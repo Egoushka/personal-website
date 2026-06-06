@@ -55,11 +55,26 @@ It shows up on `/blog` and at `/posts/my-post/` on the next build.
 
 ## Deploy
 
-The site exports to static files and is served by a self-contained Caddy stack
-on the VPS (`/opt/stacks/website`), independent of the internal `headscale-caddy`.
+The site exports to static files served by a small internal Caddy
+(`/opt/stacks/website`) bound to the tailnet at `100.64.0.4:8090`. The public
+edge `headscale-caddy` terminates TLS and reverse-proxies `hrabovskyi.online`
+to it — the same pattern as the `.internal` services, but public.
+
+**One-time, on the VPS** — add this to `/opt/stacks/headscale/Caddyfile`, then
+`docker exec headscale-caddy caddy reload --config /etc/caddy/Caddyfile`:
+
+```
+hrabovskyi.online {
+	reverse_proxy 100.64.0.4:8090
+}
+www.hrabovskyi.online {
+	redir https://hrabovskyi.online{uri} permanent
+}
+```
 
 **One-time DNS:** at the registrar for `hrabovskyi.online`, add A records
-`@` and `www` → `37.27.211.58`.
+`@` and `www` → `37.27.211.58`. Caddy issues the Let's Encrypt cert
+automatically once DNS resolves.
 
 **Ship a build:**
 

@@ -1,11 +1,9 @@
-# hrabovskyi.online — serves the exported Next.js static site (./out -> ./site)
-# Automatic HTTPS via Let's Encrypt.
+# Internal static server for hrabovskyi.online.
+# Listens on :80 inside the container (published to 100.64.0.4:8090).
+# TLS, the public hostname, and the www->apex redirect are handled upstream
+# by the edge "headscale-caddy". Keep this file plain HTTP.
 
-www.hrabovskyi.online {
-	redir https://hrabovskyi.online{uri} permanent
-}
-
-hrabovskyi.online {
+:80 {
 	root * /srv
 	encode gzip zstd
 	file_server

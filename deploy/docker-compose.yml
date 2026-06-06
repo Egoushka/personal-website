@@ -3,9 +3,11 @@ services:
     image: caddy:2-alpine
     container_name: website-caddy
     restart: unless-stopped
+    # Internal only — bound to the tailnet IP. Public TLS + hostname are
+    # handled by the edge "headscale-caddy", which reverse-proxies
+    # hrabovskyi.online -> 100.64.0.4:8090 (same pattern as the .internal sites).
     ports:
-      - "80:80"
-      - "443:443"
+      - "100.64.0.4:8090:80"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./site:/srv:ro
