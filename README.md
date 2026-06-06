@@ -77,3 +77,49 @@ ssh root@37.27.211.58 'cd /opt/stacks/website && docker compose up -d'
 ```
 
 HTTPS is issued automatically on first run — watch `docker compose logs -f caddy`.
+
+## Continuous deployment (GitHub Actions)
+
+`.github/workflows/deploy.yml` builds and deploys on every push to `main`
+(and on manual dispatch): `npm ci` → `npm run build` → rsync `out/` to the VPS →
+`docker compose up -d`. The runner reaches the VPS over SSH (port 22 is already
+open in the Hetzner firewall).
+
+### One-time setup
+
+1. **Create a dedicated deploy key** (locally — keep the private key out of git):
+
+   ```bash
+   ssh-keygen -t ed25519 -f deploy_key -N "" -C "github-actions-deploy"
+   ```
+
+2. **Authorize it on the VPS:**
+
+   ```bash
+   ssh-copy-id -i deploy_key.pub root@37.27.211.58
+   # or: cat deploy_key.pub | ssh root@37.27.211.58 'cat >> ~/.ssh/authorized_keys'
+   ```
+
+3. **Pin the VPS host key** (so the runner won't trust-on-first-use):
+
+   ```bash
+   ssh-keyscan -t ed25519 37.27.211.58
+   ```
+
+4. **Add two repo secrets** (GitHub → repo → Settings → Secrets and variables →
+   Actions → New repository secret):
+
+   | Secret | Value |
+   |--------|-------|
+   | `DEPLOY_SSH_KEY` | full contents of the private `deploy_key` file |
+   | `DEPLOY_KNOWN_HOSTS` | the line printed by `ssh-keyscan` in step 3 |
+
+5. **DNS** (once): A records `@` and `www` → `37.27.211.58`.
+
+Then push to `main` and watch the run under the repo's **Actions** tab. After
+the first successful deploy, Caddy issues the certificate and the site is live
+at <https://hrabovskyi.online>.
+
+> Tip: store the deploy private key in Vaultwarden as a backup. To rotate, drop
+> the old line from the VPS `~/.ssh/authorized_keys` and repeat with a new key.
+
