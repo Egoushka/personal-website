@@ -1,0 +1,28 @@
+# hrabovskyi.online — serves the exported Next.js static site (./out -> ./site)
+# Automatic HTTPS via Let's Encrypt.
+
+www.hrabovskyi.online {
+	redir https://hrabovskyi.online{uri} permanent
+}
+
+hrabovskyi.online {
+	root * /srv
+	encode gzip zstd
+	file_server
+
+	# Next static export uses trailingSlash: dir/index.html
+	try_files {path} {path}/index.html {path}.html
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+	@assets path /_next/static/* /cv.pdf
+	header @assets Cache-Control "public, max-age=31536000, immutable"
+
+	handle_errors {
+		rewrite * /404.html
+		file_server
+	}
+}
