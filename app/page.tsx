@@ -12,7 +12,7 @@ export default function Home() {
     <>
       <Nav />
       <Hero />
-      <main>
+      <main id="main">
         <About />
         <Projects />
         <Experience />

@@ -1,24 +1,22 @@
 import Link from "next/link";
+import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 
 export default function NotFound() {
   return (
-    <main
-      className="wrap"
-      style={{
-        minHeight: "70vh",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-      }}
-    >
-      <div className="prompt"><span className="dollar">$</span> cat page</div>
-      <h1 style={{ fontSize: 42, color: "var(--heading)", margin: "8px 0" }}>404</h1>
-      <p style={{ fontFamily: "var(--mono)", color: "var(--accent)" }}>
-        No such file or directory.
-      </p>
-      <p style={{ marginTop: 16 }}>
-        <Link href="/">← back home</Link>
-      </p>
-    </main>
+    <>
+      <Nav />
+      <main id="main" className="wrap notfound">
+        <div className="prompt"><span className="dollar">$</span> cat page</div>
+        <h1>404</h1>
+        <p className="notfound-msg">No such file or directory.</p>
+        <p>
+          Try the <Link href="/blog/">blog</Link>,{" "}
+          <Link href="/#projects">projects</Link>, or head{" "}
+          <Link href="/">back home</Link>.
+        </p>
+      </main>
+      <Footer />
+    </>
   );
 }

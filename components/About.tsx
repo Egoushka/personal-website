@@ -2,10 +2,10 @@ import { skills } from "@/lib/site";
 
 export default function About() {
   return (
-    <section id="about" className="about">
+    <section id="about" className="about" aria-labelledby="about-heading">
       <div className="wrap">
         <div className="section-label"><span className="hash">#</span> about</div>
-        <h2>What I do</h2>
+        <h2 id="about-heading">What I do</h2>
         <p>
           I&apos;m a backend-leaning full-stack developer based in Ukraine. Day to
           day I work in <strong>C# / .NET and ASP.NET Core</strong>, with Angular

@@ -10,6 +10,8 @@ export type PostMeta = {
   date: string;
   description: string;
   tags: string[];
+  /** Whole minutes at 200 wpm, floored to 1. */
+  readingTime: number;
 };
 
 export type Post = PostMeta & { content: string };
@@ -24,6 +26,7 @@ function readPostFile(slug: string): Post {
     date: String(data.date ?? ""),
     description: String(data.description ?? ""),
     tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
+    readingTime: Math.max(1, Math.round(content.trim().split(/\s+/).length / 200)),
     content,
   };
 }

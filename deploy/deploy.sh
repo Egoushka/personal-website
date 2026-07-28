@@ -3,7 +3,7 @@
 # Usage: ./deploy/deploy.sh
 set -euo pipefail
 
-VPS="${VPS:-root@37.27.211.58}"
+VPS="${VPS:-root@<origin-ip>}"
 REMOTE_DIR="${REMOTE_DIR:-/opt/stacks/website}"
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -16,10 +16,14 @@ echo "==> Syncing site content -> ${VPS}:${REMOTE_DIR}/site"
 ssh "$VPS" "mkdir -p ${REMOTE_DIR}/site"
 rsync -avz --delete out/ "${VPS}:${REMOTE_DIR}/site/"
 
-echo "==> Syncing Caddy config + compose"
-rsync -avz deploy/Caddyfile deploy/docker-compose.yml "${VPS}:${REMOTE_DIR}/"
+# compose.yaml is owned by the /opt/stacks GitOps repo, not this one.
+# --inplace preserves the inode: Caddyfile is a single-file bind mount, and a
+# rename-based write leaves the container pinned to the old inode forever.
+echo "==> Syncing Caddy config"
+rsync -avz --inplace deploy/Caddyfile "${VPS}:${REMOTE_DIR}/"
 
 echo "==> Bringing the stack up"
-ssh "$VPS" "cd ${REMOTE_DIR} && docker compose up -d"
+ssh "$VPS" "cd ${REMOTE_DIR} && docker compose up -d && \
+  docker exec website-caddy caddy reload --config /etc/caddy/Caddyfile"
 
 echo "==> Done. https://hrabovskyi.online"

@@ -4,10 +4,24 @@ export const site = {
   url: "https://hrabovskyi.online",
   role: "Backend-first full-stack engineer",
   tagline: "Clean code, calm mind, hard lessons, quiet wins.",
+  description:
+    ".NET / C#, ASP.NET Core, Angular. Fintech, distributed systems, and a self-hosted homelab.",
+  locale: "en_US",
   email: "egorgrabovskij@gmail.com",
   github: "https://github.com/Egoushka",
   githubHandle: "Egoushka",
   linkedin: "https://www.linkedin.com/in/yehor-hrabovskyi",
+};
+
+/**
+ * Feed autodiscovery links. Next.js replaces the whole `alternates` object when a
+ * page defines one, so any page that sets its own canonical must spread this back
+ * in or it silently loses the <link rel="alternate"> tags.
+ */
+export const feedTypes = {
+  "application/rss+xml": [{ url: "/feed.xml", title: `${site.name} — RSS` }],
+  "application/atom+xml": [{ url: "/atom.xml", title: `${site.name} — Atom` }],
+  "application/feed+json": [{ url: "/feed.json", title: `${site.name} — JSON Feed` }],
 };
 
 export const skills = [

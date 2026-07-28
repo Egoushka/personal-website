@@ -3,10 +3,10 @@ import { experience } from "@/lib/site";
 
 export default function Experience() {
   return (
-    <section id="experience">
+    <section id="experience" aria-labelledby="experience-heading">
       <div className="wrap">
         <div className="section-label"><span className="hash">#</span> experience</div>
-        <h2>Where I&apos;ve worked</h2>
+        <h2 id="experience-heading">Where I&apos;ve worked</h2>
         <div className="timeline">
           {experience.map((job) => (
             <div className="job" key={job.company}>

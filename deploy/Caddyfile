@@ -2,10 +2,19 @@
 # Listens on :80 inside the container (published to 100.64.0.4:8090).
 # TLS, the public hostname, and the www->apex redirect are handled upstream
 # by the edge "headscale-caddy". Keep this file plain HTTP.
+#
+# Cloudflare sits in front of the edge, so it can add, strip or override any of
+# these. Set each header in exactly ONE place — browsers intersect duplicate CSP
+# headers, which fails in ways that are painful to debug.
+#
+# Strict-Transport-Security is deliberately NOT set here: it must come from the
+# layer that terminates TLS for the browser, which is Cloudflare, not this container.
 
 :80 {
 	root * /srv
-	encode gzip zstd
+	# zstd and gzip are all the standard Caddy build ships — there is no `br` without
+	# a custom build, and Cloudflare re-compresses at the edge anyway.
+	encode zstd gzip
 	file_server
 
 	# Next static export uses trailingSlash: dir/index.html
@@ -14,10 +23,39 @@
 	header {
 		X-Content-Type-Options nosniff
 		Referrer-Policy strict-origin-when-cross-origin
+		X-Frame-Options DENY
+		Cross-Origin-Opener-Policy same-origin
+		# interest-cohort is intentionally absent — FLoC was abandoned in 2022 and
+		# Chrome now logs it as an unrecognised feature.
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+
+		# 'unsafe-inline' in script-src is unavoidable in a Next.js static export:
+		# nonces require server-side rendering, and the App Router serialises its RSC
+		# payload into inline <script>self.__next_f.push(...)</script> tags in every
+		# prerendered file. See https://github.com/vercel/next.js/discussions/54152.
+		# The directives that DO close real surface here are object-src, base-uri,
+		# form-action and frame-ancestors.
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+
 		-Server
 	}
-	@assets path /_next/static/* /cv.pdf
-	header @assets Cache-Control "public, max-age=31536000, immutable"
+
+	# Content-hashed assets never change under the same URL.
+	@immutable path /_next/static/*
+	header @immutable Cache-Control "public, max-age=31536000, immutable"
+
+	# HTML had no Cache-Control at all, so Cloudflare returned cf-cache-status:
+	# DYNAMIC and every page view reached the origin. s-maxage lets the edge cache
+	# while keeping browsers revalidating, so a deploy is visible immediately.
+	@html path / *.html */
+	header @html Cache-Control "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
+
+	@feeds path /feed.xml /atom.xml /feed.json /sitemap.xml /robots.txt
+	header @feeds Cache-Control "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400"
+
+	# Not content-hashed, so it must not be immutable — it gets replaced in place.
+	@downloads path /cv.pdf /icon.svg /apple-icon.png /manifest.webmanifest
+	header @downloads Cache-Control "public, max-age=3600, s-maxage=86400"
 
 	handle_errors {
 		rewrite * /404.html

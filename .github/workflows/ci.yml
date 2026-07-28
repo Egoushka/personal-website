@@ -1,0 +1,58 @@
+name: CI
+
+# Same checks the deploy runs, but on branches and PRs so failures surface before
+# anything reaches main — where a push is a live deploy.
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Validate content
+        run: npm run validate
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build static export
+        run: npm run build
+
+      - name: Validate Caddyfile
+        run: |
+          docker run --rm -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
+
+      # --offline checks that internal hrefs resolve to real files and skips the
+      # network entirely, so external link rot can never make this gate flaky.
+      - name: Check internal links in the built site
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # --root-dir (absolute) is what resolves root-relative hrefs like "/blog/"
+          # against the build output. --base-url only accepts a full URL and rejects
+          # a relative path outright.
+          args: >-
+            --offline
+            --no-progress
+            --root-dir ${{ github.workspace }}/out
+            --exclude-path out/_next
+            "out/**/*.html"
+          fail: true

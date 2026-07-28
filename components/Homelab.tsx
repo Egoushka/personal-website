@@ -3,11 +3,11 @@ import { homelab } from "@/lib/site";
 
 export default function Homelab() {
   return (
-    <section id="homelab">
+    <section id="homelab" aria-labelledby="homelab-heading">
       <div className="wrap">
         <div className="section-label"><span className="hash">#</span> homelab / uses</div>
-        <h2>What runs my lab</h2>
-        <p style={{ color: "var(--muted)", maxWidth: "62ch", marginBottom: 20 }}>
+        <h2 id="homelab-heading">What runs my lab</h2>
+        <p className="section-intro">
           A single Hetzner VPS in Helsinki, run like a tiny production environment.
           This very site is served from it.
         </p>
@@ -19,7 +19,7 @@ export default function Homelab() {
             </div>
           ))}
         </div>
-        <p style={{ marginTop: 18 }}>
+        <p className="section-outro">
           <Link href="/posts/homelab/">Read how it&apos;s wired together →</Link>
         </p>
       </div>

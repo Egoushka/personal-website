@@ -5,6 +5,7 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import { site, feedTypes } from "@/lib/site";
 import { getAllSlugs, getPost, formatDate } from "@/lib/posts";
 
 type Params = { slug: string };
@@ -18,7 +19,29 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { slug } = await params;
   const post = getPost(slug);
-  return { title: post.title, description: post.description };
+  const url = `${site.url}/posts/${slug}/`;
+  return {
+    title: post.title,
+    description: post.description,
+    keywords: post.tags,
+    alternates: { canonical: url, types: feedTypes },
+    openGraph: {
+      type: "article",
+      title: post.title,
+      description: post.description,
+      url,
+      siteName: site.name,
+      locale: site.locale,
+      publishedTime: post.date,
+      authors: [site.name],
+      tags: post.tags,
+    },
+    twitter: {
+      card: "summary",
+      title: post.title,
+      description: post.description,
+    },
+  };
 }
 
 export default async function PostPage(
@@ -29,17 +52,20 @@ export default async function PostPage(
   return (
     <>
       <Nav />
-      <main className="wrap article">
+      <main id="main" className="wrap article">
         <Link className="back" href="/blog/">← back to blog</Link>
-        <h1>{post.title}</h1>
-        <div className="post-meta">
-          {formatDate(post.date)}
-          {post.tags.length > 0 && ` · ${post.tags.join(" · ")}`}
-        </div>
-        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
-          {post.content}
-        </ReactMarkdown>
-        <p style={{ marginTop: 36 }}>
+        <article>
+          <h1>{post.title}</h1>
+          <div className="post-meta">
+            <time dateTime={post.date}>{formatDate(post.date)}</time>
+            {` · ${post.readingTime} min read`}
+            {post.tags.length > 0 && ` · ${post.tags.join(" · ")}`}
+          </div>
+          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+            {post.content}
+          </ReactMarkdown>
+        </article>
+        <p className="article-foot">
           <Link className="back" href="/blog/">← back to blog</Link>
         </p>
       </main>

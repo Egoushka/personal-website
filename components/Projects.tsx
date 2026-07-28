@@ -2,10 +2,10 @@ import { projects } from "@/lib/site";
 
 export default function Projects() {
   return (
-    <section id="projects">
+    <section id="projects" aria-labelledby="projects-heading">
       <div className="wrap">
         <div className="section-label"><span className="hash">#</span> projects</div>
-        <h2>Selected work</h2>
+        <h2 id="projects-heading">Selected work</h2>
         <div className="cards">
           {projects.map((p) => (
             <a className="card" href={p.href} target="_blank" rel="noopener" key={p.name}>

@@ -10,8 +10,15 @@ concurrency:
   group: deploy-production
   cancel-in-progress: true
 
+# The job only reads the repo; it authenticates to the VPS with a deploy key.
+permissions:
+  contents: read
+
 env:
-  VPS_HOST: 37.27.211.58
+  # The box moved. 37.27.211.58 still answers ping but has port 22 closed, which is
+  # why every deploy since 2026-06-06 was dead in the water. Real host is
+  # <vps-host>, tailnet 100.64.0.2.
+  VPS_HOST: <origin-ip>
   VPS_USER: root
   REMOTE_DIR: /opt/stacks/website
 
@@ -31,8 +38,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Everything below the deploy line is irreversible — rsync --delete overwrites
+      # the live site. Fail here instead.
+      - name: Validate content
+        run: npm run validate
+
+      - name: Typecheck
+        run: npm run typecheck
+
       - name: Build static export
         run: npm run build
+
+      # A syntax error here takes the site down on `docker compose up -d`.
+      - name: Validate Caddyfile
+        run: |
+          docker run --rm -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
 
       - name: Configure SSH
         run: |
@@ -42,16 +63,37 @@ jobs:
           echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
+      # This repo owns the site content and the Caddy config. It does NOT own
+      # compose.yaml — /opt/stacks is a governed GitOps repo and the stack
+      # definition (mem limits, security_opt, tailnet binding) lives there.
+      # Pushing a second docker-compose.yml alongside it is how you get two
+      # sources of truth that silently disagree.
       - name: Sync site to VPS
         run: |
           ssh -i ~/.ssh/id_ed25519 "$VPS_USER@$VPS_HOST" "mkdir -p $REMOTE_DIR/site"
           rsync -avz --delete -e "ssh -i ~/.ssh/id_ed25519" \
             out/ "$VPS_USER@$VPS_HOST:$REMOTE_DIR/site/"
-          rsync -avz -e "ssh -i ~/.ssh/id_ed25519" \
-            deploy/Caddyfile deploy/docker-compose.yml \
-            "$VPS_USER@$VPS_HOST:$REMOTE_DIR/"
+          # --inplace is load-bearing: Caddyfile is a SINGLE-FILE bind mount, and
+          # rsync's default write-temp-then-rename gives it a new inode. The mount
+          # stays pinned to the old one, so the container keeps serving the old
+          # config no matter how many times you reload it.
+          rsync -avz --inplace -e "ssh -i ~/.ssh/id_ed25519" \
+            deploy/Caddyfile "$VPS_USER@$VPS_HOST:$REMOTE_DIR/"
 
-      - name: Bring the stack up
+      # Static files are already live at this point; this only applies a Caddyfile
+      # change. `docker compose up -d` alone is a no-op here — the compose spec is
+      # unchanged, so the container is not recreated and Caddy never re-reads its
+      # config. Reload explicitly, and fail loudly if the config is invalid.
+      - name: Reload Caddy
         run: |
           ssh -i ~/.ssh/id_ed25519 "$VPS_USER@$VPS_HOST" \
-            "cd $REMOTE_DIR && docker compose up -d"
+            "cd $REMOTE_DIR && docker compose up -d && \
+             docker exec website-caddy caddy reload --config /etc/caddy/Caddyfile"
+
+      - name: Verify the site is serving
+        run: |
+          for path in / /blog/ /feed.xml; do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' "https://hrabovskyi.online$path")
+            echo "$path -> $code"
+            [ "$code" = "200" ] || exit 1
+          done
