@@ -499,3 +499,11 @@ footer .note {
 .diagram figcaption {
   color: var(--muted); font-size: 14px; max-width: 62ch; margin-top: 10px;
 }
+
+/* portrait on /about/ — floated so the lead paragraph wraps beside it */
+.portrait {
+  float: right; margin: 0 0 16px 22px;
+  width: 180px; height: auto; border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+}
+@media (max-width: 560px) { .portrait { width: 140px; margin-left: 16px; } }

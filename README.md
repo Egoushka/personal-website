@@ -153,8 +153,8 @@ runner reaches the VPS over SSH on port 22.
 `.github/workflows/ci.yml` runs the same checks on branches and PRs, plus an offline
 link check, so failures surface before anything reaches `main`.
 
-> **The host moved once.** Deploys targeted `37.27.211.58` until 2026-07-28; that
-> address still answers ping but has port 22 closed, so nothing had deployed since
+> **The host moved once.** Deploys targeted a previous address until 2026-07-28; it still answered
+> ping but had port 22 closed, so nothing had deployed since
 > **2026-06-06** — see [the post](https://hrabovskyi.online/posts/silent-deploys/).
 > The workflow now targets `<origin-ip>`, both secrets have been rotated, and
 > deploys run green. The steps below are the runbook for the next rotation.

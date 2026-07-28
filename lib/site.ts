@@ -47,19 +47,11 @@ export type Project = {
 export const projects: Project[] = [
   {
     name: "MetaExchange",
-    meta: "C#",
+    meta: "C# · take-home",
     href: "https://github.com/Egoushka/MetaExchange",
     description:
-      "A best-execution engine that computes the optimal way to buy or sell a given volume across multiple order books, respecting per-exchange balance constraints.",
+      "A best-execution engine that computes the optimal way to buy or sell a given volume across multiple order books, respecting per-exchange balance constraints. Written as an interview take-home, in layered projects with a test suite.",
     tags: [".NET", "algorithms", "order books"],
-  },
-  {
-    name: "Jirify",
-    meta: "C#",
-    href: "https://github.com/Egoushka/Jirify",
-    description:
-      "A tool for working with Jira from the terminal / automating issue workflows — built to cut the clicks out of day-to-day ticket management.",
-    tags: [".NET", "CLI", "Jira API"],
   },
   {
     name: "NetworkMonitor",

@@ -15,16 +15,16 @@ The deploy workflow pushed to a hardcoded IP:
 
 ```yaml
 env:
-  VPS_HOST: 37.27.211.58
+  VPS_HOST: 203.0.113.10
 ```
 
 The box had since moved to a different address. The workflow still pointed at the old one — and here is the part that made it invisible: **that IP still answered.**
 
 ```
-$ ping -c 2 37.27.211.58
+$ ping -c 2 203.0.113.10
 2 packets transmitted, 2 packets received, 0.0% packet loss
 
-$ nc -z 37.27.211.58 22
+$ nc -z 203.0.113.10 22
 port 22 CLOSED
 ```
 

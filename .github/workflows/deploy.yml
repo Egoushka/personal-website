@@ -15,9 +15,9 @@ permissions:
   contents: read
 
 env:
-  # The box moved. 37.27.211.58 still answers ping but has port 22 closed, which is
-  # why every deploy since 2026-06-06 was dead in the water. Real host is
-  # <vps-host>, tailnet 100.64.0.2.
+  # The box moved in 2026-07; the previous address still answered ping but had
+  # port 22 closed, which is why every deploy since 2026-06-06 was dead in the
+  # water. Host is <vps-host>, tailnet 100.64.0.2.
   VPS_HOST: <origin-ip>
   VPS_USER: root
   REMOTE_DIR: /opt/stacks/website

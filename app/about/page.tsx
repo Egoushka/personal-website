@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import Picture, { hasPicture } from "@/components/Picture";
 import { site, feedTypes, skills, experience } from "@/lib/site";
 
 const description =
@@ -33,6 +34,18 @@ export default function About() {
           <div className="wrap">
             <div className="prompt"><span className="dollar">$</span> cat about.md</div>
             <h1 id="about-heading">About</h1>
+
+            {/* Appears as soon as assets/images/portrait.jpg exists — see
+                assets/images/README.md. No code change needed to turn it on. */}
+            {hasPicture("portrait") && (
+              <Picture
+                name="portrait"
+                alt="Yehor Hrabovskyi"
+                className="portrait"
+                sizes="(max-width: 560px) 140px, 180px"
+                priority
+              />
+            )}
 
             <p className="about-lead">
               I&apos;m a backend-leaning full-stack developer based in Ukraine.

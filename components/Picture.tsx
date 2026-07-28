@@ -3,6 +3,12 @@ import path from "node:path";
 
 const WIDTHS = [480, 960, 1440];
 
+/** True once `npm run images` has produced output for `name`. Lets a page render
+ *  an image only if it exists, instead of the build failing on a missing file. */
+export function hasPicture(name: string): boolean {
+  return fs.existsSync(path.join(process.cwd(), "public", "img", `${name}.json`));
+}
+
 /**
  * Build-time-optimized image. Pairs with scripts/optimize-images.mjs.
  *
