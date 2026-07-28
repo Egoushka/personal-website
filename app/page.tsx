@@ -1,4 +1,5 @@
 import Nav from "@/components/Nav";
+import { PersonAndSiteLd } from "@/components/JsonLd";
 import Hero from "@/components/Hero";
 import About from "@/components/About";
 import Projects from "@/components/Projects";
@@ -13,6 +14,7 @@ export default function Home() {
       <Nav />
       <Hero />
       <main id="main">
+        <PersonAndSiteLd />
         <About />
         <Projects />
         <Experience />

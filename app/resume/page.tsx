@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Nav from "@/components/Nav";
+import { ProfilePageLd } from "@/components/JsonLd";
 import Footer from "@/components/Footer";
 import { site, feedTypes, skills, experience, education, projects } from "@/lib/site";
 
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
     siteName: site.name,
     locale: site.locale,
   },
-  twitter: { card: "summary", title: `Résumé — ${site.name}`, description },
+  twitter: { card: "summary_large_image", title: `Résumé — ${site.name}`, description },
 };
 
 export default function Resume() {
@@ -27,6 +28,7 @@ export default function Resume() {
     <>
       <Nav />
       <main id="main">
+        <ProfilePageLd />
         <section className="page-head" aria-labelledby="resume-heading">
           <div className="wrap">
             <div className="prompt"><span className="dollar">$</span> cat resume.md</div>

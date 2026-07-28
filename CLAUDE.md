@@ -76,6 +76,16 @@ in server components only. Never import `lib/posts.ts` from a client component.
   boundary of a control; anything animated needs a `prefers-reduced-motion` escape.
 - `@/*` path alias maps to the repo root.
 - `app/sitemap.ts` and `app/robots.ts` generate `/sitemap.xml` and `/robots.txt` at build.
+- **OG cards** come from `lib/og.tsx` via `opengraph-image.tsx` routes. next/og writes them
+  as **extensionless files**, so `deploy/Caddyfile` sets `Content-Type: image/png` for
+  `/opengraph-image` and `/posts/*/opengraph-image` — without that every scraper rejects
+  the card.
+- **JSON-LD** lives in [components/JsonLd.tsx](components/JsonLd.tsx): `Person` + `WebSite` on the homepage,
+  `BlogPosting` + `BreadcrumbList` on posts, `ProfilePage` on `/resume/`. Stable `@id`s let
+  the per-page graphs reference the Person rather than repeat it.
+- **Post heading anchors** use `rehype-slug`. The TOC in `lib/posts.ts` uses
+  **`github-slugger`** — the same slugger — on purpose: a hand-rolled version produced
+  `secrets-config` where rehype-slug produced `secrets--config`, silently breaking anchors.
 
 ## Deploy — push to main is a live deploy
 

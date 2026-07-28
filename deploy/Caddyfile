@@ -57,6 +57,15 @@
 	@downloads path /icon.svg /apple-icon.png /manifest.webmanifest
 	header @downloads Cache-Control "public, max-age=3600, s-maxage=86400"
 
+	# next/og writes these as EXTENSIONLESS files (out/opengraph-image,
+	# out/posts/<slug>/opengraph-image), so a file server has nothing to infer a
+	# MIME type from and every social scraper rejects the card. Set it explicitly.
+	@ogimages path /opengraph-image /posts/*/opengraph-image
+	header @ogimages {
+		Content-Type "image/png"
+		Cache-Control "public, max-age=3600, s-maxage=86400"
+	}
+
 	handle_errors {
 		rewrite * /404.html
 		file_server

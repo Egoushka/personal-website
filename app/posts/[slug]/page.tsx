@@ -3,10 +3,12 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
+import rehypeSlug from "rehype-slug";
 import Nav from "@/components/Nav";
+import { BlogPostingLd } from "@/components/JsonLd";
 import Footer from "@/components/Footer";
 import { site, feedTypes } from "@/lib/site";
-import { getAllSlugs, getPost, formatDate } from "@/lib/posts";
+import { getAllSlugs, getPost, formatDate, tableOfContents } from "@/lib/posts";
 
 type Params = { slug: string };
 
@@ -37,7 +39,7 @@ export async function generateMetadata(
       tags: post.tags,
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: post.title,
       description: post.description,
     },
@@ -49,11 +51,13 @@ export default async function PostPage(
 ) {
   const { slug } = await params;
   const post = getPost(slug);
+  const toc = tableOfContents(post.content);
   return (
     <>
       <Nav />
       <main id="main" className="wrap article">
         <Link className="back" href="/blog/">← back to blog</Link>
+        <BlogPostingLd post={post} />
         <article>
           <h1>{post.title}</h1>
           <div className="post-meta">
@@ -61,7 +65,17 @@ export default async function PostPage(
             {` · ${post.readingTime} min read`}
             {post.tags.length > 0 && ` · ${post.tags.join(" · ")}`}
           </div>
-          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+          {toc.length > 1 && (
+            <nav className="toc" aria-labelledby="toc-heading">
+              <h2 id="toc-heading">On this page</h2>
+              <ol>
+                {toc.map((h) => (
+                  <li key={h.id}><a href={`#${h.id}`}>{h.text}</a></li>
+                ))}
+              </ol>
+            </nav>
+          )}
+          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSlug, rehypeHighlight]}>
             {post.content}
           </ReactMarkdown>
         </article>

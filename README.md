@@ -39,6 +39,9 @@ app/icon.svg          favicon; app/apple-icon.png is the 180×180 iOS home-scree
 app/manifest.ts       /manifest.webmanifest
 app/resume/           /resume/ — the CV. Prints to PDF; there is no checked-in cv.pdf
                       on purpose, so it can never go stale.
+app/uses/  app/now/   /uses/ and /now/, both driven by lib/site.ts
+lib/og.tsx            shared OG card, rendered by the opengraph-image.tsx routes
+components/JsonLd.tsx Person/WebSite/BlogPosting/BreadcrumbList/ProfilePage structured data
 deploy/               Caddyfile + deploy.sh. The stack definition (compose.yaml)
                       is owned by the /opt/stacks GitOps repo on the VPS, not here.
 ```

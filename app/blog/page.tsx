@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     siteName: site.name,
     locale: site.locale,
   },
-  twitter: { card: "summary", title: `Blog — ${site.name}`, description },
+  twitter: { card: "summary_large_image", title: `Blog — ${site.name}`, description },
 };
 
 export default function BlogIndex() {

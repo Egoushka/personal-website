@@ -177,3 +177,36 @@ export const homelab: StackItem[] = [
   { name: "AdGuard Home", desc: "Network-wide DNS + ad/tracker filtering." },
   { name: "GitOps · SOPS + age", desc: "Encrypted, version-controlled infra config." },
 ];
+
+/** /uses — the homelab grid plus the day-to-day kit. */
+export const uses: { group: string; items: StackItem[] }[] = [
+  { group: "Server", items: homelab },
+  {
+    group: "Editor & terminal",
+    items: [
+      { name: "JetBrains Rider", desc: "Day-to-day .NET work." },
+      { name: "VS Code", desc: "Everything else — TypeScript, markdown, config." },
+      { name: "Claude Code", desc: "Pair-programming in the terminal." },
+    ],
+  },
+  {
+    group: "Day to day",
+    items: [
+      { name: "C# / .NET", desc: "ASP.NET Core, EF Core, MediatR-style CQRS." },
+      { name: "PostgreSQL", desc: "Plus SQL Server at work." },
+      { name: "Angular + TypeScript", desc: "When the work reaches the front end." },
+      { name: "Docker Compose", desc: "Every service in the lab, defined in git." },
+    ],
+  },
+];
+
+/** /now — what has my attention. Edit the date whenever this changes. */
+export const now = {
+  updated: "2026-07-28",
+  items: [
+    "Backend work on a white-label crypto trading platform at Boerse Stuttgart Digital.",
+    "Rebuilding this site — feeds, structured data, self-hosted analytics, and a résumé that cannot go stale.",
+    "Running the homelab as a real environment: Headscale, SOPS-encrypted GitOps, off-site restic backups.",
+    "Writing more. The infrastructure here is well ahead of the content it serves, and that is the wrong way round.",
+  ],
+};
