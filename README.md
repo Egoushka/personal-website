@@ -40,6 +40,7 @@ app/manifest.ts       /manifest.webmanifest
 app/resume/           /resume/ — the CV. Prints to PDF; there is no checked-in cv.pdf
                       on purpose, so it can never go stale.
 app/uses/  app/now/   /uses/ and /now/, both driven by lib/site.ts
+public/admin/         Sveltia CMS at /admin/ — see "Editing" below
 lib/og.tsx            shared OG card, rendered by the opengraph-image.tsx routes
 components/JsonLd.tsx Person/WebSite/BlogPosting/BreadcrumbList/ProfilePage structured data
 deploy/               Caddyfile + deploy.sh. The stack definition (compose.yaml)
@@ -152,11 +153,11 @@ runner reaches the VPS over SSH on port 22.
 `.github/workflows/ci.yml` runs the same checks on branches and PRs, plus an offline
 link check, so failures surface before anything reaches `main`.
 
-> **The host moved.** Deploys targeted `37.27.211.58` until 2026-07-28; that address
-> still answers ping but has port 22 closed, so nothing had deployed since
-> **2026-06-06**. The workflow now targets `<origin-ip>`. Re-do steps 2–4 below —
-> the deploy key is not in the new box's `authorized_keys` and `DEPLOY_KNOWN_HOSTS`
-> is pinned to the old host key.
+> **The host moved once.** Deploys targeted `37.27.211.58` until 2026-07-28; that
+> address still answers ping but has port 22 closed, so nothing had deployed since
+> **2026-06-06** — see [the post](https://hrabovskyi.online/posts/silent-deploys/).
+> The workflow now targets `<origin-ip>`, both secrets have been rotated, and
+> deploys run green. The steps below are the runbook for the next rotation.
 
 ### One-time setup
 
@@ -196,3 +197,26 @@ at <https://hrabovskyi.online>.
 > Tip: store the deploy private key in Vaultwarden as a backup. To rotate, drop
 > the old line from the VPS `~/.ssh/authorized_keys` and repeat with a new key.
 
+
+
+## Editing (`/admin/`)
+
+[Sveltia CMS](https://sveltiacms.app). A static SPA that talks to the GitHub API
+directly — it never touches the build, and `output: "export"` is unaffected.
+Saving commits to `main`, which triggers the normal deploy.
+
+**Signing in needs no OAuth app and no worker.** Click **Sign In Using Access
+Token**; it links to GitHub's token page with the right scopes pre-selected.
+Generate a fine-grained PAT scoped to `Egoushka/personal-website` with
+**Contents: Read and write**, and paste it in. The token is stored in your
+browser's localStorage and never reaches this repo, the server, or CI.
+
+That is deliberately the whole setup. The alternative — a GitHub OAuth app plus a
+Cloudflare Worker — means one more deployed service and a client secret to store,
+to replace a button that already works.
+
+Rotate by deleting the token on GitHub; the CMS then just asks for a new one.
+
+The editor mirrors `scripts/validate-content.mjs`, including the closed tag
+vocabulary and the 160-character description limit, so mistakes surface before
+they become a commit. CI is still the real gate.

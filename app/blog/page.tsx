@@ -29,7 +29,7 @@ export default function BlogIndex() {
   const posts = getAllPosts();
   return (
     <>
-      <Nav />
+      <Nav current="blog" />
       <main id="main">
         <section className="page-head" aria-labelledby="blog-heading">
           <div className="wrap">

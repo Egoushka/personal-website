@@ -27,7 +27,7 @@ export default function About() {
 
   return (
     <>
-      <Nav />
+      <Nav current="about" />
       <main id="main">
         <section className="page-head" aria-labelledby="about-heading">
           <div className="wrap">

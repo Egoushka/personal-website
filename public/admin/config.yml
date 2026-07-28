@@ -6,9 +6,14 @@ backend:
   name: github
   repo: Egoushka/personal-website
   branch: main
-  # Sveltia's own OAuth worker. Deploy it once and put its URL here:
-  #   https://github.com/sveltia/sveltia-cms-auth
-  # base_url: https://<your-worker>.workers.dev
+  # No base_url, and no OAuth worker: Sveltia's "Sign In Using Access Token"
+  # works out of the box. You paste a fine-grained GitHub PAT into the CMS, it is
+  # kept in your browser's localStorage, and it never touches this repo, the
+  # server, or CI. That is strictly less infrastructure and one fewer secret than
+  # an OAuth app plus a Cloudflare Worker.
+  #
+  # If you later want the "Sign In with GitHub" button instead, deploy
+  # https://github.com/sveltia/sveltia-cms-auth and set base_url to the worker.
 
 # Editing from a phone means editing on a flaky connection; save drafts remotely.
 publish_mode: editorial_workflow

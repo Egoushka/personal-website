@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 export default function Resume() {
   return (
     <>
-      <Nav />
+      <Nav current="resume" />
       <main id="main">
         <ProfilePageLd />
         <section className="page-head" aria-labelledby="resume-heading">

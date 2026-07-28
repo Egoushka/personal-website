@@ -58,7 +58,7 @@ export default async function PostPage(
   const { prev, next } = getAdjacentPosts(slug);
   return (
     <>
-      <Nav />
+      <Nav current="blog" />
       <main id="main" className="wrap article">
         <Link className="back" href="/blog/">← back to blog</Link>
         <BlogPostingLd post={post} />

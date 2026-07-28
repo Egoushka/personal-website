@@ -47,7 +47,7 @@ export default async function TagPage({ params }: { params: Promise<Params> }) {
 
   return (
     <>
-      <Nav />
+      <Nav current="blog" />
       <main id="main">
         <section className="page-head" aria-labelledby="tag-heading">
           <div className="wrap">

@@ -94,19 +94,31 @@ a:hover { text-decoration: underline; }
   border-bottom: 1px solid var(--border);
 }
 .nav .inner {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
   height: 56px; max-width: var(--maxw); margin: 0 auto; padding: 0 24px;
 }
-.nav .brand { font-family: var(--mono); font-weight: 600; color: var(--heading); font-size: 15px; }
+.nav .brand {
+  font-family: var(--mono); font-weight: 600; color: var(--heading); font-size: 15px;
+  white-space: nowrap;
+}
 .nav .brand .accent { color: var(--accent); }
-.nav .links { display: flex; gap: 20px; }
+.nav .links { display: flex; align-items: center; gap: 18px; }
 /* min-height/min-width keep these at the 24x24 WCAG 2.5.8 floor without changing type size */
 .nav .links a {
   font-family: var(--mono); font-size: 13px; color: var(--muted);
-  display: inline-flex; align-items: center; min-height: 24px; min-width: 24px;
-  justify-content: center;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 24px; min-width: 24px;
 }
 .nav .links a:hover { color: var(--accent); text-decoration: none; }
+/* Current section gets weight, so the bar has a focal point instead of five equals. */
+.nav .links a[aria-current="page"] { color: var(--heading); }
+
+.nav-search {
+  color: var(--muted);
+  border: 1px solid var(--border-strong); border-radius: 6px;
+  padding: 0 7px; min-height: 26px;
+}
+.nav-search:hover { color: var(--accent); border-color: var(--accent); }
 
 /* hero */
 .hero { padding: 88px 0 56px; }
@@ -231,17 +243,28 @@ h3 { font-size: 18px; color: var(--heading); margin: 0 0 6px; }
 .article pre code { background: none; border: none; padding: 0; }
 .article blockquote { margin: 22px 0; padding: 2px 18px; border-left: 3px solid var(--accent); color: var(--muted); }
 
-/* footer */
-footer { border-top: 1px solid var(--border); padding: 30px 0 50px; margin-top: 30px; }
-footer .inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
-footer .note { font-family: var(--mono); font-size: 12px; color: var(--muted); }
-footer .social { display: flex; gap: 16px; }
-footer .social a {
-  font-family: var(--mono); font-size: 12px; color: var(--muted);
-  display: inline-flex; align-items: center; min-height: 24px; min-width: 24px;
-  justify-content: center;
+/* footer — carries the site map the nav no longer does */
+footer { border-top: 1px solid var(--border); padding: 34px 0 50px; margin-top: 40px; }
+footer .inner { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+.footer-cols {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px;
+  margin-bottom: 26px;
 }
-footer .social a:hover { color: var(--accent); text-decoration: none; }
+.footer-cols h2 {
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .07em; margin: 0 0 10px;
+}
+.footer-cols ul { list-style: none; padding: 0; margin: 0; }
+.footer-cols li { margin-bottom: 2px; }
+.footer-cols a {
+  font-size: 14px; color: var(--text);
+  display: inline-flex; align-items: center; min-height: 26px;
+}
+.footer-cols a:hover { color: var(--accent); text-decoration: none; }
+footer .note {
+  font-family: var(--mono); font-size: 12px; color: var(--muted);
+  border-top: 1px solid var(--border); padding-top: 18px;
+}
 
 /* Shiki dual themes. Shiki inlines both palettes as CSS variables per token;
    these two rules pick one. No client JS, no flash, no second stylesheet. */
@@ -317,6 +340,15 @@ footer .social a:hover { color: var(--accent); text-decoration: none; }
   @page { margin: 14mm; }
 }
 
+/* Below ~430px the full wordmark and five nav items genuinely do not fit. The
+   brand reduces to the prompt glyph rather than the nav dropping destinations —
+   hiding navigation is what the old header did, and it made pages unreachable. */
+@media (max-width: 430px) {
+  .nav .brand-name { display: none; }
+  .nav .links { gap: 11px; }
+  .nav .links a { font-size: 12px; }
+}
+
 /* motion — the cursor blinks forever, which WCAG 2.2.2 requires an opt-out from */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -333,8 +365,10 @@ footer .social a:hover { color: var(--accent); text-decoration: none; }
 @media (max-width: 560px) {
   /* .hero h1 / .article h1 scale via clamp() — no override needed here */
   .stack-grid { grid-template-columns: 1fr; }
-  .nav .links { gap: 14px; }
-  .nav .links a.hide-sm { display: none; }
+  /* Four items plus search still fit; the brand gives up its TLD to make room. */
+  .nav .links { gap: 13px; }
+  .nav .brand-tld { display: none; }
+  .footer-cols { grid-template-columns: repeat(2, 1fr); gap: 18px; }
   .post-row { flex-direction: column; gap: 2px; }
 }
 

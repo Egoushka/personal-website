@@ -127,5 +127,6 @@ crawler-related.
   so it never touches the build or the static export. The bundle is **vendored**
   (`npm run cms:vendor`, runs in `npm run build`) rather than loaded from a CDN,
   because the CSP is `script-src 'self'`. It is 2.2 MB — the "~300 KB" figure in
-  circulation is wrong. It needs an OAuth worker before it can authenticate; see
-  README.
+  circulation is wrong. **It needs no OAuth worker**: "Sign In Using Access Token"
+  takes a fine-grained GitHub PAT held in the browser's localStorage, so there is
+  no client secret anywhere in this repo, on the server, or in CI.
