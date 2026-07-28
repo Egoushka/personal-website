@@ -30,26 +30,60 @@ are not optimising cost at zero volume.
 
 ## 2. Add the four values
 
-The compose file already reads these; they're deliberately optional so an
-unconfigured SMTP can't stop the container from starting.
+⚠️ **The `LISTMONK_smtp__0__*` env vars in `compose.yaml` do not configure SMTP.**
+listmonk keeps its SMTP blocks in the Postgres `settings` table, and the DB wins. A
+fresh install ships two stock blocks — `smtp.yoursite.com:25` (enabled) and
+`smtp.gmail.com:465` (disabled) — and it will keep using those no matter what the
+environment says. Symptom when this bites: `dial tcp 142.251.127.108:465: i/o timeout`,
+a Google address, from a container whose env clearly reads `smtp.resend.com`.
+
+The secret still belongs in SOPS — that is where the DB gets written *from*, and it
+keeps the key out of git:
 
 ```bash
 cd /opt/stacks
-make secret-set STACK=listmonk KEY=LISTMONK_SMTP_HOST     VALUE=smtp.resend.com
-make secret-set STACK=listmonk KEY=LISTMONK_SMTP_USER     VALUE=resend
 make secret-set STACK=listmonk KEY=LISTMONK_SMTP_PASSWORD VALUE=re_your_api_key
-make secret-set STACK=listmonk KEY=LISTMONK_SMTP_ENABLED  VALUE=true
 ```
+
+Commit `listmonk/.env.enc`, never `listmonk/.env`. Adding a *new* key name means
+`make inventory` too — CI fails on a stale `SECRETS.md`.
+
+Then apply it to the settings listmonk actually reads. Either **Settings → SMTP** in
+the admin UI, or straight into the DB, sourcing the password from `.env` so it is
+never retyped:
 
 ```bash
-cd /opt/stacks/listmonk && docker compose up -d
+cd /opt/stacks/listmonk
+PW=$(grep '^LISTMONK_SMTP_PASSWORD=' .env | cut -d= -f2-)
+docker compose exec -T listmonk-db psql -U listmonk -d listmonk <<SQL
+\set pw '$PW'
+update settings set value = jsonb_set(
+  jsonb_set(value, '{0}', value->0 || jsonb_build_object(
+    'enabled', true, 'host', 'smtp.resend.com', 'port', 587,
+    'auth_protocol', 'login', 'username', 'resend', 'password', :'pw',
+    'tls_type', 'STARTTLS', 'tls_skip_verify', false)),
+  '{1,enabled}', 'false'::jsonb)
+where key = 'smtp';
+SQL
+docker compose restart listmonk
 ```
 
-`make secret-set` writes into the SOPS-encrypted `.env.enc`, so the config is in git
-without the secret being in git. Commit `listmonk/.env.enc`, never `listmonk/.env`.
+STARTTLS on 587. Port 465 needs `tls_type` `TLS` instead — but Hetzner and Resend are
+both happy on 587, so there is no reason to.
 
-Defaults assume **STARTTLS on port 587**. For implicit TLS on 465, change
-`tls_type` to `TLS` in `listmonk/compose.yaml`.
+**Three more stock values bite on a fresh install.** `app.root_url` defaults to
+`http://localhost:9000`, which is what every unsubscribe and view-in-browser link in a
+campaign is built from; `app.from_email` defaults to a malformed
+`listmonk < address >`; `app.site_name` is `Mailing list`.
+
+```bash
+docker compose exec -T listmonk-db psql -U listmonk -d listmonk -c \
+  "update settings set value = to_jsonb('https://hrabovskyi.online'::text) where key='app.root_url';"
+```
+
+Same shape for `app.from_email` (`Yehor Hrabovskyi <newsletter@hrabovskyi.online>`) and
+`app.site_name`. The from-address domain must match the DKIM signing domain or DMARC
+fails — see below.
 
 ---
 
@@ -58,17 +92,24 @@ Defaults assume **STARTTLS on port 587**. For implicit TLS on 465, change
 Your provider will give you records. All go in **Cloudflare → hrabovskyi.online → DNS**.
 All are `TXT` or `CNAME`, none should be proxied.
 
-**SPF** — states which servers may send as your domain:
+**SPF** — states which servers may send as your domain. Resend uses a *custom return
+path*, so its SPF goes on the `send` subdomain, **not on `@`**:
 
 ```
-Type: TXT   Name: @   Content: v=spf1 include:<provider> ~all
+Type: TXT   Name: send   Content: v=spf1 include:amazonses.com ~all
+Type: MX    Name: send   Content: feedback-smtp.eu-west-1.amazonses.com   Priority: 10
 ```
 
-⚠️ **One SPF record only.** Two `v=spf1` records is a permanent fail, not a merge. If
-one already exists, add `include:` to it rather than creating another.
+⚠️ **Leave the root SPF alone.** `@` already carries
+`v=spf1 include:spf.efwd.registrar-servers.com ~all` for Namecheap inbound forwarding.
+Do not add `include:amazonses.com` to it and do not create a second `v=spf1` at `@` —
+two SPF records on one hostname is a permanent fail, not a merge. SPF is evaluated
+against the envelope sender, which is `send.hrabovskyi.online`, so the root record is
+not involved in sending.
 
-**DKIM** — cryptographically signs your mail. The provider gives you the selector and
-key; usually a `CNAME` like `resend._domainkey`.
+**DKIM** — cryptographically signs your mail. Resend gives a `TXT` at
+`resend._domainkey` (not a `CNAME`) whose value starts `p=`. It signs with
+`d=hrabovskyi.online`, which is what aligns DMARC — via DKIM, not SPF.
 
 **DMARC** — tells receivers what to do when the other two fail. Start permissive:
 
@@ -79,6 +120,13 @@ Type: TXT   Name: _dmarc   Content: v=DMARC1; p=none; rua=mailto:egorgrabovskij@
 `p=none` means "don't reject anything, just report". Move to `p=quarantine` once the
 reports come back clean — going straight to `p=reject` on a misconfigured domain
 silently bins your own mail.
+
+**None of the four are proxied** — MX and TXT cannot be, and the DKIM record must
+resolve to its literal value. Grey cloud in Cloudflare.
+
+Finally, set listmonk's default from-address to something `@hrabovskyi.online`
+(Settings → General). A `From:` on any other domain does not align with the DKIM
+signature and DMARC fails even though DKIM itself passes.
 
 ---
 
