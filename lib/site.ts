@@ -100,11 +100,7 @@ export const experience: Job[] = [
     points: [
       { text: "Build and maintain backend services in .NET / ASP.NET Core for a white-label crypto trading platform." },
       { text: "Own features end to end — domain logic, persistence, background jobs, and the observability around them." },
-      {
-        text: "Debug and fix production issues in distributed, job-driven systems (see the ",
-        link: { href: "/posts/referral-bug/", label: "referral-tier writeup" },
-        after: ").",
-      },
+      { text: "Debug and fix production issues in distributed, job-driven systems." },
     ],
   },
   {

@@ -79,10 +79,26 @@ for (const file of files) {
   if (!/]\(\//.test(body)) warn("no internal links — costs SEO and session depth");
 }
 
+// lib/site.ts carries hand-written internal hrefs too (experience bullets, the homelab
+// "read more"). Deleting a post used to leave those dangling silently, because this
+// script only ever looked inside markdown.
+const siteTs = fs.readFileSync(path.join(process.cwd(), "lib", "site.ts"), "utf8");
+for (const [, href] of siteTs.matchAll(/href:\s*"(\/[^"]*)"/g)) {
+  if (href.startsWith("/posts/")) {
+    const target = href.replace(/^\/posts\//, "").replace(/\/$/, "");
+    if (!files.includes(`${target}.md`)) {
+      errors.push(`lib/site.ts: links to /posts/${target}/ which does not exist`);
+    }
+  }
+  if (!href.endsWith("/") && !path.extname(href) && !href.includes("#")) {
+    errors.push(`lib/site.ts: internal link "${href}" needs a trailing slash`);
+  }
+}
+
 for (const w of warnings) console.warn(`warn  ${w}`);
 for (const e of errors) console.error(`ERROR ${e}`);
 
 console.log(
-  `\n${files.length} post(s) checked — ${errors.length} error(s), ${warnings.length} warning(s)`,
+  `\n${files.length} post(s) + lib/site.ts checked — ${errors.length} error(s), ${warnings.length} warning(s)`,
 );
 process.exit(errors.length > 0 ? 1 : 0);
