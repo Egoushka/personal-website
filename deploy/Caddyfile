@@ -29,13 +29,14 @@
 		# Chrome now logs it as an unrecognised feature.
 		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
 
+		# 'wasm-unsafe-eval' is for Pagefind, which loads its search index as WASM.
 		# 'unsafe-inline' in script-src is unavoidable in a Next.js static export:
 		# nonces require server-side rendering, and the App Router serialises its RSC
 		# payload into inline <script>self.__next_f.push(...)</script> tags in every
 		# prerendered file. See https://github.com/vercel/next.js/discussions/54152.
 		# The directives that DO close real surface here are object-src, base-uri,
 		# form-action and frame-ancestors.
-		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
 
 		-Server
 	}
@@ -56,6 +57,11 @@
 	# Not content-hashed, so it must not be immutable — it gets replaced in place.
 	@downloads path /icon.svg /apple-icon.png /manifest.webmanifest
 	header @downloads Cache-Control "public, max-age=3600, s-maxage=86400"
+
+	# Pagefind's index is rewritten on every deploy, so it caches like an asset
+	# but must not be immutable.
+	@pagefind path /pagefind/*
+	header @pagefind Cache-Control "public, max-age=3600, s-maxage=86400"
 
 	# next/og writes these as EXTENSIONLESS files (out/opengraph-image,
 	# out/posts/<slug>/opengraph-image), so a file server has nothing to infer a

@@ -446,3 +446,22 @@ footer .social a:hover { color: var(--accent); text-decoration: none; }
 /* Tag links in the post meta row are a control cluster, not prose, so 2.5.8 applies. */
 .post-meta a { display: inline-flex; align-items: center; min-height: 24px; }
 .post-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0 2px; }
+
+/* architecture diagram — inline SVG, themes with the rest of the site */
+.diagram { margin: 30px 0; }
+.dg { width: 100%; height: auto; display: block; }
+.dg-box { fill: var(--surface); stroke: var(--border-strong); stroke-width: 1; }
+.dg-label {
+  fill: var(--heading); font-family: var(--mono); font-size: 14px;
+  text-anchor: middle; dominant-baseline: middle;
+}
+.dg-sub {
+  fill: var(--muted); font-family: var(--mono); font-size: 11px;
+  text-anchor: middle; dominant-baseline: middle;
+}
+.dg-edge { fill: var(--muted); font-family: var(--mono); font-size: 11px; }
+.dg-line path { stroke: var(--border-strong); stroke-width: 1.5; fill: none; }
+.dg-arrowhead { fill: var(--border-strong); }
+.diagram figcaption {
+  color: var(--muted); font-size: 14px; max-width: 62ch; margin-top: 10px;
+}

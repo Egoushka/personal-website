@@ -3,7 +3,7 @@ import { site } from "@/lib/site";
 export default function Footer() {
   const year = new Date().getFullYear();
   return (
-    <footer>
+    <footer data-pagefind-ignore>
       <div className="inner">
         <div className="note">© {year} {site.name} · built &amp; self-hosted</div>
         <div className="social">

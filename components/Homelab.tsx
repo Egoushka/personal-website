@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { homelab } from "@/lib/site";
+import HomelabDiagram from "@/components/HomelabDiagram";
 
 export default function Homelab() {
   return (
@@ -11,6 +12,7 @@ export default function Homelab() {
           A single Hetzner VPS in Helsinki, run like a tiny production environment.
           This very site is served from it.
         </p>
+        <HomelabDiagram />
         <div className="stack-grid">
           {homelab.map((item) => (
             <div className="stack-item" key={item.name}>
