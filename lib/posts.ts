@@ -77,3 +77,43 @@ export function tableOfContents(markdown: string): { id: string; text: string }[
     return { text, id: slugger.slug(text) };
   });
 }
+
+/** Posts carrying a given tag, newest first. */
+export function getPostsByTag(tag: string): PostMeta[] {
+  return getAllPosts().filter((p) => p.tags.includes(tag));
+}
+
+/** Every tag actually used, with counts — drives /blog/ chips and the tag index. */
+export function getTagCounts(): { tag: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const p of getAllPosts()) {
+    for (const t of p.tags) counts.set(t, (counts.get(t) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([tag, count]) => ({ tag, count }))
+    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
+}
+
+/**
+ * Up to `limit` posts related to `slug`, ranked by shared tags. Falls back to
+ * the newest other posts so the section is never empty on a small blog.
+ */
+export function getRelatedPosts(slug: string, limit = 3): PostMeta[] {
+  const all = getAllPosts();
+  const current = all.find((p) => p.slug === slug);
+  if (!current) return [];
+  const others = all.filter((p) => p.slug !== slug);
+  return others
+    .map((p) => ({ post: p, shared: p.tags.filter((t) => current.tags.includes(t)).length }))
+    .sort((a, b) => b.shared - a.shared || (a.post.date < b.post.date ? 1 : -1))
+    .slice(0, limit)
+    .map((x) => x.post);
+}
+
+/** Previous (older) and next (newer) post in publication order. */
+export function getAdjacentPosts(slug: string): { prev?: PostMeta; next?: PostMeta } {
+  const all = getAllPosts(); // newest first
+  const i = all.findIndex((p) => p.slug === slug);
+  if (i === -1) return {};
+  return { next: all[i - 1], prev: all[i + 1] };
+}

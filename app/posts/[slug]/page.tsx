@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import rehypeHighlight from "rehype-highlight";
+import rehypeShikiFromHighlighter from "@shikijs/rehype/core";
+import { highlighter, shikiOptions } from "@/lib/highlight";
 import rehypeSlug from "rehype-slug";
 import Nav from "@/components/Nav";
 import { BlogPostingLd } from "@/components/JsonLd";
 import Footer from "@/components/Footer";
 import { site, feedTypes } from "@/lib/site";
-import { getAllSlugs, getPost, formatDate, tableOfContents } from "@/lib/posts";
+import { getAllSlugs, getPost, formatDate, tableOfContents, getRelatedPosts, getAdjacentPosts } from "@/lib/posts";
+import { tagLabel } from "@/lib/tags";
 
 type Params = { slug: string };
 
@@ -52,6 +54,8 @@ export default async function PostPage(
   const { slug } = await params;
   const post = getPost(slug);
   const toc = tableOfContents(post.content);
+  const related = getRelatedPosts(slug);
+  const { prev, next } = getAdjacentPosts(slug);
   return (
     <>
       <Nav />
@@ -63,7 +67,12 @@ export default async function PostPage(
           <div className="post-meta">
             <time dateTime={post.date}>{formatDate(post.date)}</time>
             {` · ${post.readingTime} min read`}
-            {post.tags.length > 0 && ` · ${post.tags.join(" · ")}`}
+            {post.tags.map((t) => (
+              <span key={t}>
+                {" · "}
+                <Link href={`/tags/${t}/`}>{tagLabel(t)}</Link>
+              </span>
+            ))}
           </div>
           {toc.length > 1 && (
             <nav className="toc" aria-labelledby="toc-heading">
@@ -77,7 +86,10 @@ export default async function PostPage(
           )}
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeSlug, rehypeHighlight]}
+            rehypePlugins={[
+              rehypeSlug,
+              [rehypeShikiFromHighlighter, highlighter, shikiOptions],
+            ]}
             components={{
               // The copy button is rendered server-side, inside React's tree. An
               // earlier version injected it with JS after parse; hydration then
@@ -95,6 +107,37 @@ export default async function PostPage(
             {post.content}
           </ReactMarkdown>
         </article>
+        {related.length > 0 && (
+          <aside className="related" aria-labelledby="related-heading">
+            <h2 id="related-heading">Related</h2>
+            <ul>
+              {related.map((r) => (
+                <li key={r.slug}>
+                  <Link href={`/posts/${r.slug}/`}>{r.title}</Link>
+                  <span className="related-meta">{r.readingTime} min</span>
+                </li>
+              ))}
+            </ul>
+          </aside>
+        )}
+
+        {(prev || next) && (
+          <nav className="post-nav" aria-label="More posts">
+            {prev ? (
+              <Link className="post-nav-prev" href={`/posts/${prev.slug}/`}>
+                <span className="post-nav-dir">← older</span>
+                <span className="post-nav-title">{prev.title}</span>
+              </Link>
+            ) : <span />}
+            {next ? (
+              <Link className="post-nav-next" href={`/posts/${next.slug}/`}>
+                <span className="post-nav-dir">newer →</span>
+                <span className="post-nav-title">{next.title}</span>
+              </Link>
+            ) : <span />}
+          </nav>
+        )}
+
         <p className="article-foot">
           <Link className="back" href="/blog/">← back to blog</Link>
         </p>

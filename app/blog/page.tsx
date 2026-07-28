@@ -3,7 +3,9 @@ import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { site, feedTypes } from "@/lib/site";
-import { getAllPosts, formatDate } from "@/lib/posts";
+import PostList from "@/components/PostList";
+import { getAllPosts, getTagCounts } from "@/lib/posts";
+import { tagLabel } from "@/lib/tags";
 
 const description =
   "Notes on backend engineering, debugging, and running a homelab — by Yehor Hrabovskyi.";
@@ -37,20 +39,14 @@ export default function BlogIndex() {
               Debug stories, backend notes, and homelab logs. Mostly the things
               I&apos;d want to have read before I learned them the hard way.
             </p>
-            <div className="post-list">
-              {posts.map((p) => (
-                <Link className="post-row" href={`/posts/${p.slug}/`} key={p.slug}>
-                  <div>
-                    <h2>{p.title}</h2>
-                    <p>{p.description}</p>
-                  </div>
-                  <span className="date">
-                    <time dateTime={p.date}>{formatDate(p.date)}</time>
-                    {` · ${p.readingTime} min`}
-                  </span>
+            <div className="tag-chips">
+              {getTagCounts().map(({ tag, count }) => (
+                <Link className="tag-chip" href={`/tags/${tag}/`} key={tag}>
+                  {tagLabel(tag)} <span className="tag-count">{count}</span>
                 </Link>
               ))}
             </div>
+            <PostList posts={posts} />
           </div>
         </section>
       </main>

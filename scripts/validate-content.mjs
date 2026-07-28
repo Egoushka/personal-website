@@ -10,6 +10,9 @@ const POSTS_DIR = path.join(process.cwd(), "content", "posts");
 const MAX_DESCRIPTION = 160; // Google truncates around here.
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+const TAGS_TS = fs.readFileSync(path.join(process.cwd(), "lib", "tags.ts"), "utf8");
+const VOCAB = [...TAGS_TS.matchAll(/^  "?([a-z0-9-]+)"?:\s*\{/gm)].map((m) => m[1]);
+
 const errors = [];
 const warnings = [];
 const seenSlugs = new Map();
@@ -54,6 +57,13 @@ for (const file of files) {
     fail("frontmatter: tags must be a non-empty array");
   } else if (data.tags.some((t) => typeof t !== "string")) {
     fail("frontmatter: every tag must be a string");
+  } else {
+    // A tag outside the vocabulary silently creates a one-post hub nobody links to.
+    for (const t of data.tags) {
+      if (!VOCAB.includes(t)) {
+        fail(`frontmatter: tag "${t}" is not in lib/tags.ts (known: ${VOCAB.join(", ")})`);
+      }
+    }
   }
 
   const body = content.trim();

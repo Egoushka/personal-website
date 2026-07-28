@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { site, now } from "@/lib/site";
-import { getAllPosts } from "@/lib/posts";
+import { getAllPosts, getTagCounts } from "@/lib/posts";
 
 export const dynamic = "force-static";
 
@@ -14,9 +14,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: `${base}/`, lastModified: newest, changeFrequency: "monthly", priority: 1 },
     { url: `${base}/blog/`, lastModified: newest, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${base}/about/`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/resume/`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/uses/`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${base}/now/`, lastModified: now.updated, changeFrequency: "monthly", priority: 0.5 },
+    ...getTagCounts().map(({ tag }) => ({
+      url: `${base}/tags/${tag}/`,
+      changeFrequency: "weekly" as const,
+      priority: 0.4,
+    })),
     ...posts.map((p) => ({
       url: `${base}/posts/${p.slug}/`,
       lastModified: p.date,

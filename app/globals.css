@@ -243,14 +243,15 @@ footer .social a {
 }
 footer .social a:hover { color: var(--accent); text-decoration: none; }
 
-/* highlight.js — minimal dark tokens tuned to palette */
-/* #6a7480 was 3.64:1 on --surface-2 and failed WCAG 1.4.3; this is 5.64:1 */
-.hljs-comment, .hljs-quote { color: #8b94a0; font-style: italic; }
-.hljs-keyword, .hljs-selector-tag, .hljs-built_in, .hljs-name, .hljs-tag { color: #ff9e64; }
-.hljs-string, .hljs-title, .hljs-section, .hljs-attribute, .hljs-literal, .hljs-template-tag, .hljs-template-variable, .hljs-type, .hljs-addition { color: var(--accent); }
-.hljs-number, .hljs-symbol, .hljs-bullet, .hljs-link, .hljs-meta, .hljs-deletion { color: var(--accent-2); }
-.hljs-function .hljs-title, .hljs-title.function_ { color: #d2a8ff; }
-.hljs-attr, .hljs-variable, .hljs-params { color: var(--text); }
+/* Shiki dual themes. Shiki inlines both palettes as CSS variables per token;
+   these two rules pick one. No client JS, no flash, no second stylesheet. */
+.shiki, .shiki span { color: var(--s-dark); background-color: transparent; }
+:root[data-theme="light"] .shiki,
+:root[data-theme="light"] .shiki span { color: var(--s-light); }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .shiki,
+  :root:not([data-theme="dark"]) .shiki span { color: var(--s-light); }
+}
 
 /* table of contents */
 .toc {
@@ -366,3 +367,82 @@ footer .social a:hover { color: var(--accent); text-decoration: none; }
 .copy-btn.is-copied { color: var(--accent); border-color: var(--accent); opacity: 1; }
 @media (hover: none) { .copy-btn { opacity: 1; } }   /* touch: no hover to reveal it */
 @media print { .copy-btn { display: none; } }
+
+/* tag chips (blog index) */
+.tag-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 24px; }
+.tag-chip {
+  font-family: var(--mono); font-size: 12px; color: var(--text);
+  padding: 5px 11px; border: 1px solid var(--border-strong); border-radius: 6px;
+  background: var(--surface);
+  display: inline-flex; align-items: center; gap: 7px; min-height: 24px;
+}
+.tag-chip:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+.tag-count { color: var(--muted); font-size: 11px; }
+
+/* related posts */
+.related { margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--border); }
+.related h2 {
+  font-family: var(--mono); font-size: 12px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .06em; margin: 0 0 12px;
+}
+.related ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.related li { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }
+.related li a { display: inline-flex; align-items: center; min-height: 24px; }
+.related-meta { font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+/* prev / next */
+.post-nav {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--border);
+}
+.post-nav a {
+  display: flex; flex-direction: column; gap: 4px; min-height: 24px;
+  padding: 14px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius);
+  background: var(--surface);
+}
+.post-nav a:hover { border-color: var(--accent); text-decoration: none; }
+.post-nav-next { text-align: right; }
+.post-nav-dir { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.post-nav-title { font-size: 14px; color: var(--heading); }
+.post-nav a:hover .post-nav-title { color: var(--accent); }
+
+/* about */
+.about-lead { font-size: 17px; max-width: 66ch; }
+.page-head h2 { font-size: 19px; margin: 34px 0 12px; }
+.about-links { list-style: none; padding: 0; font-family: var(--mono); font-size: 14px; }
+.about-links li { margin-bottom: 6px; }
+.about-links a { display: inline-flex; align-items: center; min-height: 24px; }
+
+/* ---------------------------------------------------------------------------
+   Light theme.
+   The dark palette above stays the default. This only remaps the variables, so
+   every component follows automatically and nothing needs a light-mode variant.
+   `:root[data-theme]` wins over the media query, leaving room for a future
+   manual toggle without restructuring anything.
+   --------------------------------------------------------------------------- */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:        #fbfcfd;
+    --surface:   #ffffff;
+    --surface-2: #f3f5f7;
+    --border:    #dfe3e8;
+    --border-strong: #848e9c;   /* 3.3:1 on white, 3.0:1 on --surface-2 — 1.4.11 */
+    --text:      #2b3440;
+    --heading:   #10151c;
+    --muted:     #5a6472;       /* 4.9:1 on --surface */
+    --accent:    #1a7f37;       /* 4.6:1 on --surface — the dark green fails on white */
+    --accent-2:  #0a58ca;
+    color-scheme: light;
+  }
+  /* The grid overlay was tuned for a dark ground; it reads as dirt on white. */
+  :root:not([data-theme="dark"]) body::before {
+    background-image:
+      linear-gradient(rgba(26,127,55,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(26,127,55,0.045) 1px, transparent 1px);
+  }
+  :root:not([data-theme="dark"]) .nav { background: rgba(251,252,253,0.85); }
+}
+
+/* Tag links in the post meta row are a control cluster, not prose, so 2.5.8 applies. */
+.post-meta a { display: inline-flex; align-items: center; min-height: 24px; }
+.post-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0 2px; }
