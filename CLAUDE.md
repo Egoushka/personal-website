@@ -111,3 +111,21 @@ response headers, and gates AI crawlers via AI Crawl Control. See
 the Deploy section of [README.md](README.md) before debugging anything header- or
 crawler-related.
 
+
+## Publishing
+
+- **Drafts live in `content/drafts/`**, published posts in `content/posts/`. Only the
+  latter is built. Moving a file between them is a deliberate, reviewed act — the
+  `/post` skill writes drafts and is forbidden from writing to `content/posts/`.
+- **`.claude/skills/post`** drafts in the site's voice; **`.claude/skills/review-post`**
+  critiques one adversarially before it ships. Both name the two published posts as
+  the voice reference rather than restating it.
+- **Tags are a closed vocabulary** in [lib/tags.ts](lib/tags.ts). `npm run validate` fails on
+  anything outside it, and `/tags/<tag>/` is generated only for tags a post uses.
+  Adding a tag means editing that file *and* `public/admin/config.yml`.
+- **Sveltia CMS at `/admin/`** — a static SPA that talks to the GitHub API directly,
+  so it never touches the build or the static export. The bundle is **vendored**
+  (`npm run cms:vendor`, runs in `npm run build`) rather than loaded from a CDN,
+  because the CSP is `script-src 'self'`. It is 2.2 MB — the "~300 KB" figure in
+  circulation is wrong. It needs an OAuth worker before it can authenticate; see
+  README.

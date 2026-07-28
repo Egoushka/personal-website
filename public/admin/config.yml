@@ -1,0 +1,55 @@
+# Sveltia CMS — https://sveltiacms.app
+#
+# Shares Decap's config format, so switching between the two is close to free if
+# this one disappoints.
+backend:
+  name: github
+  repo: Egoushka/personal-website
+  branch: main
+  # Sveltia's own OAuth worker. Deploy it once and put its URL here:
+  #   https://github.com/sveltia/sveltia-cms-auth
+  # base_url: https://<your-worker>.workers.dev
+
+# Editing from a phone means editing on a flaky connection; save drafts remotely.
+publish_mode: editorial_workflow
+
+media_folder: assets/images
+public_folder: /img
+
+collections:
+  - name: posts
+    label: Posts
+    label_singular: Post
+    folder: content/posts
+    create: true
+    slug: "{{fields.slug}}"
+    # Mirrors scripts/validate-content.mjs. CI is still the real gate — this just
+    # catches mistakes before they become a commit.
+    fields:
+      - { name: title, label: Title, widget: string }
+      - { name: date, label: Date, widget: datetime, date_format: "YYYY-MM-DD", time_format: false, picker_utc: true }
+      - name: description
+        label: Description
+        widget: string
+        hint: "Meta description and feed summary. Max 160 characters."
+        pattern: ["^.{1,160}$", "Must be 1–160 characters"]
+      - name: tags
+        label: Tags
+        widget: select
+        multiple: true
+        min: 1
+        # Must match lib/tags.ts. Adding one here without adding it there fails validate.
+        options: [infrastructure, self-hosting, debugging, ci-cd, dotnet]
+      - { name: body, label: Body, widget: markdown }
+
+  - name: drafts
+    label: Drafts
+    folder: content/drafts
+    create: true
+    slug: "{{fields.slug}}"
+    fields:
+      - { name: title, label: Title, widget: string }
+      - { name: date, label: Date, widget: datetime, date_format: "YYYY-MM-DD", time_format: false, picker_utc: true }
+      - { name: description, label: Description, widget: string, required: false }
+      - { name: tags, label: Tags, widget: select, multiple: true, required: false, options: [infrastructure, self-hosting, debugging, ci-cd, dotnet] }
+      - { name: body, label: Body, widget: markdown }
