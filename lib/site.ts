@@ -84,14 +84,19 @@ export type Job = {
   when: string;
   company: string;
   role: string;
+  location?: string;
   points: Point[];
+  /** Kept off the homepage timeline; still shown on /resume/ so the record has no gaps. */
+  resumeOnly?: boolean;
 };
 
+/** Source of truth for both the homepage timeline and /resume/. Mirrors LinkedIn. */
 export const experience: Job[] = [
   {
-    when: "2023 — present",
+    when: "Aug 2025 — present",
     company: "Boerse Stuttgart Digital",
-    role: "Full-Stack Developer (backend-first) · fintech / crypto trading",
+    role: "Software Engineer · fintech / crypto trading",
+    location: "Ukraine · Remote",
     points: [
       { text: "Build and maintain backend services in .NET / ASP.NET Core for a white-label crypto trading platform." },
       { text: "Own features end to end — domain logic, persistence, background jobs, and the observability around them." },
@@ -103,12 +108,66 @@ export const experience: Job[] = [
     ],
   },
   {
-    when: "earlier",
-    company: "GlobalLogic — .NET Bootcamp",
-    role: "Transition from C++ into .NET / C#",
+    when: "Dec 2024 — Jun 2025",
+    company: "IT INNOVATIONS",
+    role: "Software Engineer",
+    location: "Kyiv · Hybrid",
     points: [
-      { text: "Intensive .NET training that moved me from a C++ background into professional C# development." },
+      { text: "Led development of a greenfield .NET 9 backend using Clean Architecture and vertical-slice CQRS." },
+      { text: "Delivered a management module with REST API, Specification filters, FluentValidation and FluentResults." },
+      { text: "Built Angular features including a generic NgRx store factory and a reusable DataTable with dynamic templates." },
+      { text: "Drove backend–frontend integration quality and mentored teammates on architecture." },
     ],
+  },
+  {
+    when: "Sep 2024 — Oct 2024",
+    company: "Atlas Recruiting",
+    role: "Sales Representative",
+    location: "Kyiv · On-site",
+    resumeOnly: true,
+    points: [
+      { text: "Worked directly with US clients and drivers on real-time logistics, negotiation and crisis decisions." },
+      { text: "A short detour outside engineering; sharpened communication under pressure." },
+    ],
+  },
+  {
+    when: "Apr 2023 — Jun 2024",
+    company: "UKAD",
+    role: "Software Engineer · Umbraco / Optimizely / Azure",
+    location: "Kyiv · Remote",
+    points: [
+      { text: "Delivered features across several Umbraco-based .NET systems." },
+      { text: "Modernized legacy applications, improving stability and cutting issue turnaround." },
+      { text: "Built a VPN-to-Azure Identity migration tool." },
+      { text: "Applied CQRS and vertical-slice architecture in production codebases." },
+    ],
+  },
+  {
+    when: "Oct 2022 — Feb 2023",
+    company: "LetsData",
+    role: "Junior Software Engineer",
+    location: "Odessa",
+    points: [
+      { text: "Built Angular UI and supported .NET backend work on a new product." },
+      { text: "Implemented reusable components, forms and REST API integrations." },
+    ],
+  },
+  {
+    when: "Mar 2021 — Mar 2022",
+    company: "GlobalLogic",
+    role: "Junior Software Engineer",
+    location: "Mykolaiv · Remote",
+    points: [
+      { text: "Completed the trainee program, then contributed to legacy system improvements." },
+      { text: "Implemented features and fixes alongside cross-functional teams." },
+    ],
+  },
+];
+
+export const education = [
+  {
+    school: "Petro Mohyla Black Sea National University",
+    detail: "Mykolaiv, Ukraine",
   },
 ];
 

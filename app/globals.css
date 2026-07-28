@@ -252,6 +252,48 @@ footer .social a:hover { color: var(--accent); text-decoration: none; }
 .hljs-function .hljs-title, .hljs-title.function_ { color: #d2a8ff; }
 .hljs-attr, .hljs-variable, .hljs-params { color: var(--text); }
 
+/* resume */
+.resume-role { font-family: var(--mono); color: var(--accent); margin: 0 0 14px; }
+.resume-contact {
+  list-style: none; padding: 0; margin: 0 0 18px;
+  display: flex; flex-wrap: wrap; gap: 6px 18px;
+  font-family: var(--mono); font-size: 13px;
+}
+/* WCAG 2.5.8 — these are the densest links on the site */
+.resume-contact a,
+.job h3 a {
+  display: inline-flex; align-items: center; min-height: 24px; min-width: 24px;
+}
+.resume-print-hint {
+  color: var(--muted); font-size: 14px; max-width: 62ch;
+  border-left: 2px solid var(--border-strong); padding-left: 12px; margin-bottom: 30px;
+}
+.resume-print-hint kbd {
+  font-family: var(--mono); font-size: 12px; background: var(--surface-2);
+  border: 1px solid var(--border-strong); border-radius: 4px; padding: 1px 5px;
+}
+.resume-h2 { font-size: 19px; margin: 38px 0 16px; }
+.job-loc { color: var(--muted); }
+.resume-project-desc { margin: 6px 0 0; font-size: 15px; max-width: 68ch; }
+
+/* Printing this page is the CV. Invert to ink-on-paper and drop the chrome. */
+@media print {
+  :root { --bg: #fff; --surface: #fff; --surface-2: #fff; --text: #111; --heading: #000;
+          --muted: #444; --accent: #000; --accent-2: #000; --border: #bbb; --border-strong: #888; }
+  html { color-scheme: light; }
+  body::before { display: none; }          /* grid overlay */
+  .nav, footer, .skip-link, .prompt, .resume-print-hint, .back { display: none; }
+  .page-head { padding-top: 0; }
+  .wrap { max-width: none; padding: 0; }
+  a { color: #000; text-decoration: none; }
+  /* Print the destination of external links — a paper CV has no hover. */
+  .resume-contact a::after { content: ""; }
+  .job { break-inside: avoid; page-break-inside: avoid; }
+  .resume-h2 { break-after: avoid; page-break-after: avoid; }
+  .chip { border: 1px solid #888; }
+  @page { margin: 14mm; }
+}
+
 /* motion — the cursor blinks forever, which WCAG 2.2.2 requires an opt-out from */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

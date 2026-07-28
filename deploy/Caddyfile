@@ -54,7 +54,7 @@
 	header @feeds Cache-Control "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400"
 
 	# Not content-hashed, so it must not be immutable — it gets replaced in place.
-	@downloads path /cv.pdf /icon.svg /apple-icon.png /manifest.webmanifest
+	@downloads path /icon.svg /apple-icon.png /manifest.webmanifest
 	header @downloads Cache-Control "public, max-age=3600, s-maxage=86400"
 
 	handle_errors {

@@ -32,13 +32,13 @@ components/           Nav, Hero, About, Projects, Experience, Homelab, Contact, 
 content/posts/*.md    blog posts (frontmatter: title, date, description, tags)
 lib/site.ts           site content (projects, experience, skills, homelab)
 lib/posts.ts          build-time markdown loader
-public/cv.pdf         ⚠️ STILL A PLACEHOLDER — 3.2 KB, ReportLab-generated, no real content.
-                      The hero's "Download CV" button points at it. Replace it.
 app/feed.xml/         RSS 2.0   ┐ static route handlers, built from lib/feed.ts
 app/atom.xml/         Atom 1.0  ├ (GET only — that is all output: "export" supports)
 app/feed.json/        JSON Feed ┘
 app/icon.svg          favicon; app/apple-icon.png is the 180×180 iOS home-screen icon
 app/manifest.ts       /manifest.webmanifest
+app/resume/           /resume/ — the CV. Prints to PDF; there is no checked-in cv.pdf
+                      on purpose, so it can never go stale.
 deploy/               Caddyfile + deploy.sh. The stack definition (compose.yaml)
                       is owned by the /opt/stacks GitOps repo on the VPS, not here.
 ```
@@ -63,43 +63,51 @@ It shows up on `/blog` and at `/posts/my-post/` on the next build.
 ## Deploy
 
 The site exports to static files served by a small internal Caddy
-(`/opt/stacks/website`) bound to the tailnet at `100.64.0.2:8090`. The public
-edge `headscale-caddy` terminates TLS and reverse-proxies `hrabovskyi.online`
-to it — the same pattern as the `.internal` services, but public.
+(`/opt/stacks/website`) bound to the tailnet at `100.64.0.2:8090`.
 
-**One-time, on the VPS** — add this to `/opt/stacks/headscale/Caddyfile`, then
-`docker exec headscale-caddy caddy reload --config /etc/caddy/Caddyfile`:
+**The public edge is Traefik, not Caddy.** `/opt/stacks/headscale/Caddyfile` still exists
+and still contains an `hrabovskyi.online` block, but **no `headscale-caddy` container is
+running** — that file is dead config. Real routing lives in
+`/opt/stacks/pangolin/config/traefik/dynamic_config.yml`, which has `watch: true`, so
+edits apply without a restart:
 
+```yaml
+website-router:
+  rule: "Host(`hrabovskyi.online`) || Host(`www.hrabovskyi.online`)"
+  service: website-service      # -> http://100.64.0.2:8090
 ```
-hrabovskyi.online {
-	reverse_proxy 100.64.0.2:8090
-}
-www.hrabovskyi.online {
-	redir https://hrabovskyi.online{uri} permanent
-}
-```
+
+Analytics is routed from the same file: `/s/script.js` and `/api/send` go to `umami:3000`
+over the shared `edge` network, so the tracker is first-party.
 
 **DNS — note that Cloudflare is in front.** Live responses carry `server: cloudflare`
-and a `cf-ray` header, so the browser terminates TLS at Cloudflare, not at
-`headscale-caddy`. That has consequences worth knowing before you debug anything:
+and a `cf-ray` header, so the browser terminates TLS at Cloudflare, not at the edge
+Traefik. That has consequences worth knowing before you debug anything:
 
 - **Response headers can be added, stripped or overridden at the Cloudflare edge.** Set
   each security header in exactly one place — duplicated CSP headers get intersected by
   browsers.
 - **HTML caching** — `deploy/Caddyfile` now sends `s-maxage` for HTML, feeds and the
   icons, so Cloudflare can cache pages instead of returning `cf-cache-status: DYNAMIC`
-  on every request. Only `/_next/static/*` is `immutable`; `cv.pdf` deliberately is not,
-  because it is replaced in place.
+  on every request. Only `/_next/static/*` is `immutable`.
 - **Cloudflare injects a managed `robots.txt` block** ahead of this app's own rules,
   disallowing `GPTBot`, `ClaudeBot`, `Google-Extended`, `CCBot` and others, and setting
   `Content-Signal: ai-train=no`.
-- **WAF rules are evaluated before `robots.txt`.** As of 2026-07-28, `OAI-SearchBot`,
-  `ChatGPT-User` and `PerplexityBot` get **403**, while Googlebot, bingbot, DuckDuckBot
-  and the social unfurlers get 200. Change this under
-  **Security → Bots → AI Crawl Control** if you want to be citable in AI answers.
-- **Email Obfuscation (Scrape Shield) rewrites `mailto:` links** into
-  `/cdn-cgi/l/email-protection` and injects a decode script, so the contact links do not
-  work without JavaScript.
+- **AI Crawl Control** (Security → AI Crawl Control) decides which AI crawlers get through.
+  Retrieval/search bots are allowed — OAI-SearchBot, ChatGPT-User, PerplexityBot,
+  Claude-SearchBot (which is actively crawling and transferring bytes) — while training
+  crawlers are blocked: GPTBot, CCBot, ClaudeBot, Bytespider, Amazonbot,
+  Google-CloudVertexBot, FacebookBot.
+  **Beware of testing this with `curl -A`**: Cloudflare verifies bots by source IP, so a
+  spoofed user-agent from any other address is correctly rejected with a 403. That looks
+  identical to the crawler being blocked and is not. Use the AI Crawl Control request
+  counters instead.
+- **Email Obfuscation is now off.** It used to rewrite `mailto:` links into
+  `/cdn-cgi/l/email-protection` plus a decode script, which broke the contact path
+  entirely without JavaScript and hid the address from crawlers.
+- **A cache rule** ("Respect origin Cache-Control") and **Browser Cache TTL = Respect
+  Existing Headers** make the edge honour the origin instead of returning
+  `cf-cache-status: DYNAMIC` on every HTML request and rewriting `max-age`.
 - `www.hrabovskyi.online` answers **302**. The edge Caddy block above says `permanent`
   (301), so the 302 is **Cloudflare's** redirect, not Caddy's — the request never reaches
   the origin.
@@ -123,8 +131,13 @@ rsync -avz deploy/Caddyfile root@<origin-ip>:/opt/stacks/website/
 ssh root@<origin-ip> 'cd /opt/stacks/website && docker compose up -d'
 ```
 
-The container Caddy is plain HTTP — TLS is terminated at the edge `headscale-caddy`
-(and in front of that, Cloudflare). Nothing here issues a certificate.
+The container Caddy is plain HTTP — TLS is terminated at the edge Traefik (and in front of
+that, Cloudflare). Nothing here issues a certificate.
+
+`docker compose up -d` alone will **not** apply a Caddyfile change: the compose spec is
+unchanged so the container is not recreated, and the file is a single-file bind mount that
+rsync re-creates with a new inode. Hence `rsync --inplace` plus an explicit `caddy reload`
+in both `deploy.sh` and the workflow.
 
 ## Continuous deployment (GitHub Actions)
 

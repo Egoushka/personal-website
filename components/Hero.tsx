@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { site } from "@/lib/site";
 
 export default function Hero() {
@@ -15,7 +16,7 @@ export default function Hero() {
         </p>
         <div className="cta-row">
           <a className="btn primary" href="#projects">View projects</a>
-          <a className="btn" href="/cv.pdf">Download CV</a>
+          <Link className="btn" href="/resume/">Résumé</Link>
           <a className="btn" href={site.github} target="_blank" rel="noopener">GitHub ↗</a>
         </div>
       </div>

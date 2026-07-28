@@ -8,7 +8,7 @@ export default function Experience() {
         <div className="section-label"><span className="hash">#</span> experience</div>
         <h2 id="experience-heading">Where I&apos;ve worked</h2>
         <div className="timeline">
-          {experience.map((job) => (
+          {experience.filter((job) => !job.resumeOnly).map((job) => (
             <div className="job" key={job.company}>
               <div className="when">{job.when}</div>
               <h3>{job.company}</h3>

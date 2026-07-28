@@ -84,15 +84,20 @@ push to `main`, then `docker compose up -d`. Pushing to `main` publishes the sit
 explicit approval before pushing; don't touch `deploy/` or the workflow casually.
 
 The container Caddy ([deploy/Caddyfile](deploy/Caddyfile)) is **plain HTTP on :80**, published to the
-tailnet at `100.64.0.4:8090`. TLS, the public hostname, and the `www` redirect belong to
-the edge `headscale-caddy` on the VPS — do not add `tls`, a hostname block, or a redirect
-to `deploy/Caddyfile`.
+tailnet at `100.64.0.2:8090`. TLS, the public hostname and the `www` redirect belong to the
+edge — do not add `tls`, a hostname block, or a redirect to `deploy/Caddyfile`.
+
+**The edge is Traefik, not Caddy.** `/opt/stacks/headscale/Caddyfile` is dead config; no
+such container runs. Routing lives in `/opt/stacks/pangolin/config/traefik/dynamic_config.yml`
+(`watch: true`, so edits apply live).
+
+**A Caddyfile change needs `rsync --inplace` and an explicit `caddy reload`.** It is a
+single-file bind mount, so a normal rsync gives it a new inode the container never sees,
+and `docker compose up -d` is a no-op when the compose spec has not changed.
 
 **Cloudflare is in front of all of it** (`server: cloudflare` on every live response), which
 the README's DNS section previously did not say. It rewrites `robots.txt`, can strip or add
-response headers, 403s several AI crawlers at the WAF, and obfuscates `mailto:` links. See
+response headers, and gates AI crawlers via AI Crawl Control. See
 the Deploy section of [README.md](README.md) before debugging anything header- or
 crawler-related.
 
-**Known outstanding:** `public/cv.pdf` is a 3.2 KB ReportLab placeholder wired to the hero's
-"Download CV" button.

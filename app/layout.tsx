@@ -63,6 +63,19 @@ export default function RootLayout({
       <body>
         <a className="skip-link" href="#main">Skip to content</a>
         {children}
+        {/*
+          Umami, self-hosted. Served first-party via the edge Traefik router, NOT from
+          umami.lab.hrabovskyi.online — that name resolves to 100.64.0.2 and is reachable
+          only on the tailnet, so visitors would get nothing. Going through /s/script.js
+          also keeps third-party origins at zero, leaves ad-blocker domain lists nothing
+          to match, and lets the CSP stay at script-src 'self'.
+          The website ID is a public identifier, not a secret — it ships in every page.
+        */}
+        <script
+          defer
+          src="/s/script.js"
+          data-website-id="fd5da82a-ef38-46c5-8c7e-46ad293df97f"
+        />
       </body>
     </html>
   );
