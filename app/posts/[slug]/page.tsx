@@ -75,13 +75,50 @@ export default async function PostPage(
               </ol>
             </nav>
           )}
-          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSlug, rehypeHighlight]}>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeSlug, rehypeHighlight]}
+            components={{
+              // The copy button is rendered server-side, inside React's tree. An
+              // earlier version injected it with JS after parse; hydration then
+              // reconciled the <pre> and stripped the button back out again.
+              pre: ({ children, ...props }) => (
+                <pre {...props}>
+                  {children}
+                  <button type="button" className="copy-btn" aria-label="Copy code to clipboard">
+                    copy
+                  </button>
+                </pre>
+              ),
+            }}
+          >
             {post.content}
           </ReactMarkdown>
         </article>
         <p className="article-foot">
           <Link className="back" href="/blog/">← back to blog</Link>
         </p>
+        {/*
+          One delegated listener on document, rather than a listener per button:
+          it survives any DOM reconciliation and costs nothing per code block.
+          Still a plain script and not a client component — this site ships zero
+          'use client', and a React island for one button would put hydration on
+          every post.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.addEventListener("click",function(e){
+  var b=e.target.closest&&e.target.closest(".copy-btn"); if(!b) return;
+  var pre=b.parentElement, code=pre.querySelector("code")||pre;
+  // clipboard is undefined outside a secure context; bail rather than throw
+  if(!navigator.clipboard){ b.textContent="no clipboard"; return; }
+  navigator.clipboard.writeText(code.innerText).then(function(){
+    b.textContent="copied"; b.classList.add("is-copied");
+    setTimeout(function(){b.textContent="copy";b.classList.remove("is-copied")},1600);
+  },function(){ b.textContent="failed"; });
+});`,
+          }}
+        />
       </main>
       <Footer />
     </>
