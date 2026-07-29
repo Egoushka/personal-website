@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import React from "react";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { site, feedTypes, now } from "@/lib/site";
@@ -22,33 +22,42 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: `Now — ${site.name}`, description },
 };
 
+/**
+ * A hundred words that have to read as deliberate rather than unfinished.
+ *
+ * Two moves do it: every sentence gets its own rail label, so the page is five
+ * annotated rows instead of one short paragraph and the rail is fully engaged;
+ * and the sentences set one step above body. A short page at reading size looks
+ * like a stub — the same words at --fs-h3 look like statements.
+ */
 export default function Now() {
   return (
-    <>
+    <main id="main" className="wrap">
       <Nav />
-      <main id="main">
-        <section className="page-head" aria-labelledby="now-heading">
-          <div className="wrap">
-            <div className="prompt"><span className="dollar">$</span> cat now.md</div>
-            <h1 id="now-heading">Now</h1>
-            <p className="section-intro">
-              What has my attention at the moment. A{" "}
-              <a href="https://nownownow.com/about" rel="noopener">/now page</a>.
-            </p>
 
-            <ul className="now-list">
-              {now.items.map((item) => <li key={item}>{item}</li>)}
-            </ul>
+      <div className="rail">
+        <span className="rail--label">Updated</span>
+        <time dateTime={now.updated}>{now.updated}</time>
+      </div>
+      <h1>Now</h1>
 
-            <p className="now-updated">
-              Last updated <time dateTime={now.updated}>{now.updated}</time>. If this is
-              badly out of date, that is itself information — start at the{" "}
-              <Link href="/blog/">blog</Link>.
-            </p>
-          </div>
-        </section>
-      </main>
+      <hr className="bleed" />
+      <div className="row now-list">
+        {now.items.map((item) => (
+          <React.Fragment key={item.label}>
+            <span className="rail rail--label">{item.label}</span>
+            <p className="now-item">{item.text}</p>
+          </React.Fragment>
+        ))}
+      </div>
+
+      <hr className="bleed" />
+      <p className="now-note">
+        A <a href="https://nownownow.com/about" rel="noopener">/now page</a>.
+        What I&apos;d tell you if we ran into each other.
+      </p>
+
       <Footer />
-    </>
+    </main>
   );
 }

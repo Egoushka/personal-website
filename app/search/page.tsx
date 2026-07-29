@@ -25,32 +25,32 @@ export const metadata: Metadata = {
 export default function Search() {
   return (
     <>
-      <Nav current="search" />
-      <main id="main">
-        <section className="page-head" aria-labelledby="search-heading">
-          <div className="wrap">
-            <div className="prompt"><span className="dollar">$</span> grep -r . ./</div>
-            <h1 id="search-heading">Search</h1>
+      <main id="main" className="wrap">
+        <Nav current="search" />
 
-            {/*
-              Pagefind builds its own UI into this container and needs a real DOM
-              node to mount into. It is loaded from a plain script rather than a
-              client component: the whole index is static files, and importing it
-              through React would drag hydration onto the page for no benefit.
-              data-pagefind-ignore keeps this page out of its own index.
-            */}
-            <div id="search" data-pagefind-ignore />
+        <span className="rail rail--label">Search</span>
+        <h1 id="search-heading">Search</h1>
 
-            <noscript>
-              <p className="section-intro">
-                Search needs JavaScript. Everything is also listed on the{" "}
-                <Link href="/blog/">blog index</Link>.
-              </p>
-            </noscript>
-          </div>
-        </section>
+        {/*
+          Pagefind builds its own UI into this container and needs a real DOM
+          node to mount into. It is loaded from a plain script rather than a
+          client component: the whole index is static files, and importing it
+          through React would drag hydration onto the page for no benefit.
+          data-pagefind-ignore keeps this page out of its own index.
+          Its palette comes from the --pagefind-ui-* custom properties mapped in
+          globals.css — mapping its variables beats fighting its stylesheet.
+        */}
+        <div id="search" className="search" data-pagefind-ignore />
+
+        <noscript>
+          <p>
+            Search needs JavaScript. Everything is also listed on the{" "}
+            <Link href="/blog/">blog index</Link>.
+          </p>
+        </noscript>
+
+        <Footer />
       </main>
-      <Footer />
 
       <link href="/pagefind/pagefind-ui.css" rel="stylesheet" />
       <script src="/pagefind/pagefind-ui.js" defer />

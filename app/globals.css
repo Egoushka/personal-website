@@ -1,273 +1,413 @@
-/* hrabovskyi.online — dark terminal-minimal theme */
+/* hrabovskyi.online — "Marginalia"
+   One layout idea: a fixed rail hung left of the measure. Everything the page
+   *knows* — dates, reading time, tags, section numbers, the TOC, code languages,
+   contact details — lives in that rail, and the prose column is never interrupted.
+   Two faces only: serif for prose, mono for metadata. One accent: amber.
+   Contrast ratios in comments are measured, not estimated (WCAG 2.1). */
 
 :root {
-  --bg:        #0a0c10;
-  --surface:   #11151b;
-  --surface-2: #161b22;
-  --border:    #222a34;
-  /* Decorative hairlines can stay near-invisible, but a border that is the ONLY
-     boundary of an interactive control needs 3:1 (WCAG 1.4.11). 3.11:1 on --surface. */
-  --border-strong: #5a6578;
-  --text:      #c9d1d9;
-  --heading:   #e6edf3;
-  --muted:     #7d8590;
-  --accent:    #7ee787;
-  --accent-2:  #79c0ff;
-  --radius:    10px;
-  --maxw:      760px;
-  /* --font-mono / --font-sans come from next/font in app/layout.tsx and are
-     self-hosted at build; the stacks below are the fallbacks. */
-  --mono: var(--font-mono), ui-monospace, "SF Mono", "Menlo", "Consolas", monospace;
-  --sans: var(--font-sans), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* --- typefaces (next/font, self-hosted — see app/layout.tsx) ------------ */
+  --serif: var(--font-serif), Georgia, "Times New Roman", serif;
+  --mono:  var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* --- colour: DARK is the default theme ---------------------------------- */
+  --bg:            #100F0D;
+  --surface:       #171613;   /* code blocks, inset panels                    */
+  --surface-2:     #1E1C18;   /* hover fill, table stripes                    */
+  --border:        #26241F;   /* DECORATIVE ONLY — hairlines between blocks   */
+  --border-strong: #6B6559;   /* 3.13:1 on --surface — every control edge     */
+  --text:          #D8D2C6;   /* 12.73:1 on --bg                              */
+  --heading:       #F5F1E8;   /* 17.00:1 on --bg                              */
+  --muted:         #8E877A;   /*  5.38:1 on --bg — rail metadata              */
+  --accent:        #E0A458;   /*  8.77:1 on --bg — links, rail marks, tags    */
+  --accent-quiet:  #3A2E1C;   /* accent at 18% over --bg, for fills only      */
+  --label:         #5F5A51;   /* group labels — --muted mixed 60% to --bg     */
+
+  /* --- grid ---------------------------------------------------------------- */
+  --rail:    168px;
+  --gutter:   40px;
+  --measure: 660px;   /* ~68ch at --fs-body in Source Serif 4 */
+  --bleed:   calc(var(--rail) + var(--gutter) + var(--measure));
+
+  /* --- type scale: 1.26 ratio on an 18.5px base ---------------------------- */
+  --fs-display: 2.8750rem;  /* 46.0px */
+  --fs-h1:      2.3125rem;  /* 37.0px */
+  --fs-h2:      1.6250rem;  /* 26.0px */
+  --fs-h3:      1.3125rem;  /* 21.0px */
+  --fs-body:    1.1563rem;  /* 18.5px */
+  --fs-small:   0.9688rem;  /* 15.5px */
+  --fs-code:    0.9063rem;  /* 14.5px */
+  --fs-rail:    0.7500rem;  /* 12.0px — must stay below body: never the first fixation */
+
+  --lh-tight: 1.12;
+  --lh-head:  1.25;
+  --lh-body:  1.72;
+  --lh-code:  1.62;
+  --lh-rail:  1.50;
+
+  --ls-display: -0.02em;
+  --ls-h1:      -0.015em;
+  --ls-rail:     0.04em;
+
+  /* --- space: 4px rhythm --------------------------------------------------- */
+  --step: 4px;
+  --s-1:  4px;  --s-2:  8px;  --s-3: 12px; --s-4: 16px;
+  --s-5: 20px;  --s-6: 26px;  --s-7: 34px; --s-8: 44px;
+  --s-9: 54px;  --s-10: 72px;
+
+  --radius: 2px;      /* essentially square; the design is drawn with lines */
+  --hair:   1px;
 }
+
+/* --- colour: LIGHT is a warm paper stock, NOT an inversion ------------------
+   The page is #FAF7F0, not #fff: the amber sits *in* the paper instead of on it,
+   and long-form reading loses the glare. Same hues as dark, lightness flipped.
+   Do not "simplify" this to white.
+
+   There is no theme toggle on this site — the theme follows the OS. The
+   [data-theme] attribute is honoured first so a future toggle needs no
+   restructuring, and the media query below mirrors it for everyone else. */
+[data-theme="light"] {
+  --bg:            #FAF7F0;
+  --surface:       #FFFFFF;
+  --surface-2:     #F3EFE6;
+  --border:        #E7E1D4;
+  --border-strong: #8E877A;   /* 3.56:1 on --surface */
+  --text:          #2A2723;   /* 13.89:1 on --bg     */
+  --heading:       #14120F;   /* 17.47:1 on --bg     */
+  --muted:         #6B6558;   /*  5.41:1 on --bg     */
+  --accent:        #9A5B15;   /*  5.06:1 on --bg     */
+  --accent-quiet:  #F1E4CE;
+  --label:         #8A8478;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:            #FAF7F0;
+    --surface:       #FFFFFF;
+    --surface-2:     #F3EFE6;
+    --border:        #E7E1D4;
+    --border-strong: #8E877A;
+    --text:          #2A2723;
+    --heading:       #14120F;
+    --muted:         #6B6558;
+    --accent:        #9A5B15;
+    --accent-quiet:  #F1E4CE;
+    --label:         #8A8478;
+    color-scheme: light;
+  }
+}
+
+/* ============================================================================
+   THE GRID PRIMITIVE
+   One rule drives every page. Children default to the prose column; they opt
+   into the rail or a bleed with a class.
+   ========================================================================= */
+
+.wrap {
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, var(--measure));
+  /* Row gap separates adjacent .row blocks that aren't divided by an hr.bleed;
+     hairline-separated sections add their own margin on top of it. */
+  gap: var(--s-5) var(--gutter);
+  justify-content: center;
+  padding-inline: var(--s-6);
+}
+
+.wrap > *           { grid-column: 2; }        /* prose column — the default  */
+.wrap > .rail       { grid-column: 1; }        /* metadata                    */
+.wrap > .bleed      { grid-column: 1 / -1; }   /* section rules, wide figures */
+.wrap > .bleed-code { grid-column: 2 / -1;     /* code: prose + gutter        */
+                      margin-inline-start: calc(-1 * var(--gutter)); }
+
+/* A rail child and its prose sibling must share a row. Wrap the pair in `.row`
+   when they must align to the same baseline. */
+.row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, var(--measure));
+  gap: 0 var(--gutter);
+}
+.row > .rail       { grid-column: 1; }
+.row > *           { grid-column: 2; }
+.row > .bleed-code { grid-column: 2 / -1; margin-inline-start: calc(-1 * var(--gutter)); }
+
+/* ============================================================================
+   BASE
+   ========================================================================= */
 
 * { box-sizing: border-box; }
+
 html {
-  scroll-behavior: smooth;
-  /* The nav is sticky and 56px tall — without this, #anchor targets land under it. */
-  scroll-padding-top: 72px;
   color-scheme: dark;
+  scroll-behavior: smooth;
+  /* The header is static now, not sticky, so anchors need only breathing room. */
+  scroll-padding-top: var(--s-6);
 }
-
-/* focus — nothing in this file may set outline:none without replacing it */
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 3px;
-}
-
-.skip-link {
-  position: absolute;
-  left: 8px;
-  top: -100px;
-  z-index: 100;
-  font-family: var(--mono);
-  font-size: 13px;
-  padding: 10px 14px;
-  background: var(--surface);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius);
-  color: var(--accent);
-  transition: top .15s;
-}
-.skip-link:focus { top: 8px; text-decoration: none; }
+[data-theme="light"] { color-scheme: light; }
 
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: var(--sans);
-  font-size: 16px;
-  line-height: 1.65;
+  font: 400 var(--fs-body)/var(--lh-body) var(--serif);
+  font-optical-sizing: auto;   /* Source Serif 4 is variable-optical-size */
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(126,231,135,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(126,231,135,0.025) 1px, transparent 1px);
-  background-size: 32px 32px;
-  pointer-events: none;
-  z-index: 0;
+h1, h2, h3 { color: var(--heading); font-weight: 600; text-wrap: balance; }
+h1 { font-size: var(--fs-h1); line-height: var(--lh-tight); letter-spacing: var(--ls-h1); }
+h2 { font-size: var(--fs-h2); line-height: var(--lh-head); }
+h3 { font-size: var(--fs-h3); line-height: var(--lh-head); }
+p  { text-wrap: pretty; }
+
+a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+a:hover { text-decoration-thickness: 2px; }
+
+/* Inline code stays mono inside serif prose: 0.9em keeps the x-heights level.
+   Source Serif renders `--inplace` and `workflow_dispatch` badly — never let
+   inline code inherit the serif. */
+:not(pre) > code {
+  font: 400 0.9em/1 var(--mono);
+  background: var(--surface);
+  border: var(--hair) solid var(--border);
+  border-radius: var(--radius);
+  padding: 1px 4px;
 }
 
-a { color: var(--accent-2); text-decoration: none; }
-a:hover { text-decoration: underline; }
+/* Nothing in this file may set outline:none without replacing it. */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
-.wrap {
-  position: relative;
-  z-index: 1;
-  max-width: var(--maxw);
-  margin: 0 auto;
-  padding: 0 24px;
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
 }
 
-/* nav */
-.nav {
-  position: sticky; top: 0; z-index: 10;
-  background: rgba(10,12,16,0.8);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border);
+.skip-link {
+  position: absolute;
+  left: var(--s-2);
+  top: -100px;
+  z-index: 100;
+  font: 400 var(--fs-code)/1 var(--mono);
+  padding: 10px 14px;
+  background: var(--surface);
+  border: var(--hair) solid var(--border-strong);
+  color: var(--accent);
+  transition: top .15s;
 }
-.nav .inner {
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  height: 56px; max-width: var(--maxw); margin: 0 auto; padding: 0 24px;
-}
-.nav .brand {
-  font-family: var(--mono); font-weight: 600; color: var(--heading); font-size: 15px;
-  white-space: nowrap;
-}
-.nav .brand .accent { color: var(--accent); }
-.nav .links { display: flex; align-items: center; gap: 18px; }
-/* min-height/min-width keep these at the 24x24 WCAG 2.5.8 floor without changing type size */
-.nav .links a {
-  font-family: var(--mono); font-size: 13px; color: var(--muted);
-  display: inline-flex; align-items: center; justify-content: center;
-  min-height: 24px; min-width: 24px;
-}
-.nav .links a:hover { color: var(--accent); text-decoration: none; }
-/* Current section gets weight, so the bar has a focal point instead of five equals. */
-.nav .links a[aria-current="page"] { color: var(--heading); }
+.skip-link:focus { top: var(--s-2); text-decoration: none; }
 
-.nav-search {
+/* Screen-reader-only text that still ships to assistive tech. */
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* ============================================================================
+   THE RAIL
+   ========================================================================= */
+
+.rail {
+  font: 400 var(--fs-rail)/var(--lh-rail) var(--mono);
+  letter-spacing: var(--ls-rail);
   color: var(--muted);
-  border: 1px solid var(--border-strong); border-radius: 6px;
-  padding: 0 7px; min-height: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
 }
-.nav-search:hover { color: var(--accent); border-color: var(--accent); }
 
-/* hero */
-.hero { padding: 88px 0 56px; }
-.prompt { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-bottom: 18px; }
-.prompt .dollar { color: var(--accent); }
-/* clamp() scales across every viewport, so the site does not need a breakpoint per size */
-.hero h1 { font-size: clamp(30px, 6vw, 40px); line-height: 1.15; margin: 0 0 14px; color: var(--heading); letter-spacing: -0.02em; }
-.hero .tagline { font-family: var(--mono); color: var(--accent); font-size: 15px; margin: 0 0 22px; }
-.hero p.lead { font-size: 17px; max-width: 60ch; color: var(--text); }
-.cursor {
-  display: inline-block; width: 9px; height: 1.05em; background: var(--accent);
-  margin-left: 3px; vertical-align: -2px; animation: blink 1.1s steps(1) infinite;
+/* Align the rail's first baseline to the prose's. Eyeballed against Source
+   Serif 4 + IBM Plex Mono at this scale; re-check if either font changes. */
+.row > .rail        { padding-top: 0.42em; }   /* against h2 */
+.rail--against-body { padding-top: 0.30em; }   /* against p  */
+
+/* Headings that live in the rail are metadata, not content: they must not
+   inherit the prose heading treatment. `text-wrap: balance` in particular
+   splits "SERVER · 6" across two lines to balance them. */
+.rail h1, .rail h2, .rail h3 {
+  text-wrap: initial;
+  font-weight: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  margin: 0;
 }
-@keyframes blink { 50% { opacity: 0; } }
 
-.cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
-.btn {
-  font-family: var(--mono); font-size: 13px; padding: 9px 16px; border-radius: var(--radius);
-  border: 1px solid var(--border-strong); background: var(--surface); color: var(--heading);
-  transition: border-color .15s, color .15s; cursor: pointer;
+.rail a          { color: var(--accent); text-decoration: none; }
+.rail a:hover    { text-decoration: underline; }
+.rail--accent    { color: var(--accent); }
+.rail--section   { font-weight: 500; color: var(--accent); }
+
+/* Group label: sits above a hairline and introduces the stack beneath it. */
+.rail--label {
+  font-weight: 500;
+  font-size: 10.5px;
+  line-height: 1.4;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--label);
+}
+.rail--group {
+  border-top: var(--hair) solid var(--border);
+  padding-top: 14px;
+  margin-top: var(--s-3);
+}
+
+/* Tags are plain coloured mono text, one per line. No chips — chips were the
+   old design's tell. */
+.rail--tags { gap: 2px; }
+.rail--tags a { display: block; }
+
+/* ============================================================================
+   SITE HEADER / FOOTER
+   ========================================================================= */
+
+.site-header {
+  padding: var(--s-6) 0 var(--s-4);
+  border-bottom: var(--hair) solid var(--border);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-5);
+  flex-wrap: wrap;
+}
+.site-header .brand {
+  font: 500 13px/1 var(--mono);
+  letter-spacing: .02em;
+  color: var(--accent);
+  text-decoration: none;
+}
+.site-header-end { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.site-header nav { display: flex; gap: 22px; flex-wrap: wrap; }
+.site-header nav a {
+  font: 400 13px/1 var(--mono);
+  color: var(--muted);
+  text-decoration: none;
+  /* WCAG 2.5.8 — the densest control cluster on the site. */
   display: inline-flex; align-items: center; min-height: 24px;
 }
-.btn:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
-.btn.primary { border-color: var(--accent); color: var(--accent); }
-.btn.primary:hover { background: rgba(126,231,135,0.08); }
+.site-header nav a:hover { color: var(--heading); }
+/* Current section is --heading, not --accent: accent means "link". */
+.site-header nav a[aria-current="page"] { color: var(--heading); }
 
-/* sections */
-section { padding: 44px 0; border-top: 1px solid var(--border); }
-.section-label { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-bottom: 22px; }
-.section-label .hash { color: var(--accent); }
-h2 { font-size: 24px; color: var(--heading); margin: 0 0 18px; letter-spacing: -0.01em; }
-h3 { font-size: 18px; color: var(--heading); margin: 0 0 6px; }
-
-/* about */
-.about p { max-width: 64ch; }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
-.chip {
-  font-family: var(--mono); font-size: 12px; color: var(--text); padding: 4px 10px;
-  border: 1px solid var(--border); border-radius: 6px; background: var(--surface);
+.site-footer {
+  margin-top: var(--s-10);
+  padding: var(--s-6) 0;
+  border-top: var(--hair) solid var(--border);
+  font: 400 var(--fs-rail)/var(--lh-rail) var(--mono);
+  letter-spacing: var(--ls-rail);
+  color: var(--muted);
 }
+.site-footer a { color: var(--muted); text-decoration: none; }
+.site-footer a:hover { color: var(--accent); }
+.site-footer .sep { color: var(--border-strong); margin: 0 var(--s-2); }
 
-/* projects */
-.cards { display: grid; gap: 14px; }
-.card {
-  display: block; background: var(--surface); border: 1px solid var(--border-strong);
-  border-radius: var(--radius); padding: 18px 20px;
-  transition: border-color .15s, transform .15s;
-}
-.card:hover { border-color: var(--accent); text-decoration: none; transform: translateY(-2px); }
-.card .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.card h3 { color: var(--heading); }
-.card:hover h3 { color: var(--accent); }
-.card .meta { font-family: var(--mono); font-size: 12px; color: var(--muted); }
-.card p { margin: 6px 0 0; color: var(--text); font-size: 15px; }
-.card .tags { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
-.card .tags span {
-  font-family: var(--mono); font-size: 11px; color: var(--muted);
-  border: 1px solid var(--border); border-radius: 5px; padding: 2px 7px;
+/* ============================================================================
+   RULES
+   ========================================================================= */
+
+hr.bleed {
+  border: 0;
+  border-top: var(--hair) solid var(--border);
+  margin: var(--s-7) 0 var(--s-4);
+  width: 100%;
 }
 
-/* experience */
-.timeline { display: grid; gap: 22px; }
-.job { position: relative; padding-left: 22px; }
-.job::before {
-  content: ""; position: absolute; left: 0; top: 7px; width: 9px; height: 9px;
-  border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(126,231,135,0.12);
-}
-.job .when { font-family: var(--mono); font-size: 12px; color: var(--muted); }
-.job h3 { margin-top: 2px; }
-.job .role { color: var(--accent-2); font-size: 14px; }
-.job ul { margin: 8px 0 0; padding-left: 18px; }
-.job li { margin-bottom: 4px; font-size: 15px; }
+/* ============================================================================
+   PROSE
+   ========================================================================= */
 
-/* homelab */
-.stack-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-.stack-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
-.stack-item .name { font-family: var(--mono); color: var(--heading); font-size: 14px; }
-.stack-item .name .accent { color: var(--accent); }
-.stack-item .desc { font-size: 13px; color: var(--muted); margin-top: 3px; }
+/* The article is a subgrid of .wrap, not a block inside the measure column.
+   Without this, a `.row` nested in the article gets its own 868px grid inside a
+   660px column: the rail has nothing to align to and code blocks overflow. */
+.prose {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  row-gap: 22px;
+  align-content: start;
+}
+.prose > *           { grid-column: 2; }
+.prose > .rail       { grid-column: 1; }
+.prose > .bleed      { grid-column: 1 / -1; }
+.prose > .bleed-code { grid-column: 2 / -1; margin-inline-start: calc(-1 * var(--gutter)); }
+/* A .row inside the article must span both columns and inherit the parent's
+   tracks — otherwise `.prose > *` pins it to column 2 and its own 868px grid
+   overflows the 660px measure. */
+.prose > .row        { grid-column: 1 / -1; grid-template-columns: subgrid; }
 
-/* page heads (blog index and other standalone pages) */
-.page-head { border-top: none; padding-top: 80px; }
-.page-head h1 { font-size: 30px; color: var(--heading); margin: 0 0 12px; letter-spacing: -0.01em; }
-.section-intro { color: var(--muted); max-width: 58ch; margin-bottom: 20px; }
-.section-outro { margin-top: 18px; }
+/* The post's header rail spans the title and the standfirst, so the date sits
+   level with the h1 and the TOC runs alongside the opening prose. */
+.prose > .rail--header { grid-row: 1 / span 2; }
 
-/* blog list */
-.post-list { display: grid; gap: 6px; margin-top: 18px; }
-.post-row {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
-  padding: 14px 0; border-bottom: 1px solid var(--border);
+.prose p            { margin: 0; }
+.prose h2           { margin: 0; }
+.prose h3           { margin: var(--s-6) 0 0; }
+.prose ul, .prose ol { margin: 0; padding-left: 1.1em; }
+.prose li + li      { margin-top: var(--s-1); }
+.prose ul li::marker { content: "– "; color: var(--muted); }
+.prose strong       { font-weight: 600; color: var(--heading); }
+.prose em           { font-style: italic; }
+.prose blockquote {
+  margin: 0;
+  border-left: 2px solid var(--border-strong);
+  padding-left: 18px;
+  color: var(--muted);
 }
-.post-row:hover h2 { color: var(--accent); }
-.post-row .date { font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
-.post-row h2 { font-size: 16px; margin: 0; }
-.post-row p { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
+.prose img { max-width: 100%; height: auto; }
 
-/* 404 */
-.notfound { min-height: 60vh; display: flex; flex-direction: column; justify-content: center; }
-.notfound h1 { font-size: 42px; color: var(--heading); margin: 8px 0; }
-.notfound-msg { font-family: var(--mono); color: var(--accent); }
+/* Section numbers are a CSS counter, so the markdown pipeline never has to know
+   about them. */
+/* The counter increments on the rail mark itself, not on the h2. The rail span
+   precedes its h2 in DOM order, so incrementing on the heading renders § 00. */
+main { counter-reset: sect; }
+.rail--section { counter-increment: sect; }
+.rail--section::before { content: "§ " counter(sect, decimal-leading-zero); }
 
-/* article */
-/* Long-form measure: 760px at 16px ran ~89 characters per line. Prose is capped at
-   68ch; code blocks and headings keep the full column width. */
-.article { padding: 40px 0 0; }
-.article p, .article li, .article blockquote { max-width: 68ch; }
-.article .back {
-  font-family: var(--mono); font-size: 13px;
-  display: inline-flex; align-items: center; min-height: 24px;
+/* Heading anchors — rehype-slug puts the id on, this makes it visible on hover. */
+.prose h2 { position: relative; }
+.prose h2:hover::after {
+  content: "#";
+  color: var(--label);
+  font-weight: 400;
+  position: absolute;
+  margin-left: 10px;
 }
-.article-foot { margin-top: 36px; }
-.article h1 { font-size: clamp(26px, 5vw, 34px); line-height: 1.2; color: var(--heading); margin: 20px 0 8px; letter-spacing: -0.02em; }
-.article .post-meta { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-bottom: 30px; }
-.article p, .article li { font-size: 17px; line-height: 1.7; }
-.article h2 { font-size: 21px; margin-top: 34px; }
-.article pre {
-  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 16px; overflow-x: auto; font-family: var(--mono); font-size: 13.5px; line-height: 1.55;
-}
-.article code { font-family: var(--mono); font-size: 0.88em; background: var(--surface-2); border: 1px solid var(--border); padding: 1px 5px; border-radius: 5px; }
-.article pre code { background: none; border: none; padding: 0; }
-.article blockquote { margin: 22px 0; padding: 2px 18px; border-left: 3px solid var(--accent); color: var(--muted); }
+/* Confirmation of where you landed, in the prose column, for free — this is the
+   zero-JS answer to a current-item highlight. */
+.prose h2:target { color: var(--accent); }
 
-/* footer — carries the site map the nav no longer does */
-footer { border-top: 1px solid var(--border); padding: 34px 0 50px; margin-top: 40px; }
-footer .inner { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
-.footer-cols {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px;
-  margin-bottom: 26px;
+/* ============================================================================
+   CODE BLOCKS — the signature component
+   ========================================================================= */
+
+pre {
+  background: var(--surface);
+  border: var(--hair) solid var(--border);
+  /* The 2px accent left edge is the one place the accent touches a large
+     surface. It is what makes a code block read as hung off the rail. */
+  border-left: 2px solid var(--accent);
+  border-radius: var(--radius);
+  padding: var(--s-4) 18px;
+  font: 400 var(--fs-code)/var(--lh-code) var(--mono);
+  overflow-x: auto;
+  margin: 0;
 }
-.footer-cols h2 {
-  font-family: var(--mono); font-size: 11px; color: var(--muted);
-  text-transform: uppercase; letter-spacing: .07em; margin: 0 0 10px;
-}
-.footer-cols ul { list-style: none; padding: 0; margin: 0; }
-.footer-cols li { margin-bottom: 2px; }
-.footer-cols a {
-  font-size: 14px; color: var(--text);
-  display: inline-flex; align-items: center; min-height: 26px;
-}
-.footer-cols a:hover { color: var(--accent); text-decoration: none; }
-footer .note {
-  font-family: var(--mono); font-size: 12px; color: var(--muted);
-  border-top: 1px solid var(--border); padding-top: 18px;
-}
+pre code { background: none; border: none; padding: 0; font: inherit; }
 
 /* Shiki dual themes. Shiki inlines both palettes as CSS variables per token;
-   these two rules pick one. No client JS, no flash, no second stylesheet. */
+   these rules pick one. No client JS, no flash, no second stylesheet. */
 .shiki, .shiki span { color: var(--s-dark); background-color: transparent; }
 :root[data-theme="light"] .shiki,
 :root[data-theme="light"] .shiki span { color: var(--s-light); }
@@ -276,217 +416,314 @@ footer .note {
   :root:not([data-theme="dark"]) .shiki span { color: var(--s-light); }
 }
 
-/* table of contents */
-.toc {
-  border: 1px solid var(--border-strong); border-radius: var(--radius);
-  background: var(--surface); padding: 16px 20px; margin: 0 0 34px;
-}
-.toc h2 {
-  font-family: var(--mono); font-size: 12px; color: var(--muted);
-  text-transform: uppercase; letter-spacing: .06em; margin: 0 0 10px;
-}
-.toc ol { margin: 0; padding-left: 20px; }
-.toc li { font-size: 15px; margin-bottom: 4px; }
-.toc a { display: inline-flex; align-items: center; min-height: 24px; }
-
-/* heading anchors — rehype-slug puts the id on, this makes it linkable */
-.article h2 { position: relative; }
-.article h2 .anchor,
-.article h2 > a.anchor { text-decoration: none; }
-.article h2:hover::after {
-  content: "#"; color: var(--muted); font-weight: 400;
-  position: absolute; margin-left: 10px;
-}
-
-/* resume */
-.resume-role { font-family: var(--mono); color: var(--accent); margin: 0 0 14px; }
-.resume-contact {
-  list-style: none; padding: 0; margin: 0 0 18px;
-  display: flex; flex-wrap: wrap; gap: 6px 18px;
-  font-family: var(--mono); font-size: 13px;
-}
-/* WCAG 2.5.8 — these are the densest links on the site */
-.resume-contact a,
-.job h3 a {
-  display: inline-flex; align-items: center; min-height: 24px; min-width: 24px;
-}
-.resume-print-hint {
-  color: var(--muted); font-size: 14px; max-width: 62ch;
-  border-left: 2px solid var(--border-strong); padding-left: 12px; margin-bottom: 30px;
-}
-.resume-print-hint kbd {
-  font-family: var(--mono); font-size: 12px; background: var(--surface-2);
-  border: 1px solid var(--border-strong); border-radius: 4px; padding: 1px 5px;
-}
-.resume-h2 { font-size: 19px; margin: 38px 0 16px; }
-.job-loc { color: var(--muted); }
-.resume-project-desc { margin: 6px 0 0; font-size: 15px; max-width: 68ch; }
-
-/* Printing this page is the CV. Invert to ink-on-paper and drop the chrome. */
-@media print {
-  :root { --bg: #fff; --surface: #fff; --surface-2: #fff; --text: #111; --heading: #000;
-          --muted: #444; --accent: #000; --accent-2: #000; --border: #bbb; --border-strong: #888; }
-  html { color-scheme: light; }
-  body::before { display: none; }          /* grid overlay */
-  .nav, footer, .skip-link, .prompt, .resume-print-hint, .back { display: none; }
-  .page-head { padding-top: 0; }
-  .wrap { max-width: none; padding: 0; }
-  a { color: #000; text-decoration: none; }
-  /* Print the destination of external links — a paper CV has no hover. */
-  .resume-contact a::after { content: ""; }
-  .job { break-inside: avoid; page-break-inside: avoid; }
-  .resume-h2 { break-after: avoid; page-break-after: avoid; }
-  .chip { border: 1px solid #888; }
-  @page { margin: 14mm; }
-}
-
-/* Below ~430px the full wordmark and five nav items genuinely do not fit. The
-   brand reduces to the prompt glyph rather than the nav dropping destinations —
-   hiding navigation is what the old header did, and it made pages unreachable. */
-@media (max-width: 430px) {
-  .nav .brand-name { display: none; }
-  .nav .links { gap: 11px; }
-  .nav .links a { font-size: 12px; }
-}
-
-/* motion — the cursor blinks forever, which WCAG 2.2.2 requires an opt-out from */
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  .cursor { animation: none; }
-  .card:hover { transform: none; }
-  *, *::before, *::after {
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
-  }
-}
-
-/* responsive */
-@media (max-width: 560px) {
-  /* .hero h1 / .article h1 scale via clamp() — no override needed here */
-  .stack-grid { grid-template-columns: 1fr; }
-  /* Four items plus search still fit; the brand gives up its TLD to make room. */
-  .nav .links { gap: 13px; }
-  .nav .brand-tld { display: none; }
-  .footer-cols { grid-template-columns: repeat(2, 1fr); gap: 18px; }
-  .post-row { flex-direction: column; gap: 2px; }
-}
-
-/* uses / now */
-.uses-group { margin-bottom: 30px; }
-.uses-group h2 {
-  font-family: var(--mono); font-size: 13px; color: var(--muted);
-  text-transform: uppercase; letter-spacing: .06em; margin: 0 0 12px;
-}
-.now-list { max-width: 68ch; padding-left: 20px; }
-.now-list li { margin-bottom: 10px; }
-.now-updated { color: var(--muted); font-size: 14px; margin-top: 26px; }
-
-/* copy-to-clipboard buttons, injected by the inline script on post pages */
-.article pre { position: relative; }
+/* The copy button lives in the rail, under the language label — not floating
+   over the code. It is the site's only bespoke client JS; kept, not extended. */
 .copy-btn {
-  position: absolute; top: 8px; right: 8px;
-  font-family: var(--mono); font-size: 11px; line-height: 1;
-  min-height: 24px; min-width: 52px;              /* WCAG 2.5.8 */
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: 0 8px; cursor: pointer;
-  color: var(--muted); background: var(--surface);
-  border: 1px solid var(--border-strong); border-radius: 6px;
-  opacity: 0; transition: opacity .15s, color .15s, border-color .15s;
+  font: 400 11.5px/1 var(--mono);
+  letter-spacing: var(--ls-rail);
+  color: var(--muted);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  /* WCAG 2.5.8 */
+  min-height: 24px; min-width: 24px;
+  display: inline-flex; align-items: center;
 }
-/* Keyboard users never hover, so focus must reveal it too. */
-.article pre:hover .copy-btn,
-.copy-btn:focus-visible { opacity: 1; }
-.copy-btn:hover { color: var(--accent); border-color: var(--accent); }
-.copy-btn.is-copied { color: var(--accent); border-color: var(--accent); opacity: 1; }
-@media (hover: none) { .copy-btn { opacity: 1; } }   /* touch: no hover to reveal it */
-@media print { .copy-btn { display: none; } }
+.copy-btn:hover     { color: var(--accent); }
+.copy-btn.is-copied { color: var(--accent); }
 
-/* tag chips (blog index) */
-.tag-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 24px; }
-.tag-chip {
-  font-family: var(--mono); font-size: 12px; color: var(--text);
-  padding: 5px 11px; border: 1px solid var(--border-strong); border-radius: 6px;
+/* ============================================================================
+   TABLE OF CONTENTS — static links in the rail, no scroll-spy
+   ========================================================================= */
+
+.toc { display: flex; flex-direction: column; gap: 9px; margin: 0; padding: 0; list-style: none; }
+.toc a {
+  font: 400 var(--fs-rail)/1.45 var(--mono);
+  color: var(--muted);
+  text-decoration: none;
+  display: block;
+}
+.toc a:hover { color: var(--text); }
+
+/* Below the collapse the TOC is the one place the rail becomes interactive —
+   a <details>, which needs no JS. */
+.toc-details { display: contents; }
+.toc-details > summary { display: none; }
+
+/* ============================================================================
+   POST LIST (blog index, home)
+   ========================================================================= */
+
+.post-item h2, .post-item h3 {
+  font: 600 var(--fs-h3)/1.35 var(--serif);
+  color: var(--heading);
+  margin: 0;
+}
+.post-item a { color: inherit; text-decoration: none; }
+.post-item a:hover { color: var(--accent); }
+.post-item p {
+  font: 400 var(--fs-small)/1.6 var(--serif);
+  color: var(--muted);
+  margin: var(--s-1) 0 0;
+}
+
+/* The lead item on the home page — the only element besides the name that is
+   larger than body. */
+.lead-post h2 {
+  font: 600 30px/1.18 var(--serif);
+  letter-spacing: -0.012em;
+  margin: 0;
+}
+.lead-post p { font-size: var(--fs-body); color: var(--text); margin-top: var(--s-3); }
+.lead-post .more {
+  display: inline-block;
+  margin-top: var(--s-3);
+  font: 400 var(--fs-rail)/1 var(--mono);
+  letter-spacing: var(--ls-rail);
+  color: var(--accent);
+  text-decoration: none;
+}
+.lead-post .more:hover { text-decoration: underline; }
+
+/* ============================================================================
+   HOME — hero and work index
+   ========================================================================= */
+
+.hero { padding-top: 52px; }
+.hero h1 {
+  font-size: var(--fs-display);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-display);
+  margin: 0;
+}
+.hero p { max-width: 56ch; margin: var(--s-5) 0 0; }
+/* Optically level with the display cap-height. */
+.hero-rail { padding-top: 12px; }
+.hero-rail .open { color: var(--accent); margin-top: var(--s-2); }
+
+.work-index {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 var(--s-6);
+  font-size: var(--fs-small);
+  line-height: 1.9;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.work-index a { color: var(--text); text-decoration: none; }
+.work-index a:hover { color: var(--accent); }
+.work-index .qual {
+  font: 400 11.5px/1 var(--mono);
+  letter-spacing: var(--ls-rail);
+  color: var(--muted);
+  margin-left: var(--s-2);
+}
+
+/* ============================================================================
+   PROJECTS / EXPERIENCE / HOMELAB / RESUME (screen)
+   ========================================================================= */
+
+.project-name { font-size: var(--fs-h3); margin: 0; }
+.project-name a { color: var(--heading); text-decoration: none; }
+.project-name a:hover { color: var(--accent); }
+
+.masthead { border-bottom: 1.5px solid var(--heading); padding-bottom: var(--s-4); }
+.masthead h1 { font-size: var(--fs-display); letter-spacing: var(--ls-display); margin: 0; }
+.masthead .role-title { margin: var(--s-2) 0 0; color: var(--muted); }
+.masthead-rail { padding-top: 14px; }
+.print-hint { margin: var(--s-5) 0 0; width: max-content; }
+
+/* Dates sit right-aligned on the role line, so the right-hand column of a
+   printed CV is a straight edge rather than a ragged one. */
+.job-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-4); }
+.job-name { font: 600 var(--fs-h3)/1.3 var(--serif); color: var(--heading); margin: 0; }
+.job-name a { color: inherit; text-decoration: none; }
+.job-name a:hover { color: var(--accent); }
+.job-meta { font: 400 var(--fs-small)/1.4 var(--serif); color: var(--muted); margin: var(--s-1) 0 0; }
+.job-dates {
+  font: 400 var(--fs-rail)/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.job ul { margin: var(--s-2) 0 0; padding-left: 1.1em; font-size: var(--fs-small); }
+.job li::marker { content: "– "; color: var(--muted); }
+.job + .job { margin-top: var(--s-6); }
+
+.stack-list { margin: 0; padding: 0; list-style: none; }
+.stack-list li + li { margin-top: var(--s-3); }
+.stack-list .name { color: var(--heading); }
+.stack-list .desc { color: var(--muted); font-size: var(--fs-small); }
+
+.skills-run { font-size: var(--fs-small); color: var(--text); margin: 0; }
+
+/* ============================================================================
+   CONTROLS — anything the user can operate gets --border-strong. Anything
+   decorative gets --border. That distinction is the accessibility contract in
+   this system; never mix them up.
+   ========================================================================= */
+
+.control {
+  border: var(--hair) solid var(--border-strong);   /* 3.13:1 dark, 3.56:1 light */
+  background: transparent;
+  color: var(--text);
+  font: 400 var(--fs-code)/1 var(--mono);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  display: inline-flex; align-items: center; min-height: 24px;
+}
+.control:hover { background: var(--surface-2); }
+.control kbd { font: inherit; }
+
+/* ============================================================================
+   SEARCH — a modal over Pagefind's JS API, reachable from every page
+   ========================================================================= */
+
+.search-trigger {
+  display: inline-flex; align-items: center; gap: 7px;
+  min-height: 24px; padding: 3px 8px;
+  background: transparent;
+  border: var(--hair) solid var(--border-strong);   /* a control edge */
+  border-radius: var(--radius);
+  color: var(--muted);
+  cursor: pointer;
+  font: 400 11px/1 var(--mono);
+  letter-spacing: var(--ls-rail);
+}
+.search-trigger:hover { color: var(--heading); border-color: var(--accent); }
+.search-trigger svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.search-trigger-key { color: var(--label); }
+
+.search-dialog {
+  margin: 0 auto;
+  /* Sits high rather than centred: results grow downward and the eye should not
+     have to track back up as they arrive. */
+  margin-top: 12vh;
+  padding: 0;
+  width: min(640px, calc(100vw - 2 * var(--s-5)));
+  max-height: 70vh;
   background: var(--surface);
-  display: inline-flex; align-items: center; gap: 7px; min-height: 24px;
+  color: var(--text);
+  border: var(--hair) solid var(--border-strong);
+  border-radius: var(--radius);
 }
-.tag-chip:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
-.tag-count { color: var(--muted); font-size: 11px; }
+.search-dialog::backdrop { background: rgb(0 0 0 / 0.55); }
 
-/* related posts */
-.related { margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--border); }
-.related h2 {
-  font-family: var(--mono); font-size: 12px; color: var(--muted);
-  text-transform: uppercase; letter-spacing: .06em; margin: 0 0 12px;
+.search-panel { display: flex; flex-direction: column; max-height: 70vh; }
+
+.search-field {
+  display: flex; align-items: center; gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+  border-bottom: var(--hair) solid var(--border);
 }
-.related ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
-.related li { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }
-.related li a { display: inline-flex; align-items: center; min-height: 24px; }
-.related-meta { font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
-
-/* prev / next */
-.post-nav {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
-  margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--border);
+.search-field svg { width: 15px; height: 15px; flex: none; fill: none; stroke: var(--muted); stroke-width: 1.6; }
+.search-field input {
+  flex: 1; min-width: 0;
+  background: none; border: 0; outline: none;
+  color: var(--heading);
+  font: 400 var(--fs-body)/1.4 var(--serif);
 }
-.post-nav a {
-  display: flex; flex-direction: column; gap: 4px; min-height: 24px;
-  padding: 14px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius);
-  background: var(--surface);
-}
-.post-nav a:hover { border-color: var(--accent); text-decoration: none; }
-.post-nav-next { text-align: right; }
-.post-nav-dir { font-family: var(--mono); font-size: 11px; color: var(--muted); }
-.post-nav-title { font-size: 14px; color: var(--heading); }
-.post-nav a:hover .post-nav-title { color: var(--accent); }
+.search-field input::placeholder { color: var(--label); }
+/* The native clear affordance is a different design language; the field is
+   cleared with Esc or by selecting all. */
+.search-field input::-webkit-search-cancel-button { display: none; }
 
-/* about */
-.about-lead { font-size: 17px; max-width: 66ch; }
-.page-head h2 { font-size: 19px; margin: 34px 0 12px; }
-.about-links { list-style: none; padding: 0; font-family: var(--mono); font-size: 14px; }
-.about-links li { margin-bottom: 6px; }
-.about-links a { display: inline-flex; align-items: center; min-height: 24px; }
+.search-results { overflow-y: auto; padding: var(--s-3) 0; }
 
-/* ---------------------------------------------------------------------------
-   Light theme.
-   The dark palette above stays the default. This only remaps the variables, so
-   every component follows automatically and nothing needs a light-mode variant.
-   `:root[data-theme]` wins over the media query, leaving room for a future
-   manual toggle without restructuring anything.
-   --------------------------------------------------------------------------- */
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    --bg:        #fbfcfd;
-    --surface:   #ffffff;
-    --surface-2: #f3f5f7;
-    --border:    #dfe3e8;
-    --border-strong: #848e9c;   /* 3.3:1 on white, 3.0:1 on --surface-2 — 1.4.11 */
-    --text:      #2b3440;
-    --heading:   #10151c;
-    --muted:     #5a6472;       /* 4.9:1 on --surface */
-    --accent:    #1a7f37;       /* 4.6:1 on --surface — the dark green fails on white */
-    --accent-2:  #0a58ca;
-    color-scheme: light;
-  }
-  /* The grid overlay was tuned for a dark ground; it reads as dirt on white. */
-  :root:not([data-theme="dark"]) body::before {
-    background-image:
-      linear-gradient(rgba(26,127,55,0.045) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(26,127,55,0.045) 1px, transparent 1px);
-  }
-  :root:not([data-theme="dark"]) .nav { background: rgba(251,252,253,0.85); }
+.search-note {
+  margin: 0; padding: var(--s-3) var(--s-5);
+  font: 400 var(--fs-rail)/var(--lh-rail) var(--mono);
+  letter-spacing: var(--ls-rail);
+  color: var(--muted);
 }
 
-/* Tag links in the post meta row are a control cluster, not prose, so 2.5.8 applies. */
-.post-meta a { display: inline-flex; align-items: center; min-height: 24px; }
-.post-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0 2px; }
+kbd {
+  font: 400 10.5px/1 var(--mono);
+  color: var(--label);
+  border: var(--hair) solid var(--border);
+  border-radius: var(--radius);
+  padding: 3px 5px;
+}
 
-/* architecture diagram — inline SVG, themes with the rest of the site */
-.diagram { margin: 30px 0; }
+.search-hit {
+  display: block;
+  padding: var(--s-3) var(--s-5);
+  text-decoration: none;
+  color: inherit;
+  border-left: 2px solid transparent;
+}
+.search-hit.is-active { background: var(--surface-2); border-left-color: var(--accent); }
+/* The rail's voice without the rail's layout: a hit is too narrow for a real
+   margin column, so the URL sits above the title in the same mono register. */
+.search-hit-url {
+  display: block;
+  font: 400 var(--fs-rail)/var(--lh-rail) var(--mono);
+  letter-spacing: var(--ls-rail);
+  color: var(--label);
+  margin-bottom: 2px;
+  overflow-wrap: anywhere;
+}
+.search-hit-title {
+  display: block;
+  font: 600 var(--fs-small)/1.4 var(--serif);
+  color: var(--heading);
+}
+.search-hit-excerpt {
+  display: block;
+  font: 400 var(--fs-small)/1.55 var(--serif);
+  color: var(--muted);
+  /* Pagefind excerpts run long; two lines is enough to judge relevance. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.search-hit-excerpt mark { background: var(--accent-quiet); color: var(--heading); }
+
+@media (max-width: 560px) {
+  .search-trigger-key { display: none; }
+  .search-dialog { margin-top: var(--s-5); }
+}
+
+/* ============================================================================
+   /search/ — the no-JS fallback route, still using Pagefind's own UI
+   ========================================================================= */
+
+:root {
+  --pagefind-ui-primary: var(--heading);
+  --pagefind-ui-text: var(--text);
+  --pagefind-ui-background: var(--bg);
+  --pagefind-ui-border: var(--border-strong);
+  --pagefind-ui-tag: var(--surface);
+  --pagefind-ui-border-width: 1px;
+  --pagefind-ui-border-radius: var(--radius);
+  --pagefind-ui-font: var(--serif);
+}
+.pagefind-ui__result-title { font: 600 var(--fs-h3)/1.35 var(--serif); }
+.pagefind-ui__result-excerpt { font-size: var(--fs-small); }
+.pagefind-ui__result-tags,
+.pagefind-ui__result-link + p { font: 400 var(--fs-rail)/var(--lh-rail) var(--mono); }
+
+/* ============================================================================
+   404
+   ========================================================================= */
+
+.notfound { padding-top: var(--s-10); }
+.notfound h1 { font-size: var(--fs-display); letter-spacing: var(--ls-display); }
+
+/* ============================================================================
+   ARCHITECTURE DIAGRAM — inline SVG, themes with the rest of the site
+   ========================================================================= */
+
 .dg { width: 100%; height: auto; display: block; }
 .dg-box { fill: var(--surface); stroke: var(--border-strong); stroke-width: 1; }
 .dg-label {
-  fill: var(--heading); font-family: var(--mono); font-size: 14px;
+  fill: var(--heading); font-family: var(--mono); font-size: 12px;
+  letter-spacing: var(--ls-rail);
   text-anchor: middle; dominant-baseline: middle;
 }
 .dg-sub {
@@ -495,15 +732,371 @@ footer .note {
 }
 .dg-edge { fill: var(--muted); font-family: var(--mono); font-size: 11px; }
 .dg-line path { stroke: var(--border-strong); stroke-width: 1.5; fill: none; }
+/* The traffic path is the one accented stroke. */
+.dg-line.dg-traffic path { stroke: var(--accent); }
 .dg-arrowhead { fill: var(--border-strong); }
-.diagram figcaption {
-  color: var(--muted); font-size: 14px; max-width: 62ch; margin-top: 10px;
+.dg-arrowhead--accent { fill: var(--accent); }
+/* Trust boundaries — dashed, decorative weight, never competing with the path. */
+.dg-zone line { stroke: var(--border); stroke-width: 1; stroke-dasharray: 3 4; }
+.dg-zone-label {
+  fill: var(--label); font-family: var(--mono); font-size: 10.5px;
+  letter-spacing: .14em; text-transform: uppercase;
+}
+.dg-box { rx: 2; }                      /* the design is drawn with lines */
+figure { margin: 0; }
+figure figcaption {
+  margin-top: var(--s-3);
+  font: 400 var(--fs-rail)/var(--lh-rail) var(--mono);
+  letter-spacing: var(--ls-rail);
+  color: var(--muted);
+  max-width: var(--measure);
 }
 
-/* portrait on /about/ — floated so the lead paragraph wraps beside it */
+/* Portrait on /about/, if one is ever added. */
 .portrait {
-  float: right; margin: 0 0 16px 22px;
-  width: 180px; height: auto; border-radius: var(--radius);
-  border: 1px solid var(--border-strong);
+  float: right; margin: 0 0 var(--s-4) var(--s-6);
+  width: 180px; height: auto;
+  border: var(--hair) solid var(--border-strong);
 }
-@media (max-width: 560px) { .portrait { width: 140px; margin-left: 16px; } }
+
+/* ============================================================================
+   RESPONSIVE COLLAPSE — 900px
+   The rail does not become a sidebar, a drawer, or a sticky bar. It becomes an
+   inline label strip above the block it annotates: same DOM order, same content,
+   no duplication.
+   ========================================================================= */
+
+@media (max-width: 900px) {
+  .wrap, .row { grid-template-columns: minmax(0, 1fr); }
+  .wrap > *, .wrap > .rail, .wrap > .bleed, .wrap > .bleed-code,
+  .row > *, .row > .rail, .row > .bleed-code { grid-column: 1; }
+  .wrap > .bleed-code, .row > .bleed-code { margin-inline-start: 0; }
+
+  .rail {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0 var(--s-3);
+    margin-bottom: var(--s-2);
+    padding-top: 0 !important;
+  }
+  .rail > * { display: inline; }
+  .rail > * + *::before {
+    content: "·";
+    color: var(--border-strong);
+    margin-inline-end: var(--s-3);
+  }
+  /* Tags run inline with the rest of the strip instead of stacking. */
+  .rail--tags a { display: inline; }
+  .rail--tags a + a::before {
+    content: "·";
+    color: var(--border-strong);
+    margin: 0 var(--s-2);
+  }
+  /* The TOC takes its own line and drops the separator — it is a disclosure,
+     not another fact in the run. */
+  .rail > .toc-details { flex-basis: 100%; margin-top: var(--s-2); }
+  .rail > .toc-details::before { content: none !important; }
+  .toc-details > .rail--label { display: none; }
+  /* A group label starts a new strip rather than continuing the run. */
+  .rail--group { border-top: 0; padding-top: 0; margin-top: 0; }
+
+  .hero { padding-top: var(--s-8); }
+  .hero h1 { font-size: var(--fs-h1); }
+  .work-index { grid-template-columns: minmax(0, 1fr); }
+
+  /* The TOC becomes a closed <details> — the only interactive rail element, and
+     it needs no JavaScript. */
+  .toc-details { display: block; }
+  .toc-details > summary {
+    display: list-item;
+    font: 500 10.5px/1.4 var(--mono);
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--label);
+    cursor: pointer;
+    min-height: 24px;
+  }
+  .toc { margin-top: var(--s-2); gap: var(--s-2); }
+  .toc > li::before { content: none; }
+}
+
+@media (max-width: 560px) {
+  .site-header { gap: var(--s-3); }
+  .site-header nav { gap: var(--s-4); }
+}
+
+/* ============================================================================
+   POST INDEX — /blog/ and /tags/[tag]/ share one row
+   ========================================================================= */
+
+.post-list { list-style: none; margin: 0; padding: 0; }
+.post-row + .post-row {
+  margin-top: var(--s-6);
+  padding-top: var(--s-6);
+  border-top: var(--hair) solid var(--border);
+}
+.post-row > a {
+  font: 600 var(--fs-h3)/1.35 var(--serif);
+  color: var(--heading);
+  text-decoration: none;
+  display: block;
+}
+.post-row > a:hover { color: var(--accent); }
+.post-row p { margin: var(--s-1) 0 0; font-size: var(--fs-small); color: var(--muted); }
+.post-row .post-meta {
+  display: block;
+  margin-top: 5px;
+  font: 400 var(--fs-rail)/var(--lh-rail) var(--mono);
+  letter-spacing: var(--ls-rail);
+  color: var(--muted);
+}
+/* /blog/ groups by year, with the year as a running head in the rail. */
+.year-head { font: 600 var(--fs-h2)/1 var(--serif); color: var(--label); }
+
+/* ============================================================================
+   /uses/ — name + description without a card
+   The pair is a run-in definition list: a 200px name column inside the measure
+   would plant a second vertical rule 40px from the real rail's gutter. Two
+   margins at two scales, and the page goes muddy. One rail per page.
+   ========================================================================= */
+
+.uses-group + .uses-group { margin-top: var(--s-8); }
+.uses-list { margin: 0; }
+
+.uses-item {                       /* the container owns the leading,   */
+  font: 400 var(--fs-small)/var(--lh-body) var(--serif);   /* so a mixed */
+  color: var(--muted);             /* -size line keeps one baseline grid */
+}
+.uses-item + .uses-item { margin-top: var(--s-4); }
+.uses-item dt,
+.uses-item dd { display: inline; margin: 0; }
+.uses-item dt {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--heading);
+}
+.uses-item dd::before {
+  /* NBSPs, not plain spaces: the trailing space of generated content collapses
+     and the dash ends up glued to the description. */
+  content: "\00a0\2014\00a0";
+  color: var(--border-strong);     /* the dash is furniture, not text   */
+}
+
+/* Optional outbound link — a mark, not a coloured name. 24x24 minimum target;
+   the glyph alone would be ~12px. */
+.uses-link {
+  display: inline-block;
+  min-width: 24px; min-height: 24px;
+  font: 400 var(--fs-rail)/24px var(--mono);
+  color: var(--accent);
+  text-align: center;
+  text-decoration: none;
+  vertical-align: -7px;
+}
+.uses-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.rail-count { color: var(--muted); }
+.rail-count::before { content: " · "; }
+
+/* Live box state, appended to the /uses/ rail when /status.json is fresh. */
+.uses-status { display: flex; flex-direction: column; gap: 5px; }
+.uses-status-ok  { color: var(--accent); }
+.uses-status-bad { color: var(--heading); }
+@media (max-width: 900px) {
+  .uses-status { flex-direction: row; flex-wrap: wrap; gap: 0 var(--s-3); }
+  .uses-status > * + *::before {
+    content: "·"; color: var(--border-strong); margin-inline-end: var(--s-3);
+  }
+}
+
+/* ============================================================================
+   /now/ — a short page needs bigger type, not more content
+   ========================================================================= */
+
+.now-list { row-gap: var(--s-8); }          /* .row already sets the grid */
+
+.now-item {
+  margin: 0;
+  font-size: var(--fs-h3);                  /* one step above body        */
+  line-height: var(--lh-body);
+  color: var(--text);
+}
+.now-list > .rail { padding-top: 0.62em; }  /* label baseline at 21px     */
+
+.now-note {
+  font: 400 var(--fs-rail)/var(--lh-rail) var(--mono);
+  letter-spacing: var(--ls-rail);
+  color: var(--muted);
+}
+
+/* ============================================================================
+   /tags/[tag]/ — the h1 IS a rail item
+   A 12px h1 is fine for assistive tech: still the document's first heading,
+   still announced as level 1, and <title> carries the long form. The prose
+   column has no heading at all, so the first thing the eye lands on is a post
+   title — which is what the reader came for.
+   ========================================================================= */
+
+h1.rail--tag {
+  margin: 0;
+  font: 500 var(--fs-rail)/var(--lh-rail) var(--mono);
+  letter-spacing: var(--ls-rail);
+  color: var(--accent);
+}
+
+.tag-siblings {
+  margin-top: var(--s-4);
+  padding-top: var(--s-4);
+  border-top: var(--hair) solid var(--border);   /* decorative: --border */
+  display: flex; flex-direction: column; gap: 7px;
+}
+.tag-siblings a { color: var(--accent); text-decoration: none; }
+.tag-siblings a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.tag-all { color: var(--muted) !important; margin-top: var(--s-1); }
+
+@media (max-width: 900px) {
+  .uses-item { font-size: var(--fs-small); }
+  .now-item  { font-size: var(--fs-body); }   /* 21px is a poster on 375 */
+  .now-list  { row-gap: var(--s-7); }
+  .now-list > .rail { padding-top: 0; }
+
+  /* Siblings become a next step after the list — order, not duplication. */
+  .tag-siblings {
+    order: 1;
+    flex-direction: row; flex-wrap: wrap; gap: 0 var(--s-3);
+    margin-top: var(--s-8);
+    border-top: 0;
+  }
+  .tag-siblings .rail--label { flex-basis: 100%; }
+}
+
+/* ============================================================================
+   RÉSUMÉ PRINT SHEET — target: exactly one A4 page.
+   The rail survives to paper: the same grid becomes the label column, so there
+   is no separate print layout to maintain.
+   ========================================================================= */
+
+@media print {
+
+  /* --- force the light token set, regardless of the reader's theme -------- */
+  :root, [data-theme="dark"], [data-theme="light"] {
+    --bg:            #FFFFFF;
+    --surface:       #FFFFFF;
+    --surface-2:     #FFFFFF;
+    --border:        #E7E1D4;
+    --border-strong: #14120F;
+    --text:          #14120F;
+    --heading:       #000000;
+    --muted:         #4A463F;   /* darker than screen --muted: toner, not pixels */
+    --accent:        #14120F;   /* no colour on a printed CV                     */
+    --label:         #4A463F;
+  }
+  html { color-scheme: light; }
+
+  @page { size: A4; margin: 16mm 15mm; }
+
+  html, body {
+    background: #fff;
+    font-size: 10.5pt;          /* ~14px equivalent; above the print floor */
+    line-height: 1.5;
+  }
+
+  /* --- strip the site chrome --------------------------------------------- */
+  .site-header, .site-footer, .skip-link, .print-hint,
+  .toc, .toc-details, .search, .copy-btn, .back {
+    display: none !important;
+  }
+
+  /* --- the grid, in millimetres ------------------------------------------ */
+  .wrap, .row {
+    display: grid;
+    grid-template-columns: 40mm 1fr;
+    gap: 0 9mm;
+    padding: 0;
+    max-width: none;
+  }
+  .wrap > *, .row > *         { grid-column: 2; }
+  .wrap > .rail, .row > .rail { grid-column: 1; }
+  .wrap > .bleed              { grid-column: 1 / -1; }
+
+  .rail {
+    font: 400 8.5pt/1.55 var(--mono);
+    letter-spacing: .02em;
+    color: var(--muted);
+    flex-direction: column;
+    padding-top: 0;
+  }
+  .rail > * + *::before { content: none; }
+  .rail--label {
+    font-weight: 500;
+    font-size: 7.5pt;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* --- résumé specifics --------------------------------------------------- */
+  .resume h1 {
+    font: 600 28pt/1.02 var(--serif);
+    letter-spacing: -0.02em;
+    color: #000;
+    margin: 0;
+  }
+  .resume .role-title { font: 400 11pt/1.4 var(--serif); margin: 2mm 0 0; }
+  .resume .masthead   { border-bottom: 1.5pt solid #000; padding-bottom: 4mm; }
+
+  .resume .job           { break-inside: avoid; page-break-inside: avoid; }
+  .resume .rail--label   { break-after: avoid;  page-break-after: avoid;  }
+  .resume h2, .resume h3 { break-after: avoid;  page-break-after: avoid;  }
+
+  /* The two oldest roles keep their bullets on screen and lose them here.
+     This is cut #1 in the one-page order at the bottom of this file. */
+  .resume .job--compact ul { display: none; }
+
+  .resume .job + .job { margin-top: 4.5mm; }
+  .resume .job-name   { font: 600 12pt/1.3 var(--serif); color: #000; }
+  .resume .job-meta   { font: 400 9pt/1.4 var(--mono); color: var(--muted); margin-top: 0.8mm; }
+  .resume .job ul     { margin: 2mm 0 0; padding-left: 4mm; font-size: 10pt; line-height: 1.45; }
+  .resume .job li + li{ margin-top: 0.6mm; }
+
+  /* dates: tabular figures so the right edge is a straight line */
+  .resume .job-dates {
+    font: 400 9pt/1 var(--mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .resume .section + .section {
+    margin-top: 5mm;
+    border-top: 0.5pt solid var(--border);
+    padding-top: 4mm;
+  }
+
+  /* Links print as text. The URLs a reader needs are already spelled out in the
+     contact rail; appending them inline just adds noise. */
+  .resume a { color: #000; text-decoration: none; }
+
+  /* --- everything else on the site, when printed -------------------------- */
+  pre, blockquote, .job { break-inside: avoid; }
+  pre {
+    border: 0.5pt solid #999;
+    border-left: 1.5pt solid #000;
+    background: #fff;
+    font-size: 8.5pt;
+    white-space: pre-wrap;      /* no clipped code on paper */
+    word-break: break-word;
+  }
+  h1, h2, h3 { break-after: avoid; }
+  img, svg, figure, table { break-inside: avoid; }
+}
+
+/* ============================================================================
+   FITTING ONE PAGE — if the résumé grows past a single sheet, cut in this order:
+     1. GlobalLogic and LetsData drop to title + dates only (already the case).
+     2. UKAD drops from two bullets to one.
+     3. Skills becomes one line, no wrap.
+     4. Body from 10.5pt to 10pt. NOT below 10pt.
+     5. @page margin from 16mm/15mm to 14mm/13mm.
+   Do not shrink line-height below 1.4 and do not drop the masthead rule.
+   ========================================================================= */

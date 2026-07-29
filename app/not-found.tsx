@@ -2,21 +2,20 @@ import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 
+/** The joke is from the deploy post. It earns its place on exactly one page. */
 export default function NotFound() {
   return (
-    <>
+    <main id="main" className="wrap">
       <Nav />
-      <main id="main" className="wrap notfound">
-        <div className="prompt"><span className="dollar">$</span> cat page</div>
+      <span className="rail hero-rail">404</span>
+      <div className="hero notfound">
         <h1>404</h1>
-        <p className="notfound-msg">No such file or directory.</p>
         <p>
-          Try the <Link href="/blog/">blog</Link>,{" "}
-          <Link href="/#projects">projects</Link>, or head{" "}
-          <Link href="/">back home</Link>.
+          No page at this address. It answered, but it isn&apos;t listening.{" "}
+          <Link href="/">Back home</Link>.
         </p>
-      </main>
+      </div>
       <Footer />
-    </>
+    </main>
   );
 }

@@ -2,47 +2,29 @@ import Link from "next/link";
 import { site } from "@/lib/site";
 
 /**
- * The site map lives here, not in the header. Everything the nav dropped is
- * reachable from every page at every width — which is the trade that lets the
- * header stay at four items.
+ * One mono line, left-aligned to the rail's left edge — not centred, not a
+ * three-column site map. The header carries every destination now, so the
+ * footer's old job is gone.
  */
 export default function Footer() {
-  // Static export: this is build time, so it only changes when the site rebuilds.
-  const year = new Date().getFullYear();
-
   return (
-    <footer data-pagefind-ignore>
-      <div className="inner">
-        <nav className="footer-cols" aria-label="Footer">
-          <div>
-            <h2>Writing</h2>
-            <ul>
-              <li><Link href="/blog/">All posts</Link></li>
-              <li><Link href="/search/">Search</Link></li>
-              <li><a href="/feed.xml">RSS</a></li>
-            </ul>
-          </div>
-          <div>
-            <h2>Site</h2>
-            <ul>
-              <li><Link href="/about/">About</Link></li>
-              <li><Link href="/resume/">Résumé</Link></li>
-              <li><Link href="/uses/">Uses</Link></li>
-              <li><Link href="/now/">Now</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h2>Elsewhere</h2>
-            <ul>
-              <li><a href={site.github} rel="noopener">GitHub</a></li>
-              <li><a href={site.linkedin} rel="noopener">LinkedIn</a></li>
-              <li><a href={`mailto:${site.email}`}>Email</a></li>
-            </ul>
-          </div>
-        </nav>
-
-        <div className="note">© {year} {site.name} · built &amp; self-hosted</div>
-      </div>
+    <footer className="site-footer bleed" data-pagefind-ignore>
+      {site.domain}
+      <span className="sep">·</span>
+      {/*
+        /uses/ and /now/ live here rather than in the nav. Nav is a promise of
+        maintenance: a `now` in the top nav that was last touched eleven months
+        ago is worse than no /now/ page at all. If this one passes six months
+        without an edit, drop the link rather than leave it — a missing /now/ is
+        neutral, a stale one is a statement.
+      */}
+      <Link href="/uses/">uses</Link>
+      <span className="sep">·</span>
+      <Link href="/now/">now</Link>
+      <span className="sep">·</span>
+      <a href="/feed.xml">rss</a>
+      <span className="sep">·</span>
+      <a href={site.github} rel="noopener">source</a>
     </footer>
   );
 }

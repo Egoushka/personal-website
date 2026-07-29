@@ -9,7 +9,7 @@ import Nav from "@/components/Nav";
 import { BlogPostingLd } from "@/components/JsonLd";
 import Footer from "@/components/Footer";
 import { site, feedTypes } from "@/lib/site";
-import { getAllSlugs, getPost, formatDate, tableOfContents, getRelatedPosts, getAdjacentPosts } from "@/lib/posts";
+import { getAllSlugs, getPost, tableOfContents, getRelatedPosts, getAdjacentPosts } from "@/lib/posts";
 import { tagLabel } from "@/lib/tags";
 
 type Params = { slug: string };
@@ -54,36 +54,58 @@ export default async function PostPage(
   const { slug } = await params;
   const post = getPost(slug);
   const toc = tableOfContents(post.content);
-  const related = getRelatedPosts(slug);
+  const related = getRelatedPosts(slug, 1)[0];
   const { prev, next } = getAdjacentPosts(slug);
+  void prev; void next;
+
   return (
     <>
-      <Nav current="blog" />
-      <main id="main" className="wrap article">
-        <Link className="back" href="/blog/">← back to blog</Link>
+      <main id="main" className="wrap">
+        <Nav current="blog" />
         <BlogPostingLd post={post} />
-        <article>
-          <h1>{post.title}</h1>
-          <div className="post-meta">
-            <time dateTime={post.date}>{formatDate(post.date)}</time>
-            {` · ${post.readingTime} min read`}
-            {post.tags.map((t) => (
-              <span key={t}>
-                {" · "}
-                <Link href={`/tags/${t}/`}>{tagLabel(t)}</Link>
-              </span>
-            ))}
-          </div>
+
+        <article className="prose">
+        {/*
+          The header rail is the article's first child, not a sibling: it has to
+          share grid rows with the h1 and the standfirst, and a sibling of the
+          subgrid can only ever start its own row.
+        */}
+        <div className="rail rail--header">
+          <time dateTime={post.date}>{post.date}</time>
+          <span>
+            {post.readingTime} min · {post.wordCount.toLocaleString("en-US")} words
+          </span>
+
+          {post.tags.length > 0 && (
+            <span className="rail--tags">
+              {post.tags.map((t) => (
+                <Link key={t} href={`/tags/${t}/`}>{tagLabel(t)}</Link>
+              ))}
+            </span>
+          )}
+
+          {/*
+            Static links, no current-item highlight: CSS cannot select a TOC entry
+            from a :target further down the document, and scroll-spy JS is not an
+            option on this site. `h2:target` in globals.css gives the reader
+            confirmation of where they landed instead, in the prose column.
+            Below 900px this collapses to a closed <details> — the only place the
+            rail becomes interactive, and it needs no JavaScript.
+          */}
           {toc.length > 1 && (
-            <nav className="toc" aria-labelledby="toc-heading">
-              <h2 id="toc-heading">On this page</h2>
-              <ol>
+            <details className="toc-details rail--group">
+              <summary>On this page · {toc.length}</summary>
+              <span className="rail--label">On this page</span>
+              <ol className="toc">
                 {toc.map((h) => (
                   <li key={h.id}><a href={`#${h.id}`}>{h.text}</a></li>
                 ))}
               </ol>
-            </nav>
+            </details>
           )}
+        </div>
+
+          <h1>{post.title}</h1>
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[
@@ -91,68 +113,85 @@ export default async function PostPage(
               [rehypeShikiFromHighlighter, highlighter, shikiOptions],
             ]}
             components={{
-              // The copy button is rendered server-side, inside React's tree. An
-              // earlier version injected it with JS after parse; hydration then
-              // reconciled the <pre> and stripped the button back out again.
-              pre: ({ children, ...props }) => (
-                <pre {...props}>
-                  {children}
-                  <button type="button" className="copy-btn" aria-label="Copy code to clipboard">
-                    copy
-                  </button>
-                </pre>
+              /*
+                Every h2 gets a full-bleed hairline above it and its number in the
+                rail. The number is a CSS counter, so nothing in the markdown
+                pipeline has to know about section numbering.
+              */
+              h2: ({ children, ...props }) => (
+                <>
+                  <hr className="bleed" />
+                  <div className="row">
+                    <span className="rail rail--section" aria-hidden="true" />
+                    <h2 {...props}>{children}</h2>
+                  </div>
+                </>
               ),
+              /*
+                The code block is hung off the rail: language label and copy
+                button in the margin, the block itself bleeding left into the
+                gutter. The copy button is server-rendered inside React's tree —
+                an earlier version injected it after parse, and hydration
+                reconciled the <pre> and stripped it back out.
+              */
+              pre: ({ children, className, ...props }) => {
+                const lang = extractLang(children, props);
+                return (
+                  <div className="row">
+                    <div className="rail">
+                      {lang && <span className="rail--label">{lang}</span>}
+                      <button type="button" className="copy-btn" aria-label="Copy code to clipboard">
+                        copy
+                      </button>
+                    </div>
+                    {/*
+                      Shiki puts its own className on the <pre> it produces. It has
+                      to be merged, not spread over the top: `{...props}` after a
+                      literal className silently dropped `bleed-code`, so
+                      highlighted blocks stopped bleeding into the gutter while
+                      untagged ones still did.
+                    */}
+                    <pre className={`bleed-code${className ? ` ${className}` : ""}`} {...props}>
+                      {children}
+                    </pre>
+                  </div>
+                );
+              },
             }}
           >
             {post.content}
           </ReactMarkdown>
         </article>
-        {related.length > 0 && (
-          <aside className="related" aria-labelledby="related-heading">
-            <h2 id="related-heading">Related</h2>
-            <ul>
-              {related.map((r) => (
-                <li key={r.slug}>
-                  <Link href={`/posts/${r.slug}/`}>{r.title}</Link>
-                  <span className="related-meta">{r.readingTime} min</span>
-                </li>
-              ))}
-            </ul>
-          </aside>
+
+        {/* One link, not a grid of cards. */}
+        {related && (
+          <>
+            <hr className="bleed" />
+            <div className="row">
+              <span className="rail rail--label">Related</span>
+              <div className="post-item">
+                <h2><Link href={`/posts/${related.slug}/`}>{related.title}</Link></h2>
+                <p>{related.date} · {related.readingTime} min</p>
+              </div>
+            </div>
+          </>
         )}
 
-        {(prev || next) && (
-          <nav className="post-nav" aria-label="More posts">
-            {prev ? (
-              <Link className="post-nav-prev" href={`/posts/${prev.slug}/`}>
-                <span className="post-nav-dir">← older</span>
-                <span className="post-nav-title">{prev.title}</span>
-              </Link>
-            ) : <span />}
-            {next ? (
-              <Link className="post-nav-next" href={`/posts/${next.slug}/`}>
-                <span className="post-nav-dir">newer →</span>
-                <span className="post-nav-title">{next.title}</span>
-              </Link>
-            ) : <span />}
-          </nav>
-        )}
-
-        <p className="article-foot">
-          <Link className="back" href="/blog/">← back to blog</Link>
-        </p>
         {/*
           One delegated listener on document, rather than a listener per button:
           it survives any DOM reconciliation and costs nothing per code block.
           Still a plain script and not a client component — this site ships zero
           'use client', and a React island for one button would put hydration on
-          every post.
+          every post. The button now lives in the rail, so it walks up to .row
+          rather than to its parent.
         */}
         <script
           dangerouslySetInnerHTML={{
             __html: `document.addEventListener("click",function(e){
   var b=e.target.closest&&e.target.closest(".copy-btn"); if(!b) return;
-  var pre=b.parentElement, code=pre.querySelector("code")||pre;
+  var row=b.closest(".row"); if(!row) return;
+  var pre=row.querySelector("pre"); if(!pre) return;
+  var code=pre.querySelector("code")||pre;
   // clipboard is undefined outside a secure context; bail rather than throw
   if(!navigator.clipboard){ b.textContent="no clipboard"; return; }
   navigator.clipboard.writeText(code.innerText).then(function(){
@@ -163,7 +202,28 @@ export default async function PostPage(
           }}
         />
       </main>
-      <Footer />
+      <div className="wrap"><Footer /></div>
     </>
   );
+}
+
+/**
+ * The source language, for the rail label.
+ *
+ * Two shapes to handle: rehype-shiki moves the language onto the <pre> as
+ * `data-language` and strips `language-*` off the <code>, while an untagged
+ * fence never had one at all. Reading only the <code> className found nothing
+ * on exactly the blocks that were highlighted.
+ */
+function extractLang(
+  children: React.ReactNode,
+  preProps: Record<string, unknown>,
+): string | null {
+  const fromPre = preProps["data-language"];
+  if (typeof fromPre === "string" && fromPre && fromPre !== "text") return fromPre;
+
+  const child = Array.isArray(children) ? children[0] : children;
+  const cls = (child as { props?: { className?: string } })?.props?.className ?? "";
+  const hit = /language-([\w-]+)/.exec(cls);
+  return hit ? hit[1] : null;
 }

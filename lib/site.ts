@@ -39,35 +39,48 @@ export const skills = [
 export type Project = {
   name: string;
   meta: string;
+  /**
+   * Must be a PUBLIC URL. `*.lab.hrabovskyi.online` is a tailnet-only namespace
+   * (100.64/10), so a Forgejo link there is a dead link for every visitor. Leave
+   * this empty rather than emit one — the templates omit the link when it is.
+   */
   href: string;
   description: string;
+  /** One line, for the CV. A four-line bullet on paper does not get read. */
+  resumeLine?: string;
   tags: string[];
 };
 
+/**
+ * Two projects, both load-bearing. The previous three were an interview
+ * take-home, a utility with a handful of commits, and a link to a GitHub
+ * profile — which is how a projects section ends up saying nothing.
+ *
+ * Every number below was read out of the repo, not estimated. If a claim here
+ * cannot be checked against the source, it does not belong here: unverified
+ * project copy has already had to be corrected on this site three times.
+ */
 export const projects: Project[] = [
   {
-    name: "MetaExchange",
-    meta: "C# · take-home",
-    href: "https://github.com/Egoushka/MetaExchange",
+    name: "Chronicle",
+    meta: "Python · event store",
+    href: "https://github.com/Egoushka/chronicle",
     description:
-      "A best-execution engine that computes the optimal way to buy or sell a given volume across multiple order books, respecting per-exchange balance constraints. Written as an interview take-home, in layered projects with a test suite.",
-    tags: [".NET", "algorithms", "order books"],
+      "A personal event store that makes seven years of chat history searchable by an assistant. The archive was measured rather than assumed: 681,331 messages across 487 chats, of which 65% are under twenty characters. The existing setup embedded every one of them, so roughly 442,000 vectors stood for “ок”, “+1” and “да” — crowding out the 1.5% that carry an actual proposition. Chronicle groups events into episodes using a time gap fitted per conversation, which cuts the index about elevenfold and improves retrieval at the same time. It serves the result over MCP, so the assistant queries it directly.",
+    resumeLine:
+      "Personal event store over a 681k-message archive. Aggregates events into episodes before indexing, cutting the vector index ~11× while improving retrieval; served to an assistant over MCP.",
+    // The language is already in `meta`; tags carry the domain, not a repeat.
+    tags: ["retrieval", "embeddings", "MCP"],
   },
   {
-    name: "NetworkMonitor",
-    meta: "C#",
-    href: "https://github.com/Egoushka/NetworkMonitor",
+    name: "Baseline",
+    meta: "Flutter · instrument",
+    href: "https://github.com/Egoushka/baseline",
     description:
-      "A monitoring utility for tracking network/host availability — grew out of wanting visibility into my own homelab before paying for a SaaS.",
-    tags: [".NET", "monitoring", "homelab"],
-  },
-  {
-    name: "More on GitHub",
-    meta: "@Egoushka",
-    href: "https://github.com/Egoushka",
-    description:
-      "Smaller experiments and learning projects — webhooks, real-time chat, API integrations. The kind of thing you build to understand a thing, not to ship it.",
-    tags: ["misc", "experiments"],
+      "A self-observation app that records perceived change — where you are compared to the mark before — and never an absolute mood, score or emoji. The first mark is the baseline; every later one is placed relative to its predecessor. What makes it worth building is what it refuses to do: after a seven-day gap the line visibly breaks rather than pretending the comparison still holds, an uncertain placement is recorded as a fuzzy point instead of being laundered into false precision, and there is no global scale at all, because a chain of subjective deltas is a random walk. It measures shape and rhythm, and says so.",
+    resumeLine:
+      "Flutter app for tracking perceived change rather than absolute mood. Breaks the line after a 7-day gap and records uncertain entries as fuzzy points, rather than implying precision the data does not have.",
+    tags: ["Dart", "data viz", "product design"],
   },
 ];
 
@@ -170,6 +183,9 @@ export const homelab: StackItem[] = [
   { name: "GitOps · SOPS + age", desc: "Encrypted, version-controlled infra config." },
 ];
 
+/** Shown in the /uses/ rail. Bump it when the list below actually changes. */
+export const usesUpdated = "2026-07";
+
 /** /uses — the homelab grid plus the day-to-day kit. */
 export const uses: { group: string; items: StackItem[] }[] = [
   { group: "Server", items: homelab },
@@ -192,13 +208,35 @@ export const uses: { group: string; items: StackItem[] }[] = [
   },
 ];
 
-/** /now — what has my attention. Edit the date whenever this changes. */
+/**
+ * /now — what has my attention. Edit the date whenever this changes.
+ *
+ * One label, one sentence, one-to-one. The label goes in the rail; a second
+ * sentence in any row means the page needs a different structure, not a longer
+ * paragraph.
+ *
+ * Standing rule from the design: if this page passes six months without an
+ * edit, drop the footer link rather than leave it. A missing /now/ is neutral;
+ * a stale one is a statement.
+ */
 export const now = {
-  updated: "2026-07-28",
+  updated: "2026-07-29",
   items: [
-    "Backend work on a white-label crypto trading platform at Boerse Stuttgart Digital.",
-    "Rebuilding this site — feeds, structured data, self-hosted analytics, and a résumé that cannot go stale.",
-    "Running the homelab as a real environment: Headscale, SOPS-encrypted GitOps, off-site restic backups.",
-    "Writing more. The infrastructure here is well ahead of the content it serves, and that is the wrong way round.",
+    {
+      label: "Work",
+      text: "Backend services for a crypto trading platform at Boerse Stuttgart Digital.",
+    },
+    {
+      label: "Building",
+      text: "Chronicle — a personal event store that turns seven years of chat history into something an assistant can actually search.",
+    },
+    {
+      label: "Homelab",
+      text: "One Hetzner box, every service defined in git, rebuildable from nothing.",
+    },
+    {
+      label: "Writing",
+      text: "More of it. The infrastructure here is well ahead of the content it serves, and that is the wrong way round.",
+    },
   ],
 };

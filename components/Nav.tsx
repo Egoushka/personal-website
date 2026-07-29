@@ -1,44 +1,45 @@
 import Link from "next/link";
+import Search from "@/components/Search";
 
 /**
- * Four primary destinations, plus search as an icon.
+ * Full-bleed header row. Wordmark left, destinations right, hairline underneath.
  *
- * This used to carry nine items — 77% of the bar width — mixing real routes with
- * homepage anchors (#experience, #homelab, #contact), and `hide-sm` dropped five
- * of them on mobile, which made those pages unreachable there rather than
- * reorganised. Everything cut is now in the footer, on every page, at every width.
+ * The current destination is `--heading`, deliberately not `--accent`: in this
+ * design accent means "this is a link", so colouring the current page with it
+ * would say the opposite of what is true.
  *
- * Search is an icon because it is a different kind of action from a destination;
- * breaking it out of the word-list is most of what makes the bar readable.
+ * Search is a magnifier that opens a modal, not a nav destination — it belongs
+ * on every page, and a link to a search *page* is a worse version of that. The
+ * /search/ route still exists as a no-JS fallback and is linked from the footer.
+ *
+ * On the home page the wordmark is a <span>, not a link to itself.
  */
-/** `current` marks the active destination — the nav has a focal point instead of
- *  five equal words, and screen readers get aria-current. */
-export default function Nav({ current }: { current?: "blog" | "about" | "projects" | "resume" | "search" } = {}) {
+export default function Nav(
+  { current }: { current?: "home" | "blog" | "about" | "projects" | "resume" | "search" } = {},
+) {
   const mark = (key: string) => (current === key ? ({ "aria-current": "page" } as const) : {});
   return (
-    <nav className="nav" data-pagefind-ignore aria-label="Primary">
-      <div className="inner">
-        <Link className="brand" href="/">
-          <span className="accent">&gt;</span>
-          <span className="brand-name"> hrabovskyi</span>
-          <span className="accent brand-tld">.online</span>
-        </Link>
+    <header className="site-header bleed" data-pagefind-ignore>
+      {current === "home" ? (
+        <span className="brand">hrabovskyi.online</span>
+      ) : (
+        <Link className="brand" href="/">hrabovskyi.online</Link>
+      )}
 
-        <div className="links">
+      {/*
+        Search sits beside <nav>, never inside it. Two reasons, both real: the
+        dialog's result links would land inside the primary navigation landmark,
+        and `.site-header nav a` is inline-flex, which every hit row inherited.
+      */}
+      <div className="site-header-end">
+        <nav aria-label="Primary">
           <Link href="/blog/" {...mark("blog")}>blog</Link>
           <Link href="/about/" {...mark("about")}>about</Link>
-          <Link href="/#projects" {...mark("projects")}>projects</Link>
+          <Link href="/projects/" {...mark("projects")}>projects</Link>
           <Link href="/resume/" {...mark("resume")}>résumé</Link>
-
-          <Link className="nav-search" href="/search/" aria-label="Search" {...mark("search")}>
-            {/* aria-hidden: the link already has an accessible name */}
-            <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true" focusable="false">
-              <circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
-              <path d="M13.5 13.5 L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          </Link>
-        </div>
+        </nav>
+        <Search />
       </div>
-    </nav>
+    </header>
   );
 }

@@ -51,7 +51,26 @@ Production is plain files behind a file server. There is no Node runtime. So:
 - Every dynamic segment needs `generateStaticParams` — see [app/posts/[slug]/page.tsx](app/posts/[slug]/page.tsx).
 
 Node APIs (`fs`, `path` in [lib/posts.ts](lib/posts.ts)) are fine because they run at build time
-in server components only. Never import `lib/posts.ts` from a client component.
+in server components only. **Never import `lib/posts.ts` from a client component** — this
+still holds, and matters more now that client components exist.
+
+## Client components are allowed — sparingly
+
+The site shipped **zero `'use client'`** until 2026-07-29. That is no longer true:
+[components/Search.tsx](components/Search.tsx) is a client component. The rule now is *justify each one*,
+not *never*.
+
+- Static export still applies. A client component hydrates in the browser; it does
+  not get a server. No server actions, no data fetching at request time.
+- `components/Search.tsx` loads Pagefind's **JS API** (`/pagefind/pagefind.js`) via
+  `new Function('return import(...)')` so the bundler leaves the path alone — that
+  file only exists in `out/` after `next build`, so a static import fails the build.
+- **`/pagefind/` does not exist under `npm run dev`.** Pagefind indexes `out/` after
+  the build, so search is dead on the dev server *by design*. Test it with the
+  `static` launch config (serves `./out` on :4321), not `npm run dev`.
+- The dialog must stay **outside `<nav>`**. Inside it, result links land in the
+  primary navigation landmark and inherit `.site-header nav a { display: inline-flex }`,
+  which breaks every hit row.
 
 ## Where things live
 

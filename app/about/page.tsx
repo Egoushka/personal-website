@@ -27,27 +27,43 @@ export default function About() {
   const current = experience.find((j) => j.when.includes("present"));
 
   return (
-    <>
+    <main id="main" className="wrap">
       <Nav current="about" />
-      <main id="main">
-        <section className="page-head" aria-labelledby="about-heading">
-          <div className="wrap">
-            <div className="prompt"><span className="dollar">$</span> cat about.md</div>
-            <h1 id="about-heading">About</h1>
 
-            {/* Appears as soon as assets/images/portrait.jpg exists — see
-                assets/images/README.md. No code change needed to turn it on. */}
-            {hasPicture("portrait") && (
-              <Picture
-                name="portrait"
-                alt="Yehor Hrabovskyi"
-                className="portrait"
-                sizes="(max-width: 560px) 140px, 180px"
-                priority
-              />
-            )}
+      {/*
+        The rail carries the standing facts and the contact block. "Elsewhere"
+        is where /uses/ and /now/ live: second-visit content, annotated in the
+        margin of the page someone reads when they already like the site —
+        rather than spending two of five primary nav slots on it.
+      */}
+      <div className="rail hero-rail">
+        <span>Kyiv, Ukraine</span>
+        <span>since 2021</span>
+        <a href={`mailto:${site.email}`}>email</a>
+        <a href={site.github} rel="noopener">github</a>
+        <a href={site.linkedin} rel="noopener">linkedin</a>
 
-            <p className="about-lead">
+        <span className="rail--group rail--label">Elsewhere</span>
+        <Link href="/uses/">what I use →</Link>
+        <Link href="/now/">what I&apos;m doing now →</Link>
+      </div>
+
+      <div className="prose">
+          <h1 id="about-heading">About</h1>
+
+          {/* Appears as soon as assets/images/portrait.jpg exists — see
+              assets/images/README.md. No code change needed to turn it on. */}
+          {hasPicture("portrait") && (
+            <Picture
+              name="portrait"
+              alt="Yehor Hrabovskyi"
+              className="portrait"
+              sizes="(max-width: 560px) 140px, 180px"
+              priority
+            />
+          )}
+
+            <p>
               I&apos;m a backend-leaning full-stack developer based in Ukraine.
               {current && ` Currently a ${current.role.split(" · ")[0]} at ${current.company}, `}
               working on backend services for a white-label crypto trading platform.
@@ -82,21 +98,10 @@ export default function About() {
             </p>
 
             <h2>What I work with</h2>
-            <div className="chips">
-              {skills.map((s) => <span className="chip" key={s}>{s}</span>)}
-            </div>
+            <p className="skills-run">{skills.join(" · ")}</p>
+      </div>
 
-            <h2>Elsewhere</h2>
-            <ul className="about-links">
-              <li><a href={site.github} rel="noopener">github.com/{site.githubHandle}</a></li>
-              <li><a href={site.linkedin} rel="noopener">linkedin.com/in/yehor-hrabovskyi</a></li>
-              <li><a href={`mailto:${site.email}`}>{site.email}</a></li>
-              <li><Link href="/now/">what I&apos;m doing now</Link></li>
-            </ul>
-          </div>
-        </section>
-      </main>
       <Footer />
-    </>
+    </main>
   );
 }

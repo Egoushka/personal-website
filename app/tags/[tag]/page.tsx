@@ -45,27 +45,38 @@ export default async function TagPage({ params }: { params: Promise<Params> }) {
   const posts = getPostsByTag(tag);
   if (posts.length === 0) notFound();
 
+  // Up to five sibling tags turn a dead-end filter into a way around the
+  // archive without needing a /tags/ index page.
+  const siblings = getTagCounts().filter((t) => t.tag !== tag).slice(0, 5);
+
   return (
-    <>
+    <main id="main" className="wrap">
       <Nav current="blog" />
-      <main id="main">
-        <section className="page-head" aria-labelledby="tag-heading">
-          <div className="wrap">
-            <div className="prompt">
-              <span className="dollar">$</span> grep -l {tag} posts/*.md
-            </div>
-            <h1 id="tag-heading">{tagLabel(tag)}</h1>
-            <p className="section-intro">
-              {isTag(tag) ? TAGS[tag].description : null}
-            </p>
-            <PostList posts={posts} />
-            <p className="section-outro">
-              <Link href="/blog/">← all posts</Link>
-            </p>
-          </div>
-        </section>
-      </main>
+
+      {/*
+        The prose column has no heading at all. The h1 is the tag name, in the
+        rail, at rail size — that is where tags live everywhere else on this
+        site, and "which tag am I looking at" is a fact about the page rather
+        than something to read. A 12px h1 is still the document's first heading
+        and still announced as level 1; <title> carries the long form.
+      */}
+      <div className="rail">
+        <span className="rail--label">Tag</span>
+        <h1 className="rail--tag">{tagLabel(tag)}</h1>
+        <span>{posts.length} {posts.length === 1 ? "post" : "posts"}</span>
+
+        <nav className="tag-siblings" aria-label="Other tags">
+          <span className="rail--label">More tags</span>
+          {siblings.map(({ tag: t }) => (
+            <Link key={t} href={`/tags/${t}/`}>{tagLabel(t)}</Link>
+          ))}
+          <Link className="tag-all" href="/blog/">all posts →</Link>
+        </nav>
+      </div>
+
+      <PostList posts={posts} />
+
       <Footer />
-    </>
+    </main>
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import React from "react";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
@@ -26,31 +27,44 @@ export const metadata: Metadata = {
 };
 
 export default function BlogIndex() {
-  const posts = getAllPosts();
+  // Grouped by year, newest first. The year is a running head in the rail, not
+  // a heading in the prose column — it is a fact about the group, not content.
+  const byYear = new Map<string, ReturnType<typeof getAllPosts>>();
+  for (const p of getAllPosts()) {
+    const year = p.date.slice(0, 4);
+    byYear.set(year, [...(byYear.get(year) ?? []), p]);
+  }
+
   return (
-    <>
+    <main id="main" className="wrap">
       <Nav current="blog" />
-      <main id="main">
-        <section className="page-head" aria-labelledby="blog-heading">
-          <div className="wrap">
-            <div className="prompt"><span className="dollar">$</span> ls ./blog</div>
-            <h1 id="blog-heading">Writing</h1>
-            <p className="section-intro">
-              Debug stories, backend notes, and homelab logs. Mostly the things
-              I&apos;d want to have read before I learned them the hard way.
-            </p>
-            <div className="tag-chips">
-              {getTagCounts().map(({ tag, count }) => (
-                <Link className="tag-chip" href={`/tags/${tag}/`} key={tag}>
-                  {tagLabel(tag)} <span className="tag-count">{count}</span>
-                </Link>
-              ))}
-            </div>
+
+      <div className="rail hero-rail">
+        {getTagCounts().map(({ tag, count }) => (
+          <Link key={tag} href={`/tags/${tag}/`}>
+            {tagLabel(tag)} <span className="rail-count">{count}</span>
+          </Link>
+        ))}
+      </div>
+      <div className="hero">
+        <h1>Writing</h1>
+        <p>
+          Debug stories, backend notes, and homelab logs. Mostly the things
+          I&apos;d want to have read before I learned them the hard way.
+        </p>
+      </div>
+
+      {[...byYear.entries()].map(([year, posts]) => (
+        <React.Fragment key={year}>
+          <hr className="bleed" />
+          <section className="row">
+            <span className="rail year-head">{year}</span>
             <PostList posts={posts} />
-          </div>
-        </section>
-      </main>
+          </section>
+        </React.Fragment>
+      ))}
+
       <Footer />
-    </>
+    </main>
   );
 }

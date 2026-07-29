@@ -1,20 +1,26 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Source_Serif_4, IBM_Plex_Mono } from "next/font/google";
 import { site, feedTypes } from "@/lib/site";
 import "./globals.css";
 
 // Downloaded and self-hosted at build time — no request to Google from the browser,
 // and no render-blocking cross-origin stylesheet on the critical path.
-const sans = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+//
+// Two faces, and only two. Prose and headings are the serif; every piece of
+// metadata is the mono. A third family appearing here means the Marginalia rail
+// has started leaking into the body — see docs/DESIGN-BRIEF.md.
+const serif = Source_Serif_4({
+  // cyrillic-ext carries "Hrabovskyi" and any Ukrainian strings.
+  subsets: ["latin", "cyrillic-ext"],
+  weight: ["400", "600"],
+  style: ["normal", "italic"],
   display: "swap",
-  variable: "--font-sans",
+  variable: "--font-serif",
 });
 
-const mono = JetBrains_Mono({
+const mono = IBM_Plex_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500"],
   display: "swap",
   variable: "--font-mono",
 });
@@ -45,8 +51,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0c10",
-  colorScheme: "dark",
+  themeColor: "#100F0D",
+  colorScheme: "dark light",
 };
 
 export default function RootLayout({
@@ -58,7 +64,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${sans.variable} ${mono.variable}`}
+      className={`${serif.variable} ${mono.variable}`}
     >
       <body>
         <a className="skip-link" href="#main">Skip to content</a>

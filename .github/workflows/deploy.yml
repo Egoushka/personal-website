@@ -71,7 +71,11 @@ jobs:
       - name: Sync site to VPS
         run: |
           ssh -i ~/.ssh/id_ed25519 "$VPS_USER@$VPS_HOST" "mkdir -p $REMOTE_DIR/site"
-          rsync -avz --delete -e "ssh -i ~/.ssh/id_ed25519" \
+          # status.json is generated ON THE BOX by cron (scripts/gen-status.sh) and
+          # is not part of the build output. Without the exclude, --delete removes
+          # it on every deploy and /uses/ silently loses its live state until the
+          # next cron tick.
+          rsync -avz --delete --exclude=status.json -e "ssh -i ~/.ssh/id_ed25519" \
             out/ "$VPS_USER@$VPS_HOST:$REMOTE_DIR/site/"
           # --inplace is load-bearing: Caddyfile is a SINGLE-FILE bind mount, and
           # rsync's default write-temp-then-rename gives it a new inode. The mount
