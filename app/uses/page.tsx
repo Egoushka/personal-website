@@ -65,7 +65,21 @@ export default function Uses() {
               {group.items.map((item) => (
                 <div className="uses-item" key={item.name}>
                   <dt>{item.name}</dt>
-                  <dd>{item.desc}</dd>
+                  <dd>
+                    {item.desc}
+                    {item.href && (
+                      // A mark, not a coloured name — the name stays prose. The
+                      // 24x24 target is the point: the glyph alone is ~12px.
+                      <a
+                        className="uses-link"
+                        href={item.href}
+                        rel="noopener"
+                        aria-label={`${item.name} — official site`}
+                      >
+                        ↗
+                      </a>
+                    )}
+                  </dd>
                 </div>
               ))}
             </dl>

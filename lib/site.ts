@@ -68,7 +68,7 @@ export const projects: Project[] = [
     description:
       "A personal event store that makes seven years of chat history searchable by an assistant. The archive was measured rather than assumed: 681,331 messages across 487 chats, of which 65% are under twenty characters. The existing setup embedded every one of them, so roughly 442,000 vectors stood for “ок”, “+1” and “да” — crowding out the 1.5% that carry an actual proposition. Chronicle groups events into episodes using a time gap fitted per conversation, which cuts the index about elevenfold and improves retrieval at the same time. It serves the result over MCP, so the assistant queries it directly.",
     resumeLine:
-      "Personal event store over a 681k-message archive. Aggregates events into episodes before indexing, cutting the vector index ~11× while improving retrieval; served to an assistant over MCP.",
+      "Event store over a 681k-message archive. Aggregates events into episodes before indexing — ~11× smaller vector index, better retrieval — served over MCP.",
     // The language is already in `meta`; tags carry the domain, not a repeat.
     tags: ["retrieval", "embeddings", "MCP"],
   },
@@ -79,7 +79,7 @@ export const projects: Project[] = [
     description:
       "A self-observation app that records perceived change — where you are compared to the mark before — and never an absolute mood, score or emoji. The first mark is the baseline; every later one is placed relative to its predecessor. What makes it worth building is what it refuses to do: after a seven-day gap the line visibly breaks rather than pretending the comparison still holds, an uncertain placement is recorded as a fuzzy point instead of being laundered into false precision, and there is no global scale at all, because a chain of subjective deltas is a random walk. It measures shape and rhythm, and says so.",
     resumeLine:
-      "Flutter app for tracking perceived change rather than absolute mood. Breaks the line after a 7-day gap and records uncertain entries as fuzzy points, rather than implying precision the data does not have.",
+      "Flutter app tracking perceived change rather than absolute mood; breaks the line after a 7-day gap rather than implying precision the data lacks.",
     tags: ["Dart", "data viz", "product design"],
   },
 ];
@@ -93,6 +93,13 @@ export type Job = {
   points: Point[];
   /** Kept off the homepage timeline; still shown on /resume/ so the record has no gaps. */
   resumeOnly?: boolean;
+  /**
+   * Prints as title + dates only, no bullets. The role still appears in full on
+   * screen — this is the compression that makes one A4 sheet possible, and it
+   * is set explicitly rather than derived from position so that reordering the
+   * list cannot silently gut a current role.
+   */
+  resumeCompact?: boolean;
 };
 
 /** Source of truth for both the homepage timeline and /resume/. Mirrors LinkedIn. */
@@ -123,6 +130,7 @@ export const experience: Job[] = [
   {
     when: "Sep 2024 — Oct 2024",
     company: "Atlas Recruiting",
+    resumeCompact: true,
     role: "Sales Representative",
     location: "Kyiv · On-site",
     resumeOnly: true,
@@ -146,6 +154,7 @@ export const experience: Job[] = [
   {
     when: "Oct 2022 — Feb 2023",
     company: "LetsData",
+    resumeCompact: true,
     role: "Junior Software Engineer",
     location: "Odessa",
     points: [
@@ -156,6 +165,7 @@ export const experience: Job[] = [
   {
     when: "Mar 2021 — Mar 2022",
     company: "GlobalLogic",
+    resumeCompact: true,
     role: "Junior Software Engineer",
     location: "Mykolaiv · Remote",
     points: [
@@ -172,15 +182,20 @@ export const education = [
   },
 ];
 
-export type StackItem = { name: string; desc: string };
+export type StackItem = {
+  name: string;
+  desc: string;
+  /** Official project page. Renders as a ↗ mark on /uses/; omit if there isn't one. */
+  href?: string;
+};
 
 export const homelab: StackItem[] = [
-  { name: "Hetzner VPS", desc: "Ubuntu, Helsinki. The whole lab on one box." },
-  { name: "Caddy", desc: "Reverse proxy + automatic HTTPS. Serves this page." },
-  { name: "Tailscale + Headscale", desc: "Self-hosted control plane for a private mesh VPN." },
-  { name: "Vaultwarden", desc: "Self-hosted Bitwarden-compatible secrets vault." },
-  { name: "AdGuard Home", desc: "Network-wide DNS + ad/tracker filtering." },
-  { name: "GitOps · SOPS + age", desc: "Encrypted, version-controlled infra config." },
+  { name: "Hetzner VPS", href: "https://www.hetzner.com/cloud", desc: "Ubuntu, Helsinki. The whole lab on one box." },
+  { name: "Caddy", href: "https://caddyserver.com", desc: "Reverse proxy + automatic HTTPS. Serves this page." },
+  { name: "Tailscale + Headscale", href: "https://headscale.net", desc: "Self-hosted control plane for a private mesh VPN." },
+  { name: "Vaultwarden", href: "https://github.com/dani-garcia/vaultwarden", desc: "Self-hosted Bitwarden-compatible secrets vault." },
+  { name: "AdGuard Home", href: "https://adguard.com/adguard-home/overview.html", desc: "Network-wide DNS + ad/tracker filtering." },
+  { name: "GitOps · SOPS + age", href: "https://github.com/getsops/sops", desc: "Encrypted, version-controlled infra config." },
 ];
 
 /** Shown in the /uses/ rail. Bump it when the list below actually changes. */
@@ -192,18 +207,18 @@ export const uses: { group: string; items: StackItem[] }[] = [
   {
     group: "Editor & terminal",
     items: [
-      { name: "JetBrains Rider", desc: "Day-to-day .NET work." },
-      { name: "VS Code", desc: "Everything else — TypeScript, markdown, config." },
-      { name: "Claude Code", desc: "Pair-programming in the terminal." },
+      { name: "JetBrains Rider", href: "https://www.jetbrains.com/rider/", desc: "Day-to-day .NET work." },
+      { name: "VS Code", href: "https://code.visualstudio.com", desc: "Everything else — TypeScript, markdown, config." },
+      { name: "Claude Code", href: "https://claude.com/claude-code", desc: "Pair-programming in the terminal." },
     ],
   },
   {
     group: "Day to day",
     items: [
-      { name: "C# / .NET", desc: "ASP.NET Core, EF Core, MediatR-style CQRS." },
-      { name: "PostgreSQL", desc: "Plus SQL Server at work." },
-      { name: "Angular + TypeScript", desc: "When the work reaches the front end." },
-      { name: "Docker Compose", desc: "Every service in the lab, defined in git." },
+      { name: "C# / .NET", href: "https://dotnet.microsoft.com", desc: "ASP.NET Core, EF Core, MediatR-style CQRS." },
+      { name: "PostgreSQL", href: "https://www.postgresql.org", desc: "Plus SQL Server at work." },
+      { name: "Angular + TypeScript", href: "https://angular.dev", desc: "When the work reaches the front end." },
+      { name: "Docker Compose", href: "https://docs.docker.com/compose/", desc: "Every service in the lab, defined in git." },
     ],
   },
 ];

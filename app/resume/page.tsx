@@ -44,11 +44,6 @@ function isoDates(when: string): string {
 }
 
 export default function Resume() {
-  // The two oldest roles keep their bullets on screen and lose them in print.
-  // That compression is what makes one A4 sheet possible; deleting them
-  // outright would trade a real record for a layout constraint.
-  const compactFrom = experience.length - 2;
-
   return (
     <main id="main" className="wrap resume">
       <Nav current="resume" />
@@ -74,8 +69,11 @@ export default function Resume() {
       <section className="row section">
         <h2 className="rail rail--label">Experience</h2>
         <div>
-          {experience.map((job, i) => (
-            <div className={`job${i >= compactFrom ? " job--compact" : ""}`} key={job.company + job.when}>
+          {/* `resumeCompact` roles keep their bullets on screen and lose them in
+              print — the compression that makes one A4 sheet possible. Deleting
+              them outright would trade a real record for a layout constraint. */}
+          {experience.map((job) => (
+            <div className={`job${job.resumeCompact ? " job--compact" : ""}`} key={job.company + job.when}>
               <div className="job-head">
                 <h3 className="job-name">{job.company}</h3>
                 <span className="job-dates">{isoDates(job.when)}</span>
