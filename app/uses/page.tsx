@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import React from "react";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import UsesStatus from "@/components/UsesStatus";
+import SkillMap from "@/components/SkillMap";
 import { site, feedTypes, uses, usesUpdated } from "@/lib/site";
 
 const description =
@@ -53,39 +53,13 @@ export default function Uses() {
         </p>
       </div>
 
-      {uses.map((group) => (
-        <React.Fragment key={group.group}>
-          <hr className="bleed" />
-          <section className="row uses-group">
-            <h2 className="rail rail--label" id={group.group.toLowerCase().replace(/\W+/g, "-")}>
-              {group.group}
-              <span className="rail-count">{group.items.length}</span>
-            </h2>
-            <dl className="uses-list">
-              {group.items.map((item) => (
-                <div className="uses-item" key={item.name}>
-                  <dt>{item.name}</dt>
-                  <dd>
-                    {item.desc}
-                    {item.href && (
-                      // A mark, not a coloured name — the name stays prose. The
-                      // 24x24 target is the point: the glyph alone is ~12px.
-                      <a
-                        className="uses-link"
-                        href={item.href}
-                        rel="noopener"
-                        aria-label={`${item.name} — official site`}
-                      >
-                        ↗
-                      </a>
-                    )}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </section>
-        </React.Fragment>
-      ))}
+      <hr className="bleed" />
+      {/*
+        The graph, the filter and the list share one filter query, so they live in
+        one client component. `uses` is plain serialisable data from lib/site.ts —
+        this passes through, it is not fetched.
+      */}
+      <SkillMap groups={uses} />
 
       <Footer />
     </main>

@@ -56,12 +56,25 @@ still holds, and matters more now that client components exist.
 
 ## Client components are allowed — sparingly
 
-The site shipped **zero `'use client'`** until 2026-07-29. That is no longer true:
-[components/Search.tsx](components/Search.tsx) is a client component. The rule now is *justify each one*,
-not *never*.
+The site shipped **zero `'use client'`** until 2026-07-29. That is no longer true.
+The rule now is *justify each one*, not *never*. Three exist:
+
+| Component | Why it must be a client component |
+|---|---|
+| [Search.tsx](components/Search.tsx) | Pagefind's JS API + `<dialog>.showModal()` |
+| [UsesStatus.tsx](components/UsesStatus.tsx) | fetches `/status.json` at view time; the build cannot know what is running |
+| [SkillMap.tsx](components/SkillMap.tsx) | filter state shared by a graph and a list; hover/focus selection |
 
 - Static export still applies. A client component hydrates in the browser; it does
   not get a server. No server actions, no data fetching at request time.
+- **Every one of them must render something useful before JS runs, or degrade to
+  nothing.** `SkillMap`'s graph is in the static HTML (14 nodes, 15 edges) and its
+  text equivalent is a real `<ul>`; `UsesStatus` renders `null` when `/status.json`
+  is missing or older than 48 hours. A client component whose absence leaves a
+  blank hole does not belong on this site.
+- **No `Math.random()` or `Date.now()` in render.** `SkillMap` derives its
+  per-node animation delay from the node index for exactly this reason — a random
+  value differs between server and client and breaks hydration.
 - `components/Search.tsx` loads Pagefind's **JS API** (`/pagefind/pagefind.js`) via
   `new Function('return import(...)')` so the bundler leaves the path alone — that
   file only exists in `out/` after `next build`, so a static import fails the build.
@@ -71,6 +84,10 @@ not *never*.
 - The dialog must stay **outside `<nav>`**. Inside it, result links land in the
   primary navigation landmark and inherit `.site-header nav a { display: inline-flex }`,
   which breaks every hit row.
+- **Animating an SVG `<g>` uses the `translate` property, never `transform`.** A
+  node's position is a `transform` *attribute*, which maps to the `transform`
+  *property* — animating that property replaces the position and collapses every
+  node onto the origin. `translate` composes on top of it. See `.skill-node`.
 
 ## Where things live
 

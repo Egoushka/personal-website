@@ -898,6 +898,105 @@ figure figcaption {
 .rail-count { color: var(--muted); }
 .rail-count::before { content: " · "; }
 
+/* ============================================================================
+   SKILL MAP — the stack as a graph, on /uses/
+   Lines, not fills. One accent, used only for what the reader has selected.
+   ========================================================================= */
+
+.skill-controls { margin-bottom: var(--s-5); }
+.skill-filter { width: min(320px, 100%); }
+.skill-filter::-webkit-search-cancel-button { display: none; }
+.skill-count {
+  margin-left: var(--s-3);
+  font: 400 var(--fs-rail)/1 var(--mono);
+  letter-spacing: var(--ls-rail);
+  color: var(--muted);
+}
+
+.skill-figure { margin: 0; }
+.skill-svg { width: 100%; height: auto; display: block; overflow: visible; }
+
+/* --border-strong, not --border: here the line IS the information, so it has to
+   be legible rather than a decorative hairline. */
+.skill-edge {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+  opacity: .6;
+  transition: stroke .18s, opacity .18s, stroke-width .18s;
+}
+.skill-edge.is-lit { stroke: var(--accent); stroke-width: 1.8; opacity: 1; }
+.skill-edge.is-dim { opacity: .15; }
+
+.skill-node { cursor: pointer; transition: opacity .18s; }
+.skill-node.is-dim { opacity: .3; }
+
+/* The float is decoration on a fixed layout, not an emergent arrangement.
+   Small amplitude on purpose: a node that wanders more than a few units stops
+   reading as attached to its edges.
+
+   `translate`, NOT `transform`. Each node's position is an SVG transform
+   ATTRIBUTE, which maps to the `transform` property — animating that property
+   would replace the position and collapse all fourteen nodes onto the origin.
+   The standalone `translate` property composes on top of it instead. */
+.skill-node { animation: skill-drift 13s ease-in-out infinite; }
+@keyframes skill-drift {
+  0%   { translate: 0 0; }
+  25%  { translate: 2px -3px; }
+  50%  { translate: -1px 2px; }
+  75%  { translate: -3px -1px; }
+  100% { translate: 0 0; }
+}
+.skill-dot {
+  fill: var(--surface);
+  stroke: var(--border-strong);
+  stroke-width: 1.4;
+  transition: fill .18s, stroke .18s;
+}
+.skill-node.is-active .skill-dot,
+.skill-node:hover .skill-dot { fill: var(--accent); stroke: var(--accent); }
+.skill-dot--infra    { stroke: var(--border-strong); }
+.skill-dot--backend  { stroke: var(--muted); }
+.skill-dot--frontend { stroke: var(--muted); }
+.skill-dot--tools    { stroke: var(--border); }
+
+.skill-label {
+  fill: var(--text);
+  font-family: var(--mono);
+  font-size: 16px;
+  letter-spacing: .02em;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+.skill-node.is-active .skill-label { fill: var(--heading); }
+
+/* Focus must be visible on an SVG group, where `outline` does nothing useful. */
+.skill-node:focus { outline: none; }
+.skill-node:focus-visible .skill-dot {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  /* the ring the outline would have drawn */
+  r: 9;
+}
+
+.skill-note { display: block; margin-top: var(--s-3); color: var(--muted); }
+.skill-note-name { display: block; color: var(--accent); margin-bottom: 2px; }
+
+.skill-empty { color: var(--muted); font-size: var(--fs-small); }
+
+@media (prefers-reduced-motion: reduce) {
+  .skill-node { animation: none; }
+}
+
+@media (max-width: 900px) {
+  /* Fourteen labelled nodes in 375px is a smear. The list below carries the same
+     information and the text equivalent carries the connections. */
+  .skill-figure { display: none; }
+}
+
+@media print {
+  .skill-controls, .skill-figure { display: none; }
+}
+
 /* Live box state, appended to the /uses/ rail when /status.json is fresh. */
 .uses-status { display: flex; flex-direction: column; gap: 5px; }
 .uses-status-ok  { color: var(--accent); }
