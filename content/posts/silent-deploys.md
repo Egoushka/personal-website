@@ -2,7 +2,7 @@
 title: "The deploy said success. Nothing had deployed for 51 days."
 date: "2026-07-28"
 description: "A pipeline that reported success while shipping nothing, a config the container could never see, and one shared cause: failure that looks like success."
-tags: ["infrastructure", "debugging", "ci-cd"]
+topics: ["infrastructure", "debugging", "ci-cd"]
 spanDays: 51
 ---
 
@@ -124,6 +124,6 @@ The habit I'm trying to build from this is to make the check assert the *outcome
 
 It doesn't check that rsync ran. It checks that the site is up and serving the pages it should. That assertion would have caught all three bugs, because all three ended in the same place: the thing I wanted to be true wasn't.
 
-I built the same lab this deploys to [on a single VPS](/posts/homelab/), largely to learn this class of problem in a place where the only person I page is me. This is exactly the lesson it exists to teach — and it still took fifty-one days to notice.
+I built the same lab this deploys to [on a single VPS](/writing/homelab/), largely to learn this class of problem in a place where the only person I page is me. This is exactly the lesson it exists to teach — and it still took fifty-one days to notice.
 
 The uncomfortable part isn't that the pipeline broke. Pipelines break. It's that a broken pipeline and a working one looked identical from the outside for seven weeks, and the only reason I found out was that I happened to go looking for something else.

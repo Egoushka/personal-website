@@ -1,16 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Literata, Archivo_Narrow } from "next/font/google";
+import { Literata, Inter } from "next/font/google";
 import { site, feedTypes } from "@/lib/site";
 import "./globals.css";
 
 // Downloaded and self-hosted at build time — no request to Google from the browser,
 // and no render-blocking cross-origin stylesheet on the critical path.
 //
-// Two faces, and only two. Prose is the serif; every figure, label and balance is
-// the narrow. A third family appearing here means something has started leaking.
-//
-// Literata reads as a printed report rather than a personal essay, which is what a
-// ledger of claims should feel like.
+// Two faces, and only two. Prose is the serif; every figure, label and nav item is
+// the sans. A third family appearing here means something has started leaking.
 const prose = Literata({
   // cyrillic-ext carries "Hrabovskyi" and any Ukrainian strings.
   subsets: ["latin", "cyrillic-ext"],
@@ -20,11 +17,11 @@ const prose = Literata({
   variable: "--font-prose",
 });
 
-// Deliberately not a monospace: mono-for-metadata is the genre this site is
-// leaving, and it wastes horizontal room in a three-column ledger. Archivo Narrow
-// was drawn for dense tabular setting and sets a date and a word count in half the
-// width, with tabular figures so the columns align down the page.
-const figure = Archivo_Narrow({
+// Was Archivo Narrow, a condensed face drawn for dense tabular setting. That made
+// sense when the home page was a four-column ledger; it makes none now, and a
+// condensed face reads as tighter and more clipped than this site's voice. Inter
+// carries tabular figures for the counted numbers and stays friendly at 12px.
+const figure = Inter({
   subsets: ["latin"],
   weight: ["400", "600"],
   display: "swap",
@@ -57,7 +54,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#131518",
+  // --paper, dark theme. Keep these two in step with globals.css.
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#191714" },
+    { media: "(prefers-color-scheme: light)", color: "#FBF8F2" },
+  ],
   colorScheme: "dark light",
 };
 

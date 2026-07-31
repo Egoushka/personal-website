@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import React from "react";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import EntryHead from "@/components/EntryHead";
-import HomelabDiagram from "@/components/HomelabDiagram";
+import PageHead from "@/components/PageHead";
+import ProjectFilter from "@/components/ProjectFilter";
 import { site, feedTypes, projects } from "@/lib/site";
+import { topicName } from "@/lib/topics";
 
 const description =
-  "Side projects and the homelab — a best-execution engine for order books, a network monitor, and one Hetzner box run like production.";
+  "Side projects worth describing: an event store over seven years of chat history, and an app that refuses to give you a score.";
 
 export const metadata: Metadata = {
   title: "Projects",
@@ -24,80 +24,33 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: `Projects — ${site.name}`, description },
 };
 
-/**
- * Each project is a row: the stack line and the repo link in the rail, the name
- * and one paragraph in the prose column.
- *
- * The design allows a `.bleed-code` block per project showing the interesting
- * bit of its API or output — deliberately not added here, because neither repo
- * has a snippet worth the space and inventing one would be a claim about code
- * that does not exist. The asymmetry is fine; add a block when there is real
- * output to show.
- */
 export default function Projects() {
+  // Only topics some project actually carries. A chip that filters to nothing is
+  // a broken control, and the vocabulary is much wider than these two projects.
+  const used = [...new Set(projects.flatMap((p) => p.topics as string[]))];
+  const topics = used.map((slug) => ({ slug, name: topicName(slug) }));
+
   return (
     <main id="main" className="wrap">
       <Nav current="projects" />
 
-      <EntryHead
+      <PageHead
         title="Projects"
-        claim={{ href: "/#claim-finished", label: "Claim 08 — has finished things" }}
         figures={
           <>
-            {projects.length} projects · both running daily · 0 with a user other
-            than the author · <a href={site.github} rel="noopener">github ↗</a>
+            {projects.length} projects
+            <span className="sep">·</span>
+            both running daily
+            <span className="sep">·</span>
+            0 with a user other than me
+            <span className="sep">·</span>
+            <a href={site.github} rel="noopener">github ↗</a>
           </>
         }
-        lede="Each one exists because the alternative was worse, and each is described by what it refuses to do as much as by what it does."
+        lede="Each one exists because the alternative was worse, and each is best described by what it refuses to do."
       />
 
-      {/*
-        Measurements first, description second — the order the balance uses. What
-        a project is measured at is checkable; what it is for is the author's own
-        account of it, and the checkable thing goes on top.
-      */}
-      {projects.map((p) => (
-        <React.Fragment key={p.name}>
-          <hr className="bleed" />
-          <section className="row">
-            <span className="rail rail--label">{p.tags.join(" · ")}</span>
-            <div>
-              <h2 className="project-name">
-                {p.href ? <a href={p.href} rel="noopener">{p.name}</a> : p.name}
-              </h2>
-              <p className="entry-figures">
-                {p.meta}
-                {p.href && (
-                  <>
-                    {" · "}
-                    <a href={p.href} rel="noopener">source ↗</a>
-                  </>
-                )}
-              </p>
-              <p>{p.description}</p>
-            </div>
-          </section>
-        </React.Fragment>
-      ))}
-
-      <hr className="bleed" />
-      <section className="row">
-        <span className="rail rail--label">Fig. 01</span>
-        <div>
-          <h2 className="project-name">Homelab</h2>
-          <p className="entry-figures">
-            1 VPS · Helsinki · every service defined in git
-          </p>
-          <p>
-            A single VPS run like a tiny production environment — Tailscale in,
-            Caddy at the edge, every service defined in a SOPS-encrypted GitOps
-            repo. This site is served from it.
-          </p>
-        </div>
-      </section>
-      <figure className="bleed-code">
-        <HomelabDiagram />
-      </figure>
+      <ProjectFilter projects={projects} topics={topics} />
 
       <Footer />
     </main>

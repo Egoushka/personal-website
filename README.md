@@ -9,7 +9,8 @@ VPS.
 - **Next.js 16** App Router, `output: 'export'` (static HTML, no Node runtime in prod)
 - **TypeScript**, React 19
 - **Markdown blog** — drop a `.md` in `content/posts/`, it appears automatically
-- Custom dark terminal-minimal design in `app/globals.css`
+- One hand-written stylesheet, `app/globals.css`. Warm paper, one amber accent, two
+  faces, both themes. See [docs/DESIGN-BRIEF.md](docs/DESIGN-BRIEF.md).
 - **Caddy** reverse proxy with automatic HTTPS
 
 ## Develop
@@ -22,30 +23,41 @@ npm run dev          # http://localhost:3000
 ## Project layout
 
 ```
-app/                 routes (App Router)
-  page.tsx           home
-  blog/page.tsx      blog index
-  posts/[slug]/      dynamic post pages (static-generated)
-  sitemap.ts         /sitemap.xml
-  robots.ts          /robots.txt
-components/           Nav, Hero, About, Projects, Experience, Homelab, Contact, Footer
-content/posts/*.md    blog posts (frontmatter: title, date, description, tags)
-lib/site.ts           site content (projects, experience, skills, homelab)
+app/                  routes (App Router)
+  page.tsx            home
+  writing/            index + writing/[slug]/ post pages (static-generated)
+  topics/[topic]/     one page per topic — posts, projects AND jobs for it
+  projects/           index + projects/[slug]/
+  about/              about, what I'm doing now, and the whole stack
+  cv/                 /cv/ — prints to exactly one A4 page. No checked-in cv.pdf
+                      on purpose, so it can never go stale.
+  links/              everywhere else I am
+  sitemap.ts          /sitemap.xml
+  robots.ts           /robots.txt
+components/           Nav, Footer, PageHead, PostList, ProjectFilter, TopicMap,
+                      Search, UsesStatus, JsonLd, Picture, HomelabDiagram
+content/posts/*.md    posts (frontmatter: title, date, description, topics)
+content/drafts/       drafts. Not built. Moving a file out of here is deliberate.
+lib/site.ts           site content (projects, experience, uses, links)
+lib/topics.ts         THE vocabulary — posts, projects and jobs all reference it
+lib/readings.ts       every counted figure, computed at build time
 lib/posts.ts          build-time markdown loader
 app/feed.xml/         RSS 2.0   ┐ static route handlers, built from lib/feed.ts
 app/atom.xml/         Atom 1.0  ├ (GET only — that is all output: "export" supports)
 app/feed.json/        JSON Feed ┘
 app/icon.svg          favicon; app/apple-icon.png is the 180×180 iOS home-screen icon
 app/manifest.ts       /manifest.webmanifest
-app/resume/           /resume/ — the CV. Prints to PDF; there is no checked-in cv.pdf
-                      on purpose, so it can never go stale.
-app/uses/  app/now/   /uses/ and /now/, both driven by lib/site.ts
 public/admin/         Sveltia CMS at /admin/ — see "Editing" below
 lib/og.tsx            shared OG card, rendered by the opengraph-image.tsx routes
 components/JsonLd.tsx Person/WebSite/BlogPosting/BreadcrumbList/ProfilePage structured data
+docs/adr/             the decisions that are hard to reverse, and why
 deploy/               Caddyfile + deploy.sh. The stack definition (compose.yaml)
                       is owned by the /opt/stacks GitOps repo on the VPS, not here.
 ```
+
+Routes moved on 2026-08 (`/posts/*` → `/writing/*`, `/tags/*` → `/topics/*`,
+`/blog/` → `/writing/`, `/resume/` → `/cv/`, `/now/` and `/uses/` → `/about/`). A
+static export cannot redirect, so the old URLs are handled in `deploy/Caddyfile`.
 
 ## Add a blog post
 
@@ -55,14 +67,20 @@ Create `content/posts/my-post.md`:
 ---
 title: "My post"
 date: "2026-06-10"
-description: "One-line summary for the list + meta tags."
-tags: ["topic"]
+description: "One-line summary for the list and the meta description. Max 160 chars."
+topics: ["infrastructure", "debugging"]
 ---
 
 Body in Markdown. Code blocks get syntax highlighting.
 ```
 
-It shows up on `/blog` and at `/posts/my-post/` on the next build.
+`topics` is a **closed vocabulary** — `npm run validate` fails on anything not in
+`lib/topics.ts`, which is how you avoid one post saying `ci-cd` and the next saying
+`cicd` until there are two hubs of one post each. Adding a topic means editing that
+file *and* `public/admin/config.yml`.
+
+It shows up on `/writing/` and at `/writing/my-post/` on the next build, and on a
+page for each of its topics.
 
 ## Deploy
 
@@ -147,7 +165,7 @@ in both `deploy.sh` and the workflow.
 
 `.github/workflows/deploy.yml` runs on every push to `main` (and on manual dispatch):
 `npm ci` → `validate` → `typecheck` → `build` → `caddy validate` → rsync `out/` to the
-VPS → `docker compose up -d` → verify `/`, `/blog/` and `/feed.xml` return 200. The
+VPS → `docker compose up -d` → verify `/`, `/writing/` and `/feed.xml` return 200. The
 runner reaches the VPS over SSH on port 22.
 
 `.github/workflows/ci.yml` runs the same checks on branches and PRs, plus an offline
@@ -155,7 +173,7 @@ link check, so failures surface before anything reaches `main`.
 
 > **The host moved once.** Deploys targeted a previous address until 2026-07-28; it still answered
 > ping but had port 22 closed, so nothing had deployed since
-> **2026-06-06** — see [the post](https://hrabovskyi.online/posts/silent-deploys/).
+> **2026-06-06** — see [the post](https://hrabovskyi.online/writing/silent-deploys/).
 > The workflow now targets `<origin-ip>`, both secrets have been rotated, and
 > deploys run green. The steps below are the runbook for the next rotation.
 

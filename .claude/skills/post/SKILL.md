@@ -15,7 +15,7 @@ Read both published posts first. They are the voice reference, not this file:
 - `content/posts/homelab.md`
 - `content/posts/silent-deploys.md`
 
-Then read `lib/tags.ts`. Tags are a closed vocabulary; `npm run validate` fails on
+Then read `lib/topics.ts`. Topics are a closed vocabulary; `npm run validate` fails on
 anything outside it. If the post genuinely needs a new tag, add it there with a
 `label` and `description` and say so — don't quietly invent one.
 
@@ -39,7 +39,7 @@ anything outside it. If the post genuinely needs a new tag, add it there with a
 title: "Sentence-case, specific, ideally with a number or a surprise"
 date: "YYYY-MM-DD"
 description: "≤160 chars — this is the meta description AND the feed summary"
-tags: ["from lib/tags.ts only"]
+topics: ["from lib/topics.ts only"]
 ---
 ```
 
@@ -56,7 +56,7 @@ without breaking links.
   internal job class and an incident's blast radius was removed from this site for
   exactly that reason.
 - No `# heading` in the body — the page renders an `<h1>` from the title.
-- At least one internal link (`/posts/…/`, `/uses/`, `/about/`), with a trailing
+- At least one internal link (`/writing/…/`, `/about/`, `/topics/…/`), with a trailing
   slash. `npm run validate` warns without one.
 - Aim 1,000–1,800 words. Under 300 the validator warns.
 

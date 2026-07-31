@@ -2,6 +2,11 @@
 #
 # Shares Decap's config format, so switching between the two is close to free if
 # this one disappoints.
+#
+# Content stays in git and this edits the files directly — see ADR 0003. A
+# database-backed CMS was the obvious alternative and was rejected because it
+# would move posts out of the repo and kill the `post` and `review-post` skills
+# and `npm run validate` along with them.
 backend:
   name: github
   repo: Egoushka/personal-website
@@ -21,6 +26,31 @@ publish_mode: editorial_workflow
 media_folder: assets/images
 public_folder: /img
 
+# The one vocabulary, mirroring lib/topics.ts. Adding a slug here without adding
+# it there fails `npm run validate` in CI, which is the real gate.
+topics: &topics
+  - infrastructure
+  - self-hosting
+  - debugging
+  - ci-cd
+  - architecture
+  - observability
+  - retrieval
+  - dotnet
+  - aspnet
+  - postgres
+  - typescript
+  - angular
+  - docker
+  - caddy
+  - tailscale
+  - sops
+  - grafana
+  - linux
+  - hetzner
+  - python
+  - flutter
+
 collections:
   - name: posts
     label: Posts
@@ -38,13 +68,19 @@ collections:
         widget: string
         hint: "Meta description and feed summary. Max 160 characters."
         pattern: ["^.{1,160}$", "Must be 1–160 characters"]
-      - name: tags
-        label: Tags
+      - name: topics
+        label: Topics
         widget: select
         multiple: true
         min: 1
-        # Must match lib/tags.ts. Adding one here without adding it there fails validate.
-        options: [infrastructure, self-hosting, debugging, ci-cd, dotnet]
+        options: *topics
+      - name: spanDays
+        label: Span (days)
+        widget: number
+        required: false
+        value_type: int
+        min: 1
+        hint: "Optional. The length of the stretch of time the piece is about — 51 for an essay about fifty-one days. Leave blank and nothing is printed."
       - { name: body, label: Body, widget: markdown }
 
   - name: drafts
@@ -52,9 +88,13 @@ collections:
     folder: content/drafts
     create: true
     slug: "{{fields.slug}}"
+    # A draft is deliberately looser than a post: only the title is required, so
+    # something half-formed can be saved without arguing with a validator.
+    # Promoting it to content/posts/ is the reviewed step where the rules apply.
     fields:
       - { name: title, label: Title, widget: string }
       - { name: date, label: Date, widget: datetime, date_format: "YYYY-MM-DD", time_format: false, picker_utc: true }
       - { name: description, label: Description, widget: string, required: false }
-      - { name: tags, label: Tags, widget: select, multiple: true, required: false, options: [infrastructure, self-hosting, debugging, ci-cd, dotnet] }
+      - { name: topics, label: Topics, widget: select, multiple: true, required: false, options: *topics }
+      - { name: spanDays, label: Span (days), widget: number, required: false, value_type: int, min: 1 }
       - { name: body, label: Body, widget: markdown }

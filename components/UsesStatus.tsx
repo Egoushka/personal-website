@@ -27,7 +27,7 @@ type Status = {
   unhealthy: number;
 };
 
-export default function UsesStatus({ compact = false }: { compact?: boolean } = {}) {
+export default function UsesStatus() {
   const [status, setStatus] = useState<Status | null>(null);
 
   useEffect(() => {
@@ -47,18 +47,6 @@ export default function UsesStatus({ compact = false }: { compact?: boolean } = 
   }, []);
 
   if (!status) return null;
-
-  // The evidence cell of a ledger row: one clause appended to a counted figure,
-  // never a line of its own. Same 48-hour rule as the rail version above it —
-  // the row keeps its claim when the reading is missing, and loses the number.
-  if (compact) {
-    return (
-      <span className="ledger-live">
-        {" · "}
-        {status.containers} containers, reading {status.uptimeDays}d uptime
-      </span>
-    );
-  }
 
   return (
     <span className="rail--group uses-status">

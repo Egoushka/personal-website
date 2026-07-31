@@ -17,5 +17,5 @@ export default async function Image({
   // Next 16 made params a Promise in metadata routes too.
   const { slug } = await params;
   const post = getPost(slug);
-  return ogCard({ eyebrow: "$ cat post.md", title: post.title });
+  return ogCard({ eyebrow: "Writing", title: post.title });
 }

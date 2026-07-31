@@ -1,6 +1,7 @@
 import { Feed } from "feed";
 import { site } from "./site";
 import { getAllPosts } from "./posts";
+import { topicName } from "./topics";
 
 /** Shared feed object — serialised as RSS 2.0, Atom or JSON Feed by the route handlers. */
 export function buildFeed(): Feed {
@@ -22,14 +23,14 @@ export function buildFeed(): Feed {
   });
 
   for (const post of posts) {
-    const url = `${site.url}/posts/${post.slug}/`;
+    const url = `${site.url}/writing/${post.slug}/`;
     feed.addItem({
       title: post.title,
       id: url,
       link: url,
       description: post.description,
       date: new Date(post.date),
-      category: post.tags.map((name) => ({ name })),
+      category: post.topics.map((slug) => ({ name: topicName(slug) })),
       author: [{ name: site.name, link: site.url }],
     });
   }

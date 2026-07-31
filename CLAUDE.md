@@ -46,8 +46,8 @@ Production is plain files behind a file server. There is no Node runtime. So:
   CSS grid — and caps the bundle at 500 KB.
 - No runtime env vars — anything dynamic must be resolved at build time.
 - `next/image` optimization is off (`images.unoptimized`). Plain `<img>` or unoptimized `next/image` only.
-- `trailingSlash: true`. Internal links must carry the slash: `/blog/`, `/posts/foo/`.
-  A link to `/blog` costs a redirect and breaks under the static file server.
+- `trailingSlash: true`. Internal links must carry the slash: `/writing/`, `/writing/foo/`.
+  A link to `/writing` costs a redirect and breaks under the static file server.
 - Every dynamic segment needs `generateStaticParams` — see [app/posts/[slug]/page.tsx](app/posts/[slug]/page.tsx).
 
 Node APIs (`fs`, `path` in [lib/posts.ts](lib/posts.ts)) are fine because they run at build time
@@ -63,16 +63,18 @@ The rule now is *justify each one*, not *never*. Three exist:
 |---|---|
 | [Search.tsx](components/Search.tsx) | Pagefind's JS API + `<dialog>.showModal()` |
 | [UsesStatus.tsx](components/UsesStatus.tsx) | fetches `/status.json` at view time; the build cannot know what is running |
-| [SkillMap.tsx](components/SkillMap.tsx) | filter state shared by a graph and a list; hover/focus selection |
+| [TopicMap.tsx](components/TopicMap.tsx) | filter state shared by a graph and a list; hover/focus selection |
+| [ProjectFilter.tsx](components/ProjectFilter.tsx) | topic filter over the project index |
 
 - Static export still applies. A client component hydrates in the browser; it does
   not get a server. No server actions, no data fetching at request time.
 - **Every one of them must render something useful before JS runs, or degrade to
-  nothing.** `SkillMap`'s graph is in the static HTML (14 nodes, 15 edges) and its
-  text equivalent is a real `<ul>`; `UsesStatus` renders `null` when `/status.json`
-  is missing or older than 48 hours. A client component whose absence leaves a
-  blank hole does not belong on this site.
-- **No `Math.random()` or `Date.now()` in render.** `SkillMap` derives its
+  nothing.** `TopicMap`'s graph is in the static HTML and its text equivalent is a
+  real `<ul>`; `UsesStatus` renders `null` when `/status.json` is missing or older
+  than 48 hours; `ProjectFilter` server-renders every project and the filter only
+  ever *removes* rows, so with JS off the page is a complete list. A client
+  component whose absence leaves a blank hole does not belong on this site.
+- **No `Math.random()` or `Date.now()` in render.** `TopicMap` derives its
   per-node animation delay from the node index for exactly this reason — a random
   value differs between server and client and breaks hydration.
 - `components/Search.tsx` loads Pagefind's **JS API** (`/pagefind/pagefind.js`) via
@@ -87,7 +89,13 @@ The rule now is *justify each one*, not *never*. Three exist:
 - **Animating an SVG `<g>` uses the `translate` property, never `transform`.** A
   node's position is a `transform` *attribute*, which maps to the `transform`
   *property* — animating that property replaces the position and collapses every
-  node onto the origin. `translate` composes on top of it. See `.skill-node`.
+  node onto the origin. `translate` composes on top of it. See `.graph-node`.
+- **A closed `<details>` with `display: contents` no longer shows its content.**
+  Chrome 131 gave `<details>` a real `::details-content` pseudo-element and moved
+  the closed state onto it as `content-visibility: hidden`, which `display:
+  contents` on the parent does not bypass. The desktop table of contents relied
+  on that trick and was invisible for months. `globals.css` forces
+  `::details-content { content-visibility: visible }` above 900px.
 
 ## Where things live
 
@@ -95,15 +103,22 @@ The rule now is *justify each one*, not *never*. Three exist:
   all live in [lib/site.ts](lib/site.ts) as typed exports. Components in `components/` map over
   them and are ~20–30 lines each. Adding a project = edit `lib/site.ts`, not `Projects.tsx`.
 - **Blog posts** are `content/posts/*.md` with frontmatter `title, date (YYYY-MM-DD),
-  description, tags`, plus optional `spanDays` — the length in days of the stretch the piece
+  description, topics`, plus optional `spanDays` — the length in days of the stretch the piece
   is *about*, which the post page sets its word count against. [lib/posts.ts](lib/posts.ts) reads them at
   build time; the filename is the slug. Nothing to register.
-- **The readings are computed, never typed.** [lib/ledger.ts](lib/ledger.ts) counts posts, words, ages, the
-  code-to-prose ratio and every expiry from `content/posts`, `lib/site.ts` and the source
+- **One vocabulary covers everything.** [lib/topics.ts](lib/topics.ts) is the only taxonomy: a `Post`,
+  a `Project` and a `Job` all reference the same slugs, which is what lets
+  `/topics/<slug>/` gather posts, projects *and paid roles* on one page. It replaced
+  three separate lists (`lib/tags.ts`, `lib/skills.ts`, and a loose `skills` string
+  array), which is why ".NET" used to exist as three unrelated strings. A topic with
+  `graph` coordinates appears on the stack diagram; one without simply does not.
+- **The readings are computed, never typed.** [lib/readings.ts](lib/readings.ts) counts posts, words,
+  ages and the code-to-prose ratio from `content/posts`, `lib/site.ts` and the source
   tree, at build time. Any page printing a figure imports it from there rather than
-  restating it, so a claim and its page cannot drift. A hand-maintained number is a claim
-  pretending to be evidence — which is the failure the design exists to catch. It reads the
-  filesystem and the build clock: **never import it from a client component.**
+  restating it, so a page and a claim cannot drift. A hand-maintained number is a claim
+  pretending to be evidence. Figures that genuinely cannot be counted here live in
+  `Project.readings` and **each names its source**. It reads the filesystem and the
+  build clock: **never import it from a client component.**
 - **Fonts are self-hosted by `next/font/google`** in [app/layout.tsx](app/layout.tsx), exposed as
   `--font-prose` / `--font-figure` and consumed by `--prose` / `--figure` in `globals.css`.
   Code uses `--code`, a system monospace with no webfont. Do not add a `<link>` to
@@ -112,15 +127,20 @@ The rule now is *justify each one*, not *never*. Three exist:
 - **All styling is one global stylesheet**, [app/globals.css](app/globals.css) — CSS variables at `:root`,
   plain class names (`.sheet`, `.ledger-row`, `.entry-line`). No Tailwind, no CSS modules, no
   styled-components. **No inline `style={{}}`** — add a class instead.
-- **Six colour tokens, no accent**: `--paper`, `--ink`, `--ink-2`, `--rule`, `--rule-firm`,
-  `--open`. `--open` appears *only* where a claim does not balance, so a fully balanced site
-  is greyscale — do not reach for it as a highlight. The Marginalia names (`--bg`, `--text`,
-  `--accent`, …) survive as aliases onto the six for the pages still on the rail layout;
-  they go with it. Figures set in `--figure` need `font-variant-numeric: tabular-nums`.
-- **There is no primary navigation.** The trial balance on `/` is the index: every page is
-  reached by opening the claim it is evidence for, and [components/EntryHead.tsx](components/EntryHead.tsx) makes each
-  page name that claim. Do not add a `blog · about · projects` row — it is a second, shorter
-  index that says nothing about why those pages exist.
+- **Six colour tokens**: `--paper`, `--ink`, `--ink-2`, `--rule`, `--rule-firm`, `--accent`.
+  Warm paper, one amber accent, and the accent means **link** — do not use it to
+  decorate. The contrast ratios in `:root` are computed, not estimated, and are floors
+  a replacement has to clear. Figures set in `--figure` need
+  `font-variant-numeric: tabular-nums`.
+- **Primary nav is Writing · Projects · About · CV**, in [components/Nav.tsx](components/Nav.tsx). The design
+  before this one had *no* navigation by explicit rule — the home page was a trial
+  balance and every page was reached by opening the claim it was evidence for. It was
+  coherent and unusable by a stranger, who cannot navigate by claims they do not know
+  exist. [components/PageHead.tsx](components/PageHead.tsx) opens each page with its title and its own counted figures.
+- **The ledger is gone and is not coming back** — see [docs/adr/0002](docs/adr/0002-keep-the-computed-figures-drop-the-ledger.md). What went with it:
+  claims, a balance column, an `--open` colour, and **expiries that strike a page
+  through in public**. There is no cadence committed for this site, so nothing on it
+  scores itself against a deadline.
 - **Accessibility invariants** — these were failures that got fixed; don't regress them:
   `:focus-visible` must stay visible (never `outline: none` without a replacement); every
   page needs `<main id="main">` for the skip link; interactive targets stay ≥24×24px
@@ -130,11 +150,19 @@ The rule now is *justify each one*, not *never*. Three exist:
 - `app/sitemap.ts` and `app/robots.ts` generate `/sitemap.xml` and `/robots.txt` at build.
 - **OG cards** come from `lib/og.tsx` via `opengraph-image.tsx` routes. next/og writes them
   as **extensionless files**, so `deploy/Caddyfile` sets `Content-Type: image/png` for
-  `/opengraph-image` and `/posts/*/opengraph-image` — without that every scraper rejects
-  the card.
+  `/opengraph-image` and `/writing/*/opengraph-image` — without that every scraper rejects
+  the card. The card's colours are hard-coded there: a card renders once at build and has
+  no access to the stylesheet, so keep them in step with the tokens by hand.
 - **JSON-LD** lives in [components/JsonLd.tsx](components/JsonLd.tsx): `Person` + `WebSite` on the homepage,
-  `BlogPosting` + `BreadcrumbList` on posts, `ProfilePage` on `/resume/`. Stable `@id`s let
-  the per-page graphs reference the Person rather than repeat it.
+  `BlogPosting` + `BreadcrumbList` on posts, `ProfilePage` on `/cv/`. Stable `@id`s let
+  the per-page graphs reference the Person rather than repeat it. `knowsAbout` is derived
+  from the topics jobs and projects actually reference, so the structured data cannot
+  claim more than the visible pages do.
+- **Routes moved on 2026-08 and the old URLs are redirected in [deploy/Caddyfile](deploy/Caddyfile)**, because a
+  static export cannot redirect: `/posts/*` → `/writing/*`, `/tags/*` → `/topics/*`,
+  `/blog/` → `/writing/`, `/resume/` → `/cv/`, and `/now/` + `/uses/` → `/about/`. They use
+  `handle` blocks rather than bare `redir` — bare directives get sorted into Caddy's own
+  order and `try_files` rewrites the path before the matcher ever runs.
 - **Post heading anchors** use `rehype-slug`. The TOC in `lib/posts.ts` uses
   **`github-slugger`** — the same slugger — on purpose: a hand-rolled version produced
   `secrets-config` where rehype-slug produced `secrets--config`, silently breaking anchors.
@@ -172,9 +200,10 @@ crawler-related.
 - **`.claude/skills/post`** drafts in the site's voice; **`.claude/skills/review-post`**
   critiques one adversarially before it ships. Both name the two published posts as
   the voice reference rather than restating it.
-- **Tags are a closed vocabulary** in [lib/tags.ts](lib/tags.ts). `npm run validate` fails on
-  anything outside it, and `/tags/<tag>/` is generated only for tags a post uses.
-  Adding a tag means editing that file *and* `public/admin/config.yml`.
+- **Topics are a closed vocabulary** in [lib/topics.ts](lib/topics.ts). `npm run validate` fails on
+  anything outside it, and `/topics/<slug>/` is generated only for topics a post,
+  project or job actually references — an empty hub is worse than a 404.
+  Adding a topic means editing that file *and* `public/admin/config.yml`.
 - **Sveltia CMS at `/admin/`** — a static SPA that talks to the GitHub API directly,
   so it never touches the build or the static export. The bundle is **vendored**
   (`npm run cms:vendor`, runs in `npm run build`) rather than loaded from a CDN,

@@ -10,7 +10,17 @@ export const OG_CONTENT_TYPE = "image/png";
  * Deliberately fontless: Satori falls back to its built-in font, which keeps the
  * bundle small and avoids shipping a .ttf just for social cards. next/font emits
  * woff2, which ImageResponse does not accept.
+ *
+ * Colours are the dark theme's tokens, hard-coded — a card is rendered once at
+ * build time and has no access to the stylesheet. Keep them in step with
+ * globals.css by hand; there is no way to derive them here.
  */
+const PAPER = "#191714";
+const INK = "#EDE8DF";
+const INK_2 = "#A8A096";
+const RULE = "#2E2A25";
+const ACCENT = "#E0A257";
+
 export function ogCard({ title, eyebrow }: { title: string; eyebrow: string }) {
   return new ImageResponse(
     (
@@ -21,12 +31,12 @@ export function ogCard({ title, eyebrow }: { title: string; eyebrow: string }) {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "#0a0c10",
+          background: PAPER,
           padding: "72px 80px",
-          border: "1px solid #222a34",
+          border: `1px solid ${RULE}`,
         }}
       >
-        <div style={{ display: "flex", fontSize: 28, color: "#7ee787" }}>
+        <div style={{ display: "flex", fontSize: 28, color: ACCENT }}>
           {eyebrow}
         </div>
 
@@ -34,7 +44,7 @@ export function ogCard({ title, eyebrow }: { title: string; eyebrow: string }) {
           style={{
             display: "flex",
             fontSize: title.length > 60 ? 62 : 76,
-            color: "#e6edf3",
+            color: INK,
             lineHeight: 1.15,
             letterSpacing: "-0.02em",
           }}
@@ -43,9 +53,8 @@ export function ogCard({ title, eyebrow }: { title: string; eyebrow: string }) {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", fontSize: 30 }}>
-          <span style={{ color: "#7ee787" }}>&gt;</span>
-          <span style={{ color: "#c9d1d9", marginLeft: 14 }}>{site.domain}</span>
-          <span style={{ color: "#7d8590", marginLeft: "auto" }}>{site.role}</span>
+          <span style={{ color: INK }}>{site.domain}</span>
+          <span style={{ color: INK_2, marginLeft: "auto" }}>{site.role}</span>
         </div>
       </div>
     ),
