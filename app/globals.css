@@ -1219,3 +1219,162 @@ h1.rail--tag {
      5. @page margin from 16mm/15mm to 14mm/13mm.
    Do not shrink line-height below 1.4 and do not drop the masthead rule.
    ========================================================================= */
+
+/* ============================================================================
+   THE LEDGER — home page
+   Four columns: number, claim, evidence, balance. The whole row is one
+   <summary>, so the balance cell is inside the same target as the claim and
+   there is nothing a pointer can reach that a keyboard cannot.
+   ========================================================================= */
+
+.sheet {
+  max-width: 1000px;
+  margin-inline: auto;
+  padding-inline: var(--s-6);
+}
+
+.sheet-head { padding-top: var(--s-9); }
+.sheet-head h1 {
+  font-size: var(--fs-h1);
+  letter-spacing: var(--ls-h1);
+  margin: 0;
+}
+
+/* Status line, not metadata furniture: "open to work" is the highest-stakes
+   fact on the page and used to be set at 12px in the margin. */
+.sheet-drawn {
+  font: 400 var(--fs-small)/1.5 var(--figure);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  margin: var(--s-3) 0 0;
+}
+.sheet-drawn .sep { margin: 0 var(--s-2); color: var(--rule-firm); }
+
+.sheet-lede {
+  max-width: 60ch;
+  margin: var(--s-5) 0 var(--s-8);
+  color: var(--ink-2);
+}
+
+.ledger {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: var(--hair) solid var(--rule-firm);
+}
+
+.ledger-row { border-bottom: var(--hair) solid var(--rule); }
+.ledger-row:last-child { border-bottom-color: var(--rule-firm); }
+
+/* A row whose books do not meet carries the only colour on the site. */
+.ledger-row.is-open { box-shadow: inset 2px 0 0 var(--open); }
+
+.ledger-row summary {
+  display: grid;
+  grid-template-columns:
+    2.4rem                      /* number  */
+    minmax(0, 1.05fr)           /* claim   */
+    minmax(0, 1.5fr)            /* evidence */
+    minmax(9ch, max-content)    /* balance */
+    1.2rem;                     /* mark    */
+  align-items: baseline;
+  gap: 0 var(--s-4);
+  min-height: 56px;
+  padding: var(--s-4) var(--s-3);
+  cursor: pointer;
+  list-style: none;
+}
+.ledger-row summary::-webkit-details-marker { display: none; }
+.ledger-row summary:hover { background: var(--surface); }
+
+.ledger-no {
+  font: 400 var(--fs-rail)/1.6 var(--figure);
+  font-variant-numeric: tabular-nums;
+  color: var(--rule-firm);
+}
+
+.ledger-claim { color: var(--ink); text-wrap: pretty; }
+
+/* Tabular figures are mandatory here and in the balance: the columns exist so
+   the eye can compare them down the page, which proportional digits prevent. */
+.ledger-evidence,
+.ledger-balance {
+  font: 400 var(--fs-small)/1.5 var(--figure);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+.ledger-balance { text-align: right; }
+.is-open .ledger-balance { color: var(--open); }
+
+/* The live cell renders nothing at all when /status.json is missing or stale. */
+.ledger-live { color: var(--ink-2); }
+
+/* Disclosure mark. Not a triangle: the row is a ledger entry, and + / − is what
+   an entry that opens looks like on paper. */
+.ledger-row summary::after {
+  content: "+";
+  font: 400 var(--fs-small)/1 var(--figure);
+  color: var(--rule-firm);
+  text-align: right;
+}
+/* `open` is on the <details>, not the <li> — anchoring this to .ledger-row
+   leaves every row showing a + forever. */
+.ledger-row details[open] summary::after { content: "\2212"; }
+
+.ledger-detail {
+  padding: 0 var(--s-3) var(--s-7) calc(2.4rem + var(--s-4));
+  max-width: 68ch;
+}
+.ledger-detail p {
+  margin: 0;
+  font-size: var(--fs-small);
+  color: var(--ink-2);
+}
+
+.sub-entries {
+  list-style: none;
+  margin: var(--s-5) 0 0;
+  padding: 0;
+  border-top: var(--hair) solid var(--rule);
+}
+.sub-entries li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-3) 0;
+  border-bottom: var(--hair) solid var(--rule);
+}
+.sub-entries a { color: var(--ink); text-decoration-color: var(--rule-firm); }
+.sub-figure {
+  flex: none;
+  font: 400 var(--fs-rail)/1.5 var(--figure);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+.sub-aside a { color: var(--ink-2); }
+
+.sub-link { margin: var(--s-5) 0 0; font-size: var(--fs-small); }
+
+.sheet-note {
+  max-width: 60ch;
+  margin: var(--s-7) 0 var(--s-10);
+  font: 400 var(--fs-rail)/var(--lh-rail) var(--figure);
+  color: var(--ink-2);
+}
+
+/* Under 760px the four columns stack. The row keeps a 44px floor and the
+   balance stays on the same line as the number, so the verdict is never the
+   thing that scrolls off. */
+@media (max-width: 760px) {
+  .ledger-row summary {
+    grid-template-columns: 2.4rem minmax(0, 1fr) 1.2rem;
+    min-height: 44px;
+    gap: var(--s-1) var(--s-3);
+  }
+  .ledger-claim   { grid-column: 2; }
+  .ledger-balance { grid-column: 2; text-align: left; }
+  .ledger-evidence { grid-column: 2; }
+  .ledger-row summary::after { grid-column: 3; grid-row: 1; }
+  .ledger-detail { padding-left: calc(2.4rem + var(--s-3)); }
+}

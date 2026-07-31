@@ -122,6 +122,12 @@ export function getReadings(): Readings {
 }
 
 export type Claim = {
+  /**
+   * Stable handle. Rows that carry sub-entries are found by this rather than by
+   * position, so reordering the ledger cannot silently move the posts under a
+   * different claim.
+   */
+  id: string;
   /** The assertion. Left column. Written in the owner's voice, flat and factual. */
   claim: string;
   /** What can be measured about it. Right column. Counted wherever counting is possible. */
@@ -154,6 +160,7 @@ export function getLedger(): Claim[] {
 
   return [
     {
+      id: "writes",
       claim: "Writes about what he builds.",
       evidence: r.latest
         ? `${r.posts} posts · ${n(r.words)} words · latest ${r.latest.date}`
@@ -173,6 +180,7 @@ export function getLedger(): Claim[] {
         `unpublished — unpublished writing is not evidence.`,
     },
     {
+      id: "measures",
       claim: "Measures rather than assumes.",
       evidence: "681,331 messages · 487 chats · 65% under 20 characters",
       balance: "balanced",
@@ -185,6 +193,7 @@ export function getLedger(): Claim[] {
         "measurement pass, not from this repo, and cannot be recomputed here.",
     },
     {
+      id: "instruments",
       claim: "Builds instruments that refuse to lie.",
       evidence: "Baseline breaks the line at a 7-day gap · records change, never a score",
       balance: "balanced, unwitnessed",
@@ -197,6 +206,7 @@ export function getLedger(): Claim[] {
         "claims are testable. Neither has been tested by anyone but the author.",
     },
     {
+      id: "machine",
       claim: "Runs the machine this is served from.",
       evidence: "1 VPS · Helsinki · every service defined in git",
       balance: "balanced",
@@ -208,6 +218,7 @@ export function getLedger(): Claim[] {
         "number does not.",
     },
     {
+      id: "craft",
       claim: "The site is well made.",
       evidence: `${n(r.codeLines)} lines of application code + ${n(r.cssLines)} of CSS ⁄ ${n(r.words)} words served`,
       balance: `${ratio} lines per word`,
@@ -220,6 +231,7 @@ export function getLedger(): Claim[] {
         `a redesign. A redesign cannot close it. That is why it is printed here and not in a footer.`,
     },
     {
+      id: "now",
       claim: "Says what he is doing now.",
       evidence: `/now edited ${r.nowUpdated} · ${r.daysSinceNow} days ago`,
       balance: r.daysSinceNow <= 180 ? "balanced" : "stale",
@@ -229,6 +241,7 @@ export function getLedger(): Claim[] {
         "than left standing. A missing page is neutral. A stale one is a statement.",
     },
     {
+      id: "uses",
       claim: "The tool list is accurate.",
       evidence: `/uses verified ${r.usesVerified}`,
       balance: `balanced, expires ${r.usesExpires}`,
@@ -245,6 +258,7 @@ export function getLedger(): Claim[] {
      * and the number stays counted. Cut it rather than soften it.
      */
     {
+      id: "finished",
       claim: "Has finished things.",
       evidence: `${r.projects} projects · both running daily · 0 with a user other than the author`,
       balance: "unbalanced",

@@ -14,9 +14,19 @@ import Search from "@/components/Search";
  *
  * On the home page the wordmark is a <span>, not a link to itself.
  */
-export default function Nav(
-  { current }: { current?: "home" | "blog" | "about" | "projects" | "resume" | "search" } = {},
-) {
+export default function Nav({
+  current,
+  links = true,
+}: {
+  current?: "home" | "blog" | "about" | "projects" | "resume" | "search";
+  /**
+   * The trial balance is the site's index: every page here is reached by opening
+   * the claim it is evidence for. A destination list above it would be a second,
+   * shorter index that says nothing about why any of those pages exist — so the
+   * home page sets this false and keeps only the wordmark and search.
+   */
+  links?: boolean;
+} = {}) {
   const mark = (key: string) => (current === key ? ({ "aria-current": "page" } as const) : {});
   return (
     <header className="site-header bleed" data-pagefind-ignore>
@@ -32,12 +42,14 @@ export default function Nav(
         and `.site-header nav a` is inline-flex, which every hit row inherited.
       */}
       <div className="site-header-end">
-        <nav aria-label="Primary">
-          <Link href="/blog/" {...mark("blog")}>blog</Link>
-          <Link href="/about/" {...mark("about")}>about</Link>
-          <Link href="/projects/" {...mark("projects")}>projects</Link>
-          <Link href="/resume/" {...mark("resume")}>résumé</Link>
-        </nav>
+        {links && (
+          <nav aria-label="Primary">
+            <Link href="/blog/" {...mark("blog")}>blog</Link>
+            <Link href="/about/" {...mark("about")}>about</Link>
+            <Link href="/projects/" {...mark("projects")}>projects</Link>
+            <Link href="/resume/" {...mark("resume")}>résumé</Link>
+          </nav>
+        )}
         <Search />
       </div>
     </header>
