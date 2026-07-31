@@ -95,16 +95,32 @@ The rule now is *justify each one*, not *never*. Three exist:
   all live in [lib/site.ts](lib/site.ts) as typed exports. Components in `components/` map over
   them and are ~20–30 lines each. Adding a project = edit `lib/site.ts`, not `Projects.tsx`.
 - **Blog posts** are `content/posts/*.md` with frontmatter `title, date (YYYY-MM-DD),
-  description, tags`. [lib/posts.ts](lib/posts.ts) reads them at build time; the filename is the slug.
-  Nothing to register.
+  description, tags`, plus optional `spanDays` — the length in days of the stretch the piece
+  is *about*, which the post page sets its word count against. [lib/posts.ts](lib/posts.ts) reads them at
+  build time; the filename is the slug. Nothing to register.
+- **The readings are computed, never typed.** [lib/ledger.ts](lib/ledger.ts) counts posts, words, ages, the
+  code-to-prose ratio and every expiry from `content/posts`, `lib/site.ts` and the source
+  tree, at build time. Any page printing a figure imports it from there rather than
+  restating it, so a claim and its page cannot drift. A hand-maintained number is a claim
+  pretending to be evidence — which is the failure the design exists to catch. It reads the
+  filesystem and the build clock: **never import it from a client component.**
 - **Fonts are self-hosted by `next/font/google`** in [app/layout.tsx](app/layout.tsx), exposed as
-  `--font-sans` / `--font-mono` and consumed by `--sans` / `--mono` in `globals.css`. Do not
-  add a `<link>` to fonts.googleapis.com — it puts a render-blocking cross-origin request
-  back on the critical path and loses the `size-adjust` fallback that keeps CLS at 0.
+  `--font-prose` / `--font-figure` and consumed by `--prose` / `--figure` in `globals.css`.
+  Code uses `--code`, a system monospace with no webfont. Do not add a `<link>` to
+  fonts.googleapis.com — it puts a render-blocking cross-origin request back on the critical
+  path and loses the `size-adjust` fallback that keeps CLS at 0.
 - **All styling is one global stylesheet**, [app/globals.css](app/globals.css) — CSS variables at `:root`,
-  plain class names (`.wrap`, `.card`, `.section-label`). No Tailwind, no CSS modules, no
-  styled-components. Match the existing dark terminal-minimal palette; don't introduce a
-  styling system. **No inline `style={{}}`** — add a class instead.
+  plain class names (`.sheet`, `.ledger-row`, `.entry-line`). No Tailwind, no CSS modules, no
+  styled-components. **No inline `style={{}}`** — add a class instead.
+- **Six colour tokens, no accent**: `--paper`, `--ink`, `--ink-2`, `--rule`, `--rule-firm`,
+  `--open`. `--open` appears *only* where a claim does not balance, so a fully balanced site
+  is greyscale — do not reach for it as a highlight. The Marginalia names (`--bg`, `--text`,
+  `--accent`, …) survive as aliases onto the six for the pages still on the rail layout;
+  they go with it. Figures set in `--figure` need `font-variant-numeric: tabular-nums`.
+- **There is no primary navigation.** The trial balance on `/` is the index: every page is
+  reached by opening the claim it is evidence for, and [components/EntryHead.tsx](components/EntryHead.tsx) makes each
+  page name that claim. Do not add a `blog · about · projects` row — it is a second, shorter
+  index that says nothing about why those pages exist.
 - **Accessibility invariants** — these were failures that got fixed; don't regress them:
   `:focus-visible` must stay visible (never `outline: none` without a replacement); every
   page needs `<main id="main">` for the skip link; interactive targets stay ≥24×24px
