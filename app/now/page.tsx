@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import React from "react";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import EntryHead from "@/components/EntryHead";
 import { site, feedTypes, now } from "@/lib/site";
+import { getReadings } from "@/lib/ledger";
 
 const description =
   "What I'm working on right now — a /now page in the nownownow.com sense.";
@@ -31,15 +33,23 @@ export const metadata: Metadata = {
  * like a stub — the same words at --fs-h3 look like statements.
  */
 export default function Now() {
+  // Same reading the balance prints, from the same place, so the two cannot drift.
+  const daysSinceEdit = getReadings().daysSinceNow;
+
   return (
     <main id="main" className="wrap">
       <Nav />
 
-      <div className="rail">
-        <span className="rail--label">Updated</span>
-        <time dateTime={now.updated}>{now.updated}</time>
-      </div>
-      <h1>Now</h1>
+      <EntryHead
+        title="Now"
+        claim={{ href: "/#claim-now", label: "Claim 06 — says what he is doing now" }}
+        figures={
+          <>
+            edited <time dateTime={now.updated}>{now.updated}</time> ·{" "}
+            {daysSinceEdit} days ago · dropped rather than left standing at six months
+          </>
+        }
+      />
 
       <hr className="bleed" />
       <div className="row now-list">

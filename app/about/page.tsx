@@ -49,6 +49,12 @@ export default function About() {
       </div>
 
       <div className="prose">
+          {/*
+            The only page on the site that answers no claim, and it says so. It is
+            the account of whoever is keeping the books, which is exactly the part
+            of a ledger that cannot audit itself.
+          */}
+          <p className="entry-line">Outside the ledger — no claim pays for this page</p>
           <h1 id="about-heading">About</h1>
 
           {/* Appears as soon as assets/images/portrait.jpg exists — see

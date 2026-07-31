@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import React from "react";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import EntryHead from "@/components/EntryHead";
 import HomelabDiagram from "@/components/HomelabDiagram";
 import { site, feedTypes, projects } from "@/lib/site";
 
@@ -38,32 +39,41 @@ export default function Projects() {
     <main id="main" className="wrap">
       <Nav current="projects" />
 
-      <div className="rail hero-rail">
-        <span>{projects.length} projects</span>
-        <a href={site.github} rel="noopener">github ↗</a>
-      </div>
-      <div className="hero">
-        <h1>Projects</h1>
-        <p>
-          Two things I actually use, and the box they run on. Each one exists
-          because the alternative was worse, and each is described by what it
-          refuses to do as much as by what it does.
-        </p>
-      </div>
+      <EntryHead
+        title="Projects"
+        claim={{ href: "/#claim-finished", label: "Claim 08 — has finished things" }}
+        figures={
+          <>
+            {projects.length} projects · both running daily · 0 with a user other
+            than the author · <a href={site.github} rel="noopener">github ↗</a>
+          </>
+        }
+        lede="Each one exists because the alternative was worse, and each is described by what it refuses to do as much as by what it does."
+      />
 
+      {/*
+        Measurements first, description second — the order the balance uses. What
+        a project is measured at is checkable; what it is for is the author's own
+        account of it, and the checkable thing goes on top.
+      */}
       {projects.map((p) => (
         <React.Fragment key={p.name}>
           <hr className="bleed" />
           <section className="row">
-            <div className="rail">
-              <span>{p.meta}</span>
-              <span>{p.tags.join(" · ")}</span>
-              {p.href && <a href={p.href} rel="noopener">source ↗</a>}
-            </div>
+            <span className="rail rail--label">{p.tags.join(" · ")}</span>
             <div>
               <h2 className="project-name">
                 {p.href ? <a href={p.href} rel="noopener">{p.name}</a> : p.name}
               </h2>
+              <p className="entry-figures">
+                {p.meta}
+                {p.href && (
+                  <>
+                    {" · "}
+                    <a href={p.href} rel="noopener">source ↗</a>
+                  </>
+                )}
+              </p>
               <p>{p.description}</p>
             </div>
           </section>
@@ -72,12 +82,12 @@ export default function Projects() {
 
       <hr className="bleed" />
       <section className="row">
-        <div className="rail">
-          <span className="rail--label">Fig. 01</span>
-          <span>one Hetzner VPS, Helsinki</span>
-        </div>
+        <span className="rail rail--label">Fig. 01</span>
         <div>
           <h2 className="project-name">Homelab</h2>
+          <p className="entry-figures">
+            1 VPS · Helsinki · every service defined in git
+          </p>
           <p>
             A single VPS run like a tiny production environment — Tailscale in,
             Caddy at the edge, every service defined in a SOPS-encrypted GitOps

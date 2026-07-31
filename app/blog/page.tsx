@@ -3,9 +3,11 @@ import React from "react";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import EntryHead from "@/components/EntryHead";
 import { site, feedTypes } from "@/lib/site";
 import PostList from "@/components/PostList";
 import { getAllPosts, getTagCounts } from "@/lib/posts";
+import { getReadings } from "@/lib/ledger";
 import { tagLabel } from "@/lib/tags";
 
 const description =
@@ -27,6 +29,8 @@ export const metadata: Metadata = {
 };
 
 export default function BlogIndex() {
+  const r = getReadings();
+
   // Grouped by year, newest first. The year is a running head in the rail, not
   // a heading in the prose column — it is a fact about the group, not content.
   const byYear = new Map<string, ReturnType<typeof getAllPosts>>();
@@ -39,19 +43,24 @@ export default function BlogIndex() {
     <main id="main" className="wrap">
       <Nav current="blog" />
 
+      <EntryHead
+        title="Writing"
+        claim={{ href: "/#claim-writes", label: "Claim 01 — writes about what he builds" }}
+        figures={
+          <>
+            {r.posts} posts · {r.words.toLocaleString("en-US")} words · latest{" "}
+            {r.latest?.date} · {r.daysSinceLatest} days ago
+          </>
+        }
+        lede="Mostly the things I'd want to have read before I learned them the hard way."
+      />
+
       <div className="rail hero-rail">
         {getTagCounts().map(({ tag, count }) => (
           <Link key={tag} href={`/tags/${tag}/`}>
             {tagLabel(tag)} <span className="rail-count">{count}</span>
           </Link>
         ))}
-      </div>
-      <div className="hero">
-        <h1>Writing</h1>
-        <p>
-          Debug stories, backend notes, and homelab logs. Mostly the things
-          I&apos;d want to have read before I learned them the hard way.
-        </p>
       </div>
 
       {[...byYear.entries()].map(([year, posts]) => (

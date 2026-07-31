@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import EntryHead from "@/components/EntryHead";
 import UsesStatus from "@/components/UsesStatus";
 import SkillMap from "@/components/SkillMap";
 import { site, feedTypes, uses, usesUpdated } from "@/lib/site";
+import { getReadings } from "@/lib/ledger";
 
 const description =
   "The hardware, services and tools I actually use — a single Hetzner VPS run like production, plus the day-to-day .NET kit.";
@@ -34,23 +36,27 @@ export const metadata: Metadata = {
  */
 export default function Uses() {
   const total = uses.reduce((n, g) => n + g.items.length, 0);
+  // The expiry the balance prints for this page, from the same computation.
+  const expires = getReadings().usesExpires;
 
   return (
     <main id="main" className="wrap">
       <Nav />
 
-      <div className="rail hero-rail">
-        <span>updated {usesUpdated}</span>
-        <span>{total} things</span>
-        {/* Adds live state when /status.json is fresh; renders nothing otherwise. */}
+      <EntryHead
+        title="Uses"
+        claim={{ href: "/#claim-uses", label: "Claim 07 — the tool list is accurate" }}
+        figures={
+          <>
+            {total} things · verified {usesUpdated} · expires {expires}
+          </>
+        }
+        lede="Not aspirational — the current state, and the server half of it is version-controlled."
+      />
+
+      {/* Adds live state when /status.json is fresh; renders nothing otherwise. */}
+      <div className="rail">
         <UsesStatus />
-      </div>
-      <div className="hero">
-        <h1>Uses</h1>
-        <p>
-          What actually runs my work and my lab. Not aspirational — this is the
-          current state, and the server half of it is version-controlled.
-        </p>
       </div>
 
       <hr className="bleed" />
