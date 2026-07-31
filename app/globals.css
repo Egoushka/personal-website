@@ -483,6 +483,19 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
    them — the balance sets everything at one size and features nothing. */
 .hero-rail { padding-top: 12px; }
 
+/* Tag chips as a run of text under a page head, not a column down the rail. */
+.tag-run {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-4);
+  margin: var(--s-5) 0 0;
+  font: 400 var(--fs-rail)/var(--lh-rail) var(--figure);
+  letter-spacing: var(--ls-rail);
+  text-transform: uppercase;
+}
+.tag-run a { color: var(--ink-2); text-decoration-color: var(--rule-firm); }
+.tag-run .rail-count { font-variant-numeric: tabular-nums; color: var(--rule-firm); }
+
 /* ============================================================================
    PROJECTS / EXPERIENCE / HOMELAB / RESUME (screen)
    ========================================================================= */
@@ -1053,10 +1066,21 @@ h1.rail--tag {
 
   @page { size: A4; margin: 16mm 15mm; }
 
+  /* UNVERIFIED — check with Cmd+P before trusting this sheet.
+
+     Literata sets wider than the Source Serif this page was fitted to, so the
+     typeface swap made the résumé longer. Cut #4 below is spent here to buy that
+     back, but the page count has NOT been confirmed: print pagination cannot be
+     measured from this repo's tooling, and an attempt to simulate it in the
+     browser gave numbers that moved the wrong way when content was removed. The
+     figures below are a proportional response to a wider face, not a measurement.
+
+     If Cmd+P still shows two pages, work down the cut order at the bottom of
+     this block. Do not go below 10pt or 1.4 line-height to do it. */
   html, body {
     background: #fff;
-    font-size: 10.5pt;          /* ~14px equivalent; above the print floor */
-    line-height: 1.5;
+    font-size: 10pt;
+    line-height: 1.42;
   }
 
   /* --- strip the site chrome --------------------------------------------- */
@@ -1095,7 +1119,7 @@ h1.rail--tag {
 
   /* --- résumé specifics --------------------------------------------------- */
   .resume h1 {
-    font: 600 28pt/1.02 var(--prose);
+    font: 600 24pt/1.02 var(--prose);
     letter-spacing: -0.02em;
     color: #000;
     margin: 0;
@@ -1165,7 +1189,7 @@ h1.rail--tag {
      1. GlobalLogic and LetsData drop to title + dates only (already the case).
      2. UKAD drops from two bullets to one.
      3. Skills becomes one line, no wrap.
-     4. Body from 10.5pt to 10pt. NOT below 10pt.
+     4. Body from 10.5pt to 10pt. NOT below 10pt.  ← SPENT, 2026-07-31
      5. @page margin from 16mm/15mm to 14mm/13mm.
    Do not shrink line-height below 1.4 and do not drop the masthead rule.
    ========================================================================= */
@@ -1202,9 +1226,12 @@ h1.rail--tag {
 
 .sheet-lede {
   max-width: 60ch;
-  margin: var(--s-5) 0 var(--s-8);
+  margin: var(--s-5) 0 var(--s-6);
   color: var(--ink-2);
 }
+/* The balance wants air between the lede and the first row; a page inside the
+   grid already gets its row gap and would otherwise open a hole. */
+.sheet > .sheet-head .sheet-lede { margin-bottom: var(--s-8); }
 
 .ledger {
   list-style: none;

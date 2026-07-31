@@ -55,13 +55,18 @@ export default function BlogIndex() {
         lede="Mostly the things I'd want to have read before I learned them the hard way."
       />
 
-      <div className="rail hero-rail">
+      {/*
+        Tags run under the head rather than down the rail. In the rail they land
+        in column one of the row *after* the head, which opens a hole the width
+        of the page between the title and the first post.
+      */}
+      <p className="tag-run">
         {getTagCounts().map(({ tag, count }) => (
           <Link key={tag} href={`/tags/${tag}/`}>
             {tagLabel(tag)} <span className="rail-count">{count}</span>
           </Link>
         ))}
-      </div>
+      </p>
 
       {[...byYear.entries()].map(([year, posts]) => (
         <React.Fragment key={year}>
