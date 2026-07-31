@@ -14,6 +14,14 @@ export type PostMeta = {
   /** Whole minutes at 200 wpm, floored to 1. */
   readingTime: number;
   wordCount: number;
+  /**
+   * Optional. The length of the stretch of time the piece is *about*, in days —
+   * `spanDays: 51` for an essay about fifty-one days of a pipeline shipping
+   * nothing. The post page sets the words written against it, which is the one
+   * measurement a piece of writing can make about itself. Omit it and the line
+   * is not printed; there is no default and nothing is estimated.
+   */
+  spanDays?: number;
 };
 
 export type Post = PostMeta & { content: string };
@@ -31,6 +39,9 @@ function readPostFile(slug: string): Post {
     tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
     readingTime: Math.max(1, Math.round(words / 200)),
     wordCount: words,
+    spanDays: Number.isFinite(Number(data.spanDays)) && data.spanDays != null
+      ? Number(data.spanDays)
+      : undefined,
     content,
   };
 }

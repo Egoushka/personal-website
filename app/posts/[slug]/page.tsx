@@ -9,7 +9,15 @@ import Nav from "@/components/Nav";
 import { BlogPostingLd } from "@/components/JsonLd";
 import Footer from "@/components/Footer";
 import { site, feedTypes } from "@/lib/site";
-import { getAllSlugs, getPost, tableOfContents, getRelatedPosts, getAdjacentPosts } from "@/lib/posts";
+import {
+  getAllPosts,
+  getAllSlugs,
+  getPost,
+  tableOfContents,
+  getRelatedPosts,
+  getAdjacentPosts,
+} from "@/lib/posts";
+import { getReadings } from "@/lib/ledger";
 import { tagLabel } from "@/lib/tags";
 
 type Params = { slug: string };
@@ -58,6 +66,19 @@ export default async function PostPage(
   const { prev, next } = getAdjacentPosts(slug);
   void prev; void next;
 
+  /*
+   * A post is not a blog entry here, it is the evidence under one claim — and
+   * every post is evidence under the same one, because "writes about what he
+   * builds" is the only claim writing can pay for. Entries are numbered oldest
+   * first, the way a ledger numbers them, so a post's number never changes when
+   * the next one is filed.
+   */
+  const all = getAllPosts(); // newest first
+  const entryNo = all.length - all.findIndex((p) => p.slug === slug);
+  const daysAgo = Math.round(
+    (Date.parse(getReadings().drawnOn) - Date.parse(post.date)) / 86_400_000,
+  );
+
   return (
     <>
       <main id="main" className="wrap">
@@ -71,11 +92,6 @@ export default async function PostPage(
           subgrid can only ever start its own row.
         */}
         <div className="rail rail--header">
-          <time dateTime={post.date}>{post.date}</time>
-          <span>
-            {post.readingTime} min · {post.wordCount.toLocaleString("en-US")} words
-          </span>
-
           {post.tags.length > 0 && (
             <span className="rail--tags">
               {post.tags.map((t) => (
@@ -105,7 +121,16 @@ export default async function PostPage(
           )}
         </div>
 
+          <p className="entry-line">
+            <Link href="/#claim-writes">Claim 01 — writes about what he builds</Link>
+            <span className="sep">/</span>
+            entry {String(entryNo).padStart(2, "0")} of {all.length}
+          </p>
           <h1>{post.title}</h1>
+          <p className="entry-figures">
+            {post.wordCount.toLocaleString("en-US")} words · {post.readingTime} min ·
+            filed <time dateTime={post.date}>{post.date}</time> · {daysAgo} days ago
+          </p>
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[
@@ -162,6 +187,23 @@ export default async function PostPage(
             {post.content}
           </ReactMarkdown>
         </article>
+
+        {/*
+          The one measurement a piece of writing can make about itself: the words
+          spent against the stretch of time they report on. Printed only when the
+          post declares that stretch in its frontmatter — there is no default,
+          and a span is never inferred from the prose.
+        */}
+        {post.spanDays ? (
+          <div className="row">
+            <span className="rail rail--label">Overrun</span>
+            <p className="overrun">
+              {post.wordCount.toLocaleString("en-US")} words to describe{" "}
+              {post.spanDays} days — {Math.round(post.wordCount / post.spanDays)} words
+              for every day of it.
+            </p>
+          </div>
+        ) : null}
 
         {/* One link, not a grid of cards. */}
         {related && (

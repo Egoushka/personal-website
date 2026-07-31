@@ -103,7 +103,7 @@ export default function Home() {
 
   return (
     <main id="main" className="sheet">
-      <Nav current="home" links={false} />
+      <Nav current="home" />
       <PersonAndSiteLd />
 
       <header className="sheet-head">
@@ -123,7 +123,11 @@ export default function Home() {
 
       <ol className="ledger">
         {ledger.map((c, i) => (
-          <li key={c.id} className={c.unbalanced ? "ledger-row is-open" : "ledger-row"}>
+          <li
+            key={c.id}
+            id={`claim-${c.id}`}
+            className={c.unbalanced ? "ledger-row is-open" : "ledger-row"}
+          >
             <details>
               <summary>
                 <span className="ledger-no" aria-hidden="true">

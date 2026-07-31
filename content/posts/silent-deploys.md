@@ -3,6 +3,7 @@ title: "The deploy said success. Nothing had deployed for 51 days."
 date: "2026-07-28"
 description: "A pipeline that reported success while shipping nothing, a config the container could never see, and one shared cause: failure that looks like success."
 tags: ["infrastructure", "debugging", "ci-cd"]
+spanDays: 51
 ---
 
 I went to add a security header to this site and found that the last successful deploy had been fifty-one days earlier. Not a failed deploy. Not a red X in the Actions tab. Nothing at all — the pipeline had simply stopped being invoked, and no one, including me, had noticed.

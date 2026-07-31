@@ -1378,3 +1378,30 @@ h1.rail--tag {
   .ledger-row summary::after { grid-column: 3; grid-row: 1; }
   .ledger-detail { padding-left: calc(2.4rem + var(--s-3)); }
 }
+
+/* --- a post is evidence, not a blog entry --------------------------------- */
+
+.entry-line {
+  font: 400 var(--fs-rail)/var(--lh-rail) var(--figure);
+  letter-spacing: var(--ls-rail);
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin: 0 0 var(--s-4);
+}
+.entry-line .sep { margin: 0 var(--s-2); color: var(--rule-firm); }
+.entry-line a { color: var(--ink-2); }
+
+.entry-figures {
+  font: 400 var(--fs-small)/1.5 var(--figure);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  margin: var(--s-3) 0 0;
+}
+
+.overrun {
+  margin: 0;
+  padding-top: var(--s-3);
+  border-top: var(--hair) solid var(--rule-firm);
+  font-size: var(--fs-small);
+  color: var(--ink-2);
+}
