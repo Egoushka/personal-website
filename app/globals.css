@@ -478,58 +478,10 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
   margin: var(--s-1) 0 0;
 }
 
-/* The lead item on the home page — the only element besides the name that is
-   larger than body. */
-.lead-post h2 {
-  font: 600 30px/1.18 var(--prose);
-  letter-spacing: -0.012em;
-  margin: 0;
-}
-.lead-post p { font-size: var(--fs-body); color: var(--text); margin-top: var(--s-3); }
-.lead-post .more {
-  display: inline-block;
-  margin-top: var(--s-3);
-  font: 400 var(--fs-rail)/1 var(--figure);
-  letter-spacing: var(--ls-rail);
-  color: var(--accent);
-  text-decoration: none;
-}
-.lead-post .more:hover { text-decoration: underline; }
-
-/* ============================================================================
-   HOME — hero and work index
-   ========================================================================= */
-
-.hero { padding-top: 52px; }
-.hero h1 {
-  font-size: var(--fs-display);
-  line-height: var(--lh-tight);
-  letter-spacing: var(--ls-display);
-  margin: 0;
-}
-.hero p { max-width: 56ch; margin: var(--s-5) 0 0; }
-/* Optically level with the display cap-height. */
+/* Kept: /about, /blog and the 404 still hang a short list off the rail. The
+   home page's hero, lead post and work index are gone with the page that had
+   them — the balance sets everything at one size and features nothing. */
 .hero-rail { padding-top: 12px; }
-.hero-rail .open { color: var(--accent); margin-top: var(--s-2); }
-
-.work-index {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 var(--s-6);
-  font-size: var(--fs-small);
-  line-height: 1.9;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.work-index a { color: var(--text); text-decoration: none; }
-.work-index a:hover { color: var(--accent); }
-.work-index .qual {
-  font: 400 11.5px/1 var(--figure);
-  letter-spacing: var(--ls-rail);
-  color: var(--muted);
-  margin-left: var(--s-2);
-}
 
 /* ============================================================================
    PROJECTS / EXPERIENCE / HOMELAB / RESUME (screen)
@@ -809,9 +761,7 @@ figure figcaption {
   /* A group label starts a new strip rather than continuing the run. */
   .rail--group { border-top: 0; padding-top: 0; margin-top: 0; }
 
-  .hero { padding-top: var(--s-8); }
-  .hero h1 { font-size: var(--fs-h1); }
-  .work-index { grid-template-columns: minmax(0, 1fr); }
+  .sheet-head { padding-top: var(--s-8); }
 
   /* The TOC becomes a closed <details> — the only interactive rail element, and
      it needs no JavaScript. */

@@ -8,7 +8,7 @@ export default function NotFound() {
     <main id="main" className="wrap">
       <Nav />
       <span className="rail hero-rail">404</span>
-      <div className="hero notfound">
+      <div className="notfound">
         <h1>404</h1>
         <p>
           No page at this address. It answered, but it isn&apos;t listening.{" "}
