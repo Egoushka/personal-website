@@ -83,30 +83,36 @@
 	# the matcher before it ever ran. handle blocks are evaluated top to bottom
 	# and the first match wins.
 	#
+	# The `*` on every redir is NOT decoration. `redir` is
+	# `redir [<matcher>] <to> [<code>]`, and a first argument beginning with `/`
+	# is parsed as a PATH MATCHER — so `redir /writing/ permanent` means "match
+	# /writing/, redirect to the literal URL `permanent`". The explicit wildcard
+	# is what makes the destination a destination.
+	#
 	# The (.+) capture covers the OG card too: /posts/foo/opengraph-image lands on
 	# /writing/foo/opengraph-image, which is where next/og writes it now.
 	@oldpost path_regexp oldpost ^/posts/(.+)$
 	handle @oldpost {
-		redir /writing/{re.oldpost.1} permanent
+		redir * /writing/{re.oldpost.1} permanent
 	}
 
 	@oldtag path_regexp oldtag ^/tags/(.+)$
 	handle @oldtag {
-		redir /topics/{re.oldtag.1} permanent
+		redir * /topics/{re.oldtag.1} permanent
 	}
 
 	handle /blog* {
-		redir /writing/ permanent
+		redir * /writing/ permanent
 	}
 	handle /resume* {
-		redir /cv/ permanent
+		redir * /cv/ permanent
 	}
 	# /now/ and /uses/ are sections of /about/ now, not pages.
 	handle /now* {
-		redir /about/ permanent
+		redir * /about/ permanent
 	}
 	handle /uses* {
-		redir /about/ permanent
+		redir * /about/ permanent
 	}
 
 	handle {
