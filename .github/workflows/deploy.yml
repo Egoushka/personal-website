@@ -94,10 +94,39 @@ jobs:
             "cd $REMOTE_DIR && docker compose up -d && \
              docker exec website-caddy caddy reload --config /etc/caddy/Caddyfile"
 
+      # Every request carries a cache-busting query so this tests what was just
+      # deployed rather than Cloudflare's copy of what was there before. HTML is
+      # served with s-maxage=600, so without it /blog/ can answer 200 from the
+      # edge for ten minutes after the page has stopped existing. The redirect
+      # matchers use `path`, which ignores the query, so the buster cannot change
+      # what is being tested.
       - name: Verify the site is serving
         run: |
-          for path in / /blog/ /feed.xml; do
-            code=$(curl -sS -o /dev/null -w '%{http_code}' "https://hrabovskyi.online$path")
+          CB="cb=${GITHUB_SHA}"
+          for path in / /writing/ /projects/ /about/ /cv/ /links/ /feed.xml; do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' "https://hrabovskyi.online$path?$CB")
             echo "$path -> $code"
             [ "$code" = "200" ] || exit 1
           done
+
+          # Routes moved in 2026-08 and these redirects are the only thing keeping
+          # the old URLs alive — a static export cannot redirect, so if the
+          # Caddyfile did not reload, every one of these 404s. Both published post
+          # addresses are in feed readers, so this is not a cosmetic check.
+          # Caddy's `redir` emits the destination verbatim, so the cache-buster is
+          # dropped from Location rather than carried through — verified against a
+          # real Caddy serving a real build, not assumed.
+          check_redirect() {
+            got=$(curl -sS -o /dev/null -w '%{http_code} %{redirect_url}' "https://hrabovskyi.online$1?$CB")
+            echo "$1 -> $got"
+            if [ "$got" != "301 https://hrabovskyi.online$2" ]; then
+              echo "  expected: 301 https://hrabovskyi.online$2"
+              exit 1
+            fi
+          }
+          check_redirect /blog/                  /writing/
+          check_redirect /posts/silent-deploys/  /writing/silent-deploys/
+          check_redirect /tags/debugging/        /topics/debugging/
+          check_redirect /resume/                /cv/
+          check_redirect /now/                   /about/
+          check_redirect /uses/                  /about/
