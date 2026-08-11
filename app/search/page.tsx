@@ -26,7 +26,7 @@ export default function Search() {
   return (
     <>
       <main id="main" className="wrap">
-        <Nav current="search" />
+        <Nav />
 
         <span className="rail rail--label">Search</span>
         <h1 id="search-heading">Search</h1>
@@ -44,8 +44,9 @@ export default function Search() {
 
         <noscript>
           <p>
-            Search needs JavaScript. Everything is also listed on the{" "}
-            <Link href="/blog/">blog index</Link>.
+            Search needs JavaScript. Everything is also listed under{" "}
+            <Link href="/writing/">writing</Link> and{" "}
+            <Link href="/projects/">projects</Link>.
           </p>
         </noscript>
 

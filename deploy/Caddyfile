@@ -1,7 +1,7 @@
 # Internal static server for hrabovskyi.online.
 # Listens on :80 inside the container (published to 100.64.0.4:8090).
 # TLS, the public hostname, and the www->apex redirect are handled upstream
-# by the edge "headscale-caddy". Keep this file plain HTTP.
+# by the edge. Keep this file plain HTTP.
 #
 # Cloudflare sits in front of the edge, so it can add, strip or override any of
 # these. Set each header in exactly ONE place — browsers intersect duplicate CSP
@@ -15,10 +15,6 @@
 	# zstd and gzip are all the standard Caddy build ships — there is no `br` without
 	# a custom build, and Cloudflare re-compresses at the edge anyway.
 	encode zstd gzip
-	file_server
-
-	# Next static export uses trailingSlash: dir/index.html
-	try_files {path} {path}/index.html {path}.html
 
 	header {
 		X-Content-Type-Options nosniff
@@ -68,12 +64,61 @@
 	header @pagefind Cache-Control "public, max-age=3600, s-maxage=86400"
 
 	# next/og writes these as EXTENSIONLESS files (out/opengraph-image,
-	# out/posts/<slug>/opengraph-image), so a file server has nothing to infer a
+	# out/writing/<slug>/opengraph-image), so a file server has nothing to infer a
 	# MIME type from and every social scraper rejects the card. Set it explicitly.
-	@ogimages path /opengraph-image /posts/*/opengraph-image
+	@ogimages path /opengraph-image /writing/*/opengraph-image
 	header @ogimages {
 		Content-Type "image/png"
 		Cache-Control "public, max-age=3600, s-maxage=86400"
+	}
+
+	# ── routes that moved, 2026-08 ────────────────────────────────────────────
+	# A static export cannot redirect — `redirects` in next.config hard-errors
+	# under output: "export" — so the old URLs live here or they 404. These are
+	# permanent and they are load-bearing: /posts/<slug>/ was the canonical
+	# address of everything ever published here, and it is in feed readers.
+	#
+	# `handle` blocks rather than bare `redir`, because bare directives are sorted
+	# into Caddy's own order and try_files would rewrite the path out from under
+	# the matcher before it ever ran. handle blocks are evaluated top to bottom
+	# and the first match wins.
+	#
+	# The `*` on every redir is NOT decoration. `redir` is
+	# `redir [<matcher>] <to> [<code>]`, and a first argument beginning with `/`
+	# is parsed as a PATH MATCHER — so `redir /writing/ permanent` means "match
+	# /writing/, redirect to the literal URL `permanent`". The explicit wildcard
+	# is what makes the destination a destination.
+	#
+	# The (.+) capture covers the OG card too: /posts/foo/opengraph-image lands on
+	# /writing/foo/opengraph-image, which is where next/og writes it now.
+	@oldpost path_regexp oldpost ^/posts/(.+)$
+	handle @oldpost {
+		redir * /writing/{re.oldpost.1} permanent
+	}
+
+	@oldtag path_regexp oldtag ^/tags/(.+)$
+	handle @oldtag {
+		redir * /topics/{re.oldtag.1} permanent
+	}
+
+	handle /blog* {
+		redir * /writing/ permanent
+	}
+	handle /resume* {
+		redir * /cv/ permanent
+	}
+	# /now/ and /uses/ are sections of /about/ now, not pages.
+	handle /now* {
+		redir * /about/ permanent
+	}
+	handle /uses* {
+		redir * /about/ permanent
+	}
+
+	handle {
+		# Next static export uses trailingSlash: dir/index.html
+		try_files {path} {path}/index.html {path}.html
+		file_server
 	}
 
 	handle_errors {

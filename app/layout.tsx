@@ -1,28 +1,31 @@
 import type { Metadata, Viewport } from "next";
-import { Source_Serif_4, IBM_Plex_Mono } from "next/font/google";
+import { Literata, Inter } from "next/font/google";
 import { site, feedTypes } from "@/lib/site";
 import "./globals.css";
 
 // Downloaded and self-hosted at build time — no request to Google from the browser,
 // and no render-blocking cross-origin stylesheet on the critical path.
 //
-// Two faces, and only two. Prose and headings are the serif; every piece of
-// metadata is the mono. A third family appearing here means the Marginalia rail
-// has started leaking into the body — see docs/DESIGN-BRIEF.md.
-const serif = Source_Serif_4({
+// Two faces, and only two. Prose is the serif; every figure, label and nav item is
+// the sans. A third family appearing here means something has started leaking.
+const prose = Literata({
   // cyrillic-ext carries "Hrabovskyi" and any Ukrainian strings.
   subsets: ["latin", "cyrillic-ext"],
   weight: ["400", "600"],
   style: ["normal", "italic"],
   display: "swap",
-  variable: "--font-serif",
+  variable: "--font-prose",
 });
 
-const mono = IBM_Plex_Mono({
+// Was Archivo Narrow, a condensed face drawn for dense tabular setting. That made
+// sense when the home page was a four-column ledger; it makes none now, and a
+// condensed face reads as tighter and more clipped than this site's voice. Inter
+// carries tabular figures for the counted numbers and stays friendly at 12px.
+const figure = Inter({
   subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["400", "600"],
   display: "swap",
-  variable: "--font-mono",
+  variable: "--font-figure",
 });
 
 export const metadata: Metadata = {
@@ -51,7 +54,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#100F0D",
+  // --paper, dark theme. Keep these two in step with globals.css.
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#191714" },
+    { media: "(prefers-color-scheme: light)", color: "#FBF8F2" },
+  ],
   colorScheme: "dark light",
 };
 
@@ -64,7 +71,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${serif.variable} ${mono.variable}`}
+      className={`${prose.variable} ${figure.variable}`}
     >
       <body>
         <a className="skip-link" href="#main">Skip to content</a>

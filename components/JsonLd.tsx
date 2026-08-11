@@ -1,4 +1,5 @@
-import { site, skills, experience } from "@/lib/site";
+import { site, experience, projects } from "@/lib/site";
+import { TOPICS, topicName, type TopicSlug } from "@/lib/topics";
 import type { PostMeta } from "@/lib/posts";
 
 /**
@@ -21,6 +22,20 @@ function Ld({ data }: { data: object }) {
 const personId = `${site.url}/#person`;
 const siteId = `${site.url}/#website`;
 
+/**
+ * `knowsAbout`, derived from the record rather than typed.
+ *
+ * Same rule as the CV's skills line: a technology only appears here if a job or
+ * a project actually references it, so the structured data cannot claim more
+ * than the visible pages do.
+ */
+function knowsAbout(): string[] {
+  const used = new Set<TopicSlug>();
+  for (const job of experience) for (const t of job.topics) used.add(t);
+  for (const project of projects) for (const t of project.topics) used.add(t);
+  return [...used].filter((t) => TOPICS[t].kind === "technology").map(topicName);
+}
+
 /** Homepage: who this is, and what site it is. Both get stable @ids so the
  *  per-page graphs below can reference them instead of repeating themselves. */
 export function PersonAndSiteLd() {
@@ -38,7 +53,7 @@ export function PersonAndSiteLd() {
             email: `mailto:${site.email}`,
             jobTitle: site.role,
             description: site.description,
-            knowsAbout: skills,
+            knowsAbout: knowsAbout(),
             sameAs: [site.github, site.linkedin],
             ...(current && { worksFor: { "@type": "Organization", name: current.company } }),
           },
@@ -58,7 +73,7 @@ export function PersonAndSiteLd() {
 }
 
 export function BlogPostingLd({ post }: { post: PostMeta }) {
-  const url = `${site.url}/posts/${post.slug}/`;
+  const url = `${site.url}/writing/${post.slug}/`;
   return (
     <Ld
       data={{
@@ -72,7 +87,7 @@ export function BlogPostingLd({ post }: { post: PostMeta }) {
             url,
             datePublished: post.date,
             dateModified: post.date,
-            keywords: post.tags,
+            keywords: post.topics.map(topicName),
             wordCount: post.wordCount,
             timeRequired: `PT${post.readingTime}M`,
             inLanguage: "en",
@@ -86,7 +101,7 @@ export function BlogPostingLd({ post }: { post: PostMeta }) {
             "@type": "BreadcrumbList",
             itemListElement: [
               { "@type": "ListItem", position: 1, name: "Home", item: `${site.url}/` },
-              { "@type": "ListItem", position: 2, name: "Blog", item: `${site.url}/blog/` },
+              { "@type": "ListItem", position: 2, name: "Writing", item: `${site.url}/writing/` },
               { "@type": "ListItem", position: 3, name: post.title, item: url },
             ],
           },
@@ -102,8 +117,8 @@ export function ProfilePageLd() {
       data={{
         "@context": "https://schema.org",
         "@type": "ProfilePage",
-        url: `${site.url}/resume/`,
-        name: `Résumé — ${site.name}`,
+        url: `${site.url}/cv/`,
+        name: `CV — ${site.name}`,
         mainEntity: { "@id": personId },
       }}
     />

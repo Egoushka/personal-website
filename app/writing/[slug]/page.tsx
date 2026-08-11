@@ -9,8 +9,15 @@ import Nav from "@/components/Nav";
 import { BlogPostingLd } from "@/components/JsonLd";
 import Footer from "@/components/Footer";
 import { site, feedTypes } from "@/lib/site";
-import { getAllSlugs, getPost, tableOfContents, getRelatedPosts, getAdjacentPosts } from "@/lib/posts";
-import { tagLabel } from "@/lib/tags";
+import {
+  getAllSlugs,
+  getPost,
+  formatDate,
+  tableOfContents,
+  getRelatedPosts,
+} from "@/lib/posts";
+import { getReadings, n } from "@/lib/readings";
+import { topicName } from "@/lib/topics";
 
 type Params = { slug: string };
 
@@ -23,11 +30,11 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { slug } = await params;
   const post = getPost(slug);
-  const url = `${site.url}/posts/${slug}/`;
+  const url = `${site.url}/writing/${slug}/`;
   return {
     title: post.title,
     description: post.description,
-    keywords: post.tags,
+    keywords: post.topics,
     alternates: { canonical: url, types: feedTypes },
     openGraph: {
       type: "article",
@@ -38,7 +45,7 @@ export async function generateMetadata(
       locale: site.locale,
       publishedTime: post.date,
       authors: [site.name],
-      tags: post.tags,
+      tags: post.topics,
     },
     twitter: {
       card: "summary_large_image",
@@ -55,13 +62,14 @@ export default async function PostPage(
   const post = getPost(slug);
   const toc = tableOfContents(post.content);
   const related = getRelatedPosts(slug, 1)[0];
-  const { prev, next } = getAdjacentPosts(slug);
-  void prev; void next;
+  const daysAgo = Math.round(
+    (Date.parse(getReadings().builtOn) - Date.parse(post.date)) / 86_400_000,
+  );
 
   return (
     <>
       <main id="main" className="wrap">
-        <Nav current="blog" />
+        <Nav current="writing" />
         <BlogPostingLd post={post} />
 
         <article className="prose">
@@ -71,15 +79,10 @@ export default async function PostPage(
           subgrid can only ever start its own row.
         */}
         <div className="rail rail--header">
-          <time dateTime={post.date}>{post.date}</time>
-          <span>
-            {post.readingTime} min · {post.wordCount.toLocaleString("en-US")} words
-          </span>
-
-          {post.tags.length > 0 && (
-            <span className="rail--tags">
-              {post.tags.map((t) => (
-                <Link key={t} href={`/tags/${t}/`}>{tagLabel(t)}</Link>
+          {post.topics.length > 0 && (
+            <span className="rail--topics">
+              {post.topics.map((t) => (
+                <Link key={t} href={`/topics/${t}/`}>{topicName(t)}</Link>
               ))}
             </span>
           )}
@@ -106,6 +109,15 @@ export default async function PostPage(
         </div>
 
           <h1>{post.title}</h1>
+          <p className="page-figures">
+            <time dateTime={post.date}>{formatDate(post.date)}</time>
+            <span className="sep">·</span>
+            {n(post.wordCount)} words
+            <span className="sep">·</span>
+            {post.readingTime} min read
+            <span className="sep">·</span>
+            {daysAgo} days ago
+          </p>
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[
@@ -163,15 +175,31 @@ export default async function PostPage(
           </ReactMarkdown>
         </article>
 
+        {/*
+          The one measurement a piece of writing can make about itself: the words
+          spent against the stretch of time they report on. Printed only when the
+          post declares that stretch in its frontmatter — there is no default,
+          and a span is never inferred from the prose.
+        */}
+        {post.spanDays ? (
+          <div className="row">
+            <span className="rail rail--label">For scale</span>
+            <p className="page-figures">
+              {n(post.wordCount)} words about {post.spanDays} days —{" "}
+              {Math.round(post.wordCount / post.spanDays)} words for every day of it.
+            </p>
+          </div>
+        ) : null}
+
         {/* One link, not a grid of cards. */}
         {related && (
           <>
             <hr className="bleed" />
             <div className="row">
-              <span className="rail rail--label">Related</span>
+              <span className="rail rail--label">Read next</span>
               <div className="post-item">
-                <h2><Link href={`/posts/${related.slug}/`}>{related.title}</Link></h2>
-                <p>{related.date} · {related.readingTime} min</p>
+                <h2><Link href={`/writing/${related.slug}/`}>{related.title}</Link></h2>
+                <p>{formatDate(related.date)} · {related.readingTime} min read</p>
               </div>
             </div>
           </>
@@ -180,10 +208,9 @@ export default async function PostPage(
         {/*
           One delegated listener on document, rather than a listener per button:
           it survives any DOM reconciliation and costs nothing per code block.
-          Still a plain script and not a client component — this site ships zero
-          'use client', and a React island for one button would put hydration on
-          every post. The button now lives in the rail, so it walks up to .row
-          rather than to its parent.
+          Still a plain script and not a client component — a React island for one
+          button would put hydration on every post. The button lives in the rail,
+          so it walks up to .row rather than to its parent.
         */}
         <script
           dangerouslySetInnerHTML={{

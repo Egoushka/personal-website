@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
-import { site, now } from "@/lib/site";
-import { getAllPosts, getTagCounts } from "@/lib/posts";
+import { site, projects } from "@/lib/site";
+import { getAllPosts } from "@/lib/posts";
+import { getTopicUsage } from "@/lib/readings";
 
 export const dynamic = "force-static";
 
@@ -11,20 +12,29 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // not tell crawlers the content is fresh.
   const newest = posts[0]?.date;
 
+  // Same source as the topic route's generateStaticParams, so the sitemap can
+  // never list a page the build did not render.
+  const topics = getTopicUsage().map((t) => t.slug);
+
   return [
     { url: `${base}/`, lastModified: newest, changeFrequency: "monthly", priority: 1 },
-    { url: `${base}/blog/`, lastModified: newest, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${base}/writing/`, lastModified: newest, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${base}/projects/`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/about/`, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${base}/resume/`, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${base}/uses/`, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${base}/now/`, lastModified: now.updated, changeFrequency: "monthly", priority: 0.5 },
-    ...getTagCounts().map(({ tag }) => ({
-      url: `${base}/tags/${tag}/`,
+    { url: `${base}/cv/`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${base}/links/`, changeFrequency: "yearly", priority: 0.4 },
+    ...projects.map((p) => ({
+      url: `${base}/projects/${p.slug}/`,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
+    ...topics.map((t) => ({
+      url: `${base}/topics/${t}/`,
       changeFrequency: "weekly" as const,
       priority: 0.4,
     })),
     ...posts.map((p) => ({
-      url: `${base}/posts/${p.slug}/`,
+      url: `${base}/writing/${p.slug}/`,
       lastModified: p.date,
       changeFrequency: "yearly" as const,
       priority: 0.7,

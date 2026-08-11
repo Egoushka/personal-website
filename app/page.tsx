@@ -1,86 +1,146 @@
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import PostList from "@/components/PostList";
 import { PersonAndSiteLd } from "@/components/JsonLd";
-import { site } from "@/lib/site";
+import { site, projects } from "@/lib/site";
 import { getAllPosts } from "@/lib/posts";
+import { getReadings, getTopicUsage, n } from "@/lib/readings";
+import { topicName } from "@/lib/topics";
 
 /**
- * One lead, then indexes.
+ * The home page.
  *
- * The old home page was six equal sections, so nothing led and a first-time
- * reader's opening seconds went on orienting. The newest post now carries the
- * only display weight besides the name, and the work index does in four lines
- * what those six sections were doing.
+ * One job: a stranger who has never heard of me should know who I am and be one
+ * click from the writing inside about eight seconds. That is the whole brief.
+ *
+ * This replaced a double-entry trial balance — eight numbered claims about the
+ * owner, each set against a counted figure, behind collapsed disclosures. It was
+ * the most specific idea this site ever had and it was hostile: a reader had to
+ * learn bookkeeping before extracting one fact, five of the eight claims were
+ * about the site itself, and the CV was one word in a metadata line. What
+ * survived is the rule underneath it — every figure below is counted at build
+ * time, never typed. See ADR 0002.
  */
 export default function Home() {
-  const [latest, ...older] = getAllPosts();
+  const r = getReadings();
+  const posts = getAllPosts();
+  /*
+    Every topic anything references, not just the ones posts use. Counting only
+    post topics listed four of thirteen and left six topic pages reachable from
+    nowhere but each other — orphaned from the whole site while sitting in the
+    sitemap. A section headed "things I keep coming back to" should also not be
+    silent about the ones I am paid to come back to.
+  */
+  const topics = getTopicUsage();
 
   return (
     <main id="main" className="wrap">
       <Nav current="home" />
       <PersonAndSiteLd />
 
-      <div className="rail hero-rail">
-        <span>Kyiv, UA</span>
-        <span>.NET · ASP.NET Core</span>
-        <span>Boerse Stuttgart Digital</span>
-        <span className="open">open to work</span>
-      </div>
-      <div className="hero">
-        <h1>{site.name}</h1>
-        <p>
-          I build and run reliable systems — backend services in .NET, the
-          occasional Angular front end, and a self-hosted infrastructure stack I
-          treat as a lab. I care about the parts that don&apos;t show up in a
-          demo.
+      <header className="home-greeting">
+        <h1>{site.greeting}</h1>
+        <p className="home-intro">{site.intro}</p>
+        <p className="home-status">
+          {site.location}
+          {site.openToWork && (
+            <>
+              <span className="sep">·</span>
+              <span className="is-open">open to work</span>
+            </>
+          )}
+          <span className="sep">·</span>
+          <Link href="/cv/">CV</Link>
+          <span className="sep">·</span>
+          <a href={`mailto:${site.email}`}>email me</a>
         </p>
-      </div>
+      </header>
 
-      {latest && (
-        <>
-          <hr className="bleed" />
-          <div className="row">
-            <span className="rail rail--label">Latest</span>
-            <div className="lead-post post-item">
-              <h2><Link href={`/posts/${latest.slug}/`}>{latest.title}</Link></h2>
-              <p>{latest.description}</p>
-              <Link className="more" href={`/posts/${latest.slug}/`}>
-                read → {latest.readingTime} min
-              </Link>
-            </div>
+      <hr className="bleed" />
+      <section className="row">
+        <span className="rail rail--against-body">
+          <span className="rail--label">Writing</span>
+          <span>
+            {r.posts} {r.posts === 1 ? "post" : "posts"} · {n(r.words)} words
+          </span>
+          {r.latest && <span>latest {r.daysSinceLatest} days ago</span>}
+        </span>
+        <div>
+          <div className="section-head">
+            <h2>Things I&apos;ve written down</h2>
+            <Link href="/writing/">all posts →</Link>
           </div>
-        </>
-      )}
+          <PostList posts={posts.slice(0, 5)} />
+        </div>
+      </section>
 
-      {older.length > 0 && (
-        <div className="row">
-          <span className="rail rail--label">More</span>
-          <ol className="post-list">
-            {older.map((p) => (
-              <li className="post-row" key={p.slug}>
-                <Link href={`/posts/${p.slug}/`}>{p.title}</Link>
-                <p>{p.description}</p>
-                <span className="post-meta">
-                  <time dateTime={p.date}>{p.date.slice(0, 7)}</time>
-                  {` · ${p.readingTime} min`}
-                </span>
+      <hr className="bleed" />
+      <section className="row">
+        <span className="rail rail--against-body">
+          <span className="rail--label">Projects</span>
+          <span>{r.projects} of them</span>
+          <span>both still running</span>
+        </span>
+        <div>
+          <div className="section-head">
+            <h2>Things I&apos;ve built</h2>
+            <Link href="/projects/">all projects →</Link>
+          </div>
+          <ol className="project-list">
+            {projects.map((p) => (
+              <li className="project-row" key={p.slug}>
+                <h3 className="project-name">
+                  <Link href={`/projects/${p.slug}/`}>{p.name}</Link>
+                </h3>
+                <span className="project-status">{p.meta} · {p.status}</span>
+                <p>{p.summary}</p>
               </li>
             ))}
           </ol>
         </div>
+      </section>
+
+      {topics.length > 0 && (
+        <>
+          <hr className="bleed" />
+          <section className="row">
+            <span className="rail rail--against-body">
+              <span className="rail--label">Topics</span>
+              <span>{topics.length} of them</span>
+              <span>one vocabulary, across posts, projects and jobs</span>
+            </span>
+            <div>
+              <div className="section-head">
+                <h2>Things I keep coming back to</h2>
+              </div>
+              <ul className="topic-run">
+                {topics.map((t) => (
+                  <li key={t.slug}>
+                    <Link href={`/topics/${t.slug}/`}>
+                      {topicName(t.slug)} <span className="rail-count">{t.total}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        </>
       )}
 
-      <hr className="bleed" />
-      <div className="row">
-        <span className="rail rail--label">Work</span>
-        <ul className="work-index">
-          <li><Link href="/projects/">MetaExchange</Link><span className="qual">order books</span></li>
-          <li><Link href="/projects/">NetworkMonitor</Link><span className="qual">homelab</span></li>
-          <li><Link href="/resume/">Experience</Link><span className="qual">2021–now</span></li>
-          <li><Link href="/uses/">Homelab</Link><span className="qual">one Hetzner box</span></li>
-        </ul>
-      </div>
+      {/*
+        Counted, and left in because it is true and it is funny. It was a row of
+        the old trial balance that could not be closed by a redesign — and this
+        is the third redesign, so it is still open. It closes when I write more,
+        which is the point.
+      */}
+      <p className="home-note">
+        For the record: this site is {n(r.codeLines + r.cssLines)} lines of code
+        and CSS serving {n(r.words)} words — {r.linesPerWord.toFixed(1)} lines for
+        every word published. I&apos;m aware of how that looks. Built{" "}
+        <time dateTime={r.builtOn}>{r.builtOn}</time>; every figure on this page
+        was counted then, not typed.
+      </p>
 
       <Footer />
     </main>

@@ -2,7 +2,7 @@
 title: "Running a homelab on one VPS"
 date: "2026-06-06"
 description: "Tailscale, Caddy, Vaultwarden and GitOps on a single Hetzner box — how my homelab is wired together."
-tags: ["infrastructure", "self-hosting"]
+topics: ["infrastructure", "self-hosting"]
 ---
 
 My homelab is one Hetzner VPS in Helsinki. No rack, no Raspberry Pi cluster — just a single Ubuntu box I run like a tiny production environment. The goal was never to save money. It was to learn infrastructure the way you only learn it when you're the one who gets paged.

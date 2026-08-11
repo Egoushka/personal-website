@@ -10,8 +10,24 @@ const POSTS_DIR = path.join(process.cwd(), "content", "posts");
 const MAX_DESCRIPTION = 160; // Google truncates around here.
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-const TAGS_TS = fs.readFileSync(path.join(process.cwd(), "lib", "tags.ts"), "utf8");
-const VOCAB = [...TAGS_TS.matchAll(/^  "?([a-z0-9-]+)"?:\s*\{/gm)].map((m) => m[1]);
+/**
+ * The closed vocabulary, read out of lib/topics.ts.
+ *
+ * Sliced to the TOPICS literal first rather than regexed over the whole file:
+ * that module also declares `graphGroups`, nested `graph: { … }` objects and a
+ * list of edges, and a loose pattern picked up entries from all of them.
+ */
+const TOPICS_TS = fs.readFileSync(path.join(process.cwd(), "lib", "topics.ts"), "utf8");
+const BLOCK = TOPICS_TS.slice(
+  TOPICS_TS.indexOf("export const TOPICS = {"),
+  TOPICS_TS.indexOf("} as const satisfies"),
+);
+const VOCAB = [...BLOCK.matchAll(/^ {2}"?([a-z0-9-]+)"?:\s*\{/gm)].map((m) => m[1]);
+
+if (VOCAB.length === 0) {
+  console.error("ERROR could not parse any topics out of lib/topics.ts — has its shape changed?");
+  process.exit(1);
+}
 
 const errors = [];
 const warnings = [];
@@ -53,15 +69,19 @@ for (const file of files) {
     fail(`frontmatter: description is ${data.description.length} chars, max ${MAX_DESCRIPTION}`);
   }
 
-  if (!Array.isArray(data.tags) || data.tags.length === 0) {
-    fail("frontmatter: tags must be a non-empty array");
-  } else if (data.tags.some((t) => typeof t !== "string")) {
-    fail("frontmatter: every tag must be a string");
+  if (data.tags) {
+    fail("frontmatter: `tags` is gone — the key is `topics`, and the vocabulary is lib/topics.ts");
+  }
+
+  if (!Array.isArray(data.topics) || data.topics.length === 0) {
+    fail("frontmatter: topics must be a non-empty array");
+  } else if (data.topics.some((t) => typeof t !== "string")) {
+    fail("frontmatter: every topic must be a string");
   } else {
-    // A tag outside the vocabulary silently creates a one-post hub nobody links to.
-    for (const t of data.tags) {
+    // A topic outside the vocabulary silently creates a one-post hub nobody links to.
+    for (const t of data.topics) {
       if (!VOCAB.includes(t)) {
-        fail(`frontmatter: tag "${t}" is not in lib/tags.ts (known: ${VOCAB.join(", ")})`);
+        fail(`frontmatter: topic "${t}" is not in lib/topics.ts (known: ${VOCAB.join(", ")})`);
       }
     }
   }
@@ -75,9 +95,14 @@ for (const file of files) {
   // Relative links must resolve to a real route. Static export has no redirects,
   // and trailingSlash: true means a missing slash costs a 404 behind the file server.
   for (const [, href] of body.matchAll(/]\((\/[^)\s]*)\)/g)) {
+    if (href.startsWith("/writing/")) {
+      const target = href.replace(/^\/writing\//, "").replace(/\/$/, "");
+      if (target && !files.includes(`${target}.md`)) {
+        fail(`links to /writing/${target}/ which does not exist`);
+      }
+    }
     if (href.startsWith("/posts/")) {
-      const target = href.replace(/^\/posts\//, "").replace(/\/$/, "");
-      if (!files.includes(`${target}.md`)) fail(`links to /posts/${target}/ which does not exist`);
+      fail(`links to "${href}" — posts live under /writing/ now`);
     }
     if (!href.endsWith("/") && !path.extname(href)) {
       fail(`internal link "${href}" needs a trailing slash (trailingSlash: true)`);
@@ -89,15 +114,14 @@ for (const file of files) {
   if (!/]\(\//.test(body)) warn("no internal links — costs SEO and session depth");
 }
 
-// lib/site.ts carries hand-written internal hrefs too (experience bullets, the homelab
-// "read more"). Deleting a post used to leave those dangling silently, because this
-// script only ever looked inside markdown.
+// lib/site.ts carries hand-written internal hrefs too. Deleting a post used to
+// leave those dangling silently, because this script only ever looked inside markdown.
 const siteTs = fs.readFileSync(path.join(process.cwd(), "lib", "site.ts"), "utf8");
 for (const [, href] of siteTs.matchAll(/href:\s*"(\/[^"]*)"/g)) {
-  if (href.startsWith("/posts/")) {
-    const target = href.replace(/^\/posts\//, "").replace(/\/$/, "");
-    if (!files.includes(`${target}.md`)) {
-      errors.push(`lib/site.ts: links to /posts/${target}/ which does not exist`);
+  if (href.startsWith("/writing/")) {
+    const target = href.replace(/^\/writing\//, "").replace(/\/$/, "");
+    if (target && !files.includes(`${target}.md`)) {
+      errors.push(`lib/site.ts: links to /writing/${target}/ which does not exist`);
     }
   }
   if (!href.endsWith("/") && !path.extname(href) && !href.includes("#")) {
@@ -109,6 +133,7 @@ for (const w of warnings) console.warn(`warn  ${w}`);
 for (const e of errors) console.error(`ERROR ${e}`);
 
 console.log(
-  `\n${files.length} post(s) + lib/site.ts checked — ${errors.length} error(s), ${warnings.length} warning(s)`,
+  `\n${files.length} post(s) + lib/site.ts checked against ${VOCAB.length} topics — ` +
+    `${errors.length} error(s), ${warnings.length} warning(s)`,
 );
 process.exit(errors.length > 0 ? 1 : 0);

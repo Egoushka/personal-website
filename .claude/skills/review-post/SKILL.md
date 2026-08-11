@@ -35,7 +35,7 @@ bullet lists standing in for prose, a lesson stated before it was earned.
 - `description` ≤ 160 chars and readable as a standalone feed summary.
 - `##` headings that would make a useful table of contents — they become one.
 - At least one internal link with a trailing slash.
-- Tags from `lib/tags.ts` only.
+- Topics from `lib/topics.ts` only.
 
 ## 4. Accessibility
 

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import GithubSlugger from "github-slugger";
+import type { TopicSlug } from "./topics";
 
 const POSTS_DIR = path.join(process.cwd(), "content", "posts");
 
@@ -10,10 +11,23 @@ export type PostMeta = {
   title: string;
   date: string;
   description: string;
-  tags: string[];
+  /**
+   * Slugs from lib/topics.ts. The frontmatter key is `topics`, not `tags` — one
+   * vocabulary now covers posts, projects and jobs, so calling the post's half
+   * of it something different was the thing keeping them apart.
+   */
+  topics: TopicSlug[];
   /** Whole minutes at 200 wpm, floored to 1. */
   readingTime: number;
   wordCount: number;
+  /**
+   * Optional. The length of the stretch of time the piece is *about*, in days —
+   * `spanDays: 51` for an essay about fifty-one days of a pipeline shipping
+   * nothing. The post page sets the words written against it, which is the one
+   * measurement a piece of writing can make about itself. Omit it and the line
+   * is not printed; there is no default and nothing is estimated.
+   */
+  spanDays?: number;
 };
 
 export type Post = PostMeta & { content: string };
@@ -28,9 +42,12 @@ function readPostFile(slug: string): Post {
     title: String(data.title ?? slug),
     date: String(data.date ?? ""),
     description: String(data.description ?? ""),
-    tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
+    topics: Array.isArray(data.topics) ? (data.topics.map(String) as TopicSlug[]) : [],
     readingTime: Math.max(1, Math.round(words / 200)),
     wordCount: words,
+    spanDays: Number.isFinite(Number(data.spanDays)) && data.spanDays != null
+      ? Number(data.spanDays)
+      : undefined,
     content,
   };
 }
@@ -56,9 +73,17 @@ export function getPost(slug: string): Post {
   return readPostFile(slug);
 }
 
+/** `2026-07-28` → `28 July 2026`. Written out, because the site reads like a person. */
 export function formatDate(iso: string): string {
   if (!iso) return "";
-  return iso.slice(0, 7); // YYYY-MM to match the terminal aesthetic
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 /**
@@ -78,24 +103,24 @@ export function tableOfContents(markdown: string): { id: string; text: string }[
   });
 }
 
-/** Posts carrying a given tag, newest first. */
-export function getPostsByTag(tag: string): PostMeta[] {
-  return getAllPosts().filter((p) => p.tags.includes(tag));
+/** Posts carrying a given topic, newest first. */
+export function getPostsByTopic(topic: string): PostMeta[] {
+  return getAllPosts().filter((p) => (p.topics as string[]).includes(topic));
 }
 
-/** Every tag actually used, with counts — drives /blog/ chips and the tag index. */
-export function getTagCounts(): { tag: string; count: number }[] {
+/** Every topic a post actually uses, with counts. */
+export function getTopicCounts(): { topic: string; count: number }[] {
   const counts = new Map<string, number>();
   for (const p of getAllPosts()) {
-    for (const t of p.tags) counts.set(t, (counts.get(t) ?? 0) + 1);
+    for (const t of p.topics) counts.set(t, (counts.get(t) ?? 0) + 1);
   }
   return [...counts.entries()]
-    .map(([tag, count]) => ({ tag, count }))
-    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
+    .map(([topic, count]) => ({ topic, count }))
+    .sort((a, b) => b.count - a.count || a.topic.localeCompare(b.topic));
 }
 
 /**
- * Up to `limit` posts related to `slug`, ranked by shared tags. Falls back to
+ * Up to `limit` posts related to `slug`, ranked by shared topics. Falls back to
  * the newest other posts so the section is never empty on a small blog.
  */
 export function getRelatedPosts(slug: string, limit = 3): PostMeta[] {
@@ -104,7 +129,10 @@ export function getRelatedPosts(slug: string, limit = 3): PostMeta[] {
   if (!current) return [];
   const others = all.filter((p) => p.slug !== slug);
   return others
-    .map((p) => ({ post: p, shared: p.tags.filter((t) => current.tags.includes(t)).length }))
+    .map((p) => ({
+      post: p,
+      shared: p.topics.filter((t) => current.topics.includes(t)).length,
+    }))
     .sort((a, b) => b.shared - a.shared || (a.post.date < b.post.date ? 1 : -1))
     .slice(0, limit)
     .map((x) => x.post);

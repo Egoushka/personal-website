@@ -3,11 +3,11 @@
 import { useMemo, useState } from "react";
 import {
   GRAPH_VIEWBOX,
+  graphTopics,
   neighboursOf,
-  skillEdges,
-  skillNodes,
-  type SkillNode,
-} from "@/lib/skills";
+  topicEdges,
+  topicName,
+} from "@/lib/topics";
 import type { StackItem } from "@/lib/site";
 
 /**
@@ -15,21 +15,38 @@ import type { StackItem } from "@/lib/site";
  *
  * Why not a force simulation: it needs a physics dependency, settles differently
  * on every load, throws labels wherever it likes, and animates a layout thrash on
- * first paint. Positions in lib/skills.ts are authored, so this renders
+ * first paint. Positions live on the topics in lib/topics.ts, so this renders
  * identically every time and related things sit near each other on purpose. The
- * "floating" is a CSS transform on top of a fixed layout — motion without
- * pretending the arrangement is emergent.
+ * "floating" is CSS on top of a fixed layout — motion without pretending the
+ * arrangement is emergent.
  *
  * Selection: hover or focus a node to light up what it actually connects to.
- * Every edge carries a `why`, so the connection is a claim rather than decoration.
+ * Every edge carries a `why`, so a connection is a claim rather than decoration.
  */
 
-type Props = { groups: { group: string; items: StackItem[] }[] };
+type Props = {
+  groups: { group: string; items: StackItem[] }[];
+  /**
+   * Topic slugs that actually have a page. The stack list is wider than the
+   * vocabulary's backing: Caddy and Docker are things I run every day and
+   * nothing on this site is *about* them yet, so they get no hub. Linking them
+   * anyway produced seven dangling links straight into a static file server,
+   * which cannot redirect its way out of them.
+   */
+  linkable: string[];
+};
 
-export default function SkillMap({ groups }: Props) {
+export default function TopicMap({ groups, linkable }: Props) {
+  const hasPage = useMemo(() => new Set(linkable), [linkable]);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState<string | null>(null);
   const [pinned, setPinned] = useState<string | null>(null);
+
+  const nodes = useMemo(() => graphTopics(), []);
+  const byId = useMemo(
+    () => Object.fromEntries(nodes.map((t) => [t.slug, t])),
+    [nodes],
+  );
 
   const shown = pinned ?? active;
   const q = query.trim().toLowerCase();
@@ -43,18 +60,13 @@ export default function SkillMap({ groups }: Props) {
    */
   const matches = useMemo(() => {
     if (!q) return null;
-    const hit = skillNodes.filter((n) => n.label.toLowerCase().includes(q));
-    return hit.length ? new Set(hit.map((n) => n.id)) : null;
-  }, [q]);
+    const hit = nodes.filter((t) => t.name.toLowerCase().includes(q));
+    return hit.length ? new Set(hit.map((t) => t.slug as string)) : null;
+  }, [q, nodes]);
 
   const near = useMemo(
-    () => (shown ? new Set([shown, ...neighboursOf(shown)]) : null),
+    () => (shown ? new Set<string>([shown, ...neighboursOf(shown)]) : null),
     [shown],
-  );
-
-  const byId = useMemo(
-    () => Object.fromEntries(skillNodes.map((n) => [n.id, n])) as Record<string, SkillNode>,
-    [],
   );
 
   const dim = (id: string) =>
@@ -77,20 +89,20 @@ export default function SkillMap({ groups }: Props) {
 
   return (
     <>
-      <div className="row skill-controls">
+      <div className="row graph-controls">
         <label className="rail rail--label" htmlFor="stack-filter">Filter</label>
         <div>
           <input
             id="stack-filter"
             type="search"
-            className="control skill-filter"
+            className="control graph-filter"
             placeholder="postgres, caddy, typescript…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             autoComplete="off"
             spellCheck={false}
           />
-          <span className="skill-count" aria-live="polite">
+          <span className="graph-count" aria-live="polite">
             {q ? `${totalShown} of ${groups.reduce((n, g) => n + g.items.length, 0)}` : ""}
           </span>
         </div>
@@ -101,74 +113,76 @@ export default function SkillMap({ groups }: Props) {
           <span className="rail--label">Fig. 01</span>
           <span>how it connects</span>
           {activeNode && (
-            <span className="skill-note">
-              <span className="skill-note-name">{activeNode.label}</span>
-              {activeNode.note}
+            <span className="graph-note">
+              <span className="graph-note-name">{activeNode.name}</span>
+              {activeNode.blurb}
             </span>
           )}
         </div>
 
-        <figure className="bleed-code skill-figure">
+        <figure className="bleed-code graph-figure">
           <svg
             viewBox={`0 0 ${GRAPH_VIEWBOX.w} ${GRAPH_VIEWBOX.h}`}
-            className="skill-svg"
+            className="graph-svg"
             role="img"
-            aria-labelledby="skillmap-title skillmap-desc"
+            aria-labelledby="topicmap-title topicmap-desc"
           >
-            <title id="skillmap-title">How the stack connects</title>
-            <desc id="skillmap-desc">
-              Fourteen tools and languages, joined where one actually depends on or
-              is used through the other. A full text equivalent follows the figure.
+            <title id="topicmap-title">How the stack connects</title>
+            <desc id="topicmap-desc">
+              {nodes.length} tools and languages, joined where one actually depends
+              on or is used through the other. A full text equivalent follows the
+              figure.
             </desc>
 
-            <g className="skill-edges">
-              {skillEdges.map((e) => {
+            <g className="graph-edges">
+              {topicEdges.map((e) => {
                 const a = byId[e.from];
                 const b = byId[e.to];
+                if (!a || !b) return null;
                 const lit = shown ? e.from === shown || e.to === shown : false;
                 const faded = dim(e.from) || dim(e.to);
                 return (
                   <line
                     key={`${e.from}-${e.to}`}
-                    x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-                    className={`skill-edge${lit ? " is-lit" : ""}${faded && !lit ? " is-dim" : ""}`}
+                    x1={a.graph.x} y1={a.graph.y} x2={b.graph.x} y2={b.graph.y}
+                    className={`graph-edge${lit ? " is-lit" : ""}${faded && !lit ? " is-dim" : ""}`}
                   />
                 );
               })}
             </g>
 
-            {skillNodes.map((n, i) => {
-              const faded = dim(n.id);
-              const isShown = shown === n.id;
+            {nodes.map((t, i) => {
+              const faded = dim(t.slug);
+              const isShown = shown === t.slug;
               return (
                 <g
-                  key={n.id}
-                  className={`skill-node${isShown ? " is-active" : ""}${faded ? " is-dim" : ""}`}
+                  key={t.slug}
+                  className={`graph-node${isShown ? " is-active" : ""}${faded ? " is-dim" : ""}`}
                   /* Deterministic per-node delay — Math.random() here would
                      differ between server and client and break hydration. */
                   style={{ animationDelay: `${(i % 7) * -1.9}s` }}
-                  transform={`translate(${n.x} ${n.y})`}
+                  transform={`translate(${t.graph.x} ${t.graph.y})`}
                   tabIndex={0}
                   role="button"
-                  aria-pressed={pinned === n.id}
-                  aria-label={`${n.label}. ${n.note} Connects to ${neighboursOf(n.id)
-                    .map((id) => byId[id].label)
+                  aria-pressed={pinned === t.slug}
+                  aria-label={`${t.name}. ${t.blurb} Connects to ${neighboursOf(t.slug)
+                    .map((id) => topicName(id))
                     .join(", ")}.`}
-                  onMouseEnter={() => setActive(n.id)}
+                  onMouseEnter={() => setActive(t.slug)}
                   onMouseLeave={() => setActive(null)}
-                  onFocus={() => setActive(n.id)}
+                  onFocus={() => setActive(t.slug)}
                   onBlur={() => setActive(null)}
-                  onClick={() => setPinned((p) => (p === n.id ? null : n.id))}
+                  onClick={() => setPinned((p) => (p === t.slug ? null : t.slug))}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      setPinned((p) => (p === n.id ? null : n.id));
+                      setPinned((p) => (p === t.slug ? null : t.slug));
                     }
                     if (e.key === "Escape") setPinned(null);
                   }}
                 >
-                  <circle r="6" className={`skill-dot skill-dot--${n.group}`} />
-                  <text x="14" y="5" className="skill-label">{n.label}</text>
+                  <circle r="6" className="graph-dot" />
+                  <text x="14" y="5" className="graph-label">{t.name}</text>
                 </g>
               );
             })}
@@ -180,10 +194,10 @@ export default function SkillMap({ groups }: Props) {
             what a screen reader, a text browser, and a printed page get.
           */}
           <ul className="visually-hidden">
-            {skillNodes.map((n) => (
-              <li key={n.id}>
-                {n.label}: {n.note} Connects to{" "}
-                {neighboursOf(n.id).map((id) => byId[id].label).join(", ")}.
+            {nodes.map((t) => (
+              <li key={t.slug}>
+                {t.name}: {t.blurb} Connects to{" "}
+                {neighboursOf(t.slug).map((id) => topicName(id)).join(", ")}.
               </li>
             ))}
           </ul>
@@ -198,14 +212,22 @@ export default function SkillMap({ groups }: Props) {
 
       {filteredGroups.map((group) => (
         <section className="row uses-group" key={group.group}>
-          <h2 className="rail rail--label" id={group.group.toLowerCase().replace(/\W+/g, "-")}>
+          <h3 className="rail rail--label" id={group.group.toLowerCase().replace(/\W+/g, "-")}>
             {group.group}
             <span className="rail-count">{group.items.length}</span>
-          </h2>
+          </h3>
           <dl className="uses-list">
             {group.items.map((item) => (
               <div className="uses-item" key={item.name}>
-                <dt>{item.name}</dt>
+                {/* When the thing is a topic with a page, its name is the way
+                    in. `StackItem.topic` was populated and never read, which is
+                    how /topics/dotnet/ ended up unreachable from anywhere on
+                    the site a reader would actually be. */}
+                <dt>
+                  {item.topic && hasPage.has(item.topic)
+                    ? <a href={`/topics/${item.topic}/`}>{item.name}</a>
+                    : item.name}
+                </dt>
                 <dd>
                   {item.desc}
                   {item.href && (
@@ -226,9 +248,9 @@ export default function SkillMap({ groups }: Props) {
       ))}
 
       {q && totalShown === 0 && (
-        <p className="skill-empty">
-          Nothing matches “{query}”. That is the honest answer — this list is what
-          I actually use, not everything I have heard of.
+        <p className="graph-empty">
+          Nothing matches “{query}”. That&apos;s the honest answer — this list is
+          what I actually use, not everything I&apos;ve heard of.
         </p>
       )}
     </>
