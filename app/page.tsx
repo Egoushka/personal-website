@@ -4,8 +4,8 @@ import Footer from "@/components/Footer";
 import PostList from "@/components/PostList";
 import { PersonAndSiteLd } from "@/components/JsonLd";
 import { site, projects } from "@/lib/site";
-import { getAllPosts, getTopicCounts } from "@/lib/posts";
-import { getReadings, n } from "@/lib/readings";
+import { getAllPosts } from "@/lib/posts";
+import { getReadings, getTopicUsage, n } from "@/lib/readings";
 import { topicName } from "@/lib/topics";
 
 /**
@@ -25,7 +25,14 @@ import { topicName } from "@/lib/topics";
 export default function Home() {
   const r = getReadings();
   const posts = getAllPosts();
-  const topics = getTopicCounts();
+  /*
+    Every topic anything references, not just the ones posts use. Counting only
+    post topics listed four of thirteen and left six topic pages reachable from
+    nowhere but each other — orphaned from the whole site while sitting in the
+    sitemap. A section headed "things I keep coming back to" should also not be
+    silent about the ones I am paid to come back to.
+  */
+  const topics = getTopicUsage();
 
   return (
     <main id="main" className="wrap">
@@ -100,6 +107,7 @@ export default function Home() {
           <section className="row">
             <span className="rail rail--against-body">
               <span className="rail--label">Topics</span>
+              <span>{topics.length} of them</span>
               <span>one vocabulary, across posts, projects and jobs</span>
             </span>
             <div>
@@ -107,10 +115,10 @@ export default function Home() {
                 <h2>Things I keep coming back to</h2>
               </div>
               <ul className="topic-run">
-                {topics.map(({ topic, count }) => (
-                  <li key={topic}>
-                    <Link href={`/topics/${topic}/`}>
-                      {topicName(topic)} <span className="rail-count">{count}</span>
+                {topics.map((t) => (
+                  <li key={t.slug}>
+                    <Link href={`/topics/${t.slug}/`}>
+                      {topicName(t.slug)} <span className="rail-count">{t.total}</span>
                     </Link>
                   </li>
                 ))}

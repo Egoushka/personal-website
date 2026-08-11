@@ -24,9 +24,20 @@ import type { StackItem } from "@/lib/site";
  * Every edge carries a `why`, so a connection is a claim rather than decoration.
  */
 
-type Props = { groups: { group: string; items: StackItem[] }[] };
+type Props = {
+  groups: { group: string; items: StackItem[] }[];
+  /**
+   * Topic slugs that actually have a page. The stack list is wider than the
+   * vocabulary's backing: Caddy and Docker are things I run every day and
+   * nothing on this site is *about* them yet, so they get no hub. Linking them
+   * anyway produced seven dangling links straight into a static file server,
+   * which cannot redirect its way out of them.
+   */
+  linkable: string[];
+};
 
-export default function TopicMap({ groups }: Props) {
+export default function TopicMap({ groups, linkable }: Props) {
+  const hasPage = useMemo(() => new Set(linkable), [linkable]);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState<string | null>(null);
   const [pinned, setPinned] = useState<string | null>(null);
@@ -208,7 +219,15 @@ export default function TopicMap({ groups }: Props) {
           <dl className="uses-list">
             {group.items.map((item) => (
               <div className="uses-item" key={item.name}>
-                <dt>{item.name}</dt>
+                {/* When the thing is a topic with a page, its name is the way
+                    in. `StackItem.topic` was populated and never read, which is
+                    how /topics/dotnet/ ended up unreachable from anywhere on
+                    the site a reader would actually be. */}
+                <dt>
+                  {item.topic && hasPage.has(item.topic)
+                    ? <a href={`/topics/${item.topic}/`}>{item.name}</a>
+                    : item.name}
+                </dt>
                 <dd>
                   {item.desc}
                   {item.href && (

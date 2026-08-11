@@ -8,7 +8,7 @@ import Picture, { hasPicture } from "@/components/Picture";
 import UsesStatus from "@/components/UsesStatus";
 import TopicMap from "@/components/TopicMap";
 import { site, feedTypes, experience, now, uses, usesUpdated } from "@/lib/site";
-import { getReadings } from "@/lib/readings";
+import { getReadings, getTopicUsage } from "@/lib/readings";
 
 const description =
   "Backend-leaning full-stack developer in Ukraine. C# / .NET and ASP.NET Core, Angular when the work reaches the front end, and a homelab run like production.";
@@ -157,7 +157,7 @@ export default function About() {
         one client component. `uses` is plain serialisable data from lib/site.ts —
         it passes through, it is not fetched.
       */}
-      <TopicMap groups={uses} />
+      <TopicMap groups={uses} linkable={getTopicUsage().map((t) => t.slug)} />
 
       <Footer />
     </main>

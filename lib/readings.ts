@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { getAllPosts } from "./posts";
-import { now, projects, usesUpdated } from "./site";
+import { now, projects, experience, usesUpdated } from "./site";
+import { ALL_TOPICS, type TopicSlug } from "./topics";
 
 /**
  * Every counted figure on the site, in one place.
@@ -101,4 +102,39 @@ export function getReadings(): Readings {
 /** `1394` → `1,394`. Used everywhere a figure is printed. */
 export function n(x: number): string {
   return x.toLocaleString("en-US");
+}
+
+export type TopicUsage = {
+  slug: TopicSlug;
+  posts: number;
+  projects: number;
+  jobs: number;
+  /** Everything referencing it. Zero means the topic gets no page at all. */
+  total: number;
+};
+
+/**
+ * How much each topic is actually backed by, counted across all three things
+ * that reference the vocabulary.
+ *
+ * This lives here rather than in lib/topics.ts because it needs `lib/site.ts`,
+ * and site.ts already imports the topic types — putting it there would be a
+ * cycle. It is the single source for three questions that were being answered
+ * separately and had already drifted: which topics get a page
+ * (`/topics/[topic]/generateStaticParams`), which go in the sitemap, and which
+ * the home page lists. The home page used to ask a fourth, narrower question —
+ * "which topics do posts use" — which is why a section headed "things I keep
+ * coming back to" listed four tags and left six topic pages reachable only from
+ * each other.
+ */
+export function getTopicUsage(): TopicUsage[] {
+  const posts = getAllPosts();
+  return ALL_TOPICS.map((slug) => {
+    const p = posts.filter((x) => (x.topics as string[]).includes(slug)).length;
+    const pr = projects.filter((x) => (x.topics as string[]).includes(slug)).length;
+    const j = experience.filter((x) => (x.topics as string[]).includes(slug)).length;
+    return { slug, posts: p, projects: pr, jobs: j, total: p + pr + j };
+  })
+    .filter((t) => t.total > 0)
+    .sort((a, b) => b.total - a.total || a.slug.localeCompare(b.slug));
 }

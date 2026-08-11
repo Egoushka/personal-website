@@ -7,7 +7,8 @@ import PageHead from "@/components/PageHead";
 import PostList from "@/components/PostList";
 import { site, feedTypes, projects, experience } from "@/lib/site";
 import { getPostsByTopic } from "@/lib/posts";
-import { TOPICS, isTopic, topicName, ALL_TOPICS } from "@/lib/topics";
+import { TOPICS, isTopic, topicName } from "@/lib/topics";
+import { getTopicUsage } from "@/lib/readings";
 
 type Params = { topic: string };
 
@@ -21,21 +22,12 @@ type Params = { topic: string };
  * I have a side project.
  *
  * Only topics something actually references get a page. An empty hub is worse
- * than a 404 — it is a promise the site cannot keep.
+ * than a 404 — it is a promise the site cannot keep. `getTopicUsage()` is the
+ * single answer to that question; this page, the sitemap and the home page all
+ * ask it there rather than each reimplementing the filter.
  */
-function usedTopics(): string[] {
-  const used = new Set<string>();
-  for (const t of ALL_TOPICS) {
-    const hasPost = getPostsByTopic(t).length > 0;
-    const hasProject = projects.some((p) => (p.topics as string[]).includes(t));
-    const hasJob = experience.some((j) => (j.topics as string[]).includes(t));
-    if (hasPost || hasProject || hasJob) used.add(t);
-  }
-  return [...used];
-}
-
 export function generateStaticParams(): Params[] {
-  return usedTopics().map((topic) => ({ topic }));
+  return getTopicUsage().map((t) => ({ topic: t.slug }));
 }
 
 export async function generateMetadata(
@@ -72,7 +64,9 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
   const jobs = experience.filter((j) => (j.topics as string[]).includes(topic));
   if (posts.length + built.length + jobs.length === 0) notFound();
 
-  const others = usedTopics().filter((t) => t !== topic);
+  const others = getTopicUsage()
+    .map((t) => t.slug)
+    .filter((t) => t !== topic);
 
   return (
     <main id="main" className="wrap">

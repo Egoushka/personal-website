@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
-import { site, projects, experience } from "@/lib/site";
-import { getAllPosts, getPostsByTopic } from "@/lib/posts";
-import { ALL_TOPICS } from "@/lib/topics";
+import { site, projects } from "@/lib/site";
+import { getAllPosts } from "@/lib/posts";
+import { getTopicUsage } from "@/lib/readings";
 
 export const dynamic = "force-static";
 
@@ -12,14 +12,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // not tell crawlers the content is fresh.
   const newest = posts[0]?.date;
 
-  // Same rule as the topic route itself: only topics something references get a
-  // page, so only those belong in the sitemap.
-  const topics = ALL_TOPICS.filter(
-    (t) =>
-      getPostsByTopic(t).length > 0 ||
-      projects.some((p) => (p.topics as string[]).includes(t)) ||
-      experience.some((j) => (j.topics as string[]).includes(t)),
-  );
+  // Same source as the topic route's generateStaticParams, so the sitemap can
+  // never list a page the build did not render.
+  const topics = getTopicUsage().map((t) => t.slug);
 
   return [
     { url: `${base}/`, lastModified: newest, changeFrequency: "monthly", priority: 1 },
