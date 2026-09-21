@@ -74,6 +74,22 @@ export default function RootLayout({
       className={`${prose.variable} ${figure.variable}`}
     >
       <body>
+        {/*
+          Runs before anything paints, so a reader who chose a theme never sees
+          the other one first. It is inline and un-deferred on purpose: a
+          request for this would be a request that has to finish before the
+          first frame, which is the flash it exists to prevent.
+
+          Everything it can throw is caught. Blocked storage means no stored
+          choice, which is the same as never having made one, and the media
+          query in globals.css takes over.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}",
+          }}
+        />
         <a className="skip-link" href="#main">Skip to content</a>
         {children}
         {/*

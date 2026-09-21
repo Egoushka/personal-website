@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Search from "@/components/Search";
+import ThemeToggle from "@/components/ThemeToggle";
 
 /**
  * Wordmark left, four links and search right, hairline underneath.
@@ -53,6 +54,7 @@ export default function Nav({ current }: { current?: Section } = {}) {
           ))}
         </nav>
         <Search />
+        <ThemeToggle />
       </div>
     </header>
   );

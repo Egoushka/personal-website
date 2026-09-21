@@ -897,6 +897,24 @@ kbd {
 .search-trigger svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.6; }
 .search-trigger-key { color: var(--ink-2); }
 
+/* The theme switch. Same control edge and the same 24px minimum target as the
+   search trigger beside it — one control shape, two controls. The label names
+   the theme it switches TO; `min-width` keeps "dark" and "light" the same size
+   so the header does not shift when it is pressed. */
+.theme-toggle {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 24px; min-width: 58px; padding: 4px 9px;
+  background: transparent;
+  border: var(--hair) solid var(--rule-firm);
+  border-radius: var(--radius);
+  color: var(--ink-2);
+  cursor: pointer;
+  font: 400 11px/1 var(--figure);
+  letter-spacing: var(--ls-rail);
+  text-transform: uppercase;
+}
+.theme-toggle:hover { color: var(--ink); border-color: var(--accent); }
+
 .search-dialog {
   margin: 0 auto;
   /* Sits high rather than centred: results grow downward and the eye should not
