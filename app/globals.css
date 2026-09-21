@@ -581,11 +581,46 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
   margin: var(--s-5) 0 0;
 }
 .home-status .sep { margin: 0 var(--s-2); color: var(--rule-firm); }
-/* The one place a state is worth marking. Not a badge — a word in accent. */
 /* The one primary call to action above the fold. Everything else in this line is
    metadata; weight, not colour, is what separates them, because --accent already
    means "link" and cannot also mean "this link matters more". */
 .home-status .cta { font-weight: 600; }
+
+/* The proof row.
+
+   Three checkable lines under the hero, and the only block on the home page
+   that does not use the rail. The label leads the line rather than sitting in
+   the left column on purpose: this is the one place the page has to interrupt
+   its own rhythm, and it borrows the rail's small-caps treatment to do it
+   without introducing a fifth way of setting a label. No cards, no icons, no
+   border the project list does not already use. */
+.proof {
+  list-style: none;
+  margin: var(--s-8) 0 0;
+  padding: 0;
+  max-width: 62ch;
+  font-size: var(--fs-small);
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.proof li + li {
+  border-top: var(--hair) solid var(--rule);
+  margin-top: var(--s-4);
+  padding-top: var(--s-4);
+}
+.proof-label {
+  font: 600 10.5px/1.4 var(--figure);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  margin-inline-end: var(--s-3);
+}
+.proof-link {
+  font: 400 var(--fs-small)/1 var(--figure);
+  white-space: nowrap;
+  margin-inline-start: var(--s-2);
+}
 
 .section-head {
   display: flex;

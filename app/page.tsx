@@ -3,7 +3,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import PostList from "@/components/PostList";
 import { PersonAndSiteLd } from "@/components/JsonLd";
-import { site, projects } from "@/lib/site";
+import { site, proof, projects } from "@/lib/site";
 import { getAllPosts } from "@/lib/posts";
 import { getReadings, getTopicUsage, n } from "@/lib/readings";
 import { topicName } from "@/lib/topics";
@@ -72,6 +72,41 @@ export default function Home() {
           <a href={`mailto:${site.email}`}>email me</a>
         </p>
       </header>
+
+      {/*
+        The proof row. It deliberately does NOT use the rail-left / content-right
+        rhythm every section below it uses: four screens of identical rhythm is
+        what made this page scroll past unread, and the one block a cold reader
+        must not scroll past is this one.
+
+        The third row is assembled here rather than stored in lib/site.ts with
+        the other two, because both its figure and its link come from the post
+        index — writing "51" into the data file would be typing a number the
+        build already knows. No post with a `spanDays`, no third row.
+      */}
+      <ul className="proof">
+        {proof.map((p) => (
+          <li key={p.label}>
+            <span className="proof-label">{p.label}</span>
+            {p.text}
+            {p.links.map((l) => (
+              <a className="proof-link" key={l.href} href={l.href} rel="noopener">
+                {l.label}
+              </a>
+            ))}
+          </li>
+        ))}
+        {r.longestSpan && (
+          <li>
+            <span className="proof-label">{r.longestSpan.days} days</span>
+            A deployment that reported success while shipping nothing. Found,
+            explained, fixed.
+            <Link className="proof-link" href={`/writing/${r.longestSpan.slug}/`}>
+              read it →
+            </Link>
+          </li>
+        )}
+      </ul>
 
       <hr className="bleed" />
       <section className="row">

@@ -81,6 +81,44 @@ export const links: { label: string; href: string; handle: string; note: string 
   },
 ];
 
+/**
+ * The proof row: what sits directly under the hero.
+ *
+ * Three lines, and the only test each one has to pass is that a stranger can
+ * check it in under a minute. That is why two of them carry links to somewhere
+ * that is not this site — a claim I host myself is not evidence — and why the
+ * day job carries none: it is the one thing here nobody can verify from
+ * outside, so it is stated plainly and not dressed up.
+ *
+ * Where the figures come from, since the page cannot compute them: **87
+ * countries** is one validator per country in github.com/Egoushka/attest, and
+ * **197 defects** is the count in the package description on NuGet. Both are on
+ * the other end of the links in this row. The third line's figure is not here at
+ * all — it is counted at build time from the post's frontmatter, so the home
+ * page assembles that row itself.
+ */
+export const proof: {
+  label: string;
+  text: string;
+  links: { label: string; href: string }[];
+}[] = [
+  {
+    label: "Attest",
+    text:
+      "Validates national ID, tax ID, VAT and postal codes for 87 countries, against the rule each country publishes. A fork of CountryValidator with 197 of its defects fixed, published on NuGet.",
+    links: [
+      { label: "repo ↗", href: "https://github.com/Egoushka/attest" },
+      { label: "nuget ↗", href: "https://www.nuget.org/packages/Attest" },
+    ],
+  },
+  {
+    label: "Day job",
+    text:
+      ".NET on a European crypto brokerage platform: trade and payment flows, reconciliation, third-party integrations.",
+    links: [],
+  },
+];
+
 /** One measured fact about a project. `source` says where it came from — always. */
 export type Reading = { label: string; value: string; source: string };
 
