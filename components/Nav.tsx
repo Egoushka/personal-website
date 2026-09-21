@@ -3,12 +3,12 @@ import Search from "@/components/Search";
 import ThemeToggle from "@/components/ThemeToggle";
 
 /**
- * Wordmark left, four links and search right, hairline underneath.
+ * Wordmark left, three links and search right, hairline underneath.
  *
- * The CV used to be the fourth of five and is now in the footer. A CV answers
- * "should we hire this person full time", which is a question this site stopped
- * asking in 2026-09; Work answers the one it asks instead, and it goes first
- * because it is the only page here a stranger can act on.
+ * The CV used to be the fourth and is now in the footer. A CV answers "should
+ * we hire this person full time", which is not the question this site is
+ * written for any more — but it is the record, so it stays one click away
+ * rather than in the header.
  *
  * The previous design had no primary navigation at all: the home page was a
  * trial balance and every page was reached by opening the claim it was evidence
@@ -22,7 +22,6 @@ import ThemeToggle from "@/components/ThemeToggle";
  */
 
 const SECTIONS = [
-  { key: "work", href: "/work/", label: "Work" },
   { key: "writing", href: "/writing/", label: "Writing" },
   { key: "projects", href: "/projects/", label: "Projects" },
   { key: "about", href: "/about/", label: "About" },

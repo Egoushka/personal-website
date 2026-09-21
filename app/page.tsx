@@ -59,10 +59,11 @@ export default function Home() {
         points at. Delete that post and the clause disappears rather than
         printing a figure with nothing behind it.
 
-        One primary call to action. "What I can do" is the emphasised link; the
-        e-mail address is a metadata link like the location beside it, because a
-        reader who is ready to write already knows what they want to say and one
-        who is not should read the page first.
+        One primary call to action, and it is the e-mail address. There was a
+        /work page between the two for a day — rates, stages, what I will not
+        take — and it is gone: a price list is a thing to argue with before
+        anyone has said hello. The proof row under this makes the case; the
+        conversation settles the rest.
       */}
       <header className="home-greeting">
         <h1>{site.greeting}</h1>
@@ -81,9 +82,7 @@ export default function Home() {
           <span className="sep">·</span>
           {site.availability}
           <span className="sep">·</span>
-          <Link className="cta" href="/work/">What I can do →</Link>
-          <span className="sep">·</span>
-          <a href={`mailto:${site.email}`}>email me</a>
+          <a className="cta" href={`mailto:${site.email}`}>email me →</a>
         </p>
       </header>
 
