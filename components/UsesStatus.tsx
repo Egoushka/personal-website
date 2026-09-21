@@ -72,15 +72,12 @@ export default function UsesStatus() {
         <>
           <span>{status.coding.hours} h coding, 30 days</span>
           {status.coding.language && (
-            <span>
-              {status.coding.language} {status.coding.languagePercent}%
+            <>
+              <span>{status.coding.language} {status.coding.languagePercent}%</span>
               {status.coding.editor && (
-                <>
-                  {" · "}
-                  {status.coding.editor} {status.coding.editorPercent}%
-                </>
+                <span>{status.coding.editor} {status.coding.editorPercent}%</span>
               )}
-            </span>
+            </>
           )}
         </>
       )}

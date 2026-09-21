@@ -44,13 +44,9 @@ export default function Projects() {
         title="Projects"
         figures={
           <>
-            {projects.length} projects
-            <span className="sep">·</span>
-            {running} still running
-            <span className="sep">·</span>
-            {shipped} anyone can install
-            <span className="sep">·</span>
-            <a href={site.github} rel="noopener">github ↗</a>
+            <span>{projects.length} projects</span>
+            <span>{running} still running</span>
+            <span><a href={site.github} rel="noopener">GitHub</a></span>
           </>
         }
         lede="Each one exists because the alternative was worse, and most of them are best described by what they refuse to do. Only the first is something you can install; the rest run for one user, and the repositories are private."

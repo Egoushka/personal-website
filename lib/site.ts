@@ -107,8 +107,8 @@ export const proof: {
     text:
       "Validates national ID, tax ID, VAT and postal codes for 87 countries, against the rule each country publishes. A fork of CountryValidator with 197 of its defects fixed, published on NuGet.",
     links: [
-      { label: "repo ↗", href: "https://github.com/Egoushka/attest" },
-      { label: "nuget ↗", href: "https://www.nuget.org/packages/Attest" },
+      { label: "the repo", href: "https://github.com/Egoushka/attest" },
+      { label: "on NuGet", href: "https://www.nuget.org/packages/Attest" },
     ],
   },
   {
@@ -128,8 +128,13 @@ export type Project = {
   name: string;
   /** Where it stands today, in one word. Nothing here is called "finished". */
   status: "running" | "paused" | "building";
-  /** Language and shape, e.g. "Python · event store". Prints beside the name. */
-  meta: string;
+  /**
+   * What it is written in, and what shape it is. Two fields rather than one
+   * string with a separator baked into it: the separator is a rendering
+   * decision, and it changed once already.
+   */
+  lang: string;
+  shape: string;
   /**
    * Must be a PUBLIC URL. `*.lab.hrabovskyi.online` is a tailnet-only namespace
    * (100.64/10), so a Forgejo link there is a dead link for every visitor. Leave
@@ -173,7 +178,7 @@ export const projects: Project[] = [
     slug: "attest",
     name: "Attest",
     status: "running",
-    meta: "C# · library",
+    lang: "C#", shape: "library",
     href: "https://github.com/Egoushka/attest",
     summary:
       "Validates national ID, tax ID, VAT and postal codes for 87 countries, against the rule each country publishes rather than a regex someone guessed.",
@@ -193,7 +198,7 @@ export const projects: Project[] = [
     side: true,
     name: "Chronicle",
     status: "running",
-    meta: "Python · event store",
+    lang: "Python", shape: "event store",
     href: "",
     summary:
       "Makes seven years of chat history searchable by an assistant, by refusing to index the 65% of it that says “ok”.",
@@ -214,7 +219,7 @@ export const projects: Project[] = [
     side: true,
     name: "Baseline",
     status: "running",
-    meta: "Flutter · instrument",
+    lang: "Flutter", shape: "instrument",
     href: "",
     summary:
       "Tracks how you've changed since last time, and breaks the line rather than pretend a week-old comparison still holds.",
@@ -234,7 +239,7 @@ export const projects: Project[] = [
     side: true,
     status: "building",
     name: "Oura Platform",
-    meta: "C# · health warehouse",
+    lang: "C#", shape: "health warehouse",
     href: "",
     summary:
       "Pulls Oura Ring data into a database I own, so it can be joined against everything Oura will never see.",
@@ -254,7 +259,7 @@ export const projects: Project[] = [
     side: true,
     status: "running",
     name: "Homelab GitOps",
-    meta: "Compose · infrastructure",
+    lang: "Compose", shape: "infrastructure",
     href: "",
     summary:
       "Every stack on the box, one directory each, with the secrets encrypted in the repository rather than living on the machine.",
@@ -274,7 +279,7 @@ export const projects: Project[] = [
     side: true,
     status: "building",
     name: "Trader",
-    meta: "Python · backtesting",
+    lang: "Python", shape: "backtesting",
     href: "",
     summary:
       "A systematic crypto trading system whose result so far is two pre-registered hypotheses, both rejected, and no orders.",
@@ -297,7 +302,11 @@ export type Job = {
   when: string;
   company: string;
   role: string;
+  /** What the role was pointed at, when the title does not say. */
+  focus?: string;
   location?: string;
+  /** Remote, Hybrid, On-site. Its own field for the same reason as `shape`. */
+  mode?: string;
   points: Point[];
   /**
    * What the role was actually built with. This is the edge that makes a topic
@@ -321,8 +330,10 @@ export const experience: Job[] = [
   {
     when: "Aug 2025 — present",
     company: "Boerse Stuttgart Digital",
-    role: "Software Engineer · fintech / crypto trading",
-    location: "Ukraine · Remote",
+    role: "Software Engineer",
+    focus: "fintech / crypto trading",
+    location: "Ukraine",
+    mode: "Remote",
     topics: ["dotnet", "aspnet", "observability", "architecture"],
     points: [
       { text: "Build and maintain backend services in .NET / ASP.NET Core for a white-label crypto trading platform." },
@@ -334,7 +345,8 @@ export const experience: Job[] = [
     when: "Dec 2024 — Jun 2025",
     company: "IT INNOVATIONS",
     role: "Software Engineer",
-    location: "Kyiv · Hybrid",
+    location: "Kyiv",
+    mode: "Hybrid",
     topics: ["dotnet", "aspnet", "angular", "typescript", "architecture"],
     points: [
       { text: "Led development of a greenfield .NET 9 backend using Clean Architecture and vertical-slice CQRS." },
@@ -348,7 +360,8 @@ export const experience: Job[] = [
     company: "Atlas Recruiting",
     resumeCompact: true,
     role: "Sales Representative",
-    location: "Kyiv · On-site",
+    location: "Kyiv",
+    mode: "On-site",
     resumeOnly: true,
     topics: [],
     points: [
@@ -359,8 +372,10 @@ export const experience: Job[] = [
   {
     when: "Apr 2023 — Jun 2024",
     company: "UKAD",
-    role: "Software Engineer · Umbraco / Optimizely / Azure",
-    location: "Kyiv · Remote",
+    role: "Software Engineer",
+    focus: "Umbraco / Optimizely / Azure",
+    location: "Kyiv",
+    mode: "Remote",
     topics: ["dotnet", "architecture"],
     points: [
       { text: "Delivered features across several Umbraco-based .NET systems." },
@@ -386,7 +401,8 @@ export const experience: Job[] = [
     company: "GlobalLogic",
     resumeCompact: true,
     role: "Junior Software Engineer",
-    location: "Mykolaiv · Remote",
+    location: "Mykolaiv",
+    mode: "Remote",
     topics: ["dotnet"],
     points: [
       { text: "Completed the trainee program, then contributed to legacy system improvements." },
@@ -405,7 +421,7 @@ export const education = [
 export type StackItem = {
   name: string;
   desc: string;
-  /** Official project page. Renders as a ↗ mark; omit if there isn't one. */
+  /** Official project page. Renders as the word "site"; omit if there isn't one. */
   href?: string;
   /** Links the row to a topic page, when the thing is one. */
   topic?: TopicSlug;

@@ -36,7 +36,7 @@ export default function Links() {
 
       <PageHead
         title="Links"
-        figures={<>{links.length} places · all of them live</>}
+        figures={<><span>{links.length} places</span><span>all of them live</span></>}
         lede="Everywhere else I actually am. If it isn't listed, I'm not there."
       />
 

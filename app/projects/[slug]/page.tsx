@@ -63,14 +63,11 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
         title={project.name}
         figures={
           <>
-            {project.meta}
-            <span className="sep">·</span>
-            {project.status}
+            <span>{project.lang}</span>
+            <span>{project.shape}</span>
+            <span>{project.status}</span>
             {project.href && (
-              <>
-                <span className="sep">·</span>
-                <a href={project.href} rel="noopener">source ↗</a>
-              </>
+              <span><a href={project.href} rel="noopener">the repository</a></span>
             )}
           </>
         }
@@ -109,9 +106,8 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
       <div className="row">
         <span className="rail rail--label">Elsewhere</span>
         <p className="page-figures">
-          <Link href="/projects/">every project</Link>
-          <span className="sep">·</span>
-          <a href={site.github} rel="noopener">github ↗</a>
+          <span><Link href="/projects/">all projects</Link></span>
+          <span><a href={site.github} rel="noopener">my GitHub</a></span>
         </p>
       </div>
 

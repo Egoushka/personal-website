@@ -52,8 +52,8 @@ export default function About() {
         <a href={site.github} rel="noopener">github</a>
         <a href={site.linkedin} rel="noopener">linkedin</a>
         <span className="rail--group rail--label">Also</span>
-        <Link href="/cv/">the CV →</Link>
-        <Link href="/links/">everywhere else →</Link>
+        <Link href="/cv/">the CV</Link>
+        <Link href="/links/">everywhere else</Link>
       </div>
 
       <PageHead
@@ -76,7 +76,7 @@ export default function About() {
 
         <p>
           I&apos;m a backend-leaning full-stack developer based in Ukraine.
-          {current && ` Right now I'm a ${current.role.split(" · ")[0]} at ${current.company}, `}
+          {current && ` Right now I'm a ${current.role} at ${current.company}, `}
           working on backend services for a white-label crypto trading platform.
         </p>
 

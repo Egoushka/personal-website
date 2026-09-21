@@ -97,7 +97,7 @@ export default async function PostPage(
           */}
           {toc.length > 1 && (
             <details className="toc-details rail--group">
-              <summary>On this page · {toc.length}</summary>
+              <summary>On this page <span className="rail-count">{toc.length}</span></summary>
               <span className="rail--label">On this page</span>
               <ol className="toc">
                 {toc.map((h) => (
@@ -110,13 +110,10 @@ export default async function PostPage(
 
           <h1>{post.title}</h1>
           <p className="page-figures">
-            <time dateTime={post.date}>{formatDate(post.date)}</time>
-            <span className="sep">·</span>
-            {n(post.wordCount)} words
-            <span className="sep">·</span>
-            {post.readingTime} min read
-            <span className="sep">·</span>
-            {daysAgo} days ago
+            <span><time dateTime={post.date}>{formatDate(post.date)}</time></span>
+            <span>{n(post.wordCount)} words</span>
+            <span>{post.readingTime} min read</span>
+            <span>{daysAgo} days ago</span>
           </p>
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
@@ -199,7 +196,7 @@ export default async function PostPage(
               <span className="rail rail--label">Read next</span>
               <div className="post-item">
                 <h2><Link href={`/writing/${related.slug}/`}>{related.title}</Link></h2>
-                <p>{formatDate(related.date)} · {related.readingTime} min read</p>
+                <p className="run"><span>{formatDate(related.date)}</span><span>{related.readingTime} min read</span></p>
               </div>
             </div>
           </>

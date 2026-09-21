@@ -130,7 +130,7 @@ export const TOPICS = {
     graph: { x: 250, y: 224, group: "infra" },
   },
   tailscale: {
-    name: "Tailscale · Headscale",
+    name: "Tailscale and Headscale",
     kind: "technology",
     blurb: "The only way in. SSH isn't exposed to the internet.",
     graph: { x: 108, y: 158, group: "infra" },

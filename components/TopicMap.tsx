@@ -237,7 +237,7 @@ export default function TopicMap({ groups, linkable }: Props) {
                       rel="noopener"
                       aria-label={`${item.name} — official site`}
                     >
-                      ↗
+                      site
                     </a>
                   )}
                 </dd>

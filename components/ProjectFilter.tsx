@@ -63,7 +63,9 @@ export default function ProjectFilter({
               <Link href={`/projects/${p.slug}/`}>{p.name}</Link>
             </h2>
             <span className="project-status">
-              {p.meta} · {p.status}
+              <span>{p.lang}</span>
+              <span>{p.shape}</span>
+              <span>{p.status}</span>
             </span>
             <p>{p.summary}</p>
             <ul className="topic-run">

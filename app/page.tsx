@@ -28,7 +28,7 @@ function projectRow(p: Project) {
       <h3 className="project-name">
         <Link href={`/projects/${p.slug}/`}>{p.name}</Link>
       </h3>
-      <span className="project-status">{p.meta} · {p.status}</span>
+      <span className="project-status run"><span>{p.lang}</span><span>{p.shape}</span><span>{p.status}</span></span>
       <p>{p.summary}</p>
     </li>
   );
@@ -63,11 +63,9 @@ export default function Home() {
         <h1>{site.greeting}</h1>
         <p className="home-intro">{site.intro}</p>
         <p className="home-status">
-          {site.location}
-          <span className="sep">·</span>
-          {site.availability}
-          <span className="sep">·</span>
-          <a className="cta" href={`mailto:${site.email}`}>email me →</a>
+          <span>{site.location}</span>
+          <span>{site.availability}</span>
+          <span><a className="cta" href={`mailto:${site.email}`}>email me</a></span>
         </p>
       </header>
 
@@ -100,7 +98,7 @@ export default function Home() {
             A deployment that reported success while shipping nothing. Found,
             explained, fixed.
             <Link className="proof-link" href={`/writing/${r.longestSpan.slug}/`}>
-              read it →
+              read it
             </Link>
           </li>
         )}
@@ -110,15 +108,14 @@ export default function Home() {
       <section className="row">
         <span className="rail rail--against-body">
           <span className="rail--label">Writing</span>
-          <span>
-            {r.posts} {r.posts === 1 ? "post" : "posts"} · {n(r.words)} words
-          </span>
+          <span>{r.posts} {r.posts === 1 ? "post" : "posts"}</span>
+          <span>{n(r.words)} words</span>
           {r.latest && <span>latest {r.daysSinceLatest} days ago</span>}
         </span>
         <div>
           <div className="section-head">
             <h2>Things I&apos;ve written down</h2>
-            <Link href="/writing/">all posts →</Link>
+            <Link href="/writing/">all posts</Link>
           </div>
           <PostList posts={posts.slice(0, 5)} />
         </div>
@@ -143,7 +140,7 @@ export default function Home() {
         <div>
           <div className="section-head">
             <h2>Built, and still running</h2>
-            <Link href="/projects/">all projects →</Link>
+            <Link href="/projects/">all projects</Link>
           </div>
           <ol className="project-list">{shipped.map(projectRow)}</ol>
           {side.length > 0 && (

@@ -45,8 +45,8 @@ export default function HomelabDiagram() {
         {/* Ports are deliberately absent: which port Umami listens on is a
             deployment detail, and the two boundaries are the actual idea. */}
         {box(270, 8, 160, 40, "Visitor")}
-        {box(270, 84, 160, 50, "Cloudflare", "TLS · AI crawl control")}
-        {box(270, 176, 160, 50, "Traefik", "TLS again · routes by Host")}
+        {box(270, 84, 160, 50, "Cloudflare", "TLS, AI crawl control")}
+        {box(270, 176, 160, 50, "Traefik", "TLS again, routes by Host")}
 
         {box(60, 286, 180, 52, "Caddy", "static files")}
         {box(460, 286, 180, 52, "Umami", "first-party analytics")}
@@ -59,7 +59,7 @@ export default function HomelabDiagram() {
         </g>
         <text x="20" y="56" className="dg-zone-label">public internet</text>
         <text x="20" y="148" className="dg-zone-label">cloudflare edge</text>
-        <text x="20" y="248" className="dg-zone-label">one hetzner box · private network</text>
+        <text x="20" y="248" className="dg-zone-label">one hetzner box, private network</text>
 
         {/*
           The request path a visitor actually takes is the one accented stroke on

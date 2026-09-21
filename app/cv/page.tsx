@@ -84,7 +84,7 @@ export default function CV() {
       </div>
 
       <p className="control print-hint">
-        <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>P</kbd> → one A4 page
+        <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>P</kbd> prints one A4 page
       </p>
 
       <hr className="bleed" />
@@ -100,9 +100,11 @@ export default function CV() {
                 <h3 className="job-name">{job.company}</h3>
                 <span className="job-dates">{isoDates(job.when)}</span>
               </div>
-              <p className="job-meta">
-                {job.role}
-                {job.location && ` · ${job.location}`}
+              <p className="job-meta run">
+                <span>{job.role}</span>
+                {job.focus && <span>{job.focus}</span>}
+                {job.location && <span>{job.location}</span>}
+                {job.mode && <span>{job.mode}</span>}
               </p>
               <ul>
                 {job.points.map((pt, j) => (
@@ -128,9 +130,9 @@ export default function CV() {
                 <h3 className="job-name">
                   {p.href ? <a href={p.href} rel="noopener">{p.name}</a> : p.name}
                 </h3>
-                <span className="job-dates">{p.meta}</span>
+                <span className="job-dates">{p.lang}</span>
               </div>
-              <p className="job-meta">{p.topics.map(topicName).join(" · ")}</p>
+              <p className="job-meta run">{p.topics.map((t) => <span key={t}>{topicName(t)}</span>)}</p>
               {/* One line on paper. The full account is on the project's own
                   page; a CV bullet that runs four lines does not get read. */}
               <ul><li>{p.resumeLine ?? p.summary}</li></ul>
@@ -142,7 +144,7 @@ export default function CV() {
       <hr className="bleed" />
       <section className="row section">
         <h2 className="rail rail--label">Skills</h2>
-        <p className="skills-run">{skills.join(" · ")}</p>
+        <p className="skills-run run">{skills.map((s) => <span key={s}>{s}</span>)}</p>
       </section>
 
       <hr className="bleed" />

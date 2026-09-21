@@ -76,13 +76,10 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
         title={topicName(topic)}
         figures={
           <>
-            {posts.length} {posts.length === 1 ? "post" : "posts"}
-            <span className="sep">·</span>
-            {built.length} {built.length === 1 ? "project" : "projects"}
-            <span className="sep">·</span>
-            {jobs.length} {jobs.length === 1 ? "role" : "roles"}
-            <span className="sep">·</span>
-            {TOPICS[topic].kind}
+            <span>{posts.length} {posts.length === 1 ? "post" : "posts"}</span>
+            <span>{built.length} {built.length === 1 ? "project" : "projects"}</span>
+            <span>{jobs.length} {jobs.length === 1 ? "role" : "roles"}</span>
+            <span>{TOPICS[topic].kind}</span>
           </>
         }
         lede={TOPICS[topic].blurb}
@@ -109,7 +106,7 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
                   <h2 className="project-name">
                     <Link href={`/projects/${p.slug}/`}>{p.name}</Link>
                   </h2>
-                  <span className="project-status">{p.meta} · {p.status}</span>
+                  <span className="project-status run"><span>{p.lang}</span><span>{p.shape}</span><span>{p.status}</span></span>
                   <p>{p.summary}</p>
                 </li>
               ))}

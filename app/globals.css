@@ -279,8 +279,11 @@ a:hover { text-decoration-thickness: 2px; }
 .rail--topics { gap: 2px; }
 .rail--topics a { display: block; }
 
-.rail-count { color: var(--ink-2); font-variant-numeric: tabular-nums; }
-.rail-count::before { content: " · "; }
+.rail-count {
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  margin-inline-start: var(--s-2);
+}
 
 /* ============================================================================
    SITE HEADER / FOOTER
@@ -333,7 +336,6 @@ a:hover { text-decoration-thickness: 2px; }
 }
 .site-footer a { color: var(--ink-2); text-decoration: none; }
 .site-footer a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
-.site-footer .sep { color: var(--rule-firm); margin: 0 var(--s-2); }
 
 /* ============================================================================
    RULES
@@ -354,13 +356,28 @@ hr.bleed {
 .page-head { padding-top: var(--s-8); }
 .page-head h1 { margin: 0; }
 
+/* A RUN — several facts on one line, separated by space.
+
+   This replaced the interpunct. There were three mechanisms for that dot: a
+   <span className="sep"> in twenty-odd JSX sites, a " · " baked into data
+   strings and joins, and five CSS `content:` rules — so "change the separator"
+   meant editing three unrelated things and missing one. A run is a flex line
+   with a gap: the separator is now the absence of a glyph, which cannot drift.
+
+   Children must be elements, not bare text nodes: an anonymous flex item gets
+   no gap. Every call site wraps its facts in <span>. */
+.run, .page-figures, .home-status, .site-footer, .post-row .post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--s-5);
+}
+
 .page-figures {
   font: 400 var(--fs-small)/1.5 var(--figure);
   font-variant-numeric: tabular-nums;
   color: var(--ink-2);
   margin: var(--s-3) 0 0;
 }
-.page-figures .sep { margin: 0 var(--s-2); color: var(--rule-firm); }
 
 .page-lede {
   max-width: 60ch;
@@ -525,7 +542,6 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
 .post-row > a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
 .post-row p { margin: var(--s-1) 0 0; font-size: var(--fs-small); color: var(--ink-2); }
 .post-row .post-meta {
-  display: block;
   margin-top: 5px;
   font: 400 var(--fs-rail)/var(--lh-rail) var(--figure);
   letter-spacing: var(--ls-rail);
@@ -595,7 +611,6 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
   color: var(--ink-2);
   margin: var(--s-5) 0 0;
 }
-.home-status .sep { margin: 0 var(--s-2); color: var(--rule-firm); }
 /* The one primary call to action above the fold. Everything else in this line is
    metadata; weight, not colour, is what separates them, because --accent already
    means "link" and cannot also mean "this link matters more". */
@@ -1184,18 +1199,8 @@ figure figcaption {
     margin-bottom: var(--s-2);
     padding-top: 0 !important;
   }
-  .rail > * { display: inline; }
-  .rail > * + *::before {
-    content: "·";
-    color: var(--rule-firm);
-    margin-inline-end: var(--s-3);
-  }
-  .rail--topics a { display: inline; }
-  .rail--topics a + a::before {
-    content: "·";
-    color: var(--rule-firm);
-    margin: 0 var(--s-2);
-  }
+  .rail { gap: 0 var(--s-5); }
+  .rail--topics { gap: 0 var(--s-5); }
   /* The TOC takes its own line and drops the separator — it is a disclosure,
      not another fact in the run. */
   .rail > .toc-details { flex-basis: 100%; margin-top: var(--s-2); }
@@ -1228,10 +1233,7 @@ figure figcaption {
   .now-list  { row-gap: var(--s-6); }
   .now-list > .rail { padding-top: 0; }
 
-  .uses-status { flex-direction: row; flex-wrap: wrap; gap: 0 var(--s-3); }
-  .uses-status > * + *::before {
-    content: "·"; color: var(--rule-firm); margin-inline-end: var(--s-3);
-  }
+  .uses-status { flex-direction: row; flex-wrap: wrap; gap: 0 var(--s-5); }
 }
 
 @media (max-width: 560px) {
@@ -1330,14 +1332,8 @@ figure figcaption {
     flex-wrap: wrap;
     gap: 0 3mm;
     margin-top: 1.6mm;
-    /* 8pt is what fits all five on one line. If it wraps, the separator leads
-       the second line, which looks like a typo rather than a layout. */
+    /* 8pt is what fits all five on one line. */
     font-size: 8pt;
-  }
-  .cv .masthead-rail > * + *::before {
-    content: "·";
-    margin-inline-end: 3mm;
-    color: var(--ink-2);
   }
 
   .cv .job           { break-inside: avoid; page-break-inside: avoid; }

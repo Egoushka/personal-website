@@ -14,15 +14,11 @@ import { site } from "@/lib/site";
 export default function Footer() {
   return (
     <footer className="site-footer bleed" data-pagefind-ignore>
-      {site.domain}
-      <span className="sep">·</span>
-      <Link href="/cv/">cv</Link>
-      <span className="sep">·</span>
-      <Link href="/links/">links</Link>
-      <span className="sep">·</span>
-      <a href="/feed.xml">rss</a>
-      <span className="sep">·</span>
-      <a href={site.github} rel="noopener">github</a>
+      <span>{site.domain}</span>
+      <span><Link href="/cv/">cv</Link></span>
+      <span><Link href="/links/">links</Link></span>
+      <span><a href="/feed.xml">rss</a></span>
+      <span><a href={site.github} rel="noopener">github</a></span>
     </footer>
   );
 }
