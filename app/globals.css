@@ -1291,6 +1291,14 @@ figure figcaption {
 .masthead h1 { font-size: var(--fs-display); letter-spacing: var(--ls-display); margin: 0; }
 .masthead .role-title { margin: var(--s-2) 0 0; color: var(--ink-2); }
 .masthead-rail { padding-top: 14px; }
+/* Five contact links stacked at 12px are 18px tall, which fails WCAG 2.5.8 —
+   the same 24px floor every other control on this site clears. They are the
+   most likely thing on the page to be tapped, too. */
+.masthead-rail a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
 .print-hint { margin: var(--s-5) 0 0; width: max-content; }
 
 /* Dates sit right-aligned on the role line, so the right-hand column of a
