@@ -178,6 +178,22 @@ The original single-layer setup was: A records `@` and `www` → the VPS, with C
 the Let's Encrypt cert once DNS resolved. That still describes the origin; it is no longer
 the whole path.
 
+### Live state on /about/
+
+`scripts/gen-status.sh` runs from cron **on the VPS** and writes `/status.json` next to the
+site. `components/UsesStatus.tsx` fetches it in the browser and renders nothing if it is
+missing or older than 48 hours, so the page never claims live state it does not have.
+
+It publishes aggregates only — container count, unhealthy count, uptime, and, when
+`WAKAPI_API_KEY` is set in the cron environment, hours coded in the last 30 days with the
+top language and editor as shares. Never service names, versions, ports or project names:
+the busiest project is an employer's codebase and this document is public.
+
+```
+WAKAPI_API_KEY=... WAKAPI_URL=http://wakapi:3000 \
+  /opt/stacks/website/gen-status.sh /opt/stacks/website/site/status.json
+```
+
 **Ship a build:**
 
 ```bash

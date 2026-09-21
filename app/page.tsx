@@ -54,29 +54,14 @@ export default function Home() {
       <PersonAndSiteLd />
 
       {/*
-        The second sentence carries the only number above the fold, and it is
-        counted: `longestSpan` is the `spanDays` frontmatter of the post it
-        points at. Delete that post and the clause disappears rather than
-        printing a figure with nothing behind it.
-
-        One primary call to action, and it is the e-mail address. There was a
-        /work page between the two for a day — rates, stages, what I will not
-        take — and it is gone: a price list is a thing to argue with before
-        anyone has said hello. The proof row under this makes the case; the
-        conversation settles the rest.
+        One line and one call to action. The line used to carry a second
+        sentence with a counted figure in it; the figure is still on the page,
+        in the row below, where it sits next to the post that proves it instead
+        of in front of a reader who has not been told anything yet.
       */}
       <header className="home-greeting">
         <h1>{site.greeting}</h1>
-        <p className="home-intro">
-          {site.intro}
-          {r.longestSpan && (
-            <>
-              {" "}
-              My work is making the next failure visible on the day it happens,
-              not {r.longestSpan.days} days later.
-            </>
-          )}
-        </p>
+        <p className="home-intro">{site.intro}</p>
         <p className="home-status">
           {site.location}
           <span className="sep">·</span>
@@ -203,17 +188,14 @@ export default function Home() {
       )}
 
       {/*
-        Counted, and left in because it is true and it is funny. It was a row of
-        the old trial balance that could not be closed by a redesign — and this
-        is the third redesign, so it is still open. It closes when I write more,
-        which is the point.
+        The ratio stays because it is counted and it is the site admitting
+        something. The commentary around it is gone: the number was making the
+        joke and the sentence was explaining it.
       */}
       <p className="home-note">
-        For the record: this site is {n(r.codeLines + r.cssLines)} lines of code
-        and CSS serving {n(r.words)} words — {r.linesPerWord.toFixed(1)} lines for
-        every word published. I&apos;m aware of how that looks. Built{" "}
-        <time dateTime={r.builtOn}>{r.builtOn}</time>; every figure on this page
-        was counted then, not typed.
+        {n(r.codeLines + r.cssLines)} lines of code and CSS for {n(r.words)}{" "}
+        words. Counted at build, <time dateTime={r.builtOn}>{r.builtOn}</time> —
+        like every figure on this page.
       </p>
 
       <Footer />

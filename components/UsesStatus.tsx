@@ -25,6 +25,18 @@ type Status = {
   uptimeDays: number;
   containers: number;
   unhealthy: number;
+  /**
+   * Last 30 days from the Wakapi on the same box. Null whenever the generator
+   * could not read it, which is why every line below is guarded: a stack page
+   * claiming measured hours it does not have would be worse than a quiet one.
+   */
+  coding?: {
+    hours: number;
+    language: string | null;
+    languagePercent: number;
+    editor: string | null;
+    editorPercent: number;
+  } | null;
 };
 
 export default function UsesStatus() {
@@ -56,6 +68,22 @@ export default function UsesStatus() {
       <span className={status.unhealthy ? "uses-status-bad" : "uses-status-ok"}>
         {status.unhealthy ? `${status.unhealthy} unhealthy` : "all healthy"}
       </span>
+      {status.coding && status.coding.hours > 0 && (
+        <>
+          <span>{status.coding.hours} h coding, 30 days</span>
+          {status.coding.language && (
+            <span>
+              {status.coding.language} {status.coding.languagePercent}%
+              {status.coding.editor && (
+                <>
+                  {" · "}
+                  {status.coding.editor} {status.coding.editorPercent}%
+                </>
+              )}
+            </span>
+          )}
+        </>
+      )}
     </span>
   );
 }

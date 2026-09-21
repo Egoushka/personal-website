@@ -39,12 +39,50 @@ STATES="$(docker ps --filter 'label=com.docker.compose.project' --format '{{.Sta
 COUNT="$(printf '%s\n' "$STATES" | grep -c . || true)"
 UNHEALTHY="$(printf '%s\n' "$STATES" | grep -cv '^running$' || true)"
 
+# ── coding activity, optional ───────────────────────────────────────────────
+# Aggregates from the Wakapi on this box, so /about/ can say what I actually
+# work in rather than what I would like to be working in.
+#
+# Aggregates only, again: hours, the top language and the top editor, each as a
+# share. NOT the project list — the biggest project is an employer's codebase
+# and its name is not mine to publish. Every failure here is silent and leaves
+# the field null; UsesStatus renders nothing when it is missing, so the page
+# degrades to the static list rather than to a gap.
+#
+# Set WAKAPI_API_KEY in the cron environment to switch it on. WAKAPI_URL
+# defaults to the container's address on the compose network.
+CODING=null
+if [ -n "${WAKAPI_API_KEY:-}" ]; then
+  CODING="$(
+    curl -sf -m 10 \
+      -H "Authorization: Basic $(printf '%s' "$WAKAPI_API_KEY" | base64 -w0)" \
+      "${WAKAPI_URL:-http://wakapi:3000}/api/compat/wakatime/v1/users/current/stats/last_30_days" \
+    | python3 -c '
+import json, sys
+d = json.load(sys.stdin)["data"]
+first = lambda k: (d.get(k) or [{}])[0]
+lang, ed = first("languages"), first("editors")
+hours = round(d.get("total_seconds", 0) / 3600)
+if not hours:
+    raise SystemExit(1)
+print(json.dumps({
+    "hours": hours,
+    "language": lang.get("name"),
+    "languagePercent": round(lang.get("percent", 0)),
+    "editor": ed.get("name"),
+    "editorPercent": round(ed.get("percent", 0)),
+}))' 2>/dev/null || echo null
+  )"
+  [ -n "$CODING" ] || CODING=null
+fi
+
 {
   printf '{\n'
   printf '  "generated": "%s",\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   printf '  "uptimeDays": %s,\n' "$UP_DAYS"
   printf '  "containers": %s,\n' "$COUNT"
-  printf '  "unhealthy": %s\n' "$UNHEALTHY"
+  printf '  "unhealthy": %s,\n' "$UNHEALTHY"
+  printf '  "coding": %s\n' "$CODING"
   printf '}\n'
 } > "$TMP"
 

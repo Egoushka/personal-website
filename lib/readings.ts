@@ -58,8 +58,6 @@ export type Readings = {
   daysSinceLatest?: number;
   codeLines: number;
   cssLines: number;
-  /** Lines of source per published word. Currently, embarrassingly, above 1. */
-  linesPerWord: number;
   nowUpdated: string;
   daysSinceNow: number;
   usesVerified: string;
@@ -107,7 +105,6 @@ export function getReadings(): Readings {
     daysSinceLatest: latest ? daysBetween(latest.date, builtOn) : undefined,
     codeLines,
     cssLines,
-    linesPerWord: words ? (codeLines + cssLines) / words : 0,
     nowUpdated: now.updated,
     daysSinceNow: daysBetween(now.updated, builtOn),
     usesVerified: usesUpdated,

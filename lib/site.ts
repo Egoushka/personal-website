@@ -8,17 +8,11 @@ export const site = {
   url: "https://hrabovskyi.online",
   role: "Backend-first .NET developer",
   /**
-   * The first sentence under the greeting, and the only one stored here. The
-   * home page adds a second sentence whose figure is counted at build time —
-   * see `longestSpan` in lib/readings.ts — because a number about my work is
-   * the one part of a pitch that must not be typed by hand.
-   *
-   * It replaced "A .NET dev who just likes building interesting things. Some of
-   * it worked, some of it didn't." That sentence was true and it answered a
-   * question nobody arriving from a cold email is asking.
+   * One line under the greeting. It has been three sentences and a list of
+   * symptoms; both were longer than the thing they said. The three lines under
+   * it are the specifics, and they are checkable, which a paragraph is not.
    */
-  intro:
-    "I fix .NET backends that fail quietly: the integration that reports success, the job that stopped running, the numbers that stop reconciling.",
+  intro: "I write .NET backends and fix the ones that fail quietly.",
   description:
     "Backend services in .NET and ASP.NET Core, a homelab on one box in Helsinki, and writing about the parts that went wrong.",
   locale: "en_US",
@@ -351,10 +345,20 @@ export type StackItem = {
 };
 
 /** Bump this when the stack below actually changes. Prints on /about/. */
-export const usesUpdated = "2026-07";
+export const usesUpdated = "2026-09";
 
 /**
  * What I actually run and use, on /about/.
+ *
+ * The test for a row is that I could be caught out by it: every service under
+ * "the box" is defined in the homelab-gitops repo, every language under "day to
+ * day" shows up in my own Wakapi, and the editor split is measured rather than
+ * remembered. Nothing aspirational, nothing I used once.
+ *
+ * What is deliberately NOT here: versions, ports, hostnames, and the other
+ * ninety-odd containers on that machine. Naming a dozen mainstream services is
+ * an explanation; enumerating the whole stack with versions is a CVE list for a
+ * box whose address is already public. Same rule as scripts/gen-status.sh.
  *
  * This used to be its own page at /uses/ with a six-month expiry that struck the
  * heading through in public when it lapsed. The expiry is gone with the ledger —
@@ -365,30 +369,38 @@ export const uses: { group: string; items: StackItem[] }[] = [
   {
     group: "The box",
     items: [
-      { name: "Hetzner VPS", topic: "hetzner", href: "https://www.hetzner.com/cloud", desc: "Ubuntu, Helsinki. The whole lab on one machine." },
-      { name: "Caddy", topic: "caddy", href: "https://caddyserver.com", desc: "Reverse proxy and automatic HTTPS. It's serving this page." },
-      { name: "Tailscale + Headscale", topic: "tailscale", href: "https://headscale.net", desc: "Self-hosted control plane for a private mesh VPN. The only way in." },
+      { name: "Hetzner VPS", topic: "hetzner", href: "https://www.hetzner.com/cloud", desc: "One cx53 in Helsinki, 32 GB. Everything below runs on it." },
+      { name: "Traefik", href: "https://traefik.io/traefik/", desc: "The public edge. It decides what the internet is allowed to reach." },
+      { name: "Caddy", topic: "caddy", href: "https://caddyserver.com", desc: "Behind Traefik, serving this page as plain files." },
+      { name: "Tailscale + Headscale", topic: "tailscale", href: "https://headscale.net", desc: "Self-hosted control plane for a private mesh. SSH is not on the internet." },
+      { name: "Docker Compose", topic: "docker", href: "https://docs.docker.com/compose/", desc: "One stack per directory, every one of them in git." },
+      { name: "SOPS + age", topic: "sops", href: "https://github.com/getsops/sops", desc: "Secrets encrypted in the repo. The box is not the source of truth." },
+      { name: "Grafana", topic: "grafana", href: "https://grafana.com", desc: "Enough dashboards to answer “is it up”, not enough to become a hobby." },
+      { name: "Postgres + TimescaleDB", topic: "postgres", href: "https://www.timescale.com", desc: "One database per stack. The health data is a hypertable." },
+      { name: "Qdrant", href: "https://qdrant.tech", desc: "Vector index over seven years of chat history. Chronicle reads it." },
+      { name: "Wakapi", href: "https://wakapi.dev", desc: "Self-hosted WakaTime. Where the editor hours on this page come from." },
       { name: "Vaultwarden", href: "https://github.com/dani-garcia/vaultwarden", desc: "Bitwarden-compatible vault, self-hosted." },
       { name: "AdGuard Home", href: "https://adguard.com/adguard-home/overview.html", desc: "Network-wide DNS and tracker filtering." },
-      { name: "SOPS + age", topic: "sops", href: "https://github.com/getsops/sops", desc: "Encrypted, version-controlled infra config." },
-      { name: "Grafana", topic: "grafana", href: "https://grafana.com", desc: "Enough dashboards to answer “is it up”." },
     ],
   },
   {
     group: "Editor & terminal",
     items: [
+      { name: "Claude Code", href: "https://claude.com/claude-code", desc: "Most of my measured editor time, which was not the plan and is now the fact." },
       { name: "JetBrains Rider", href: "https://www.jetbrains.com/rider/", desc: "Anything with a .sln. The debugger is the whole reason." },
       { name: "VS Code", href: "https://code.visualstudio.com", desc: "Everything else — TypeScript, markdown, config." },
-      { name: "Claude Code", href: "https://claude.com/claude-code", desc: "Pair programming in the terminal." },
+      { name: "MCP", href: "https://modelcontextprotocol.io", desc: "How the assistant reaches my own data instead of guessing at it." },
     ],
   },
   {
     group: "Day to day",
     items: [
-      { name: "C# / .NET", topic: "dotnet", href: "https://dotnet.microsoft.com", desc: "ASP.NET Core, EF Core, MediatR-style CQRS." },
-      { name: "PostgreSQL", topic: "postgres", href: "https://www.postgresql.org", desc: "At home. SQL Server at work." },
-      { name: "Angular + TypeScript", topic: "angular", href: "https://angular.dev", desc: "When the work reaches the front end." },
-      { name: "Docker Compose", topic: "docker", href: "https://docs.docker.com/compose/", desc: "Every service in the lab, defined in git." },
+      { name: "C# / .NET", topic: "dotnet", href: "https://dotnet.microsoft.com", desc: "The majority of every week. ASP.NET Core, EF Core, MediatR-style CQRS." },
+      { name: "ASP.NET Core", topic: "aspnet", href: "https://learn.microsoft.com/aspnet/core", desc: "Where the services actually live — APIs, jobs, integrations." },
+      { name: "SQL Server", desc: "At work. Postgres everywhere I get to choose." },
+      { name: "Python", topic: "python", href: "https://www.python.org", desc: "The data work: ingestion, retrieval, anything with a notebook in its past." },
+      { name: "Angular + TypeScript", topic: "angular", href: "https://angular.dev", desc: "When the work reaches the front end. NgRx when state gets real." },
+      { name: "Flutter", topic: "flutter", href: "https://flutter.dev", desc: "One app, on one phone, built to prove a point about measurement." },
     ],
   },
 ];
@@ -402,7 +414,7 @@ export const uses: { group: string; items: StackItem[] }[] = [
  * beats a route that has to justify its own freshness.
  */
 export const now = {
-  updated: "2026-07-29",
+  updated: "2026-09-21",
   items: [
     {
       label: "Work",
@@ -418,7 +430,7 @@ export const now = {
     },
     {
       label: "Writing",
-      text: "More of it. The infrastructure here has been well ahead of the content it serves, which is the wrong way round.",
+      text: "More of it. The site has been easier to build than to fill.",
     },
   ],
 };

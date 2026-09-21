@@ -88,16 +88,6 @@ export default function About() {
           code the next person can read without booking a meeting about it.
         </p>
 
-        <h2>How I got here</h2>
-        <p>
-          I started at GlobalLogic in 2021 and have worked across Umbraco-based
-          .NET systems, greenfield Clean Architecture backends, and now fintech.
-          It wasn&apos;t a straight line — there&apos;s a two-month gap in 2024
-          where I took a sales job while looking for engineering work. It&apos;s
-          on the <Link href="/cv/">CV</Link> rather than quietly removed, because
-          a tidied-up history is worth less than an honest one.
-        </p>
-
         <h2>The homelab</h2>
         <p>
           Outside work I run a small homelab on a single VPS. It&apos;s a
@@ -145,10 +135,6 @@ export default function About() {
           <div className="section-head">
             <h2>Everything I actually use</h2>
           </div>
-          <p className="page-lede">
-            Not aspirational — the current state. The server half of it is
-            version-controlled, so it can be checked rather than believed.
-          </p>
         </div>
       </section>
 
