@@ -143,7 +143,14 @@ export default function About() {
         one client component. `uses` is plain serialisable data from lib/site.ts —
         it passes through, it is not fetched.
       */}
-      <TopicMap groups={uses} linkable={getTopicUsage().map((t) => t.slug)} />
+      <TopicMap groups={uses} linkable={getTopicUsage().map((t) => t.slug)} showGraph={false} />
+
+      <p className="page-figures">
+        <span>
+          The same stack as a graph you can pull apart lives on{" "}
+          <Link href="/stack/">the stack page</Link>.
+        </span>
+      </p>
 
       <Footer />
     </main>

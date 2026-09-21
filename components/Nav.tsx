@@ -24,6 +24,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 const SECTIONS = [
   { key: "writing", href: "/writing/", label: "Writing" },
   { key: "projects", href: "/projects/", label: "Projects" },
+  { key: "stack", href: "/stack/", label: "Stack" },
   { key: "about", href: "/about/", label: "About" },
 ] as const;
 

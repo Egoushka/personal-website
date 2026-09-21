@@ -1203,6 +1203,80 @@ figure figcaption {
 }
 
 /* ============================================================================
+   STACK PLAYGROUND — /stack/
+   Lines and labels, no fills. The accent is reserved for what the reader has
+   picked, exactly as in the older figure: colour here means "you chose this",
+   not "this is important".
+   ========================================================================= */
+
+.stack-page .play-figure { grid-column: 1 / -1; margin: var(--s-7) 0 0; }
+
+.play {
+  width: 100%;
+  height: auto;
+  display: block;
+  touch-action: none;          /* dragging a node must not scroll the page */
+  cursor: grab;
+}
+.play:active { cursor: grabbing; }
+
+.play-edge {
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+.play-edge.is-lit { stroke: var(--accent); stroke-width: 1.5; }
+
+.play-node circle {
+  fill: var(--paper);
+  stroke: var(--rule-firm);
+  stroke-width: 1.5;
+}
+.play-node text {
+  fill: var(--ink-2);
+  font: 400 13px/1 var(--figure);
+  letter-spacing: .01em;
+  dominant-baseline: middle;
+  user-select: none;
+}
+.play-node--hub text {
+  fill: var(--ink);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.play-node.is-on circle,
+.play-node.is-lit circle { stroke: var(--accent); }
+.play-node.is-on text,
+.play-node.is-lit text   { fill: var(--ink); }
+.play-node.is-dim        { opacity: .45; }
+
+/* The focus ring is drawn rather than suppressed — see the rule at the top of
+   this file. An SVG <g> cannot take an outline reliably, so the circle grows a
+   second stroke instead. */
+.play-node:focus { outline: none; }
+.play-node:focus-visible circle {
+  stroke: var(--accent);
+  stroke-width: 3;
+  paint-order: stroke;
+}
+
+.play-figure figcaption {
+  margin-top: var(--s-5);
+  max-width: 68ch;
+  font: 400 var(--fs-small)/1.6 var(--figure);
+  color: var(--ink-2);
+}
+.play-figure figcaption strong { color: var(--ink); font-weight: 600; }
+
+.play-list { grid-column: 1 / -1; margin-top: var(--s-9); }
+.play-list .row + .row { margin-top: var(--s-7); }
+
+@media (prefers-reduced-motion: reduce) {
+  .play { cursor: default; }
+}
+
+/* ============================================================================
    404
    ========================================================================= */
 

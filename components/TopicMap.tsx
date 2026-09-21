@@ -34,9 +34,15 @@ type Props = {
    * which cannot redirect its way out of them.
    */
   linkable: string[];
+  /**
+   * The diagram itself. /about/ turns it off and links to /stack/ instead,
+   * where the same graph gets a page rather than a corner of one — the labels
+   * were fighting each other inside 660px.
+   */
+  showGraph?: boolean;
 };
 
-export default function TopicMap({ groups, linkable }: Props) {
+export default function TopicMap({ groups, linkable, showGraph = true }: Props) {
   const hasPage = useMemo(() => new Set(linkable), [linkable]);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState<string | null>(null);
@@ -120,94 +126,96 @@ export default function TopicMap({ groups, linkable }: Props) {
           )}
         </div>
 
-        <figure className="bleed-code graph-figure">
-          <svg
-            viewBox={`0 0 ${GRAPH_VIEWBOX.w} ${GRAPH_VIEWBOX.h}`}
-            className="graph-svg"
-            role="img"
-            aria-labelledby="topicmap-title topicmap-desc"
-          >
-            <title id="topicmap-title">How the stack connects</title>
-            <desc id="topicmap-desc">
-              {nodes.length} tools and languages, joined where one actually depends
-              on or is used through the other. A full text equivalent follows the
-              figure.
-            </desc>
-
-            <g className="graph-edges">
-              {topicEdges.map((e) => {
-                const a = byId[e.from];
-                const b = byId[e.to];
-                if (!a || !b) return null;
-                const lit = shown ? e.from === shown || e.to === shown : false;
-                const faded = dim(e.from) || dim(e.to);
+        {showGraph && (
+          <figure className="bleed-code graph-figure">
+            <svg
+              viewBox={`0 0 ${GRAPH_VIEWBOX.w} ${GRAPH_VIEWBOX.h}`}
+              className="graph-svg"
+              role="img"
+              aria-labelledby="topicmap-title topicmap-desc"
+            >
+              <title id="topicmap-title">How the stack connects</title>
+              <desc id="topicmap-desc">
+                {nodes.length} tools and languages, joined where one actually depends
+                on or is used through the other. A full text equivalent follows the
+                figure.
+              </desc>
+  
+              <g className="graph-edges">
+                {topicEdges.map((e) => {
+                  const a = byId[e.from];
+                  const b = byId[e.to];
+                  if (!a || !b) return null;
+                  const lit = shown ? e.from === shown || e.to === shown : false;
+                  const faded = dim(e.from) || dim(e.to);
+                  return (
+                    <line
+                      key={`${e.from}-${e.to}`}
+                      x1={a.graph.x} y1={a.graph.y} x2={b.graph.x} y2={b.graph.y}
+                      className={`graph-edge${lit ? " is-lit" : ""}${faded && !lit ? " is-dim" : ""}`}
+                    />
+                  );
+                })}
+              </g>
+  
+              {nodes.map((t, i) => {
+                const faded = dim(t.slug);
+                const isShown = shown === t.slug;
                 return (
-                  <line
-                    key={`${e.from}-${e.to}`}
-                    x1={a.graph.x} y1={a.graph.y} x2={b.graph.x} y2={b.graph.y}
-                    className={`graph-edge${lit ? " is-lit" : ""}${faded && !lit ? " is-dim" : ""}`}
-                  />
+                  <g
+                    key={t.slug}
+                    className={`graph-node${isShown ? " is-active" : ""}${faded ? " is-dim" : ""}`}
+                    /* Deterministic per-node delay — Math.random() here would
+                       differ between server and client and break hydration. */
+                    style={{ animationDelay: `${(i % 7) * -1.9}s` }}
+                    transform={`translate(${t.graph.x} ${t.graph.y})`}
+                    tabIndex={0}
+                    role="button"
+                    aria-pressed={pinned === t.slug}
+                    aria-label={`${t.name}. ${t.blurb} Connects to ${neighboursOf(t.slug)
+                      .map((id) => topicName(id))
+                      .join(", ")}.`}
+                    onMouseEnter={() => setActive(t.slug)}
+                    onMouseLeave={() => setActive(null)}
+                    onFocus={() => setActive(t.slug)}
+                    onBlur={() => setActive(null)}
+                    onClick={() => setPinned((p) => (p === t.slug ? null : t.slug))}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setPinned((p) => (p === t.slug ? null : t.slug));
+                      }
+                      if (e.key === "Escape") setPinned(null);
+                    }}
+                  >
+                    <circle r="6" className="graph-dot" />
+                    <text x="14" y="5" className="graph-label">{t.name}</text>
+                  </g>
                 );
               })}
-            </g>
-
-            {nodes.map((t, i) => {
-              const faded = dim(t.slug);
-              const isShown = shown === t.slug;
-              return (
-                <g
-                  key={t.slug}
-                  className={`graph-node${isShown ? " is-active" : ""}${faded ? " is-dim" : ""}`}
-                  /* Deterministic per-node delay — Math.random() here would
-                     differ between server and client and break hydration. */
-                  style={{ animationDelay: `${(i % 7) * -1.9}s` }}
-                  transform={`translate(${t.graph.x} ${t.graph.y})`}
-                  tabIndex={0}
-                  role="button"
-                  aria-pressed={pinned === t.slug}
-                  aria-label={`${t.name}. ${t.blurb} Connects to ${neighboursOf(t.slug)
-                    .map((id) => topicName(id))
-                    .join(", ")}.`}
-                  onMouseEnter={() => setActive(t.slug)}
-                  onMouseLeave={() => setActive(null)}
-                  onFocus={() => setActive(t.slug)}
-                  onBlur={() => setActive(null)}
-                  onClick={() => setPinned((p) => (p === t.slug ? null : t.slug))}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setPinned((p) => (p === t.slug ? null : t.slug));
-                    }
-                    if (e.key === "Escape") setPinned(null);
-                  }}
-                >
-                  <circle r="6" className="graph-dot" />
-                  <text x="14" y="5" className="graph-label">{t.name}</text>
-                </g>
-              );
-            })}
-          </svg>
-
-          {/*
-            The graph is a picture of information, so the information exists in
-            text too — not as a caption, as the actual adjacency list. This is
-            what a screen reader, a text browser, and a printed page get.
-          */}
-          <ul className="visually-hidden">
-            {nodes.map((t) => (
-              <li key={t.slug}>
-                {t.name}: {t.blurb} Connects to{" "}
-                {neighboursOf(t.slug).map((id) => topicName(id)).join(", ")}.
-              </li>
-            ))}
-          </ul>
-
-          <figcaption>
-            Lines mean one thing depends on, or is used through, the other — not
-            that both are technologies. Hover a node to see what it touches.
-            {pinned && " Click again to unpin."}
-          </figcaption>
-        </figure>
+            </svg>
+  
+            {/*
+              The graph is a picture of information, so the information exists in
+              text too — not as a caption, as the actual adjacency list. This is
+              what a screen reader, a text browser, and a printed page get.
+            */}
+            <ul className="visually-hidden">
+              {nodes.map((t) => (
+                <li key={t.slug}>
+                  {t.name}: {t.blurb} Connects to{" "}
+                  {neighboursOf(t.slug).map((id) => topicName(id)).join(", ")}.
+                </li>
+              ))}
+            </ul>
+  
+            <figcaption>
+              Lines mean one thing depends on, or is used through, the other — not
+              that both are technologies. Hover a node to see what it touches.
+              {pinned && " Click again to unpin."}
+            </figcaption>
+          </figure>
+        )}
       </div>
 
       {filteredGroups.map((group) => (
