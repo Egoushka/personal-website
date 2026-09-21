@@ -64,6 +64,8 @@ export type Readings = {
   daysSinceNow: number;
   usesVerified: string;
   projects: number;
+  /** Of those, how many are still running. Counted, so "all three" cannot rot. */
+  projectsRunning: number;
   /**
    * The longest stretch of time any post is *about* (`spanDays`), and the post
    * that is about it. The hero sentence and the proof row both cite this figure
@@ -110,6 +112,7 @@ export function getReadings(): Readings {
     daysSinceNow: daysBetween(now.updated, builtOn),
     usesVerified: usesUpdated,
     projects: projects.length,
+    projectsRunning: projects.filter((p) => p.status === "running").length,
     longestSpan: spanned && {
       days: spanned.spanDays,
       slug: spanned.slug,

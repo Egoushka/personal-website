@@ -3,7 +3,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import PostList from "@/components/PostList";
 import { PersonAndSiteLd } from "@/components/JsonLd";
-import { site, proof, projects } from "@/lib/site";
+import { site, proof, projects, type Project } from "@/lib/site";
 import { getAllPosts } from "@/lib/posts";
 import { getReadings, getTopicUsage, n } from "@/lib/readings";
 import { topicName } from "@/lib/topics";
@@ -22,6 +22,18 @@ import { topicName } from "@/lib/topics";
  * survived is the rule underneath it — every figure below is counted at build
  * time, never typed. See ADR 0002.
  */
+function projectRow(p: Project) {
+  return (
+    <li className="project-row" key={p.slug}>
+      <h3 className="project-name">
+        <Link href={`/projects/${p.slug}/`}>{p.name}</Link>
+      </h3>
+      <span className="project-status">{p.meta} · {p.status}</span>
+      <p>{p.summary}</p>
+    </li>
+  );
+}
+
 export default function Home() {
   const r = getReadings();
   const posts = getAllPosts();
@@ -33,6 +45,8 @@ export default function Home() {
     silent about the ones I am paid to come back to.
   */
   const topics = getTopicUsage();
+  const shipped = projects.filter((p) => !p.side);
+  const side = projects.filter((p) => p.side);
 
   return (
     <main id="main" className="wrap">
@@ -126,29 +140,34 @@ export default function Home() {
         </div>
       </section>
 
+      {/*
+        Two lists, not one. The thing a stranger can install sits above the two
+        things only I run, because listing them as equals averages the first
+        down to the second. The split is `Project.side`, not array position, so
+        adding a project cannot silently promote it.
+
+        The heading no longer starts "Things I've". Three sections in a row
+        opening with the same four words read as a tic rather than as a voice.
+      */}
       <hr className="bleed" />
       <section className="row">
         <span className="rail rail--against-body">
           <span className="rail--label">Projects</span>
           <span>{r.projects} of them</span>
-          <span>both still running</span>
+          <span>{r.projectsRunning} still running</span>
         </span>
         <div>
           <div className="section-head">
-            <h2>Things I&apos;ve built</h2>
+            <h2>Built, and still running</h2>
             <Link href="/projects/">all projects →</Link>
           </div>
-          <ol className="project-list">
-            {projects.map((p) => (
-              <li className="project-row" key={p.slug}>
-                <h3 className="project-name">
-                  <Link href={`/projects/${p.slug}/`}>{p.name}</Link>
-                </h3>
-                <span className="project-status">{p.meta} · {p.status}</span>
-                <p>{p.summary}</p>
-              </li>
-            ))}
-          </ol>
+          <ol className="project-list">{shipped.map(projectRow)}</ol>
+          {side.length > 0 && (
+            <>
+              <span className="project-sublabel">Side projects</span>
+              <ol className="project-list">{side.map(projectRow)}</ol>
+            </>
+          )}
         </div>
       </section>
 
@@ -169,7 +188,12 @@ export default function Home() {
                 {topics.map((t) => (
                   <li key={t.slug}>
                     <Link href={`/topics/${t.slug}/`}>
-                      {topicName(t.slug)} <span className="rail-count">{t.total}</span>
+                      {topicName(t.slug)}
+                      {/* A count of 1 is not a count, it is a label repeating
+                          itself. The row stays — hiding every topic backed by
+                          one thing would hide debugging, observability and
+                          CI/CD, which is most of what this site is now for. */}
+                      {t.total > 1 && <span className="rail-count">{t.total}</span>}
                     </Link>
                   </li>
                 ))}

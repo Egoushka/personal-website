@@ -66,7 +66,9 @@ export default function CV() {
 
   return (
     <main id="main" className="wrap cv">
-      <Nav current="cv" />
+      {/* No `current`: the CV is no longer a navigation section. It lives in the
+          footer now, so there is nothing in the header for it to mark. */}
+      <Nav />
       <ProfilePageLd />
 
       <div className="rail masthead-rail">

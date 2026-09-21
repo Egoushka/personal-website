@@ -7,7 +7,7 @@ import { site, feedTypes, projects } from "@/lib/site";
 import { topicName } from "@/lib/topics";
 
 const description =
-  "Side projects worth describing: an event store over seven years of chat history, and an app that refuses to give you a score.";
+  "A .NET validation library other people install, an event store over seven years of chat history, and an app that refuses to give you a score.";
 
 export const metadata: Metadata = {
   title: "Projects",
@@ -30,6 +30,12 @@ export default function Projects() {
   const used = [...new Set(projects.flatMap((p) => p.topics as string[]))];
   const topics = used.map((slug) => ({ slug, name: topicName(slug) }));
 
+  // Counted rather than written out. "0 with a user other than me" was true of
+  // this page for exactly as long as nothing here was published, and it went on
+  // being printed after that stopped being true.
+  const running = projects.filter((p) => p.status === "running").length;
+  const shipped = projects.filter((p) => !p.side).length;
+
   return (
     <main id="main" className="wrap">
       <Nav current="projects" />
@@ -40,9 +46,9 @@ export default function Projects() {
           <>
             {projects.length} projects
             <span className="sep">·</span>
-            both running daily
+            {running} still running
             <span className="sep">·</span>
-            0 with a user other than me
+            {shipped} anyone can install
             <span className="sep">·</span>
             <a href={site.github} rel="noopener">github ↗</a>
           </>

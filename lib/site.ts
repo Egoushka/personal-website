@@ -214,14 +214,26 @@ export type Project = {
   description: string;
   /** One line, for the CV. A four-line bullet on paper does not get read. */
   resumeLine?: string;
+  /**
+   * True for a project built for one user — me. The home page groups these
+   * under their own label, because "a library 400 other people installed" and
+   * "an app on my own phone" are not the same kind of evidence and putting
+   * them in one list quietly averages the first down to the second.
+   */
+  side?: boolean;
   topics: TopicSlug[];
   readings: Reading[];
 };
 
 /**
- * Two projects, both load-bearing. The previous three were an interview
- * take-home, a utility with a handful of commits, and a link to a GitHub
- * profile — which is how a projects section ends up saying nothing.
+ * Three projects, all load-bearing, and one of them installable by a stranger.
+ * The set before this was an interview take-home, a utility with a handful of
+ * commits, and a link to a GitHub profile — which is how a projects section
+ * ends up saying nothing.
+ *
+ * Attest is first because it is the only one that anybody else runs. The other
+ * two carry `side: true` and are grouped under their own label rather than
+ * listed as its equals.
  *
  * Every number below was read out of the repo it describes, not estimated, and
  * every reading names where it came from. If a claim here can't be checked
@@ -230,7 +242,27 @@ export type Project = {
  */
 export const projects: Project[] = [
   {
+    slug: "attest",
+    name: "Attest",
+    status: "running",
+    meta: "C# · library",
+    href: "https://github.com/Egoushka/attest",
+    summary:
+      "Validates national ID, tax ID, VAT and postal codes for 87 countries, against the rule each country publishes rather than a regex someone guessed.",
+    description:
+      "A .NET library that validates national identification numbers, tax numbers, VAT codes and postal codes for 87 countries. It started as a fork of CountryValidator and the fork is the point: the original had the right shape and the wrong answers, and 197 defects in it are fixed here — checksums that accepted invalid numbers, formats that rejected valid ones, countries whose rule had changed since the code was written. Every country has its own test file, so a claim about Poland is a test about Poland rather than a line in a README. It is on NuGet, which makes it the only thing I have built that fails in public when I get it wrong.",
+    resumeLine:
+      "Published .NET validation library covering national ID, tax, VAT and postal codes for 87 countries; a fork of CountryValidator with 197 of its defects fixed.",
+    topics: ["dotnet"],
+    readings: [
+      { label: "Countries", value: "87", source: "one validator per country in the repo, each with its own test file" },
+      { label: "Defects fixed", value: "197", source: "counted against the upstream project; stated on the NuGet package page" },
+      { label: "Published", value: "nuget.org/packages/Attest", source: "public package, Apache-2.0" },
+    ],
+  },
+  {
     slug: "chronicle",
+    side: true,
     name: "Chronicle",
     status: "running",
     meta: "Python · event store",
@@ -251,6 +283,7 @@ export const projects: Project[] = [
   },
   {
     slug: "baseline",
+    side: true,
     name: "Baseline",
     status: "running",
     meta: "Flutter · instrument",

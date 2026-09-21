@@ -668,6 +668,18 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
    PROJECTS
    ========================================================================= */
 
+/* Introduces the second project list. Borrows the rail's small-caps treatment
+   for the same reason the proof row does: a fifth way of setting a label would
+   be a fifth thing to keep in step. */
+.project-sublabel {
+  display: block;
+  font: 600 10.5px/1.4 var(--figure);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin: var(--s-8) 0 var(--s-5);
+}
+
 .project-name { font-size: var(--fs-h3); margin: 0; }
 .project-name a { color: var(--ink); text-decoration: none; }
 .project-name a:hover { color: var(--accent); }

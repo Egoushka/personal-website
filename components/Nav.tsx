@@ -4,6 +4,11 @@ import Search from "@/components/Search";
 /**
  * Wordmark left, four links and search right, hairline underneath.
  *
+ * The CV used to be the fourth of five and is now in the footer. A CV answers
+ * "should we hire this person full time", which is a question this site stopped
+ * asking in 2026-09; Work answers the one it asks instead, and it goes first
+ * because it is the only page here a stranger can act on.
+ *
  * The previous design had no primary navigation at all: the home page was a
  * trial balance and every page was reached by opening the claim it was evidence
  * for. It was coherent and it was unusable by a stranger, who cannot navigate by
@@ -20,7 +25,6 @@ const SECTIONS = [
   { key: "writing", href: "/writing/", label: "Writing" },
   { key: "projects", href: "/projects/", label: "Projects" },
   { key: "about", href: "/about/", label: "About" },
-  { key: "cv", href: "/cv/", label: "CV" },
 ] as const;
 
 export type Section = (typeof SECTIONS)[number]["key"] | "home";
