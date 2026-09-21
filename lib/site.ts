@@ -367,6 +367,12 @@ export const projects: Project[] = [
  */
 export type Skill = {
   name: string;
+  /**
+   * What the graph calls it. "Background jobs and scheduling" is the right
+   * name in a list and a 190px object in a diagram; the node says "Background
+   * jobs" and the list below it still says the whole thing.
+   */
+  short?: string;
   /** Links to the hub, when the vocabulary has one. */
   topic?: TopicSlug;
   now: string;
@@ -382,9 +388,9 @@ export const skills: { group: string; items: Skill[] }[] = [
       { name: "ASP.NET Core", topic: "aspnet",
         now: "Where the services live: APIs, background jobs, third-party integrations." },
       { name: "EF Core", now: "The default at work. Dapper when the query matters more than the mapping." },
-      { name: "CQRS and vertical slices", topic: "architecture",
+      { name: "CQRS and vertical slices", short: "CQRS", topic: "architecture",
         now: "A greenfield .NET 9 backend built this way in 2025, and an opinion about when it is overkill." },
-      { name: "Background jobs and scheduling",
+      { name: "Background jobs and scheduling", short: "Background jobs",
         now: "The part that fails quietly, which is why most of what I write about starts here." },
       { name: "RabbitMQ", now: "Cross-service messaging at work. My first broker feature shipped in 2025 — two days of it spent on a consumer I had never registered." },
       { name: "Redis", now: "Read caches and the invalidation that goes with them." },
@@ -393,7 +399,7 @@ export const skills: { group: string; items: Skill[] }[] = [
   {
     group: "Data",
     items: [
-      { name: "PostgreSQL", topic: "postgres", now: "Everywhere I get to choose. TimescaleDB when the rows are a time series." },
+      { name: "PostgreSQL", short: "Postgres", topic: "postgres", now: "Everywhere I get to choose. TimescaleDB when the rows are a time series." },
       { name: "SQL Server", now: "At work. Deep SQL is the gap I named myself in 2026 and the one I am deliberately closing." },
       { name: "Python", topic: "python", wakatime: "Python",
         now: "Ingestion, retrieval and backtesting. Not where I would take complex business logic, and I say so before anyone asks." },
@@ -403,11 +409,11 @@ export const skills: { group: string; items: Skill[] }[] = [
   {
     group: "Infrastructure",
     items: [
-      { name: "Docker Compose", topic: "docker", now: "One stack per service, every one of them in git." },
+      { name: "Docker Compose", short: "Compose", topic: "docker", now: "One stack per service, every one of them in git." },
       { name: "Linux", topic: "linux", now: "One Ubuntu box I run like production, because it is the only one I get paged for." },
-      { name: "Traefik and Caddy", topic: "caddy", now: "The edge and the origin of everything I self-host, including this page." },
-      { name: "Tailscale and Headscale", topic: "tailscale", now: "The only way in. SSH is not on the internet." },
-      { name: "SOPS and age", topic: "sops", now: "Secrets encrypted in the repository, so the box is never the source of truth." },
+      { name: "Traefik and Caddy", short: "Traefik", topic: "caddy", now: "The edge and the origin of everything I self-host, including this page." },
+      { name: "Tailscale and Headscale", short: "Tailscale", topic: "tailscale", now: "The only way in. SSH is not on the internet." },
+      { name: "SOPS and age", short: "SOPS", topic: "sops", now: "Secrets encrypted in the repository, so the box is never the source of truth." },
       { name: "GitHub Actions", topic: "ci-cd", now: "Every deploy here, and the 51 days I once spent not noticing one had stopped." },
     ],
   },
@@ -415,14 +421,14 @@ export const skills: { group: string; items: Skill[] }[] = [
     group: "Front end",
     items: [
       { name: "TypeScript", topic: "typescript", wakatime: "TypeScript", now: "This site, and anything that reaches a browser." },
-      { name: "Angular and NgRx", topic: "angular", now: "When the work reaches the front end. A generic NgRx store factory is the piece I would show." },
+      { name: "Angular and NgRx", short: "Angular", topic: "angular", now: "When the work reaches the front end. A generic NgRx store factory is the piece I would show." },
     ],
   },
   {
     group: "How I work",
     items: [
       { name: "Observability", topic: "observability", now: "Structured logs, Grafana, and the habit of asking what this will look like at 3am before it is 3am." },
-      { name: "Debugging production", topic: "debugging", now: "Distributed, job-driven systems, on a rotation. The fastest way I know to learn what a system does when nobody is watching." },
+      { name: "Debugging production", short: "Debugging", topic: "debugging", now: "Distributed, job-driven systems, on a rotation. The fastest way I know to learn what a system does when nobody is watching." },
       { name: "Testing", now: "xUnit and Testcontainers. I wrote tests in university before anyone asked for them, which is either a virtue or a warning." },
       { name: "Self-hosting", topic: "self-hosting", now: "Everything above, on one box, defined in git and rebuildable from it." },
     ],
@@ -543,10 +549,11 @@ export const eras: Era[] = [
   {
     slug: "university",
     title: "Learning it in public",
-    years: "2019 — 2021",
+    years: "2018 — 2021",
     jobs: [],
     body: [
-      "Computer science at Petro Mohyla in Mykolaiv: C++, Java, a lexical analyser, a validator in TSQL, the usual coursework. What was not usual is where it went — by the second year everything I wrote went to GitHub, including the parts that embarrassed me in a lab report.",
+      "It did not start at university. A year and a half before I sat the entrance exams I enrolled at Computer Academy STEP — evening courses, homework, marks — and that is where the question got settled. I defended it to a friend in 2019, before I had written anything anyone paid for: it is not a school, it is courses, and it gives you the basics of nearly every current language. It also meant the first years of the degree were easy, because someone had already explained most of it better.",
+      "Then computer science at Petro Mohyla in Mykolaiv: C++, Java, a lexical analyser, a validator in TSQL, the usual coursework. What was not usual is where it went — by the second year everything I wrote went to GitHub, including the parts that embarrassed me in a lab report.",
       "The first public repository is a Unity test task from July 2020, and it is the one that settled the question: I liked the coding, not the games. Tests came before anyone asked for them — JUnit in a lab about a zoo, xUnit in a bank's take-home a year later — and the first CI I ever set up was three workflows on a repository that was one day old.",
     ],
   },
@@ -647,6 +654,13 @@ export const education = [
     when: "defended 2023",
     detail: "Mykolaiv, Ukraine",
     note: "Worked full time from the second year onward; the degree finished two and a half years into the first job.",
+  },
+  {
+    school: "Computer Academy STEP",
+    degree: "Programming",
+    when: "2018 — 2020",
+    detail: "Mykolaiv, Ukraine",
+    note: "Enrolled a year and a half before university and kept going through the first year of it.",
   },
 ];
 

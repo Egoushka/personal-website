@@ -3,42 +3,50 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { skills, type Skill } from "@/lib/site";
-import { topicEdges, topicName } from "@/lib/topics";
+import { topicEdges } from "@/lib/topics";
+import { useStatus } from "@/lib/status";
 
 /**
  * The stack, as something you can pull apart.
  *
- * The old figure was a fixed layout with a CSS float on top — honest, and about
- * the size of a postage stamp. This is the same claim at the size it deserves:
- * every skill is a node, every group is a hub, and the edges between
- * technologies are the ones from lib/topics.ts, each of which had to assert
- * something checkable before it was allowed in ("EF Core is how the domain
- * reaches the database", not "both of these are backend words").
+ * ── What the first version got wrong, and why ───────────────────────────────
  *
- * ── Why the physics is written out by hand ──────────────────────────────────
- * d3-force is fifty kilobytes and this is four lines of vector maths: springs
- * along the edges, repulsion between every pair, a little gravity toward the
- * middle, and damping. Twenty-four nodes is under three hundred pairs a frame,
- * which is nothing. The site ships no runtime libraries and this was not the
- * thing to break that for.
+ * **It animated itself into place on every load.** A graph that visibly swims
+ * around while you are trying to read it is an animation nobody asked for. The
+ * layout is solved now *before the first paint* — `settle()` runs the physics
+ * silently — and motion happens only when the reader touches something.
  *
- * ── What keeps it honest ────────────────────────────────────────────────────
- * - **Seed positions are deterministic** (trigonometry on the index, never
- *   `Math.random`), so the server-rendered SVG and the first client frame are
- *   identical and hydration has nothing to disagree about.
- * - **That seed layout IS the no-JavaScript version.** It renders as a readable
- *   diagram before any of this runs, and the list underneath is the real
- *   content either way.
- * - **`prefers-reduced-motion` turns the simulation off entirely.** No drift,
- *   no throw, no bounce; dragging still moves a node, it just goes where you
- *   put it.
- * - Positions are written straight to the DOM through refs. Re-rendering
- *   twenty-four React subtrees sixty times a second to move some circles is
- *   how a toy becomes a fan.
+ * **It separated circles, not labels.** A 5px dot with a 105px label attached
+ * is a 105px object, and the label hangs to the *right* of the dot, so the box
+ * is not even centred on the coordinates. Both are modelled now (`ox`, `hw`),
+ * and the widths are **measured from the DOM** rather than guessed —
+ * `label.length * 6.5` was short by 10–25%, which stays invisible until two
+ * long labels are "separated" by a solver working from boxes smaller than the
+ * text inside them.
+ *
+ * **Separation was a force, so the springs argued with it.** Two labels could
+ * sit on top of each other in a stable equilibrium where the spring pulled
+ * exactly as hard as the separation pushed. It is a positional projection now,
+ * applied after integration: it does not negotiate.
+ *
+ * **`prefers-reduced-motion` disabled the layout, not just the motion.** That
+ * setting asks for less movement; it does not ask for a worse arrangement. The
+ * world is still solved — in one silent pass — so those readers get the same
+ * graph and simply never watch it travel. This matters more than it sounds:
+ * the same still layout is what the server renders and what anyone without
+ * JavaScript sees, so it has to be good on its own.
+ *
+ * The physics is thirty lines rather than fifty kilobytes of d3, and the seed
+ * positions are trigonometry on the index — never `Math.random` — so the
+ * server HTML and the first client frame agree.
  */
 
-const VIEW = { w: 1000, h: 620 } as const;
-const PAD = 46;
+const VIEW = { w: 1100, h: 760 } as const;
+const PAD = 30;
+/** Below this total energy nothing is moving usefully. */
+const SLEEP = 0.04;
+/** Only a seed: the real widths are measured from the DOM on mount. */
+const CHAR = 6.5;
 
 type Node = {
   id: string;
@@ -47,17 +55,22 @@ type Node = {
   group: string;
   now?: string;
   topic?: string;
+  wakatime?: string;
+  r: number;
+  /** Offset from the dot to the middle of the label box. */
+  ox: number;
+  /** Half the width, and half the height, of that box. */
+  hw: number;
+  hh: number;
   x: number;
   y: number;
   vx: number;
   vy: number;
-  /** Seed position, so Escape can put everything back. */
-  hx: number;
-  hy: number;
+  seedX: number;
+  seedY: number;
 };
 
-/** Hubs on an ellipse, their skills on a smaller ring around them. No randomness. */
-function seed(): { nodes: Node[]; edges: [string, string, string][] } {
+function build(): { nodes: Node[]; edges: [string, string, string][] } {
   const nodes: Node[] = [];
   const edges: [string, string, string][] = [];
   const cx = VIEW.w / 2;
@@ -65,27 +78,33 @@ function seed(): { nodes: Node[]; edges: [string, string, string][] } {
 
   skills.forEach((group, gi) => {
     const a = (gi / skills.length) * Math.PI * 2 - Math.PI / 2;
-    const hx = cx + Math.cos(a) * 300;
-    const hy = cy + Math.sin(a) * 200;
-    nodes.push({
+    const hx = cx + Math.cos(a) * 250;
+    const hy = cy + Math.sin(a) * 175;
+    const hubW = group.group.length * 7.4;
+    const hub: Node = {
       id: `hub:${group.group}`, label: group.group, kind: "hub", group: group.group,
-      x: hx, y: hy, vx: 0, vy: 0, hx, hy,
-    });
+      r: 10, ox: (7 + hubW) / 2, hw: 10 + (7 + hubW) / 2, hh: 11,
+      x: hx, y: hy, vx: 0, vy: 0, seedX: hx, seedY: hy,
+    };
+    nodes.push(hub);
 
     group.items.forEach((skill: Skill, si) => {
-      const spread = (si - (group.items.length - 1) / 2) * 0.55;
-      const sx = hx + Math.cos(a + spread) * 128;
-      const sy = hy + Math.sin(a + spread) * 128;
+      // A full ring around the hub, not a fan: a fan throws every label the
+      // same way and they queue up on top of each other.
+      const t = a + (si / group.items.length) * Math.PI * 2;
+      const sx = hx + Math.cos(t) * 100;
+      const sy = hy + Math.sin(t) * 100;
+      const label = skill.short ?? skill.name;
       nodes.push({
-        id: skill.name, label: skill.name, kind: "skill", group: group.group,
-        now: skill.now, topic: skill.topic,
-        x: sx, y: sy, vx: 0, vy: 0, hx: sx, hy: sy,
+        id: skill.name, label, kind: "skill", group: group.group,
+        now: skill.now, topic: skill.topic, wakatime: skill.wakatime,
+        r: 5, ox: (7 + label.length * CHAR) / 2, hw: 5 + (7 + label.length * CHAR) / 2, hh: 10,
+        x: sx, y: sy, vx: 0, vy: 0, seedX: sx, seedY: sy,
       });
-      edges.push([`hub:${group.group}`, skill.name, `${skill.name} is part of how I do ${group.group.toLowerCase()}`]);
+      edges.push([hub.id, skill.name, `${skill.name} is part of how I do ${group.group.toLowerCase()}`]);
     });
   });
 
-  // The claims. A topic edge only becomes a line if both ends are skills I present.
   const byTopic = new Map(nodes.filter((n) => n.topic).map((n) => [n.topic!, n.id]));
   for (const e of topicEdges) {
     const from = byTopic.get(e.from);
@@ -96,168 +115,335 @@ function seed(): { nodes: Node[]; edges: [string, string, string][] } {
 }
 
 export default function StackPlayground() {
-  const { nodes: seeded, edges } = useMemo(seed, []);
-  const nodes = useRef<Node[]>(seeded.map((n) => ({ ...n })));
-  const groupRefs = useRef<Record<string, SVGGElement | null>>({});
+  const { nodes: seeded, edges } = useMemo(build, []);
+  const status = useStatus();
+
+  const live = useRef<Node[]>(seeded.map((n) => ({ ...n })));
+  const gRefs = useRef<Record<string, SVGGElement | null>>({});
   const lineRefs = useRef<(SVGLineElement | null)[]>([]);
-  const dragging = useRef<{ id: string; px: number; py: number } | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const drag = useRef<{ id: string; x: number; y: number } | null>(null);
+  const pointer = useRef<{ x: number; y: number } | null>(null);
+  const raf = useRef(0);
+  const running = useRef(false);
+
   const [selected, setSelected] = useState<string | null>(null);
+  const [closed, setClosed] = useState<Set<string>>(new Set());
+  const closedRef = useRef(closed);
+  closedRef.current = closed;
 
   const byId = useMemo(() => new Map(seeded.map((n) => [n.id, n])), [seeded]);
   const neighbours = useMemo(() => {
     const m = new Map<string, Set<string>>();
     for (const [a, b] of edges) {
-      if (!m.has(a)) m.set(a, new Set());
-      if (!m.has(b)) m.set(b, new Set());
-      m.get(a)!.add(b);
-      m.get(b)!.add(a);
+      (m.get(a) ?? m.set(a, new Set()).get(a)!).add(b);
+      (m.get(b) ?? m.set(b, new Set()).get(b)!).add(a);
     }
     return m;
   }, [edges]);
 
-  /** Screen pixels to viewBox units, so a drag tracks the pointer at any size. */
-  const toView = useCallback((clientX: number, clientY: number) => {
+  const hidden = useCallback(
+    (n: Node) => n.kind === "skill" && closedRef.current.has(n.group),
+    [],
+  );
+
+  const toView = useCallback((cx: number, cy: number) => {
     const r = svgRef.current?.getBoundingClientRect();
     if (!r) return { x: 0, y: 0 };
-    return { x: ((clientX - r.left) / r.width) * VIEW.w, y: ((clientY - r.top) / r.height) * VIEW.h };
+    return { x: ((cx - r.left) / r.width) * VIEW.w, y: ((cy - r.top) / r.height) * VIEW.h };
   }, []);
 
-  useEffect(() => {
-    const calm = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let frame = 0;
+  const paint = useCallback(() => {
+    for (const n of live.current) {
+      const g = gRefs.current[n.id];
+      if (!g) continue;
+      g.setAttribute("transform", `translate(${n.x.toFixed(1)} ${n.y.toFixed(1)})`);
+      g.style.opacity = hidden(n) ? "0" : "1";
+      g.style.pointerEvents = hidden(n) ? "none" : "auto";
+    }
+    edges.forEach(([a, b], i) => {
+      const el = lineRefs.current[i];
+      if (!el) return;
+      const na = live.current.find((n) => n.id === a);
+      const nb = live.current.find((n) => n.id === b);
+      if (!na || !nb) return;
+      el.setAttribute("x1", na.x.toFixed(1));
+      el.setAttribute("y1", na.y.toFixed(1));
+      el.setAttribute("x2", nb.x.toFixed(1));
+      el.setAttribute("y2", nb.y.toFixed(1));
+      el.style.opacity = hidden(na) || hidden(nb) ? "0" : "";
+    });
+  }, [edges, hidden]);
 
-    function paint() {
-      for (const n of nodes.current) {
-        const g = groupRefs.current[n.id];
-        if (g) g.setAttribute("transform", `translate(${n.x.toFixed(1)} ${n.y.toFixed(1)})`);
+  /** One step of the world. Returns what a caller needs to decide to stop. */
+  const step = useCallback(() => {
+    const all = live.current;
+    const list = all.filter((n) => !hidden(n));
+
+    // A soft, general repulsion so the clusters do not fuse into one blob.
+    for (let i = 0; i < list.length; i++) {
+      for (let j = i + 1; j < list.length; j++) {
+        const a = list[i];
+        const b = list[j];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const d2 = dx * dx + dy * dy || 1;
+        if (d2 < 90000) {
+          const f = 1200 / d2;
+          const d = Math.sqrt(d2);
+          a.vx -= (dx / d) * f; a.vy -= (dy / d) * f;
+          b.vx += (dx / d) * f; b.vy += (dy / d) * f;
+        }
       }
-      edges.forEach(([a, b], i) => {
-        const line = lineRefs.current[i];
-        const na = nodes.current.find((n) => n.id === a);
-        const nb = nodes.current.find((n) => n.id === b);
-        if (!line || !na || !nb) return;
-        line.setAttribute("x1", na.x.toFixed(1));
-        line.setAttribute("y1", na.y.toFixed(1));
-        line.setAttribute("x2", nb.x.toFixed(1));
-        line.setAttribute("y2", nb.y.toFixed(1));
-      });
     }
 
-    function step() {
-      const list = nodes.current;
+    for (const [aId, bId] of edges) {
+      const a = all.find((n) => n.id === aId);
+      const b = all.find((n) => n.id === bId);
+      if (!a || !b || hidden(a) || hidden(b)) continue;
+      const rest = a.kind === "hub" || b.kind === "hub" ? 118 : 200;
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const d = Math.hypot(dx, dy) || 1;
+      const k = (d - rest) * 0.014;
+      a.vx += (dx / d) * k; a.vy += (dy / d) * k;
+      b.vx -= (dx / d) * k; b.vy -= (dy / d) * k;
+    }
 
-      // Repulsion: every pair pushes apart, harder the closer they are.
+    let energy = 0;
+    for (const n of list) {
+      n.vx += (VIEW.w / 2 - n.x) * 0.0022;
+      n.vy += (VIEW.h / 2 - n.y) * 0.0022;
+
+      // The cursor shoulders nodes aside. This is why the page feels alive
+      // without anything animating on its own.
+      const p = pointer.current;
+      if (p && drag.current?.id !== n.id) {
+        const dx = n.x - p.x;
+        const dy = n.y - p.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < 13000 && d2 > 1) {
+          const f = 900 / d2;
+          const d = Math.sqrt(d2);
+          n.vx += (dx / d) * f;
+          n.vy += (dy / d) * f;
+        }
+      }
+
+      n.vx *= 0.84;
+      n.vy *= 0.84;
+      if (drag.current?.id !== n.id) {
+        n.x += n.vx;
+        n.y += n.vy;
+      }
+
+      // Walls, measured on the label box so a long name cannot run off.
+      const left = n.x + n.ox - n.hw;
+      const right = n.x + n.ox + n.hw;
+      if (left < PAD) { n.x += PAD - left; n.vx = Math.abs(n.vx) * 0.5; }
+      if (right > VIEW.w - PAD) { n.x -= right - (VIEW.w - PAD); n.vx = -Math.abs(n.vx) * 0.5; }
+      if (n.y < PAD) { n.y = PAD; n.vy = Math.abs(n.vy) * 0.5; }
+      if (n.y > VIEW.h - PAD) { n.y = VIEW.h - PAD; n.vy = -Math.abs(n.vy) * 0.5; }
+
+      energy += n.vx * n.vx + n.vy * n.vy;
+    }
+
+    // Label separation, as a projection rather than a force. Eight passes is
+    // enough for a chain of long labels, and the velocity along the corrected
+    // axis is killed so the springs cannot restore the overlap next frame.
+    let overlaps = 0;
+    for (let pass = 0; pass < 8; pass++) {
+      overlaps = 0;
       for (let i = 0; i < list.length; i++) {
         for (let j = i + 1; j < list.length; j++) {
           const a = list[i];
           const b = list[j];
-          let dx = b.x - a.x;
-          let dy = b.y - a.y;
-          let d2 = dx * dx + dy * dy;
-          if (d2 < 1) { dx = 0.5; dy = 0.5; d2 = 1; }
-          const force = 2600 / d2;
-          const d = Math.sqrt(d2);
-          const fx = (dx / d) * force;
-          const fy = (dy / d) * force;
-          a.vx -= fx; a.vy -= fy;
-          b.vx += fx; b.vy += fy;
+          const dx = (b.x + b.ox) - (a.x + a.ox);
+          const dy = b.y - a.y;
+          const gapX = a.hw + b.hw + 12 - Math.abs(dx);
+          const gapY = a.hh + b.hh + 6 - Math.abs(dy);
+          if (gapX <= 0 || gapY <= 0) continue;
+          overlaps++;
+          const aPinned = drag.current?.id === a.id;
+          const bPinned = drag.current?.id === b.id;
+          if (aPinned && bPinned) continue;
+          // Vertical is nearly always the cheaper way out: a line of type is
+          // wide and short, so a few pixels up or down clears what would take
+          // a hundred sideways.
+          if (gapY * 3 < gapX) {
+            const shift = gapY * (dy < 0 ? -0.5 : 0.5);
+            if (!aPinned) a.y -= bPinned ? shift * 2 : shift;
+            if (!bPinned) b.y += aPinned ? shift * 2 : shift;
+            a.vy *= 0.2; b.vy *= 0.2;
+          } else {
+            const shift = gapX * (dx < 0 ? -0.5 : 0.5);
+            if (!aPinned) a.x -= bPinned ? shift * 2 : shift;
+            if (!bPinned) b.x += aPinned ? shift * 2 : shift;
+            a.vx *= 0.2; b.vx *= 0.2;
+          }
         }
       }
-
-      // Springs along the edges, and a little gravity so nothing drifts away.
-      for (const [aId, bId] of edges) {
-        const a = list.find((n) => n.id === aId);
-        const b = list.find((n) => n.id === bId);
-        if (!a || !b) continue;
-        const rest = a.kind === "hub" || b.kind === "hub" ? 120 : 190;
-        const dx = b.x - a.x;
-        const dy = b.y - a.y;
-        const d = Math.hypot(dx, dy) || 1;
-        const k = (d - rest) * 0.012;
-        const fx = (dx / d) * k;
-        const fy = (dy / d) * k;
-        a.vx += fx; a.vy += fy;
-        b.vx -= fx; b.vy -= fy;
-      }
-
-      for (const n of list) {
-        n.vx += (VIEW.w / 2 - n.x) * 0.0016;
-        n.vy += (VIEW.h / 2 - n.y) * 0.0016;
-        n.vx *= 0.86;
-        n.vy *= 0.86;
-
-        if (dragging.current?.id === n.id) continue;
-        n.x += n.vx;
-        n.y += n.vy;
-
-        // Walls, with a little bounce.
-        if (n.x < PAD) { n.x = PAD; n.vx = Math.abs(n.vx) * 0.6; }
-        if (n.x > VIEW.w - PAD) { n.x = VIEW.w - PAD; n.vx = -Math.abs(n.vx) * 0.6; }
-        if (n.y < PAD) { n.y = PAD; n.vy = Math.abs(n.vy) * 0.6; }
-        if (n.y > VIEW.h - PAD) { n.y = VIEW.h - PAD; n.vy = -Math.abs(n.vy) * 0.6; }
-      }
-
-      paint();
-      frame = requestAnimationFrame(step);
+      if (!overlaps) break;
     }
 
-    if (calm.matches) {
-      paint();
+    return { energy, overlaps };
+  }, [edges, hidden]);
+
+  /** Put the layout in its final place without showing the journey. */
+  const settle = useCallback((iterations: number) => {
+    for (let i = 0; i < iterations; i++) {
+      const { energy, overlaps } = step();
+      if (energy < SLEEP && overlaps === 0) break;
+    }
+    paint();
+  }, [step, paint]);
+
+  /** Motion, and only on interaction. */
+  const wake = useCallback(() => {
+    if (running.current) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      settle(40);
       return;
     }
-    frame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frame);
-  }, [edges]);
+    running.current = true;
+    let frames = 0;
 
-  const onPointerDown = (id: string) => (e: React.PointerEvent) => {
+    const tick = () => {
+      const { energy, overlaps } = step();
+      paint();
+      frames++;
+      // The backstop: a layout that cannot fully untangle itself must still
+      // come to rest rather than argue with itself forever.
+      if ((energy < SLEEP && overlaps === 0 && !drag.current && !pointer.current) || frames > 900) {
+        running.current = false;
+        return;
+      }
+      raf.current = requestAnimationFrame(tick);
+    };
+    raf.current = requestAnimationFrame(tick);
+  }, [step, paint, settle]);
+
+  /*
+    Measure the labels from the DOM, then solve the layout — both before the
+    reader has finished reading the heading. `getComputedTextLength()` returns
+    user units, which is what the simulation works in, so no scaling is needed.
+  */
+  useEffect(() => {
+    for (const n of live.current) {
+      const text = gRefs.current[n.id]?.querySelector("text") as SVGTextContentElement | null;
+      if (!text) continue;
+      const w = text.getComputedTextLength();
+      if (!w) continue;
+      n.ox = (7 + w) / 2;
+      n.hw = n.r + (7 + w) / 2;
+      const box = text.getBBox?.();
+      if (box?.height) n.hh = box.height / 2 + 1;
+    }
+    settle(400);
+    return () => cancelAnimationFrame(raf.current);
+  }, [settle]);
+
+  // Sizes follow the measurement when there is one: on a month of nothing but
+  // C#, C# is visibly the biggest node on the page.
+  useEffect(() => {
+    const langs = status?.coding?.languages;
+    if (!langs) return;
+    for (const n of live.current) {
+      const row = n.wakatime ? langs.find((l) => l.name === n.wakatime) : undefined;
+      if (!row) continue;
+      const grown = 5 + Math.min(row.percent, 60) * 0.18;
+      n.hw += grown - n.r;
+      n.r = grown;
+      const g = gRefs.current[n.id];
+      g?.querySelector("circle")?.setAttribute("r", String(grown));
+      g?.querySelector("text")?.setAttribute("x", String(grown + 7));
+    }
+    settle(120);
+  }, [status, settle]);
+
+  const onMove = (e: React.PointerEvent) => {
+    const p = toView(e.clientX, e.clientY);
+    pointer.current = p;
+    const d = drag.current;
+    if (d) {
+      const n = live.current.find((x) => x.id === d.id);
+      if (n) {
+        n.vx = p.x - d.x;
+        n.vy = p.y - d.y;
+        n.x = p.x;
+        n.y = p.y;
+        d.x = p.x;
+        d.y = p.y;
+      }
+    }
+    wake();
+  };
+
+  const stopDrag = () => { drag.current = null; wake(); };
+  const leave = () => { pointer.current = null; drag.current = null; wake(); };
+
+  const onDown = (id: string) => (e: React.PointerEvent) => {
     (e.target as Element).setPointerCapture?.(e.pointerId);
     const p = toView(e.clientX, e.clientY);
-    dragging.current = { id, px: p.x, py: p.y };
+    drag.current = { id, x: p.x, y: p.y };
     setSelected(id);
+    wake();
   };
 
-  const onPointerMove = (e: React.PointerEvent) => {
-    const drag = dragging.current;
-    if (!drag) return;
-    const p = toView(e.clientX, e.clientY);
-    const n = nodes.current.find((x) => x.id === drag.id);
-    if (!n) return;
-    // Throwing it: the velocity it leaves with is the velocity you gave it.
-    n.vx = p.x - drag.px;
-    n.vy = p.y - drag.py;
-    n.x = p.x;
-    n.y = p.y;
-    drag.px = p.x;
-    drag.py = p.y;
-    const g = groupRefs.current[n.id];
-    if (g) g.setAttribute("transform", `translate(${n.x.toFixed(1)} ${n.y.toFixed(1)})`);
+  /** A hub folds its skills away, and lets them back out where they were. */
+  const toggle = (node: Node | undefined) => {
+    if (!node || node.kind !== "hub") return;
+    setClosed((prev) => {
+      const next = new Set(prev);
+      if (next.has(node.group)) {
+        next.delete(node.group);
+        for (const n of live.current) {
+          if (n.kind === "skill" && n.group === node.group) {
+            n.x = node.x + (n.seedX - node.seedX);
+            n.y = node.y + (n.seedY - node.seedY);
+            n.vx = 0; n.vy = 0;
+          }
+        }
+      } else {
+        next.add(node.group);
+      }
+      return next;
+    });
+    requestAnimationFrame(() => settle(120));
   };
 
-  const onPointerUp = () => { dragging.current = null; };
-
-  /** Arrow keys move the focused node, so this is not a mouse-only toy. */
-  const onKeyDown = (id: string) => (e: React.KeyboardEvent) => {
-    const n = nodes.current.find((x) => x.id === id);
-    if (!n) return;
-    const step = e.shiftKey ? 24 : 8;
+  const onKey = (id: string) => (e: React.KeyboardEvent) => {
+    const node = live.current.find((x) => x.id === id);
+    if (!node) return;
+    const dist = e.shiftKey ? 30 : 10;
     const moves: Record<string, [number, number]> = {
-      ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step],
+      ArrowLeft: [-dist, 0], ArrowRight: [dist, 0], ArrowUp: [0, -dist], ArrowDown: [0, dist],
     };
     if (moves[e.key]) {
       e.preventDefault();
-      n.x += moves[e.key][0];
-      n.y += moves[e.key][1];
+      node.x += moves[e.key][0];
+      node.y += moves[e.key][1];
       setSelected(id);
+      paint();
+      wake();
+    }
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggle(node);
     }
     if (e.key === "Escape") {
-      for (const m of nodes.current) { m.x = m.hx; m.y = m.hy; m.vx = 0; m.vy = 0; }
+      for (const m of live.current) { m.x = m.seedX; m.y = m.seedY; m.vx = 0; m.vy = 0; }
+      setClosed(new Set());
       setSelected(null);
+      settle(400);
     }
   };
 
   const lit = selected ? neighbours.get(selected) ?? new Set<string>() : null;
   const chosen = selected ? byId.get(selected) : null;
+  const measured = chosen?.wakatime
+    ? status?.coding?.languages?.find((l) => l.name === chosen.wakatime)
+    : undefined;
 
   return (
     <>
@@ -267,10 +453,10 @@ export default function StackPlayground() {
           className="play"
           viewBox={`0 0 ${VIEW.w} ${VIEW.h}`}
           role="img"
-          aria-label="Every skill as a node, joined to the group it belongs to and to the technologies it actually touches. Drag a node to move it."
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerLeave={onPointerUp}
+          aria-label="Every skill as a node, joined to its group and to the technologies it actually touches. Drag a node to move it; click a group to fold it away."
+          onPointerMove={onMove}
+          onPointerUp={stopDrag}
+          onPointerLeave={leave}
         >
           {edges.map(([a, b, why], i) => (
             <line
@@ -287,24 +473,30 @@ export default function StackPlayground() {
           {seeded.map((n) => (
             <g
               key={n.id}
-              ref={(el) => { groupRefs.current[n.id] = el; }}
+              ref={(el) => { gRefs.current[n.id] = el; }}
               className={[
                 "play-node",
                 n.kind === "hub" ? "play-node--hub" : "",
+                closed.has(n.group) && n.kind === "hub" ? "is-closed" : "",
                 selected === n.id ? "is-on" : "",
-                lit && lit.has(n.id) ? "is-lit" : "",
+                lit?.has(n.id) ? "is-lit" : "",
                 selected && selected !== n.id && !lit?.has(n.id) ? "is-dim" : "",
               ].filter(Boolean).join(" ")}
               transform={`translate(${n.x} ${n.y})`}
               role="button"
               tabIndex={0}
-              aria-label={n.kind === "hub" ? `${n.label}, a group` : `${n.label}. ${n.now ?? ""}`}
-              onPointerDown={onPointerDown(n.id)}
+              aria-label={
+                n.kind === "hub"
+                  ? `${n.label}, a group of skills. Press Enter to fold it away.`
+                  : `${n.label}. ${n.now ?? ""}`
+              }
+              onPointerDown={onDown(n.id)}
+              onClick={() => toggle(live.current.find((x) => x.id === n.id))}
               onFocus={() => setSelected(n.id)}
-              onKeyDown={onKeyDown(n.id)}
+              onKeyDown={onKey(n.id)}
             >
-              <circle r={n.kind === "hub" ? 9 : 5} />
-              <text x={n.kind === "hub" ? 16 : 11} y="4">{n.label}</text>
+              <circle r={n.r} />
+              <text x={n.r + 7} y="4">{n.label}</text>
             </g>
           ))}
         </svg>
@@ -312,13 +504,19 @@ export default function StackPlayground() {
         <figcaption>
           {chosen ? (
             <>
-              <strong>{chosen.label}</strong> {chosen.now}
-              {chosen.topic && (
-                <> <Link href={`/topics/${chosen.topic}/`}>everything about it</Link></>
+              <strong>{chosen.label}</strong>
+              {chosen.kind === "hub" ? (
+                <> — {closed.has(chosen.group) ? "folded away. Click it again to let it out." : "click to fold this group away."}</>
+              ) : (
+                <>
+                  {" "}{chosen.now}
+                  {measured && <> <span className="measured">{measured.percent}% of my last 30 days</span></>}
+                  {chosen.topic && <> <Link href={`/topics/${chosen.topic}/`}>everything about it</Link></>}
+                </>
               )}
             </>
           ) : (
-            "Drag a node and the rest follows it. Arrow keys move whatever is focused; Escape puts it all back."
+            "Drag a node and the rest follows. The cursor pushes things aside; a group folds away when you click it. Arrow keys move whatever is focused, Enter folds, Escape puts it all back."
           )}
         </figcaption>
       </figure>

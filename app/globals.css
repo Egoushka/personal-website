@@ -1223,9 +1223,11 @@ figure figcaption {
 .play-edge {
   stroke: var(--rule);
   stroke-width: 1;
+  transition: opacity .28s ease;
 }
 .play-edge.is-lit { stroke: var(--accent); stroke-width: 1.5; }
 
+.play-node { transition: opacity .28s ease; }
 .play-node circle {
   fill: var(--paper);
   stroke: var(--rule-firm);
@@ -1249,7 +1251,10 @@ figure figcaption {
 .play-node.is-lit circle { stroke: var(--accent); }
 .play-node.is-on text,
 .play-node.is-lit text   { fill: var(--ink); }
-.play-node.is-dim        { opacity: .45; }
+.play-node.is-dim        { opacity: .4; }
+/* A folded group keeps its circle but hollows out, so the page says "there is
+   more here" rather than "something disappeared". */
+.play-node--hub.is-closed circle { fill: var(--accent-quiet); stroke: var(--accent); }
 
 /* The focus ring is drawn rather than suppressed — see the rule at the top of
    this file. An SVG <g> cannot take an outline reliably, so the circle grows a
@@ -1560,6 +1565,17 @@ figure figcaption {
      three lines and tells the reader nothing new. The roles keep their meta
      line — that one carries the title, and the title is the point. */
   .cv .project-stack { display: none; }
+
+  /* Two schools, one line each: name, subject, place, date. On screen they get
+     room; on paper they are the last thing anyone reads. */
+  .cv .edu { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 3mm; }
+  .cv .edu .job-head { flex: 1 1 auto; gap: 3mm; }
+  .cv .edu .job-meta { margin: 0; }
+  .cv .edu + .edu { margin-top: 1mm; }
+
+  /* The 24px touch target on the contact links is a screen concern. Paper has
+     no fingers, and it was costing two millimetres. */
+  .cv .masthead-rail a { min-height: 0; display: inline; }
 
   /* Links print as text. The URLs a reader needs are already spelled out in the
      contact rail; appending them inline just adds noise. */

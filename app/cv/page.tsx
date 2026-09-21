@@ -201,7 +201,7 @@ export default function CV() {
         <h2 className="rail rail--label">Education</h2>
         <div>
           {education.map((e) => (
-            <div className="job" key={e.school}>
+            <div className="job edu" key={e.school}>
               <div className="job-head">
                 <h3 className="job-name">{e.school}</h3>
                 <span className="job-dates">{e.when}</span>

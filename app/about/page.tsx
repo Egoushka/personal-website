@@ -58,7 +58,7 @@ export default function About() {
 
       <PageHead
         title="About"
-        lede="The short version, the current version, and the whole stack it all runs on."
+        lede="The short version."
       />
 
       <div className="prose">
@@ -75,28 +75,17 @@ export default function About() {
         )}
 
         <p>
-          I&apos;m a backend-leaning full-stack developer based in Ukraine.
-          {current && ` Right now I'm a ${current.role} at ${current.company}, `}
-          working on backend services for a white-label crypto trading platform.
+          Backend developer in Ukraine.
+          {current && ` ${current.role} at ${current.company}, `}
+          on a crypto trading platform: C# and ASP.NET Core, and the parts that
+          never show up in a demo — error handling, observability, what happens
+          under load.
         </p>
 
         <p>
-          Day to day that means <strong>C# / .NET and ASP.NET Core</strong>, with
-          Angular and TypeScript when the work reaches the front end. The parts I
-          actually care about are the ones that don&apos;t show up in a demo:
-          error handling, observability, predictable behaviour under load, and
-          code the next person can read without booking a meeting about it.
-        </p>
-
-        <h2>The homelab</h2>
-        <p>
-          Outside work I run a small homelab on a single VPS. It&apos;s a
-          deliberate way to learn infrastructure properly: networking, secrets
-          management, reverse proxies, and the difference between &quot;it
-          works&quot; and &quot;it works at 3am.&quot; It&apos;s the cheapest
-          environment I know for breaking production when production is only
-          mine — and I write about it over in{" "}
-          <Link href="/writing/">the writing</Link>.
+          Outside work I run one VPS like a production environment, because it
+          is the cheapest place I know to break things that are only mine. Most
+          of <Link href="/writing/">the writing</Link> comes out of it.
         </p>
       </div>
 
