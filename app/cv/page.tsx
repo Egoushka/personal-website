@@ -110,8 +110,6 @@ export default function CV() {
                 {job.points.map((pt, j) => (
                   <li key={j}>
                     {pt.text}
-                    {pt.link && <Link href={pt.link.href}>{pt.link.label}</Link>}
-                    {pt.after}
                   </li>
                 ))}
               </ul>

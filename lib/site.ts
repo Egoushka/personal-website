@@ -14,7 +14,7 @@ export const site = {
    */
   intro: "I write .NET backends and fix the ones that fail quietly.",
   description:
-    "Backend services in .NET and ASP.NET Core, a homelab on one box in Helsinki, and writing about the parts that went wrong.",
+    "Backend services in .NET and ASP.NET Core, a homelab on one box in Nuremberg, and writing about the parts that went wrong.",
   locale: "en_US",
   location: "Kyiv, Ukraine",
   /**
@@ -66,6 +66,12 @@ export const links: { label: string; href: string; handle: string; note: string 
     href: `mailto:${site.email}`,
     handle: site.email,
     note: "The fastest way to reach me. I do read it.",
+  },
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/everlasting_sunshrine/",
+    handle: "@everlasting_sunshrine",
+    note: "The half of my life that is not a terminal.",
   },
   {
     label: "NuGet",
@@ -331,7 +337,6 @@ export const projects: Project[] = [
 ];
 
 
-export type Point = { text: string; link?: { href: string; label: string }; after?: string };
 export type Job = {
   when: string;
   company: string;
@@ -341,15 +346,13 @@ export type Job = {
   location?: string;
   /** Remote, Hybrid, On-site. Its own field for the same reason as `shape`. */
   mode?: string;
-  points: Point[];
+  points: { text: string }[];
   /**
    * What the role was actually built with. This is the edge that makes a topic
    * page honest — without it a topic can only ever prove I have a side project,
    * never that I've been paid to use it.
    */
   topics: TopicSlug[];
-  /** Kept off the homepage timeline; still shown on /cv/ so the record has no gaps. */
-  resumeOnly?: boolean;
   /**
    * Prints as title + dates only, no bullets. The role still appears in full on
    * screen — this is the compression that makes one A4 sheet possible, and it
@@ -396,7 +399,6 @@ export const experience: Job[] = [
     role: "Sales Representative",
     location: "Kyiv",
     mode: "On-site",
-    resumeOnly: true,
     topics: [],
     points: [
       { text: "Worked directly with US clients and drivers on real-time logistics, negotiation and crisis decisions." },
@@ -486,7 +488,7 @@ export const uses: { group: string; items: StackItem[] }[] = [
   {
     group: "The box",
     items: [
-      { name: "Hetzner VPS", topic: "hetzner", href: "https://www.hetzner.com/cloud", desc: "One cx53 in Helsinki, 32 GB. Everything below runs on it." },
+      { name: "Hetzner VPS", topic: "hetzner", href: "https://www.hetzner.com/cloud", desc: "One cx53 in Nuremberg, 32 GB. Everything below runs on it." },
       { name: "Traefik", href: "https://traefik.io/traefik/", desc: "The public edge. It decides what the internet is allowed to reach." },
       { name: "Caddy", topic: "caddy", href: "https://caddyserver.com", desc: "Behind Traefik, serving this page as plain files." },
       { name: "Tailscale + Headscale", topic: "tailscale", href: "https://headscale.net", desc: "Self-hosted control plane for a private mesh. SSH is not on the internet." },

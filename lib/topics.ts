@@ -156,7 +156,7 @@ export const TOPICS = {
   hetzner: {
     name: "Hetzner VPS",
     kind: "technology",
-    blurb: "One shared-vCPU box in Helsinki. Everything else runs on it.",
+    blurb: "One shared-vCPU box in Nuremberg. Everything else runs on it.",
     graph: { x: 110, y: 390, group: "infra" },
   },
   python: {
