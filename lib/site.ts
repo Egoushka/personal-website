@@ -53,7 +53,7 @@ export const links: { label: string; href: string; handle: string; note: string 
     label: "GitHub",
     href: site.github,
     handle: `@${site.githubHandle}`,
-    note: "Everything I build in public, including this site.",
+    note: "The public half of what I build. Attest lives here; most of the rest is still private.",
   },
   {
     label: "LinkedIn",
@@ -66,6 +66,12 @@ export const links: { label: string; href: string; handle: string; note: string 
     href: `mailto:${site.email}`,
     handle: site.email,
     note: "The fastest way to reach me. I do read it.",
+  },
+  {
+    label: "NuGet",
+    href: "https://www.nuget.org/profiles/red_tar",
+    handle: "red_tar",
+    note: "Where Attest is published. The one thing here that fails in public when I get it wrong.",
   },
   {
     label: "RSS",
@@ -188,7 +194,7 @@ export const projects: Project[] = [
     name: "Chronicle",
     status: "running",
     meta: "Python · event store",
-    href: "https://github.com/Egoushka/chronicle",
+    href: "",
     summary:
       "Makes seven years of chat history searchable by an assistant, by refusing to index the 65% of it that says “ok”.",
     description:
@@ -209,7 +215,7 @@ export const projects: Project[] = [
     name: "Baseline",
     status: "running",
     meta: "Flutter · instrument",
-    href: "https://github.com/Egoushka/baseline",
+    href: "",
     summary:
       "Tracks how you've changed since last time, and breaks the line rather than pretend a week-old comparison still holds.",
     description:
@@ -223,7 +229,68 @@ export const projects: Project[] = [
       { label: "Users", value: "1 — me", source: "counted" },
     ],
   },
+  {
+    slug: "oura-platform",
+    side: true,
+    status: "building",
+    name: "Oura Platform",
+    meta: "C# · health warehouse",
+    href: "",
+    summary:
+      "Pulls Oura Ring data into a database I own, so it can be joined against everything Oura will never see.",
+    description:
+      "A self-hosted health warehouse. Oura's own app will show you last night's sleep; it will never show you last night's sleep against the meetings in the calendar, the training load, the CO₂ in the bedroom or the glucose curve, because it does not have any of those. This pulls the ring's data out over OAuth into Postgres with TimescaleDB, on the same box as everything else, where SQL and Grafana can ask questions across all of it. Two processes, one database, no Kubernetes. It is stage 1 of 8 and the plan says so: OAuth, storage, backfill and the scheduled poll work; dashboards, webhooks and the MCP server do not exist yet.",
+    resumeLine:
+      "Self-hosted health warehouse in .NET: OAuth ingestion of wearable data into Postgres/TimescaleDB on a single VPS, joined against calendar and environment data.",
+    topics: ["dotnet", "postgres", "self-hosting"],
+    readings: [
+      { label: "Stage", value: "1 of 8", source: "the staged plan in the repo; stages 2–4 are not built" },
+      { label: "Storage", value: "Postgres + TimescaleDB", source: "hypertables, on the same box as the rest of the lab" },
+      { label: "Users", value: "1 — me", source: "counted" },
+    ],
+  },
+  {
+    slug: "homelab-gitops",
+    side: true,
+    status: "running",
+    name: "Homelab GitOps",
+    meta: "Compose · infrastructure",
+    href: "",
+    summary:
+      "Every stack on the box, one directory each, with the secrets encrypted in the repository rather than living on the machine.",
+    description:
+      "The whole homelab as a git repository: one directory per Docker Compose stack, secrets committed as SOPS+age encrypted files with the plaintext gitignored, and Traefik at the edge deciding what the internet is allowed to reach. The point of doing it this way is falsifiable — if the box disappeared, this repository is what would rebuild it, and the only way to know that is that it has had to. It is also the reason the writing on this site exists: the deploy that shipped nothing for fifty-one days was found because the state of the machine is supposed to be reconstructable from here, and for fifty-one days it was not.",
+    resumeLine:
+      "Single-VPS homelab defined entirely in git: Compose stacks per service, SOPS+age encrypted secrets, Traefik edge, rebuildable from the repository.",
+    topics: ["self-hosting", "infrastructure", "docker", "sops"],
+    readings: [
+      { label: "Host", value: "one cx53, 32 GB", source: "the repo's own README; tailnet address, not a public one" },
+      { label: "Secrets", value: "encrypted in git", source: "*.enc committed, plaintext gitignored — checkable in the tree" },
+      { label: "Stacks", value: "one directory each", source: "the layout of the repository" },
+    ],
+  },
+  {
+    slug: "trader",
+    side: true,
+    status: "building",
+    name: "Trader",
+    meta: "Python · backtesting",
+    href: "",
+    summary:
+      "A systematic crypto trading system whose result so far is two pre-registered hypotheses, both rejected, and no orders.",
+    description:
+      "Trend following and funding-carry capture on crypto perpetuals, built in the order that makes the answer trustworthy rather than the order that gets to a chart fastest: hypotheses pre-registered before the data was touched, a conservative cost model every strategy has to route through, a second-source reconciliation against another exchange, and Deflated Sharpe and PBO reporting on top of walk-forward selection. The gate for phase 3 was that at least one candidate survives all of it. None did — the known-bad control is correctly rejected at Sharpe −0.43 and PBO 0.82, and both opening hypotheses are dead. That is the project working. A backtest that finds an edge on the first try has usually found a bug, and the expensive version of this lesson is paid for with real money.",
+    resumeLine:
+      "Systematic trading research in Python: pre-registered hypotheses, conservative cost model, cross-exchange reconciliation, walk-forward with Deflated Sharpe/PBO. Both opening hypotheses rejected.",
+    topics: ["python", "architecture"],
+    readings: [
+      { label: "Phase", value: "3 of 7", source: "the phase gates in the repo's plan, which are not skippable" },
+      { label: "Hypotheses", value: "2 pre-registered, 2 rejected", source: "the research log, which records failures too" },
+      { label: "Capital at risk", value: "none", source: "testnet only; there are no live orders" },
+    ],
+  },
 ];
+
 
 export type Point = { text: string; link?: { href: string; label: string }; after?: string };
 export type Job = {

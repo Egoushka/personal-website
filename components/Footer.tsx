@@ -22,7 +22,7 @@ export default function Footer() {
       <span className="sep">·</span>
       <a href="/feed.xml">rss</a>
       <span className="sep">·</span>
-      <a href={site.github} rel="noopener">source</a>
+      <a href={site.github} rel="noopener">github</a>
     </footer>
   );
 }

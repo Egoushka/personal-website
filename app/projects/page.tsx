@@ -7,7 +7,7 @@ import { site, feedTypes, projects } from "@/lib/site";
 import { topicName } from "@/lib/topics";
 
 const description =
-  "A .NET validation library other people install, an event store over seven years of chat history, and an app that refuses to give you a score.";
+  "A .NET validation library other people install, a homelab defined entirely in git, an event store over seven years of chat history, and a trading system whose result so far is two rejected hypotheses.";
 
 export const metadata: Metadata = {
   title: "Projects",
@@ -53,7 +53,7 @@ export default function Projects() {
             <a href={site.github} rel="noopener">github ↗</a>
           </>
         }
-        lede="Each one exists because the alternative was worse, and each is best described by what it refuses to do."
+        lede="Each one exists because the alternative was worse, and most of them are best described by what they refuse to do. Only the first is something you can install; the rest run for one user, and the repositories are private."
       />
 
       <ProjectFilter projects={projects} topics={topics} />
