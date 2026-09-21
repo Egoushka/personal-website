@@ -5,6 +5,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import PageHead from "@/components/PageHead";
 import { site, feedTypes, projects } from "@/lib/site";
+import { Downloads } from "@/components/Measured";
 import { topicName } from "@/lib/topics";
 
 type Params = { slug: string };
@@ -113,6 +114,10 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
               <span className="reading-source">{reading.source}</span>
             </li>
           ))}
+          {/* Counted by NuGet rather than by me, which is the whole point of
+              it. Absent until the box publishes it, like everything else that
+              is true now rather than true at build. */}
+          {project.slug === "attest" && <Downloads />}
         </ul>
       </section>
 

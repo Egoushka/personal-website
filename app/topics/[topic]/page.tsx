@@ -5,7 +5,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import PageHead from "@/components/PageHead";
 import PostList from "@/components/PostList";
-import { site, feedTypes, projects, experience } from "@/lib/site";
+import { site, feedTypes, projects, experience, skills } from "@/lib/site";
 import { getPostsByTopic } from "@/lib/posts";
 import { TOPICS, isTopic, topicName } from "@/lib/topics";
 import { getTopicUsage } from "@/lib/readings";
@@ -62,6 +62,7 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
   const posts = getPostsByTopic(topic);
   const built = projects.filter((p) => (p.topics as string[]).includes(topic));
   const jobs = experience.filter((j) => (j.topics as string[]).includes(topic));
+  const now = skills.flatMap((g) => g.items).find((s) => s.topic === topic)?.now;
   if (posts.length + built.length + jobs.length === 0) notFound();
 
   const others = getTopicUsage()
@@ -84,6 +85,15 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
         }
         lede={TOPICS[topic].blurb}
       />
+
+      {/*
+        Where this one actually stands, from the curated skills list rather
+        than a second field here. `blurb` is reused in five places — the meta
+        description, the OG card, the graph's hover note and its aria-label —
+        so it cannot grow into a paragraph; `now` can, and it lives beside the
+        claim it qualifies on the CV.
+      */}
+      {now && <p className="topic-now">{now}</p>}
 
       {posts.length > 0 && (
         <>

@@ -3,8 +3,11 @@ import Link from "next/link";
 import Nav from "@/components/Nav";
 import { ProfilePageLd } from "@/components/JsonLd";
 import Footer from "@/components/Footer";
-import { site, feedTypes, experience, education, projects } from "@/lib/site";
-import { TOPICS, topicName, type TopicSlug } from "@/lib/topics";
+import React from "react";
+import { site, feedTypes, experience, education, projects, skills } from "@/lib/site";
+import { topicName } from "@/lib/topics";
+import { getTopicUsage } from "@/lib/readings";
+import Measured from "@/components/Measured";
 
 const description =
   "CV of Yehor Hrabovskyi — .NET backend engineer. Clean Architecture, CQRS, ASP.NET Core, Angular, self-hosted infrastructure.";
@@ -43,26 +46,11 @@ function isoDates(when: string): string {
   );
 }
 
-/**
- * The skills line, derived rather than typed.
- *
- * There used to be a hand-maintained `skills` array in lib/site.ts that had
- * drifted from both the jobs and the projects it was supposed to summarise. This
- * is every technology topic that some role or project actually references, in
- * vocabulary order — so it cannot claim anything the rest of the site does not
- * already back up.
- */
-function skillsFromRecord(): string[] {
-  const used = new Set<TopicSlug>();
-  for (const job of experience) for (const t of job.topics) used.add(t);
-  for (const project of projects) for (const t of project.topics) used.add(t);
-  return [...used]
-    .filter((t) => TOPICS[t].kind === "technology")
-    .map(topicName);
-}
-
 export default function CV() {
-  const skills = skillsFromRecord();
+  // Only link a skill whose hub actually exists — the vocabulary is wider than
+  // the pages it has earned, and a static file server cannot redirect its way
+  // out of a dangling link.
+  const hasPage = new Set(getTopicUsage().map((t) => t.slug));
 
   return (
     <main id="main" className="wrap cv">
@@ -139,10 +127,42 @@ export default function CV() {
         </div>
       </section>
 
+      {/*
+        Skills, curated and grouped, each saying where it actually stands.
+
+        The previous version was one undifferentiated run of nine words derived
+        from the topic vocabulary, which is why it printed Flutter — one app on
+        my own phone — and could not print Clean Architecture, EF Core or SQL
+        Server at all. The list is chosen now; the honesty moved into the
+        second line, which has to be specific enough to be wrong.
+
+        `Measured` prints the share of my editor time from my own Wakapi, and
+        renders nothing when the box is not publishing. On paper the second
+        lines are hidden and this compresses back to names.
+      */}
       <hr className="bleed" />
       <section className="row section">
         <h2 className="rail rail--label">Skills</h2>
-        <p className="skills-run run">{skills.map((s) => <span key={s}>{s}</span>)}</p>
+        <div className="skill-groups">
+          {skills.map((group) => (
+            <div className="skill-group" key={group.group}>
+              <h3>{group.group}</h3>
+              <dl>
+                {group.items.map((skill) => (
+                  <React.Fragment key={skill.name}>
+                    <dt>
+                      {skill.topic && hasPage.has(skill.topic)
+                        ? <Link href={`/topics/${skill.topic}/`}>{skill.name}</Link>
+                        : skill.name}
+                      {skill.wakatime && <Measured lang={skill.wakatime} />}
+                    </dt>
+                    <dd>{skill.now}</dd>
+                  </React.Fragment>
+                ))}
+              </dl>
+            </div>
+          ))}
+        </div>
       </section>
 
       <hr className="bleed" />

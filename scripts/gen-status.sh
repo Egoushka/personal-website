@@ -65,16 +65,45 @@ lang, ed = first("languages"), first("editors")
 hours = round(d.get("total_seconds", 0) / 3600)
 if not hours:
     raise SystemExit(1)
+# The per-language table, so /cv/ can print a measured share next to a claim.
+# Anything under 1% is noise and is dropped rather than rounded to zero.
+langs = [
+    {"name": x.get("name"), "percent": round(x.get("percent", 0)), "hours": round(x.get("total_seconds", 0) / 3600, 1)}
+    for x in (d.get("languages") or [])
+    if x.get("percent", 0) >= 1
+][:12]
 print(json.dumps({
     "hours": hours,
     "language": lang.get("name"),
     "languagePercent": round(lang.get("percent", 0)),
     "editor": ed.get("name"),
     "editorPercent": round(ed.get("percent", 0)),
+    "languages": langs,
 }))' 2>/dev/null || echo null
   )"
   [ -n "$CODING" ] || CODING=null
 fi
+
+# ── the published package, from a public API ────────────────────────────────
+# Downloads are the one figure about this work that someone else counts. The
+# call is to nuget.org, not to anything of mine, and a failure leaves it null.
+PACKAGE=null
+PACKAGE_ID="${NUGET_PACKAGE_ID:-Attest}"
+PACKAGE="$(
+  curl -sf -m 10 "https://azuresearch-usnc.nuget.org/query?q=packageid:${PACKAGE_ID}&prerelease=false" \
+  | python3 -c '
+import json, sys
+d = (json.load(sys.stdin).get("data") or [])
+if not d:
+    raise SystemExit(1)
+p = d[0]
+print(json.dumps({
+    "id": p.get("id"),
+    "version": p.get("version"),
+    "downloads": p.get("totalDownloads", 0),
+}))' 2>/dev/null || echo null
+)"
+[ -n "$PACKAGE" ] || PACKAGE=null
 
 {
   printf '{\n'
@@ -82,7 +111,8 @@ fi
   printf '  "uptimeDays": %s,\n' "$UP_DAYS"
   printf '  "containers": %s,\n' "$COUNT"
   printf '  "unhealthy": %s,\n' "$UNHEALTHY"
-  printf '  "coding": %s\n' "$CODING"
+  printf '  "coding": %s,\n' "$CODING"
+  printf '  "package": %s\n' "$PACKAGE"
   printf '}\n'
 } > "$TMP"
 
