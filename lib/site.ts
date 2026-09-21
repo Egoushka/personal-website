@@ -174,6 +174,13 @@ export type Project = {
   /** One line, for the CV. A four-line bullet on paper does not get read. */
   resumeLine?: string;
   /**
+   * Prints on the CV. Two of six: the one anyone can install, and the one with
+   * the best measurement behind it. The rest are one click away and were
+   * costing a second sheet of A4 — this is the last lever in the one-page cut
+   * order, and it is now spent.
+   */
+  print?: boolean;
+  /**
    * True for a project built for one user — me. The home page groups these
    * under their own label, because "a library 400 other people installed" and
    * "an app on my own phone" are not the same kind of evidence and putting
@@ -202,6 +209,7 @@ export type Project = {
 export const projects: Project[] = [
   {
     slug: "attest",
+    print: true,
     name: "Attest",
     status: "running",
     lang: "C#", shape: "library",
@@ -223,6 +231,7 @@ export const projects: Project[] = [
   },
   {
     slug: "chronicle",
+    print: true,
     side: true,
     visibility: "private",
     tech: ["Python", "FastAPI", "Postgres", "pgvector", "MCP", "sentence-transformers", "pymorphy3", "Docker"],
@@ -443,13 +452,112 @@ export type Job = {
    * list cannot silently gut a current role.
    */
   resumeCompact?: boolean;
+  /**
+   * How many bullets survive to paper. Explicit, because the CSS used to do
+   * this with `:nth-child(n+4)` and `:nth-of-type(n+3)` — which counts
+   * position in the DOM, and the DOM is now nested inside eras. A positional
+   * rule fails silently the moment the markup changes; a number does not.
+   */
+  printBullets?: number;
 };
+
+/**
+ * The CV as a journey, on screen only.
+ *
+ * A CV is a list of employers in reverse order, which is a format designed to
+ * be skimmed by someone filtering forty people — and it throws away the only
+ * thing that makes one person's five years different from another's: what went
+ * wrong, and what changed because of it.
+ *
+ * So the screen gets eras. Each one holds the roles of its period, says what
+ * the period was actually like, and names one obstacle. **In print all of this
+ * prose disappears** and the job blocks it wraps print as an ordinary record —
+ * same data, two densities, one page.
+ *
+ * Every claim below is dated and came out of my own record: commits, packages,
+ * and messages I wrote at the time. Nothing here is a reconstruction, and
+ * nothing that belongs to an employer is in it.
+ */
+export type Era = {
+  slug: string;
+  title: string;
+  years: string;
+  /** Companies whose roles belong to this era, matched on `Job.company`. */
+  jobs: string[];
+  body: string[];
+  /** The thing that went wrong. One sentence, and it is not optional padding. */
+  obstacle?: string;
+};
+
+export const eras: Era[] = [
+  {
+    slug: "production",
+    title: "Production, and a box I get paged for",
+    years: "2025 — now",
+    jobs: ["Boerse Stuttgart Digital"],
+    body: [
+      "A white-label crypto trading platform, in .NET: trade and payment flows, reconciliation, the integrations either side of them, and the background jobs that hold it together. The estate is large enough that I onboarded by reading its tests rather than its code, which turned out to be the fastest map anyone had.",
+      "The year taught me the parts that do not appear in a demo. A read cache invalidated across services, and two days lost to a consumer I had never registered — the message was published and nothing was listening. A month on the rotation, which is the quickest way to learn what a system does when nobody is watching it. A release run end to end. By 2026 I was on the other side of the interview table.",
+      "Alongside it, the homelab moved into git and became the busiest repository I own. That is also where Attest came from: work needed a validation library, the one that existed had been abandoned, so I forked it, fixed 197 of its defects in six days and published it. It is the only thing I have built that fails in public when I get it wrong.",
+    ],
+    obstacle:
+      "My own migration moved the box, and the deploy kept reporting success for fifty-one days while shipping nothing. I found it by accident, while adding a header.",
+  },
+  {
+    slug: "greenfield",
+    title: "Greenfield, and learning to choose",
+    years: "2024 — 2025",
+    jobs: ["IT INNOVATIONS"],
+    body: [
+      "A .NET 9 backend from nothing: Clean Architecture, vertical-slice CQRS, a management module with Specification filters and FluentValidation, and on the front end a generic NgRx store factory and a DataTable that took dynamic templates. It is the work I would point at to show I can start something rather than only maintain it.",
+      "It is also where I stopped taking whatever was offered. When it ended I wrote down — for myself, in a message to a friend — exactly which work suits me and which does not: integrations, parsers, CLI tools and data processing on .NET, yes; complex business logic in Python, no; anything without clear business rules, no. I have not deviated from that list since, and this site exists partly to say it out loud.",
+    ],
+    obstacle:
+      "Day five of the next search is in my own messages, and so is the rejection on the thirteenth. It took until August to land.",
+  },
+  {
+    slug: "umbraco",
+    title: "Legacy systems, and a year of my own clients",
+    years: "2023 — 2024",
+    jobs: ["UKAD", "Atlas Recruiting"],
+    body: [
+      "Umbraco, Optimizely and Azure: features across several .NET systems, legacy applications modernised, a VPN-to-Azure Identity migration tool. I got in on a take-home I put 348 commits into over eight days, with three rounds of feedback from someone who had no obligation to give any.",
+      "When it ended I worked for myself for most of a year. A WordPress estate rescued while it was half down, Telegram bots, Python scrapers and parsers, sites in .NET, PHP and JS frameworks. None of it is on GitHub and none of it has a public URL I can show you — it was other people's businesses — but it is where the scraping and automation work in my side projects actually comes from.",
+      "Then two months selling logistics over the phone to US clients, which I took deliberately rather than sit still. It is on this page for the same reason the fifty-one days are: a record with the awkward parts removed is worth less than one without.",
+    ],
+    obstacle:
+      "One rejection that year was for being too young — the manager wanted candidates aged 27 and over. It was in writing, which at least made it quick.",
+  },
+  {
+    slug: "first-jobs",
+    title: "The first real tasks",
+    years: "2021 — 2023",
+    jobs: ["LetsData", "GlobalLogic"],
+    body: [
+      "A trainee programme, then legacy systems, then Angular and .NET on a new product. Four months after a lecture I was in a seat; eight months after that I recorded a voice note saying I was learning more than I ever had, because the tasks were real and somebody depended on them.",
+      "In 2022 I wrote myself a plan — gRPC, SignalR, .NET 6, xUnit and AutoFixture, CI/CD, architecture books, a project of my own — and then moved city for the next job. The degree ran underneath all of it: I defended in June 2023, two and a half years into working full time.",
+    ],
+    obstacle:
+      "Four months of applications before the next job, and it came from a mentor calling back rather than from anything I sent.",
+  },
+  {
+    slug: "university",
+    title: "Learning it in public",
+    years: "2019 — 2021",
+    jobs: [],
+    body: [
+      "Computer science at Petro Mohyla in Mykolaiv: C++, Java, a lexical analyser, a validator in TSQL, the usual coursework. What was not usual is where it went — by the second year everything I wrote went to GitHub, including the parts that embarrassed me in a lab report.",
+      "The first public repository is a Unity test task from July 2020, and it is the one that settled the question: I liked the coding, not the games. Tests came before anyone asked for them — JUnit in a lab about a zoo, xUnit in a bank's take-home a year later — and the first CI I ever set up was three workflows on a repository that was one day old.",
+    ],
+  },
+];
 
 /** Source of truth for /about/, /cv/ and every topic page. Mirrors LinkedIn. */
 export const experience: Job[] = [
   {
     when: "Aug 2025 — present",
     company: "Boerse Stuttgart Digital",
+    printBullets: 3,
     role: "Software Engineer",
     focus: "fintech / crypto trading",
     location: "Ukraine",
@@ -464,6 +572,7 @@ export const experience: Job[] = [
   {
     when: "Dec 2024 — Jun 2025",
     company: "IT INNOVATIONS",
+    printBullets: 3,
     role: "Software Engineer",
     location: "Kyiv",
     mode: "Hybrid",
@@ -491,6 +600,7 @@ export const experience: Job[] = [
   {
     when: "Apr 2023 — Jun 2024",
     company: "UKAD",
+    printBullets: 1,
     role: "Software Engineer",
     focus: "Umbraco / Optimizely / Azure",
     location: "Kyiv",
@@ -533,7 +643,10 @@ export const experience: Job[] = [
 export const education = [
   {
     school: "Petro Mohyla Black Sea National University",
+    degree: "Computer Science",
+    when: "defended 2023",
     detail: "Mykolaiv, Ukraine",
+    note: "Worked full time from the second year onward; the degree finished two and a half years into the first job.",
   },
 ];
 

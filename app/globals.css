@@ -1236,6 +1236,30 @@ figure figcaption {
 .job li::marker { content: "– "; color: var(--ink-2); }
 .job + .job { margin-top: var(--s-6); }
 
+/* THE CV AS ERAS — screen only.
+   The title belongs to the era rather than to a role, so it takes the section
+   heading and the companies under it stay h3. The prose sits at body size
+   because it is meant to be read; the roles beneath stay dense because they
+   are meant to be scanned. None of it survives to paper. */
+.era-title { font-size: var(--fs-h2); margin: 0 0 var(--s-5); }
+.era-prose { margin: 0 0 var(--s-5); max-width: 62ch; }
+.era-obstacle {
+  margin: var(--s-6) 0 var(--s-7);
+  padding-left: var(--s-5);
+  border-left: 2px solid var(--accent);
+  max-width: 62ch;
+  color: var(--ink-2);
+}
+.era-obstacle-label {
+  display: block;
+  font: 600 10.5px/1.4 var(--figure);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin-bottom: var(--s-2);
+}
+.cv-era .job:first-of-type { margin-top: var(--s-7); }
+
 /* ============================================================================
    RESPONSIVE COLLAPSE — 900px
    The rail does not become a sidebar, a drawer, or a sticky bar. It becomes an
@@ -1370,7 +1394,7 @@ figure figcaption {
 
   /* --- CV specifics ------------------------------------------------------- */
   .cv h1 {
-    font: 600 24pt/1.02 var(--prose);
+    font: 600 21pt/1.02 var(--prose);
     letter-spacing: -0.02em;
     color: #000;
     margin: 0;
@@ -1397,20 +1421,29 @@ figure figcaption {
   .cv .rail--label   { break-after: avoid;  page-break-after: avoid;  }
   .cv h2, .cv h3     { break-after: avoid;  page-break-after: avoid;  }
 
-  /* Cuts #1, #2 and #3 from the one-page order below. Older roles keep their
-     bullets on screen and lose them here, and no role prints more than three. A
-     fourth bullet on a role from 2023 is not what a reader is deciding on.
-     From the third role down the cap drops to two: by then the reader is
-     scanning dates and titles, not sentences. */
+  /* The sheet is the record, not the story. Each era's title, prose and
+     obstacle line are screen furniture; what prints is the same job blocks a
+     reader expects from a CV, in the same order.
+
+     Bullets are budgeted by `printBullets` on the data and marked
+     `.print-hide` in the markup. This was `:nth-child(n+4)` and
+     `:nth-of-type(n+3)`, which count position in the DOM — and the DOM is
+     nested inside eras now, so those would have gone on matching while
+     quietly counting the wrong thing. */
+  .cv .era-title,
+  .cv .era-prose,
+  .cv .era-obstacle,
+  .cv .print-hide      { display: none; }
   .cv .job--compact ul { display: none; }
-  .cv .job ul li:nth-child(n+4) { display: none; }
-  .cv .job:nth-of-type(n+3) ul li:nth-child(n+3) { display: none; }
+  .cv .cv-era .job:first-of-type { margin-top: 0; }
+  /* The era rail carries years the roles print for themselves. */
+  .cv .cv-era > .rail  { visibility: hidden; }
 
   /* Every section boundary was drawn twice: an <hr class="bleed"> in the markup
      AND a border-top from `.section + .section`. On screen the hr is the rule;
      on paper the section border is, so the hr goes. */
   .cv hr.bleed { display: none; }
-  .cv .job + .job { margin-top: 2.2mm; }
+  .cv .job + .job { margin-top: 1.8mm; }
   .cv .job-name   { font: 600 11.5pt/1.25 var(--prose); color: #000; }
   .cv .job-meta   { font: 400 9pt/1.35 var(--figure); color: var(--ink-2); margin-top: 0.6mm; }
   .cv .job ul     { margin: 1.4mm 0 0; padding-left: 4mm; font-size: 10pt; line-height: 1.38; }
@@ -1424,11 +1457,27 @@ figure figcaption {
   }
 
   .cv .section + .section {
-    margin-top: 3.5mm;
+    margin-top: 2.2mm;
     border-top: 0.5pt solid var(--rule);
-    padding-top: 3mm;
+    padding-top: 2mm;
   }
   .cv .skills-run { font-size: 9.5pt; line-height: 1.35; }
+
+  /* Skills compress to names, one group per line with its label in the margin
+     of the prose column. The "where it stands" line is the argument, and an
+     argument is what the conversation after the CV is for. */
+  .cv .skill-groups { display: flex; flex-direction: column; gap: 1mm; }
+  .cv .skill-group   { display: flex; align-items: baseline; gap: 3mm; }
+  .cv .skill-group h3 { flex: 0 0 20mm; font-size: 7.5pt; margin: 0; }
+  .cv .skill-group dl { display: flex; flex-wrap: wrap; gap: 0 3mm; margin: 0; }
+  .cv .skill-group dt { font-weight: 400; font-size: 9.5pt; margin: 0; }
+  .cv .skill-group dd { display: none; }
+  .cv .measured { display: none; }
+
+  /* A project's stack is already inside its one bullet; printing it twice costs
+     three lines and tells the reader nothing new. The roles keep their meta
+     line — that one carries the title, and the title is the point. */
+  .cv .project-stack { display: none; }
 
   /* Links print as text. The URLs a reader needs are already spelled out in the
      contact rail; appending them inline just adds noise. */

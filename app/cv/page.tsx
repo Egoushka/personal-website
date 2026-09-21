@@ -4,8 +4,7 @@ import Nav from "@/components/Nav";
 import { ProfilePageLd } from "@/components/JsonLd";
 import Footer from "@/components/Footer";
 import React from "react";
-import { site, feedTypes, experience, education, projects, skills } from "@/lib/site";
-import { topicName } from "@/lib/topics";
+import { site, feedTypes, experience, education, projects, skills, eras } from "@/lib/site";
 import { getTopicUsage } from "@/lib/readings";
 import Measured from "@/components/Measured";
 
@@ -75,50 +74,82 @@ export default function CV() {
         <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>P</kbd> prints one A4 page
       </p>
 
-      <hr className="bleed" />
-      <section className="row section">
-        <h2 className="rail rail--label">Experience</h2>
-        <div>
-          {/* `resumeCompact` roles keep their bullets on screen and lose them in
-              print — the compression that makes one A4 sheet possible. Deleting
-              them outright would trade a real record for a layout constraint. */}
-          {experience.map((job) => (
-            <div className={`job${job.resumeCompact ? " job--compact" : ""}`} key={job.company + job.when}>
-              <div className="job-head">
-                <h3 className="job-name">{job.company}</h3>
-                <span className="job-dates">{isoDates(job.when)}</span>
-              </div>
-              <p className="job-meta run">
-                <span>{job.role}</span>
-                {job.focus && <span>{job.focus}</span>}
-                {job.location && <span>{job.location}</span>}
-                {job.mode && <span>{job.mode}</span>}
-              </p>
-              <ul>
-                {job.points.map((pt, j) => (
-                  <li key={j}>
-                    {pt.text}
-                  </li>
-                ))}
-              </ul>
+      {/*
+        The record, told as eras.
+
+        Each era carries its own prose and one obstacle, and wraps the roles of
+        that period. **All of the prose is display:none in print** — the sheet
+        that comes out of Cmd+P is the ordinary reverse-chronological record a
+        reader expects, and the screen is the version that explains it.
+
+        Bullets that survive to paper are chosen by `printBullets` on the data,
+        not by `:nth-child` in the stylesheet: the markup is nested inside eras
+        now, and a positional rule would have kept working while quietly
+        counting the wrong thing.
+      */}
+      {eras.map((era) => (
+        <React.Fragment key={era.slug}>
+          <hr className="bleed" />
+          <section
+            className={`row section cv-era${era.jobs.length === 0 ? " print-hide" : ""}`}
+            id={era.slug}
+          >
+            <div className="rail">
+              <span className="rail--label">{era.years}</span>
             </div>
-          ))}
-        </div>
-      </section>
+            <div>
+              <h2 className="era-title">{era.title}</h2>
+              {era.body.map((paragraph) => (
+                <p className="era-prose" key={paragraph.slice(0, 40)}>{paragraph}</p>
+              ))}
+              {era.obstacle && (
+                <p className="era-obstacle">
+                  <span className="era-obstacle-label">What went wrong</span>
+                  {era.obstacle}
+                </p>
+              )}
+
+              {experience
+                .filter((job) => era.jobs.includes(job.company))
+                .map((job) => (
+                  <div className={`job${job.resumeCompact ? " job--compact" : ""}`} key={job.company + job.when}>
+                    <div className="job-head">
+                      <h3 className="job-name">{job.company}</h3>
+                      <span className="job-dates">{isoDates(job.when)}</span>
+                    </div>
+                    <p className="job-meta run">
+                      <span>{job.role}</span>
+                      {job.focus && <span>{job.focus}</span>}
+                      {job.location && <span>{job.location}</span>}
+                      {job.mode && <span>{job.mode}</span>}
+                    </p>
+                    <ul>
+                      {job.points.map((pt, j) => (
+                        <li key={j} className={j >= (job.printBullets ?? 0) ? "print-hide" : undefined}>
+                          {pt.text}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+            </div>
+          </section>
+        </React.Fragment>
+      ))}
 
       <hr className="bleed" />
       <section className="row section">
         <h2 className="rail rail--label">Projects</h2>
         <div>
           {projects.map((p) => (
-            <div className="job" key={p.slug}>
+            <div className={`job${p.print ? "" : " print-hide"}`} key={p.slug}>
               <div className="job-head">
                 <h3 className="job-name">
                   {p.href ? <a href={p.href} rel="noopener">{p.name}</a> : p.name}
                 </h3>
                 <span className="job-dates">{p.lang}</span>
               </div>
-              <p className="job-meta run">{p.topics.map((t) => <span key={t}>{topicName(t)}</span>)}</p>
+              <p className="job-meta run project-stack">{p.tech.slice(0, 6).map((t) => <span key={t}>{t}</span>)}</p>
               {/* One line on paper. The full account is on the project's own
                   page; a CV bullet that runs four lines does not get read. */}
               <ul><li>{p.resumeLine ?? p.summary}</li></ul>
@@ -173,8 +204,13 @@ export default function CV() {
             <div className="job" key={e.school}>
               <div className="job-head">
                 <h3 className="job-name">{e.school}</h3>
+                <span className="job-dates">{e.when}</span>
               </div>
-              <p className="job-meta">{e.detail}</p>
+              <p className="job-meta run">
+                <span>{e.degree}</span>
+                <span>{e.detail}</span>
+              </p>
+              <ul className="print-hide"><li>{e.note}</li></ul>
             </div>
           ))}
         </div>
