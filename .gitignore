@@ -36,3 +36,4 @@ next-env.d.ts
 
 # vendored by `npm run cms:vendor`
 /public/admin/sveltia-cms.js
+graft/

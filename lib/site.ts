@@ -8,18 +8,27 @@ export const site = {
   url: "https://hrabovskyi.online",
   role: "Backend-first .NET developer",
   /**
-   * One line, under the greeting. No tagline field any more: the old one was
-   * "Clean code, calm mind, hard lessons, quiet wins" — four abstractions in a
-   * row, and the least like-me sentence on the site.
+   * The first sentence under the greeting, and the only one stored here. The
+   * home page adds a second sentence whose figure is counted at build time —
+   * see `longestSpan` in lib/readings.ts — because a number about my work is
+   * the one part of a pitch that must not be typed by hand.
+   *
+   * It replaced "A .NET dev who just likes building interesting things. Some of
+   * it worked, some of it didn't." That sentence was true and it answered a
+   * question nobody arriving from a cold email is asking.
    */
   intro:
-    "A .NET dev who just likes building interesting things. Some of it worked, some of it didn't. Both are here.",
+    "I fix .NET backends that fail quietly: the integration that reports success, the job that stopped running, the numbers that stop reconciling.",
   description:
     "Backend services in .NET and ASP.NET Core, a homelab on one box in Helsinki, and writing about the parts that went wrong.",
   locale: "en_US",
   location: "Kyiv, Ukraine",
-  /** Prints next to the greeting. Set to false and the line disappears. */
-  openToWork: true,
+  /**
+   * Prints next to the location. This replaced `openToWork`, which advertised
+   * for a job this site is not looking for: the reader it is written for is
+   * buying a week of work, not filling a role.
+   */
+  availability: "available for contract work",
   email: "egorgrabovskij@gmail.com",
   github: "https://github.com/Egoushka",
   githubHandle: "Egoushka",

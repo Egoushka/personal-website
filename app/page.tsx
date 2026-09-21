@@ -39,19 +39,35 @@ export default function Home() {
       <Nav current="home" />
       <PersonAndSiteLd />
 
+      {/*
+        The second sentence carries the only number above the fold, and it is
+        counted: `longestSpan` is the `spanDays` frontmatter of the post it
+        points at. Delete that post and the clause disappears rather than
+        printing a figure with nothing behind it.
+
+        One primary call to action. "What I can do" is the emphasised link; the
+        e-mail address is a metadata link like the location beside it, because a
+        reader who is ready to write already knows what they want to say and one
+        who is not should read the page first.
+      */}
       <header className="home-greeting">
         <h1>{site.greeting}</h1>
-        <p className="home-intro">{site.intro}</p>
-        <p className="home-status">
-          {site.location}
-          {site.openToWork && (
+        <p className="home-intro">
+          {site.intro}
+          {r.longestSpan && (
             <>
-              <span className="sep">·</span>
-              <span className="is-open">open to work</span>
+              {" "}
+              My work is making the next failure visible on the day it happens,
+              not {r.longestSpan.days} days later.
             </>
           )}
+        </p>
+        <p className="home-status">
+          {site.location}
           <span className="sep">·</span>
-          <Link href="/cv/">CV</Link>
+          {site.availability}
+          <span className="sep">·</span>
+          <Link className="cta" href="/work/">What I can do →</Link>
           <span className="sep">·</span>
           <a href={`mailto:${site.email}`}>email me</a>
         </p>
