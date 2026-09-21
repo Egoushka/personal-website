@@ -1604,3 +1604,178 @@ figure figcaption {
      5. @page margin from 16mm/15mm to 14mm/13mm.
    Do not shrink line-height below 1.4 and do not drop the masthead rule.
    ========================================================================= */
+
+/* ============================================================================
+   DESIGN PREVIEW — /design/, scoped to `.proto`, deletable in one block.
+
+   A direction, not a decision. The live pages are untouched: nothing here
+   escapes `.proto`, so the two can be compared side by side in one build.
+
+   What it changes, and why the current site reads as "old":
+     · Warm sepia ground (#191714) and cream ink are PRINT colours. The
+       reference class for a 2026 developer site is a cool near-black —
+       Linear ships #08090a — which reads as a screen rather than as paper.
+     · Literata at 19px/1.72 is an editorial setting. Every site in this class
+       sets 15–16px sans at ~1.55 and spends the saved room on whitespace.
+     · Headings here are serif 600. Modern equivalents are Inter around weight
+       500–560 with NEGATIVE tracking (Linear's h1: 56px, 510, -0.022em).
+     · Small-caps hairline labels are a newspaper device. The same job is done
+       now by a mono kicker, which also reads as "developer" rather than
+       "broadsheet".
+   The counted figures stay, and get louder: they are the one thing on this
+   site nobody else can copy, so the prototype gives them a card and a number
+   at display size.
+   ========================================================================= */
+
+.proto {
+  --p-bg:      #08090A;
+  --p-surface: #101113;
+  --p-raised:  #16181B;
+  --p-line:    #1D1F23;
+  --p-line-2:  #2A2D32;
+  --p-ink:     #F4F5F6;
+  --p-ink-2:   #9BA1A8;
+  --p-accent:  #E6A860;
+
+  --p-sans: var(--font-figure), -apple-system, system-ui, sans-serif;
+  --p-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  display: block;
+  min-height: 100vh;
+  background: var(--p-bg);
+  color: var(--p-ink);
+  font-family: var(--p-sans);
+  font-size: 15.5px;
+  line-height: 1.55;
+  letter-spacing: -0.006em;
+  -webkit-font-smoothing: antialiased;
+}
+
+.proto-shell { max-width: 1080px; margin: 0 auto; padding: 28px 28px 80px; }
+
+.proto-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: 28px;
+}
+.proto-brand { font-weight: 560; letter-spacing: -0.015em; }
+.proto-nav nav { display: flex; gap: 22px; }
+.proto-nav a { color: var(--p-ink-2); text-decoration: none; font-size: 14px; }
+.proto-nav a:hover { color: var(--p-ink); }
+
+/* The hero is one sentence at display size. Tight tracking is most of what
+   separates a 2026 heading from a 2015 one. */
+.proto-hero { padding: 76px 0 64px; }
+.proto-hero h1 {
+  font: 560 clamp(38px, 5.2vw, 60px)/1.06 var(--p-sans);
+  letter-spacing: -0.032em;
+  margin: 0;
+  max-width: 16ch;
+  text-wrap: balance;
+}
+.proto-lede { color: var(--p-ink-2); margin: 20px 0 0; font-size: 16px; }
+.proto-cta { display: flex; gap: 10px; margin-top: 30px; }
+.proto-btn {
+  display: inline-flex; align-items: center; height: 38px; padding: 0 16px;
+  border-radius: 9px; background: var(--p-ink); color: var(--p-bg);
+  font-size: 14px; font-weight: 550; text-decoration: none; white-space: nowrap;
+  transition: transform .12s ease, opacity .12s ease;
+}
+.proto-btn:hover { opacity: .88; transform: translateY(-1px); }
+.proto-btn--ghost {
+  background: transparent; color: var(--p-ink);
+  border: 1px solid var(--p-line-2);
+}
+.proto-btn--ghost:hover { background: var(--p-surface); }
+
+/* Cards, which this site has never allowed. On a flat near-black ground a
+   1px line and four points of radius is not decoration — it is the only way
+   to say "these three things are the same kind of thing". */
+.proto-cards {
+  display: grid; gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  margin-bottom: 72px;
+}
+.proto-card {
+  background: var(--p-surface);
+  border: 1px solid var(--p-line);
+  border-radius: 12px;
+  padding: 18px;
+  transition: background .15s ease, border-color .15s ease;
+}
+.proto-card:hover { background: var(--p-raised); border-color: var(--p-line-2); }
+.proto-card p { margin: 10px 0 0; color: var(--p-ink-2); font-size: 14px; }
+.proto-card-links { display: flex; gap: 14px; margin-top: 12px; }
+.proto-card-links a { color: var(--p-accent); font-size: 13px; text-decoration: none; }
+.proto-card-links a:hover { text-decoration: underline; }
+
+.proto-kicker {
+  font: 500 11px/1 var(--p-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--p-ink-2);
+}
+
+.proto-figure {
+  font: 500 54px/1 var(--p-sans);
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--p-ink) !important;
+  margin: 12px 0 0 !important;
+}
+.proto-figure span { color: var(--p-ink-2); font-size: 26px; }
+.proto-figure-note { font-size: 13px !important; }
+
+.proto-section { margin-bottom: 76px; }
+.proto-section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 16px; margin-bottom: 26px;
+  padding-bottom: 14px; border-bottom: 1px solid var(--p-line);
+}
+.proto-section-head h2 {
+  font: 560 22px/1.2 var(--p-sans); letter-spacing: -0.02em; margin: 0;
+}
+
+/* ── the radial stack ───────────────────────────────────────────────────── */
+.orbit-figure { margin: 0; }
+.orbit { width: 100%; height: auto; display: block; }
+.orbit-link { fill: none; stroke: var(--p-line-2); stroke-width: 1; }
+.orbit-link.is-on { stroke: var(--p-accent); }
+.orbit-core { fill: var(--p-surface); stroke: var(--p-line-2); }
+.orbit-core-label {
+  fill: var(--p-ink-2); font: 500 13px/1 var(--p-mono);
+  font-variant-numeric: tabular-nums;
+}
+.orbit-hub { fill: var(--p-bg); stroke: var(--p-ink-2); stroke-width: 1.5; }
+.orbit-hub-label {
+  fill: var(--p-ink); font: 500 10.5px/1 var(--p-mono);
+  letter-spacing: .08em; text-transform: uppercase;
+}
+.orbit-node { cursor: default; }
+.orbit-node circle { fill: var(--p-bg); stroke: var(--p-ink-2); stroke-width: 1.5; }
+.orbit-node text { fill: var(--p-ink-2); font: 400 13px/1 var(--p-sans); }
+.orbit-node.is-on circle { fill: var(--p-accent); stroke: var(--p-accent); }
+.orbit-node.is-on text { fill: var(--p-ink); }
+.orbit-node.is-dim { opacity: .35; }
+.orbit-node:focus { outline: none; }
+.orbit-node:focus-visible circle { stroke: var(--p-accent); stroke-width: 3; }
+.orbit-figure figcaption {
+  margin-top: 18px; color: var(--p-ink-2); font-size: 14px; min-height: 2.6em;
+}
+.orbit-figure figcaption strong { color: var(--p-ink); font-weight: 550; }
+
+/* ── skills ─────────────────────────────────────────────────────────────── */
+.proto-skills { display: grid; gap: 34px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.proto-skill-group ul { list-style: none; margin: 14px 0 0; padding: 0; }
+.proto-skill-group li { padding: 9px 0; border-top: 1px solid var(--p-line); }
+.proto-skill-group li span { display: block; font-weight: 500; }
+.proto-skill-group li em {
+  display: block; font-style: normal; color: var(--p-ink-2);
+  font-size: 13px; margin-top: 2px;
+}
+
+.proto-foot {
+  display: flex; justify-content: space-between;
+  padding-top: 24px; border-top: 1px solid var(--p-line);
+  color: var(--p-ink-2); font-size: 13px;
+}
+.proto-foot a { color: var(--p-ink-2); }
