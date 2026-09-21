@@ -161,8 +161,22 @@ h2 { font-size: var(--fs-h2); line-height: var(--lh-head); }
 h3 { font-size: var(--fs-h3); line-height: var(--lh-head); }
 p  { text-wrap: pretty; }
 
+/* A link is ink with an amber rule under it.
+
+   The accent used to BE the link — coloured text, everywhere. That worked, and
+   it cost the site two things. Amber text at --fs-small is the lightest thing
+   on the page and it was carrying the most important job; and because colour
+   meant "link", nothing else was allowed to use colour, so every other kind of
+   emphasis had to be invented out of weight and underlines anyway.
+
+   Now the underline carries it. Ink text keeps prose at 14.7:1 (dark) and
+   16.4:1 (light) instead of the accent's 8.1/5.1, the amber survives as the
+   signal rather than the substance, and `aria-current` in the nav — already an
+   amber underline before this change — stops being a special case. */
 a {
-  color: var(--accent);
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-color: var(--accent);
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
 }
@@ -200,7 +214,7 @@ a:hover { text-decoration-thickness: 2px; }
   padding: 10px 14px;
   background: var(--surface);
   border: var(--hair) solid var(--rule-firm);
-  color: var(--accent);
+  color: var(--ink);
   transition: top .15s;
 }
 .skip-link:focus { top: var(--s-2); text-decoration: none; }
@@ -242,8 +256,8 @@ a:hover { text-decoration-thickness: 2px; }
   margin: 0;
 }
 
-.rail a       { color: var(--accent); text-decoration: none; }
-.rail a:hover { text-decoration: underline; }
+.rail a       { color: inherit; text-decoration-color: var(--accent); }
+.rail a:hover { text-decoration-thickness: 2px; }
 
 /* Group label: sits above a hairline and introduces the stack beneath it. */
 .rail--label {
@@ -287,7 +301,7 @@ a:hover { text-decoration-thickness: 2px; }
   color: var(--ink);
   text-decoration: none;
 }
-.site-header .brand:hover { color: var(--accent); }
+.site-header .brand:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
 
 .site-header-end { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
 .site-header-controls { display: flex; align-items: center; gap: var(--s-2); }
@@ -318,7 +332,7 @@ a:hover { text-decoration-thickness: 2px; }
   color: var(--ink-2);
 }
 .site-footer a { color: var(--ink-2); text-decoration: none; }
-.site-footer a:hover { color: var(--accent); }
+.site-footer a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
 .site-footer .sep { color: var(--rule-firm); margin: 0 var(--s-2); }
 
 /* ============================================================================
@@ -508,7 +522,7 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
   text-decoration: none;
   display: block;
 }
-.post-row > a:hover { color: var(--accent); }
+.post-row > a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
 .post-row p { margin: var(--s-1) 0 0; font-size: var(--fs-small); color: var(--ink-2); }
 .post-row .post-meta {
   display: block;
@@ -523,7 +537,7 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
   margin: 0;
 }
 .post-item a { color: inherit; text-decoration: none; }
-.post-item a:hover { color: var(--accent); }
+.post-item a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
 .post-item p {
   font: 400 var(--fs-small)/1.6 var(--prose);
   color: var(--ink-2);
@@ -550,12 +564,12 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
 }
 .topic-run a {
   color: var(--ink-2);
-  text-decoration-color: var(--rule-firm);
+  text-decoration-color: var(--accent);
   display: inline-flex;
   align-items: center;
   min-height: 24px;      /* WCAG 2.5.8 */
 }
-.topic-run a:hover { color: var(--accent); }
+.topic-run a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
 
 /* ============================================================================
    HOME
@@ -662,7 +676,7 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
 
 .project-name { font-size: var(--fs-h3); margin: 0; }
 .project-name a { color: var(--ink); text-decoration: none; }
-.project-name a:hover { color: var(--accent); }
+.project-name a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
 
 .project-list { list-style: none; margin: 0; padding: 0; }
 .project-row + .project-row {
@@ -759,7 +773,7 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
   text-decoration: none;
   color: var(--ink);
 }
-.link-row > a:hover { color: var(--accent); }
+.link-row > a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
 .link-handle {
   font: 400 var(--fs-rail)/1.5 var(--figure);
   color: var(--ink-2);
@@ -803,18 +817,19 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
   color: var(--rule-firm);
 }
 
-/* Optional outbound link — a mark, not a coloured name. 24×24 minimum target;
-   the glyph alone would be ~12px. */
+/* Optional outbound link. It used to be a ↗ glyph in a 24px box, which is a
+   mark you have to learn; it is the word "site" now, which is one you do not.
+   The box stays for the 24×24 target (WCAG 2.5.8). */
 .uses-link {
   display: inline-block;
-  min-width: 24px; min-height: 24px;
+  min-height: 24px;
+  padding-inline: 2px;
   font: 400 var(--fs-rail)/24px var(--figure);
-  color: var(--accent);
-  text-align: center;
-  text-decoration: none;
+  color: inherit;
+  text-decoration-color: var(--accent);
   vertical-align: -7px;
 }
-.uses-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.uses-link:hover { text-decoration-thickness: 2px; }
 
 /* Live box state, appended when /status.json is fresh. Renders nothing when it
    is missing or older than 48 hours. */
@@ -1137,7 +1152,7 @@ figure figcaption {
 .job-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-4); }
 .job-name { font: 600 var(--fs-h3)/1.3 var(--prose); margin: 0; }
 .job-name a { color: inherit; text-decoration: none; }
-.job-name a:hover { color: var(--accent); }
+.job-name a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
 .job-meta { font: 400 var(--fs-small)/1.4 var(--prose); color: var(--ink-2); margin: var(--s-1) 0 0; }
 .job-dates {
   font: 400 var(--fs-rail)/1 var(--figure);
