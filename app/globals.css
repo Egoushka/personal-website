@@ -290,6 +290,7 @@ a:hover { text-decoration-thickness: 2px; }
 .site-header .brand:hover { color: var(--accent); }
 
 .site-header-end { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.site-header-controls { display: flex; align-items: center; gap: var(--s-2); }
 .site-header nav { display: flex; gap: 20px; flex-wrap: wrap; }
 .site-header nav a {
   font: 400 14px/1 var(--figure);

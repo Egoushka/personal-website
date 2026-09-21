@@ -53,8 +53,12 @@ export default function Nav({ current }: { current?: Section } = {}) {
             </Link>
           ))}
         </nav>
-        <Search />
-        <ThemeToggle />
+        {/* One unit, so the two controls wrap together rather than the theme
+            switch dropping to a line of its own at phone width. */}
+        <span className="site-header-controls">
+          <Search />
+          <ThemeToggle />
+        </span>
       </div>
     </header>
   );
