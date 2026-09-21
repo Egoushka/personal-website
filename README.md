@@ -84,6 +84,46 @@ page for each of its topics.
 
 ## Deploy
 
+There are **two** deploy paths, and a push to `main` runs both.
+
+| | Path 1 — the VPS (origin) | Path 2 — Cloudflare Pages (mirror) |
+|---|---|---|
+| Workflow | [.github/workflows/deploy.yml](.github/workflows/deploy.yml) | [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) |
+| Serves | container Caddy on the Hetzner box | Cloudflare's own network |
+| Headers, redirects | [deploy/Caddyfile](deploy/Caddyfile) | [deploy/pages/_headers](deploy/pages/_headers), [deploy/pages/_redirects](deploy/pages/_redirects) |
+| What the apex points at | this, today | nothing, until you point it |
+| Survives the box being down | no | yes |
+
+The second path exists because the first one ends at a single machine that also runs
+every other self-hosted thing here. Without it the commercial front of this site goes
+down with the test lab. It is a **failover, not a migration**: the VPS stays the origin,
+and switching is one DNS change.
+
+**Turning path 2 on** — it is gated off so a push cannot fail in red for a deploy that
+was never configured:
+
+1. Create the Pages project (any name; the default the workflow expects is
+   `hrabovskyi-online`, override it with the repo variable `CLOUDFLARE_PAGES_PROJECT`).
+2. Add repo secrets `CLOUDFLARE_API_TOKEN` (scope: Cloudflare Pages → Edit) and
+   `CLOUDFLARE_ACCOUNT_ID`.
+3. Set the repo **variable** `DEPLOY_CLOUDFLARE_PAGES` to `true`.
+
+**Keep the two in step.** Caddy gets its headers and redirects from the Caddyfile; Pages
+gets them from `_headers` and `_redirects`, which are copied into `out/` by the workflow
+rather than living in `public/`. The redirects are not optional on either: `/posts/*` was
+the canonical address of everything published here and is still in feed readers, and
+without the `Content-Type: image/png` line every social scraper rejects the OG cards,
+which `next/og` writes as extensionless files. A rule added to one file and not the other
+is a bug that only appears on whichever path you are not looking at.
+
+**Analytics does not follow the mirror.** `/s/script.js` and `/api/send` are first-party
+only because the edge Traefik routes them to the Umami container; on Pages there is no
+such route and the tracker is silently dead. That is acceptable for a failover — it is
+the one thing on the page nobody is there for — but it is worth knowing before debugging
+it a second time.
+
+### Path 1 — the VPS
+
 The site exports to static files served by a small internal Caddy
 (`/opt/stacks/website`) bound to the tailnet at `100.64.0.2:8090`.
 
