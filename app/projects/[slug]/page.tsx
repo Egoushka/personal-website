@@ -66,8 +66,10 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
             <span>{project.lang}</span>
             <span>{project.shape}</span>
             <span>{project.status}</span>
-            {project.href && (
+            {project.href ? (
               <span><a href={project.href} rel="noopener">the repository</a></span>
+            ) : (
+              <span>private repository</span>
             )}
           </>
         }
@@ -81,6 +83,24 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
           </li>
         ))}
       </ul>
+
+      {/*
+        What it is built with, read out of the repository rather than
+        remembered, and where it has got to. The phase line is only ever
+        printed when the project itself declares stages, and it has to name
+        what does not exist yet: that is the half a reader cannot check, and
+        it is what makes the rest believable.
+      */}
+      <hr className="bleed" />
+      <section className="row">
+        <span className="rail rail--label">Built with</span>
+        <div>
+          <p className="tech-run run">
+            {project.tech.map((t) => <span key={t}>{t}</span>)}
+          </p>
+          {project.phase && <p className="project-phase">{project.phase}</p>}
+        </div>
+      </section>
 
       <hr className="bleed" />
       <section className="row">
@@ -105,10 +125,20 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
       <hr className="bleed" />
       <div className="row">
         <span className="rail rail--label">Elsewhere</span>
-        <p className="page-figures">
-          <span><Link href="/projects/">all projects</Link></span>
-          <span><a href={site.github} rel="noopener">my GitHub</a></span>
-        </p>
+        <div>
+          {project.visibility === "private" && (
+            <p className="page-lede">
+              This repository is private, so there is nothing to click. The
+              public half of what I build — including the one thing here anyone
+              can install — is on{" "}
+              <a href={site.github} rel="noopener">my GitHub</a>.
+            </p>
+          )}
+          <p className="page-figures">
+            <span><Link href="/projects/">all projects</Link></span>
+            <span><a href={site.github} rel="noopener">my GitHub</a></span>
+          </p>
+        </div>
       </div>
 
       <Footer />

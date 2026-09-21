@@ -141,6 +141,26 @@ export type Project = {
    * this empty rather than emit one — the templates omit the link when it is.
    */
   href: string;
+  /**
+   * Public or private. This used to be inferred from an empty `href`, which
+   * meant "no link" and "private" were the same state and the page said
+   * neither — a reader just found a project with nothing to click and drew
+   * their own conclusion. Now it says so, and offers the profile instead.
+   */
+  visibility: "public" | "private";
+  /**
+   * What it is actually built with, read out of the repository rather than
+   * remembered. Free strings on purpose: this is not the closed topic
+   * vocabulary, because "Dapper" and "Testcontainers" are facts about one
+   * project and will never be a hub page.
+   */
+  tech: string[];
+  /**
+   * Where it has got to, when the project has declared stages. One line, and
+   * it must name what does NOT exist yet — that is the half a reader cannot
+   * check and the half that makes the rest believable.
+   */
+  phase?: string;
   /** One line. This is what the homepage and the index show. */
   summary: string;
   /** The full account, on the project's own page. */
@@ -180,6 +200,8 @@ export const projects: Project[] = [
     status: "running",
     lang: "C#", shape: "library",
     href: "https://github.com/Egoushka/attest",
+    visibility: "public",
+    tech: ["C#", ".NET Standard", "xUnit", "GitHub Actions", "NuGet"],
     summary:
       "Validates national ID, tax ID, VAT and postal codes for 87 countries, against the rule each country publishes rather than a regex someone guessed.",
     description:
@@ -196,6 +218,8 @@ export const projects: Project[] = [
   {
     slug: "chronicle",
     side: true,
+    visibility: "private",
+    tech: ["Python", "FastAPI", "Postgres", "pgvector", "MCP", "sentence-transformers", "pymorphy3", "Docker"],
     name: "Chronicle",
     status: "running",
     lang: "Python", shape: "event store",
@@ -217,6 +241,8 @@ export const projects: Project[] = [
   {
     slug: "baseline",
     side: true,
+    visibility: "private",
+    tech: ["Flutter", "Dart", "Drift", "SQLite", "AES-GCM"],
     name: "Baseline",
     status: "running",
     lang: "Flutter", shape: "instrument",
@@ -237,6 +263,9 @@ export const projects: Project[] = [
   {
     slug: "oura-platform",
     side: true,
+    visibility: "private",
+    tech: ["C#", ".NET", "Postgres", "TimescaleDB", "Dapper", "DbUp", "Serilog", "Grafana", "OAuth", "xUnit", "Testcontainers"],
+    phase: "Stage 1 of 8. OAuth, storage, backfill and the scheduled poll work; the dashboards, the webhooks and the MCP server do not exist yet.",
     status: "building",
     name: "Oura Platform",
     lang: "C#", shape: "health warehouse",
@@ -257,6 +286,8 @@ export const projects: Project[] = [
   {
     slug: "homelab-gitops",
     side: true,
+    visibility: "private",
+    tech: ["Docker Compose", "Traefik", "SOPS", "age", "Tailscale", "Headscale", "Caddy", "Grafana", "Python", "Shell"],
     status: "running",
     name: "Homelab GitOps",
     lang: "Compose", shape: "infrastructure",
@@ -277,6 +308,9 @@ export const projects: Project[] = [
   {
     slug: "trader",
     side: true,
+    visibility: "private",
+    tech: ["Python", "nautilus_trader", "ccxt", "polars", "DuckDB", "Parquet"],
+    phase: "Phase 3 of 7. The backtesting framework is built and the gate was not passed: both opening hypotheses are dead, and no live order has ever been placed.",
     status: "building",
     name: "Trader",
     lang: "Python", shape: "backtesting",
@@ -460,7 +494,7 @@ export const uses: { group: string; items: StackItem[] }[] = [
       { name: "SOPS + age", topic: "sops", href: "https://github.com/getsops/sops", desc: "Secrets encrypted in the repo. The box is not the source of truth." },
       { name: "Grafana", topic: "grafana", href: "https://grafana.com", desc: "Enough dashboards to answer “is it up”, not enough to become a hobby." },
       { name: "Postgres + TimescaleDB", topic: "postgres", href: "https://www.timescale.com", desc: "One database per stack. The health data is a hypertable." },
-      { name: "Qdrant", href: "https://qdrant.tech", desc: "Vector index over seven years of chat history. Chronicle reads it." },
+      { name: "Qdrant", href: "https://qdrant.tech", desc: "Vector index over seven years of chat history, and what Chronicle was built to replace." },
       { name: "Wakapi", href: "https://wakapi.dev", desc: "Self-hosted WakaTime. Where the editor hours on this page come from." },
       { name: "Vaultwarden", href: "https://github.com/dani-garcia/vaultwarden", desc: "Bitwarden-compatible vault, self-hosted." },
       { name: "AdGuard Home", href: "https://adguard.com/adguard-home/overview.html", desc: "Network-wide DNS and tracker filtering." },
