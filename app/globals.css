@@ -635,6 +635,27 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
   white-space: nowrap;
 }
 
+/* ============================================================================
+   WORK
+   Borrows the prose rules rather than inventing a second set: the sections sit
+   inside a `.row`, which is a grid, so `.prose` (itself a grid) cannot wrap
+   them and its rules have to be repeated on the column that can.
+   ========================================================================= */
+
+.work-body > * + * { margin-top: var(--s-5); }
+.work-body p       { margin: 0; }
+.work-body ul      { margin: 0; padding-left: 1.1em; }
+.work-body li + li { margin-top: var(--s-3); }
+.work-body ul li::marker { content: "– "; color: var(--ink-2); }
+
+/* The address in full, set as prose rather than as a button. Nothing on this
+   site is a button, and an e-mail address a reader can read is worth more than
+   a word that hides it. */
+.work-cta {
+  margin: var(--s-8) 0 var(--s-10);
+  font-size: var(--fs-h3);
+}
+
 /* The self-deprecating one, kept because it is counted rather than felt. */
 .home-note {
   max-width: 62ch;

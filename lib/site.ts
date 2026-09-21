@@ -119,6 +119,78 @@ export const proof: {
   },
 ];
 
+/**
+ * /work — what I can be hired for, what it costs, and what I will not take.
+ *
+ * The prices live here rather than in the page for the same reason every other
+ * fact on this site does: one place to change them, and no chance of the home
+ * page and the work page quoting different numbers at the same reader. They are
+ * the one class of figure on this site that is NOT counted from a source, and
+ * they are not pretending to be — a price is a decision, not a measurement. The
+ * rule this site runs on is that a number presented as evidence must be
+ * countable; a number presented as terms must simply be honoured.
+ *
+ * `rail` and `meta` set the left column. The terms go there rather than being
+ * buried in the paragraph so that a reader who scans the page — which is every
+ * reader who arrived from a cold e-mail — cannot miss the price.
+ */
+export type WorkSection = {
+  /** Small-caps label, left column. */
+  rail: string;
+  /** Further rail lines: the terms, in as few words as they can be put. */
+  meta?: string[];
+  heading: string;
+  body?: string[];
+  items?: string[];
+};
+
+export const work: { lede: string; sections: WorkSection[] } = {
+  lede:
+    "Contract work alongside a full-time role — 10–15 hours a week. It starts with a one-week audit at $1,500–2,500, and you own what comes out of it whether or not I do the work.",
+  sections: [
+    {
+      rail: "Scope",
+      heading: "What I take on",
+      items: [
+        "Integrations and third-party APIs that fail silently or inconsistently — the call that returns 200 and does nothing.",
+        "Reconciliation, idempotency, retries and background jobs that drift: the numbers stop matching and nobody can say when they started.",
+        "Observability — OpenTelemetry, Prometheus, Grafana, Loki, structured logs — so the next failure is visible rather than discovered.",
+      ],
+    },
+    {
+      rail: "Week one",
+      meta: ["$1,500–2,500", "fixed price"],
+      heading: "How it starts",
+      body: [
+        "A one-week paid audit, fixed price, $1,500–2,500. I read the code and the logs, reproduce what I can, and deliver a written report: what is actually broken, what will break next, what I would change and in what order. Then a call to walk you through it.",
+      ],
+    },
+    {
+      rail: "After",
+      meta: ["$6,000–15,000 a stage", "or $2,000–3,500 a month", "50% up front"],
+      heading: "What happens after",
+      body: [
+        "Either you take the report and fix it yourself — a real outcome, and the cheaper one — or I do the work. $6,000–15,000 per scoped stage, or $2,000–3,500 a month for ongoing changes and support during working hours. 50% up front either way.",
+      ],
+    },
+    {
+      rail: "Not this",
+      heading: "What I do not do",
+      body: [
+        "Full-time contracts. Greenfield mobile apps. Design. Unpaid test tasks — if you want to see how I work, the audit is the cheapest way to find out.",
+      ],
+    },
+    {
+      rail: "Start",
+      meta: ["reply within two working days"],
+      heading: "How to start",
+      body: [
+        "One email: what the system does, which part is misbehaving, and how you would know it was fixed. I reply within two working days.",
+      ],
+    },
+  ],
+};
+
 /** One measured fact about a project. `source` says where it came from — always. */
 export type Reading = { label: string; value: string; source: string };
 

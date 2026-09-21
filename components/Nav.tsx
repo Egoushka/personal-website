@@ -16,6 +16,7 @@ import Search from "@/components/Search";
  */
 
 const SECTIONS = [
+  { key: "work", href: "/work/", label: "Work" },
   { key: "writing", href: "/writing/", label: "Writing" },
   { key: "projects", href: "/projects/", label: "Projects" },
   { key: "about", href: "/about/", label: "About" },
