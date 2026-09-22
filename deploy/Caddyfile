@@ -30,9 +30,15 @@
 		# nonces require server-side rendering, and the App Router serialises its RSC
 		# payload into inline <script>self.__next_f.push(...)</script> tags in every
 		# prerendered file. See https://github.com/vercel/next.js/discussions/54152.
+		# frame-src 'self' is for the comment widget, which renders itself in an
+		# iframe served from /c/ on THIS origin. It is not a third-party embed —
+		# every hosted option (Giscus, utterances, Disqus) is refused by
+		# script-src and connect-src above, which is the policy working.
+		# frame-ancestors stays 'none': this site frames its own widget, and
+		# nobody frames this site.
 		# The directives that DO close real surface here are object-src, base-uri,
 		# form-action and frame-ancestors.
-		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
 
 		-Server
 	}

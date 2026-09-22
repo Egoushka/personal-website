@@ -8,6 +8,7 @@ import rehypeSlug from "rehype-slug";
 import Nav from "@/components/Nav";
 import { BlogPostingLd } from "@/components/JsonLd";
 import Footer from "@/components/Footer";
+import Comments from "@/components/Comments";
 import { site, feedTypes } from "@/lib/site";
 import {
   getAllSlugs,
@@ -208,6 +209,9 @@ export default async function PostPage(
             </div>
           </>
         )}
+
+        <hr className="bleed" />
+        <Comments url={`${site.url}/writing/${post.slug}/`} />
 
         {/*
           One delegated listener on document, rather than a listener per button:

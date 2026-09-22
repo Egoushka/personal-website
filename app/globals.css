@@ -1896,6 +1896,28 @@ figure figcaption {
 
 
 /* ============================================================================
+   COMMENTS — self-hosted, first-party
+
+   The widget renders itself into #remark42 and brings its own styling inside
+   an iframe, so there is very little to do here: reserve the room, and make
+   the fallback look like the rest of the site rather than like an error page.
+   ========================================================================= */
+
+.comments { margin-top: var(--s-9); }
+/* The thread arrives after its script does. Reserving height keeps CLS at 0
+   on a page that had none — the same reason .panel-body has a min-height.
+   300px is the measured height of an empty thread (sign-in box, toolbar, sort
+   control); anything less shifts for a reader who scrolls down while it
+   loads. */
+.comments #remark42 { min-height: 300px; }
+.comments-note {
+  margin: 0 0 var(--s-4);
+  max-width: 62ch;
+  font-size: var(--fs-small);
+  color: var(--ink-2);
+}
+
+/* ============================================================================
    SKILLS AS A READOUT — /skills/
 
    Two diagrams came before this one: a force simulation, then a radial tree.
