@@ -28,6 +28,9 @@ app/                  routes (App Router)
   writing/            index + writing/[slug]/ post pages (static-generated)
   topics/[topic]/     one page per topic — posts, projects AND jobs for it
   projects/           index + projects/[slug]/
+  skills/             what I work with, with the measured share of editor time
+  journey/            the roles on a time axis, gaps included
+  lab/                unlinked prototypes. Not in the nav, not in the sitemap.
   about/              about, what I'm doing now, and the whole stack
   cv/                 /cv/ — prints to exactly one A4 page. No checked-in cv.pdf
                       on purpose, so it can never go stale.
@@ -35,7 +38,8 @@ app/                  routes (App Router)
   sitemap.ts          /sitemap.xml
   robots.ts           /robots.txt
 components/           Nav, Footer, PageHead, PostList, ProjectFilter, TopicMap,
-                      Search, UsesStatus, JsonLd, Picture, HomelabDiagram
+                      SkillsBoard, Journey, Panel, Icon, Search, UsesStatus,
+                      JsonLd, Picture
 content/posts/*.md    posts (frontmatter: title, date, description, topics)
 content/drafts/       drafts. Not built. Moving a file out of here is deliberate.
 lib/site.ts           site content (projects, experience, uses, links)

@@ -112,10 +112,10 @@ export default function About() {
       </div>
 
       {/*
-        The stack used to be listed here in full, and again on /stack/ — the
+        The stack used to be listed here in full, and again on /skills/ — the
         same twenty-odd rows, twice, with the second copy carrying a graph. One
         of them had to go, and it was this one: a page about a person should
-        say what he is like, and a page about a stack should carry the stack.
+        say what he is like, and a page about the work should carry the tools.
       */}
       <hr className="bleed" />
       <section className="row">
@@ -127,12 +127,12 @@ export default function About() {
         <div>
           <div className="section-head">
             <h2>What I actually run</h2>
-            <Link href="/stack/">the whole stack</Link>
+            <Link href="/skills/">Skills</Link>
           </div>
           <p className="page-lede">
-            One box, every service defined in git. The full list — what I use,
-            what I would put my name to, and what connects to what — is on{" "}
-            <Link href="/stack/">the stack page</Link>.
+            One box, every service defined in git. The full list — what I use
+            and what I would put my name to — is on{" "}
+            <Link href="/skills/">the skills page</Link>.
           </p>
         </div>
       </section>

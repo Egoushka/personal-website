@@ -394,7 +394,7 @@ export const skills: { group: string; items: Skill[] }[] = [
         now: "A greenfield .NET 9 backend built this way in 2025, and an opinion about when it is overkill." },
       { name: "Background jobs and scheduling", icon: "job", short: "Background jobs",
         now: "The part that fails quietly, which is why most of what I write about starts here." },
-      { name: "RabbitMQ", icon: "rabbitmq", now: "Cross-service messaging at work. My first broker feature shipped in 2025 — two days of it spent on a consumer I had never registered." },
+      { name: "RabbitMQ", icon: "rabbitmq", now: "Cross-service messaging at work: publishers, consumers and the retries around them." },
       { name: "Redis", icon: "redis", now: "Read caches and the invalidation that goes with them." },
     ],
   },
@@ -685,7 +685,7 @@ export type StackItem = {
 export const usesUpdated = "2026-09";
 
 /**
- * What I actually run and use, on /about/.
+ * What I actually run, on /skills/.
  *
  * The test for a row is that I could be caught out by it: every service under
  * "the box" is defined in the homelab-gitops repo, every language under "day to
@@ -697,10 +697,15 @@ export const usesUpdated = "2026-09";
  * an explanation; enumerating the whole stack with versions is a CVE list for a
  * box whose address is already public. Same rule as scripts/gen-status.sh.
  *
+ * There was a third group here, "Day to day", and it was the same six languages
+ * already listed in `skills` — including Flutter, which `skills` had deliberately
+ * dropped. A list cannot be evidence and a restatement of the list above it at the
+ * same time, so it is gone.
+ *
  * This used to be its own page at /uses/ with a six-month expiry that struck the
  * heading through in public when it lapsed. The expiry is gone with the ledger —
- * see ADR 0002 — so this is now a section of the page about me, which is what it
- * always was.
+ * see ADR 0002 — so it is a section of /skills/ now: what the measured hours were
+ * measured on.
  */
 export const uses: { group: string; items: StackItem[] }[] = [
   {
@@ -727,17 +732,6 @@ export const uses: { group: string; items: StackItem[] }[] = [
       { name: "JetBrains Rider", href: "https://www.jetbrains.com/rider/", desc: "Anything with a .sln. The debugger is the whole reason." },
       { name: "VS Code", href: "https://code.visualstudio.com", desc: "Everything else — TypeScript, markdown, config." },
       { name: "MCP", href: "https://modelcontextprotocol.io", desc: "How the assistant reaches my own data instead of guessing at it." },
-    ],
-  },
-  {
-    group: "Day to day",
-    items: [
-      { name: "C# / .NET", topic: "dotnet", href: "https://dotnet.microsoft.com", desc: "The majority of every week. ASP.NET Core, EF Core, MediatR-style CQRS." },
-      { name: "ASP.NET Core", topic: "aspnet", href: "https://learn.microsoft.com/aspnet/core", desc: "Where the services actually live — APIs, jobs, integrations." },
-      { name: "SQL Server", desc: "At work. Postgres everywhere I get to choose." },
-      { name: "Python", topic: "python", href: "https://www.python.org", desc: "The data work: ingestion, retrieval, anything with a notebook in its past." },
-      { name: "Angular + TypeScript", topic: "angular", href: "https://angular.dev", desc: "When the work reaches the front end. NgRx when state gets real." },
-      { name: "Flutter", topic: "flutter", href: "https://flutter.dev", desc: "One app, on one phone, built to prove a point about measurement." },
     ],
   },
 ];

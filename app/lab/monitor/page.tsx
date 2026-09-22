@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * A direction for /stack/, full-bleed and on its own. Not linked from the site
+ * A direction for /skills/, full-bleed and on its own. Not linked from the site
  * and not in the sitemap: three of these exist so one can be chosen.
  */
 export default function Page() {
