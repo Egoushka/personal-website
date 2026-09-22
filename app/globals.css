@@ -223,11 +223,15 @@ p  { text-wrap: pretty; }
 a {
   color: inherit;
   text-decoration-line: underline;
-  text-decoration-color: var(--accent);
+  /* Not full amber. A page with five links stacked in the rail and twenty in a
+     chip list was reading as a page of yellow lines — the signal was louder
+     than the thing it pointed at. Half-strength at rest, full on hover, and
+     further off the baseline so it stops touching the descenders. */
+  text-decoration-color: color-mix(in srgb, var(--accent) 50%, transparent);
   text-decoration-thickness: 1px;
-  text-underline-offset: 2px;
+  text-underline-offset: 3px;
 }
-a:hover { text-decoration-thickness: 2px; }
+a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; }
 
 /* Inline code stays mono inside serif prose: 0.9em keeps the x-heights level.
    A proportional face renders `--inplace` and `workflow_dispatch` badly — never
@@ -303,7 +307,6 @@ a:hover { text-decoration-thickness: 2px; }
   margin: 0;
 }
 
-.rail a       { color: inherit; text-decoration-color: var(--accent); }
 .rail a:hover { text-decoration-thickness: 2px; }
 
 /* Group label: sits above a hairline and introduces the stack beneath it. */
@@ -657,9 +660,11 @@ figure.code pre {
   letter-spacing: var(--ls-rail);
   text-transform: uppercase;
 }
+/* Every item here is a link, so nothing is being told apart from anything —
+   the underline is pure decoration until the pointer is on one. */
 .topic-run a {
   color: var(--ink-2);
-  text-decoration-color: var(--accent);
+  text-decoration-line: none;
   display: inline-flex;
   align-items: center;
   min-height: 24px;      /* WCAG 2.5.8 */
@@ -1737,31 +1742,29 @@ figure figcaption {
 
 .board { grid-column: 1 / -1; margin-top: var(--s-6); }
 
-/* The live bar. Wide like the home page's panel, because it is the same kind
-   of thing: what the box is doing, tonight, rather than a claim about it. */
-.board-bar {
-  display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-5);
-  padding: var(--s-3) var(--s-4);
-  border: var(--hair) solid var(--rule);
-  border-radius: var(--radius);
-  background: var(--surface);
-  font: 400 var(--fs-code)/1.5 var(--figure);
-  color: var(--ink-2);
-}
-.board-bad { color: var(--warn); }
-.board-filter { margin-left: auto; }
+/* The filter, and nothing else above the list.
+
+   There was a live bar here — containers, uptime, editor hours, health — and
+   it was the home page's instrument panel said a second time, on the page
+   least about the box. The measured shares still arrive from the same
+   /status.json; they are in the bars, where they mean something. */
+.board-filter { display: flex; align-items: baseline; gap: var(--s-4); }
 .board-filter input {
-  width: 10rem;
+  width: 11rem;
   background: var(--paper);
   border: var(--hair) solid var(--rule-firm);
   border-radius: 6px;
-  padding: 5px 9px;
+  padding: 6px 10px;
   color: var(--ink);
   font: 400 var(--fs-code)/1.6 var(--figure);
-  min-height: 28px;                       /* WCAG 2.5.8 */
+  min-height: 30px;                       /* WCAG 2.5.8 */
 }
 .board-filter input::placeholder { color: var(--ink-2); opacity: .7; }
-.board-count { font-variant-numeric: tabular-nums; }
+.board-count {
+  font: 400 var(--fs-rail)/1 var(--figure);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
 
 /* `.row` supplies the rail/measure split and collapses it at 900px. */
 .board-group { margin-top: var(--s-8); }
@@ -1789,7 +1792,10 @@ figure figcaption {
 .board-list > li.is-measured .board-meter { background: var(--surface-2); }
 .board-fill { display: block; height: 100%; border-radius: 3px; background: var(--accent); }
 
+/* Only a measured row prints one. The em-dash that used to sit here on fifteen
+   rows was a column of punctuation that had to be explained. */
 .board-num {
+  grid-column: 4;
   text-align: right;
   font: 400 var(--fs-code)/1 var(--figure);
   font-variant-numeric: tabular-nums;
@@ -1816,13 +1822,22 @@ figure figcaption {
   list-style: none; margin: 0; padding: 0;
 }
 .board-box li {
+  display: flex;
   font: 400 var(--fs-code)/1 var(--figure);
   color: var(--ink-2);
   border: var(--hair) solid var(--rule);
   border-radius: 999px;
-  padding: 8px 11px;
+  transition: border-color .15s ease, background .15s ease;
 }
-.board-box a { color: inherit; }
+/* The padding belongs to the child, so the whole chip is the hit target and
+   the focus ring follows the shape rather than the word inside it. */
+.board-box li > * {
+  padding: 8px 12px;
+  text-decoration-line: none;
+  border-radius: 999px;
+}
+.board-box li:has(a):hover { border-color: var(--rule-firm); background: var(--surface); }
+.board-box a:hover { color: var(--ink); }
 
 @media (max-width: 560px) {
   .board-list > li { grid-template-columns: 22px minmax(0, 1fr) 2.6rem; }

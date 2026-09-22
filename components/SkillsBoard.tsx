@@ -10,11 +10,12 @@ import { useStatus } from "@/lib/status";
  * The skills as a readout.
  *
  * Not a diagram. Four lists, a mark per row, and a bar only where something
- * was genuinely measured. Everything else gets a dash — an unmeasured skill is
- * not a zero, and it is certainly not seven out of ten. There are no
- * proficiency ratings anywhere on this page and there never will be, because
- * nobody can check them; the whole argument of this site is that a number
- * should be checkable.
+ * was genuinely measured. An unmeasured row simply says nothing: it is not a
+ * zero, it is certainly not seven out of ten, and the em-dash that used to
+ * stand in for it was a column of punctuation that needed explaining. There
+ * are no proficiency ratings anywhere on this page and there never will be,
+ * because nobody can check them; the whole argument of this site is that a
+ * number should be checkable.
  *
  * Group names sit in the page's own rail rather than in a card header, so every
  * row starts on the same line as the title above it. The four bordered panels
@@ -22,10 +23,10 @@ import { useStatus } from "@/lib/status";
  * sets its own margin, and what was left for the sentence that matters was
  * eleven pixels of monospace.
  *
- * The filter is the reason it is a client component. Twenty-odd rows is a
- * scroll, and a reader who came here for "does he know Postgres" should be one
- * keystroke from the answer. It narrows the list live and says how much it
- * hid, so nothing disappears silently.
+ * The filter is the reason it is a client component, and it is now the only
+ * thing above the list. Twenty-odd rows is a scroll, and a reader who came
+ * here for "does he know Postgres" should be one keystroke from the answer. It
+ * says how much it hid, so nothing disappears silently.
  *
  * `practice` is deliberately NOT one of the groups. Observability and testing
  * were once a fifth column of rows beside Redis and Angular, as though they
@@ -66,38 +67,26 @@ export default function SkillsBoard({ linkable }: { linkable: string[] }) {
 
   return (
     <div className="board">
-      <header className="board-bar">
-        {status ? (
-          <>
-            <span>{status.containers} containers</span>
-            <span>up {status.uptimeDays}d</span>
-            {status.coding && <span>{status.coding.hours}h / 30d</span>}
-            {status.coding?.editor && (
-              <span>
-                {status.coding.editor.toLowerCase()} {status.coding.editorPercent}%
-              </span>
-            )}
-            <span className={status.unhealthy ? "board-bad" : "board-ok"}>
-              {status.unhealthy ? `${status.unhealthy} unhealthy` : "all healthy"}
-            </span>
-          </>
-        ) : (
-          <span>box not reporting</span>
-        )}
-        <label className="board-filter">
-          <span className="visually-hidden">Filter the skills</span>
-          <input
-            type="text"
-            value={q}
-            placeholder="filter"
-            onChange={(e) => setQ(e.target.value)}
-            spellCheck={false}
-          />
-        </label>
-        <span className="board-count">
-          {shown === total ? `${total}` : `${shown}/${total}`}
-        </span>
-      </header>
+      {/* In the prose column, on the title's line. `.row` puts it there and
+          collapses with everything else at 900px. */}
+      <div className="row">
+        <div className="board-filter">
+          <label>
+            <span className="visually-hidden">Filter the skills</span>
+            <input
+              type="text"
+              value={q}
+              placeholder="filter"
+              onChange={(e) => setQ(e.target.value)}
+              spellCheck={false}
+            />
+          </label>
+          {/* Always in the DOM so the count is announced when it changes. */}
+          <span className="board-count" aria-live="polite">
+            {query ? `${shown} of ${total}` : ""}
+          </span>
+        </div>
+      </div>
 
       {groups.map((group) => (
         <section className="row board-group" key={group.group}>
@@ -123,7 +112,7 @@ export default function SkillsBoard({ linkable }: { linkable: string[] }) {
                   <span className="board-meter" aria-hidden="true">
                     {row && <span className="board-fill" style={{ width: `${Math.min(row.percent, 100)}%` }} />}
                   </span>
-                  <span className="board-num">{row ? `${row.percent}%` : "—"}</span>
+                  {row && <span className="board-num">{row.percent}%</span>}
                   <span className="board-now">{skill.now}</span>
                 </li>
               );
@@ -161,7 +150,9 @@ export default function SkillsBoard({ linkable }: { linkable: string[] }) {
           <ul className="board-box">
             {group.items.map((item) => (
               <li key={item.name}>
-                {item.href ? <a href={item.href} rel="noopener">{item.name}</a> : item.name}
+                {item.href
+                  ? <a href={item.href} rel="noopener">{item.name}</a>
+                  : <span>{item.name}</span>}
               </li>
             ))}
           </ul>
