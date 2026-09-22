@@ -859,7 +859,8 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
 /* Status is a word, not a coloured pill. "running" is the normal case and must
    not shout; there is no state here that needs an alarm colour. */
 .project-status {
-  font: 400 var(--fs-rail)/1 var(--figure);
+  display: flex; flex-wrap: wrap; gap: 0 var(--s-4);
+  font: 400 var(--fs-rail)/1.4 var(--figure);
   letter-spacing: var(--ls-rail);
   text-transform: uppercase;
   color: var(--ink-2);

@@ -113,7 +113,7 @@ export default async function PostPage(
             <span><time dateTime={post.date}>{formatDate(post.date)}</time></span>
             <span>{n(post.wordCount)} words</span>
             <span>{post.readingTime} min read</span>
-            <span>{daysAgo} days ago</span>
+            <span>{daysAgo} {daysAgo === 1 ? "day" : "days"} ago</span>
           </p>
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}

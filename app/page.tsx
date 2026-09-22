@@ -121,7 +121,7 @@ export default function Home() {
           <span className="rail--label">Writing</span>
           <span>{r.posts} {r.posts === 1 ? "post" : "posts"}</span>
           <span>{n(r.words)} words</span>
-          {r.latest && <span>latest {r.daysSinceLatest} days ago</span>}
+          {r.latest && <span>latest {r.daysSinceLatest} {r.daysSinceLatest === 1 ? "day" : "days"} ago</span>}
         </span>
         <div>
           <div className="section-head">

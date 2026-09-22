@@ -94,7 +94,7 @@ export default function About() {
         <span className="rail rail--against-body">
           <span className="rail--label">Right now</span>
           <span>edited {r.nowUpdated}</span>
-          <span>{r.daysSinceNow} days ago</span>
+          <span>{r.daysSinceNow} {r.daysSinceNow === 1 ? "day" : "days"} ago</span>
         </span>
         <div className="section-head">
           <h2>What has my attention</h2>
