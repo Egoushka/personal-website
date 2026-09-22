@@ -404,6 +404,9 @@ a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; 
 }
 .rail--section { font-weight: var(--w-head); color: var(--accent); }
 
+/* Paper and screen want different words in the same slot. */
+.print-only { display: none; }
+
 /* Topics in the rail: plain text, one per line. No chips.
    Stacked 11px lines are 16px tall, which is under the 24px floor every other
    control on this site clears (WCAG 2.5.8). The row carries the height rather
@@ -1526,6 +1529,13 @@ figure figcaption {
   min-height: 24px;
 }
 .print-hint { margin: var(--s-5) 0 0; width: max-content; }
+/* The button and its shortcut. `.run` supplies the gap. */
+.print-actions { margin: var(--s-5) 0 0; align-items: center; }
+.print-actions button.control { cursor: pointer; font-family: var(--prose); }
+.print-hint-key {
+  font: var(--w-body) var(--fs-rail)/1 var(--figure);
+  color: var(--ink-2);
+}
 
 /* Dates sit right-aligned on the role line, so the right-hand column of a
    printed CV is a straight edge rather than a ragged one. */
@@ -1681,7 +1691,7 @@ figure figcaption {
   }
 
   /* --- strip the site chrome --------------------------------------------- */
-  .site-header, .site-footer, .skip-link, .print-hint,
+  .site-header, .site-footer, .skip-link, .print-hint, .print-actions,
   .toc, .toc-details, .search, .copy-btn, .filter-bar {
     display: none !important;
   }
@@ -1730,8 +1740,13 @@ figure figcaption {
   /* The contact rail is five long URLs and the label column is 26mm wide, so on
      paper they printed straight over the name. Below the collapse they already
      run inline; do the same here. `order` moves the masthead ahead of the rail
-     without touching DOM order, so the sheet reads name, rule, contacts. */
-  .cv .masthead { order: -1; }
+     without touching DOM order, so the sheet reads name, rule, contacts.
+
+     The masthead spans BOTH columns. It used to sit in the prose column while
+     the contacts under it spanned the sheet, so the name was indented 32mm
+     past its own rule and its own address — the first thing on the page and
+     the only thing not aligned to anything. */
+  .cv .masthead { order: -1; grid-column: 1 / -1; }
   .cv .masthead-rail {
     grid-column: 1 / -1;
     flex-direction: row;
@@ -1758,11 +1773,17 @@ figure figcaption {
   .cv .era-title,
   .cv .era-prose,
   .cv .era-obstacle,
+  .cv .screen-only,
   .cv .print-hide      { display: none; }
+  .cv .print-only      { display: block; }
   .cv .job--compact ul { display: none; }
   .cv .cv-era .job:first-of-type { margin-top: 0; }
-  /* The era rail carries years the roles print for themselves. */
-  .cv .cv-era > .rail  { visibility: hidden; }
+
+  /* Every other section on the sheet is labelled and this one — the longest —
+     was not: the era rails carry years the roles print for themselves, so they
+     were hidden and left a 26mm column blank down the whole record. One
+     "Experience" at the top, nothing under it. */
+  .cv .cv-era:not(:first-of-type) > .rail { visibility: hidden; }
 
   /* Every section boundary was drawn twice: an <hr class="bleed"> in the markup
      AND a border-top from `.section + .section`. On screen the hr is the rule;
@@ -1791,11 +1812,26 @@ figure figcaption {
   /* Skills compress to names, one group per line with its label in the margin
      of the prose column. The "where it stands" line is the argument, and an
      argument is what the conversation after the CV is for. */
-  .cv .skill-groups { display: flex; flex-direction: column; gap: 1mm; }
-  .cv .skill-group   { display: flex; align-items: baseline; gap: 3mm; }
-  .cv .skill-group h3 { flex: 0 0 20mm; font-size: 7.5pt; margin: 0; }
-  .cv .skill-group dl { display: flex; flex-wrap: wrap; gap: 0 3mm; margin: 0; }
-  .cv .skill-group dt { font-weight: 400; font-size: 9.5pt; margin: 0; }
+  /* A run-in, not a nested column. `flex: 0 0 20mm` on the group heading put a
+     second label column INSIDE the prose column, so the sheet had five left
+     edges — contacts, name, headings, bullets, skill values — and the values
+     wrapped ragged against a flex gap. Now each group is one paragraph: the
+     name in small caps, then the list, separated by a mark rather than by
+     whitespace that could be a line break. */
+  .cv .skill-groups { display: block; }
+  .cv .skill-group   { display: block; margin: 0; }
+  .cv .skill-group + .skill-group { margin-top: 0.9mm; }
+  .cv .skill-group h3 {
+    display: inline;
+    font-size: 7.5pt;
+    margin: 0;
+  }
+  .cv .skill-group h3::after { content: "  "; letter-spacing: 1.5mm; }
+  .cv .skill-group dl { display: inline; margin: 0; }
+  .cv .skill-group dt { display: inline; font-weight: 400; font-size: 9.5pt; margin: 0; }
+  /* NOT `dt + dt` — every dt is followed by its dd, so they are never
+     adjacent siblings and the separator silently never rendered. */
+  .cv .skill-group dt:not(:first-of-type)::before { content: " · "; color: var(--ink-2); }
   .cv .skill-group dd { display: none; }
   .cv .measured { display: none; }
 

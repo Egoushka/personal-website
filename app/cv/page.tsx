@@ -3,6 +3,7 @@ import Link from "next/link";
 import Nav from "@/components/Nav";
 import { ProfilePageLd } from "@/components/JsonLd";
 import Footer from "@/components/Footer";
+import PrintCv from "@/components/PrintCv";
 import React from "react";
 import { site, feedTypes, experience, education, projects, skills, eras } from "@/lib/site";
 import { getTopicUsage } from "@/lib/readings";
@@ -70,9 +71,7 @@ export default function CV() {
         <p className="role-title">{site.role}</p>
       </div>
 
-      <p className="control print-hint">
-        <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>P</kbd> prints one A4 page
-      </p>
+      <PrintCv />
 
       {/*
         The record, told as eras.
@@ -95,7 +94,11 @@ export default function CV() {
             id={era.slug}
           >
             <div className="rail">
-              <span className="rail--label">{era.years}</span>
+              {/* Paper gets one "Experience" label above the whole record;
+                  screen gets the era's years. Both live in the same rail, and
+                  the print sheet swaps which one is visible. */}
+              <span className="rail--label print-only">Experience</span>
+              <span className="rail--label screen-only">{era.years}</span>
             </div>
             <div>
               <h2 className="era-title">{era.title}</h2>

@@ -43,6 +43,7 @@ export default function JourneyPage() {
 
       <PageHead
         title="Journey"
+        quiet
         figures={
           <>
             <span>2021 — now</span>

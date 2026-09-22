@@ -45,6 +45,7 @@ export default function WritingIndex() {
 
       <PageHead
         title="Writing"
+        quiet
         figures={
           <>
             <span>{r.posts} {r.posts === 1 ? "post" : "posts"}</span>

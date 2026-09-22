@@ -55,10 +55,7 @@ export default function About() {
         <Link href="/links/">everywhere else</Link>
       </div>
 
-      <PageHead
-        title="About"
-        lede="The short version."
-      />
+      <PageHead title="About" quiet />
 
       <div className="prose">
         {/* Appears as soon as assets/images/portrait.jpg exists — see

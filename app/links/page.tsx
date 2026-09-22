@@ -36,6 +36,7 @@ export default function Links() {
 
       <PageHead
         title="Links"
+        quiet
         figures={<><span>{links.length} places</span><span>all of them live</span></>}
         lede="Everywhere else I actually am. If it isn't listed, I'm not there."
       />
