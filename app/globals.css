@@ -1795,99 +1795,121 @@ figure figcaption {
 
 
 /* ============================================================================
-   THE STACK, AS A RADIAL TREE — /stack/
+   THE STACK, AS A READOUT — /stack/
 
-   This replaced a force simulation, which was the wrong instrument: a physics
-   engine arranges nodes by what does not collide, which is a physical answer
-   to a design question. It settled somewhere slightly different every load and
-   no amount of tuning made "wherever the springs stopped" look deliberate.
-
-   Laid out instead. The centre is the whole stack, each group owns an angular
-   sector sized by how many skills are in it, and the leaves sit on one ring
-   with their labels flipping anchor on the left half — the standard radial
-   dendrogram treatment, and the reason this reads as drawn. Overlap is
-   impossible by construction rather than something a solver has to fight.
+   Two diagrams came before this one: a force simulation, then a radial tree.
+   Both were pictures of a claim rather than evidence for it — any developer
+   can draw a graph of the words they know. This is the version that is hard to
+   copy: fixed columns, a mark per row, and a bar only where a machine actually
+   measured something.
    ========================================================================= */
 
-.orbit-figure { grid-column: 1 / -1; margin: var(--s-6) 0 0; }
-.orbit { width: 100%; height: auto; display: block; }
+.board { grid-column: 1 / -1; margin-top: var(--s-7); font-family: var(--figure); }
 
-.orbit-link { fill: none; stroke: var(--rule); stroke-width: 1; transition: stroke .16s ease; }
-.orbit-link.is-on { stroke: var(--accent); }
-
-.orbit-core { fill: var(--surface); stroke: var(--rule-firm); }
-.orbit-core-label {
-  fill: var(--ink-2); font: 400 13px/1 var(--figure);
-  font-variant-numeric: tabular-nums;
-}
-
-.orbit-hub { fill: var(--paper); stroke: var(--ink-2); stroke-width: 1.5; }
-.orbit-hub-label {
-  fill: var(--ink); font: 400 10.5px/1 var(--figure);
-  letter-spacing: var(--ls-rail); text-transform: uppercase;
-}
-
-.orbit-node circle {
-  fill: var(--paper); stroke: var(--ink-2); stroke-width: 1.5;
-  transition: fill .16s ease, stroke .16s ease;
-}
-.orbit-node text {
-  fill: var(--ink-2); font: 400 13px/1 var(--prose);
-  letter-spacing: -0.01em; transition: fill .16s ease;
-}
-.orbit-node.is-on circle {
-  fill: var(--accent); stroke: var(--accent);
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 55%, transparent));
-}
-.orbit-node.is-on text { fill: var(--ink); }
-.orbit-node.is-dim { opacity: .3; }
-/* An SVG <g> cannot take an outline reliably, so the ring is drawn on the
-   circle rather than suppressed. */
-.orbit-node:focus { outline: none; }
-.orbit-node:focus-visible circle { stroke: var(--accent); stroke-width: 3; }
-
-.orbit-figure figcaption {
-  font-family: var(--prose);
-  letter-spacing: -0.006em;
-  margin-top: var(--s-5);
-  max-width: 70ch;
-  font-size: var(--fs-small);
+.board-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s-5);
+  padding: var(--s-2) var(--s-3);
+  border: var(--hair) solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: var(--fs-rail);
   color: var(--ink-2);
-  min-height: 3em;
+  margin-bottom: var(--s-4);
 }
-.orbit-figure figcaption strong { color: var(--ink); font-weight: 500; }
+.board-prompt { color: var(--accent); }
+.board-bad { color: var(--warn); }
+.board-dim { opacity: .7; }
+.board-filter { margin-left: auto; }
+.board-filter input {
+  width: 9rem;
+  background: var(--paper);
+  border: var(--hair) solid var(--rule-firm);
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: var(--ink);
+  font: 400 var(--fs-rail)/1.6 var(--figure);
+  min-height: 24px;                       /* WCAG 2.5.8 */
+}
+.board-filter input::placeholder { color: var(--ink-2); opacity: .7; }
+.board-count { font-variant-numeric: tabular-nums; }
 
-/* The skills, as columns rather than a stack of definition lists. Three
-   columns of short rows read in one pass; twenty-three rows in a single file
-   is a scroll, and it was the reason this page ended in a wall. */
-.stack-groups {
-  grid-column: 1 / -1;
+.board-grid { display: grid; gap: var(--s-4); grid-template-columns: repeat(auto-fit, minmax(430px, 1fr)); }
+.board-panel { border: var(--hair) solid var(--rule); border-radius: var(--radius); overflow: hidden; }
+.board-panel h2 {
+  display: flex; justify-content: space-between;
+  margin: 0; padding: var(--s-2) var(--s-4);
+  border-bottom: var(--hair) solid var(--rule);
+  background: var(--surface);
+  font: 400 var(--fs-rail)/1.6 var(--figure);
+  letter-spacing: var(--ls-rail); text-transform: uppercase; color: var(--ink-2);
+}
+.board-panel ul { list-style: none; margin: 0; padding: 0; }
+.board-panel li {
   display: grid;
-  gap: var(--s-8) var(--s-7);
-  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
-  margin-top: var(--s-10);
-}
-.stack-groups--box { grid-column: auto; margin-top: var(--s-5); }
-
-.stack-group h2, .stack-group h3 { margin: 0 0 var(--s-4); }
-.stack-group ul { list-style: none; margin: 0; padding: 0; }
-.stack-group li {
-  padding: var(--s-3) 0;
+  grid-template-columns: 20px 12.5rem 1fr 3.2rem;
+  align-items: center; gap: 0 var(--s-3);
+  padding: var(--s-2) var(--s-4);
   border-top: var(--hair) solid var(--rule);
+  font-size: var(--fs-code);
 }
-.stack-name {
-  display: flex; align-items: baseline; gap: var(--s-2); flex-wrap: wrap;
-  font-weight: 500;
+.board-panel li:first-child { border-top: 0; }
+.board-panel li:hover { background: var(--surface); }
+
+.board-mark { display: flex; align-items: center; color: var(--ink-2); }
+.board-panel li.is-measured .board-mark { color: var(--accent); }
+.icon { display: block; }
+
+.board-name { color: var(--ink); min-width: 0; }
+.board-meter { height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+.board-fill { display: block; height: 100%; background: var(--accent); }
+.board-none {
+  display: block; height: 100%; width: 100%;
+  background: repeating-linear-gradient(90deg, var(--rule) 0 3px, transparent 3px 7px);
 }
-.stack-now {
-  display: block;
+.board-num { text-align: right; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.board-now {
+  grid-column: 2 / -1;
   margin-top: 2px;
+  font-size: var(--fs-rail);
+  color: var(--ink-2); opacity: .8;
+}
+
+.board-empty { margin: var(--s-6) 0 0; color: var(--ink-2); font-size: var(--fs-small); }
+
+/* Practice is prose, not rows. Nobody installs a habit. */
+.board-practice { margin-top: var(--s-8); }
+.board-practice p {
+  margin: var(--s-4) 0 0;
+  max-width: 78ch;
+  font-family: var(--prose);
   font-size: var(--fs-small);
   color: var(--ink-2);
 }
+.board-practice strong { color: var(--ink); font-weight: 500; }
 
-@media (prefers-reduced-motion: reduce) {
-  .orbit-link, .orbit-node circle, .orbit-node text { transition: none; }
+.board-box { margin-top: var(--s-8); }
+.board-box ul {
+  display: flex; flex-wrap: wrap; gap: var(--s-2);
+  list-style: none; margin: var(--s-4) 0 0; padding: 0;
+}
+.board-box li {
+  font-size: var(--fs-rail);
+  color: var(--ink-2);
+  border: var(--hair) solid var(--rule);
+  border-radius: 999px;
+  padding: 6px 10px;
+}
+
+.board-foot {
+  margin-top: var(--s-7);
+  max-width: 72ch;
+  font-size: var(--fs-rail);
+  color: var(--ink-2);
+}
+
+@media (max-width: 560px) {
+  .board-panel li { grid-template-columns: 20px 1fr 3rem; }
+  .board-meter { display: none; }
 }
 
 /* ============================================================================

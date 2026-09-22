@@ -367,6 +367,8 @@ export const projects: Project[] = [
  */
 export type Skill = {
   name: string;
+  /** Key into lib/icons.ts. A brand mark where one exists, a drawn glyph where none does. */
+  icon?: string;
   /**
    * What the graph calls it. "Background jobs and scheduling" is the right
    * name in a list and a 190px object in a diagram; the node says "Background
@@ -383,56 +385,62 @@ export const skills: { group: string; items: Skill[] }[] = [
   {
     group: "Backend",
     items: [
-      { name: "C# / .NET", topic: "dotnet", wakatime: "C#",
+      { name: "C# / .NET", icon: "dotnet", topic: "dotnet", wakatime: "C#",
         now: "Five years, and most of every working week." },
-      { name: "ASP.NET Core", topic: "aspnet",
+      { name: "ASP.NET Core", icon: "dotnet", topic: "aspnet",
         now: "Where the services live: APIs, background jobs, third-party integrations." },
-      { name: "EF Core", now: "The default at work. Dapper when the query matters more than the mapping." },
-      { name: "CQRS and vertical slices", short: "CQRS", topic: "architecture",
+      { name: "EF Core", icon: "database", now: "The default at work. Dapper when the query matters more than the mapping." },
+      { name: "CQRS and vertical slices", icon: "pattern", short: "CQRS", topic: "architecture",
         now: "A greenfield .NET 9 backend built this way in 2025, and an opinion about when it is overkill." },
-      { name: "Background jobs and scheduling", short: "Background jobs",
+      { name: "Background jobs and scheduling", icon: "job", short: "Background jobs",
         now: "The part that fails quietly, which is why most of what I write about starts here." },
-      { name: "RabbitMQ", now: "Cross-service messaging at work. My first broker feature shipped in 2025 — two days of it spent on a consumer I had never registered." },
-      { name: "Redis", now: "Read caches and the invalidation that goes with them." },
+      { name: "RabbitMQ", icon: "rabbitmq", now: "Cross-service messaging at work. My first broker feature shipped in 2025 — two days of it spent on a consumer I had never registered." },
+      { name: "Redis", icon: "redis", now: "Read caches and the invalidation that goes with them." },
     ],
   },
   {
     group: "Data",
     items: [
-      { name: "PostgreSQL", short: "Postgres", topic: "postgres", now: "Everywhere I get to choose. TimescaleDB when the rows are a time series." },
-      { name: "SQL Server", now: "At work. Deep SQL is the gap I named myself in 2026 and the one I am deliberately closing." },
-      { name: "Python", topic: "python", wakatime: "Python",
+      { name: "PostgreSQL", icon: "postgresql", short: "Postgres", topic: "postgres", now: "Everywhere I get to choose. TimescaleDB when the rows are a time series." },
+      { name: "SQL Server", icon: "sql", now: "At work. Deep SQL is the gap I named myself in 2026 and the one I am deliberately closing." },
+      { name: "Python", icon: "python", topic: "python", wakatime: "Python",
         now: "Ingestion, retrieval and backtesting. Not where I would take complex business logic, and I say so before anyone asks." },
-      { name: "Retrieval", topic: "retrieval", now: "Embeddings and vector search, and a working argument that most of what people index is noise." },
+      { name: "Retrieval", icon: "search", topic: "retrieval", now: "Embeddings and vector search, and a working argument that most of what people index is noise." },
     ],
   },
   {
     group: "Infrastructure",
     items: [
-      { name: "Docker Compose", short: "Compose", topic: "docker", now: "One stack per service, every one of them in git." },
-      { name: "Linux", topic: "linux", now: "One Ubuntu box I run like production, because it is the only one I get paged for." },
-      { name: "Traefik and Caddy", short: "Traefik", topic: "caddy", now: "The edge and the origin of everything I self-host, including this page." },
-      { name: "Tailscale and Headscale", short: "Tailscale", topic: "tailscale", now: "The only way in. SSH is not on the internet." },
-      { name: "SOPS and age", short: "SOPS", topic: "sops", now: "Secrets encrypted in the repository, so the box is never the source of truth." },
-      { name: "GitHub Actions", topic: "ci-cd", now: "Every deploy here, and the 51 days I once spent not noticing one had stopped." },
+      { name: "Docker Compose", icon: "docker", short: "Compose", topic: "docker", now: "One stack per service, every one of them in git." },
+      { name: "Linux", icon: "linux", topic: "linux", now: "One Ubuntu box I run like production, because it is the only one I get paged for." },
+      { name: "Traefik and Caddy", icon: "traefikproxy", short: "Traefik", topic: "caddy", now: "The edge and the origin of everything I self-host, including this page." },
+      { name: "Tailscale and Headscale", icon: "tailscale", short: "Tailscale", topic: "tailscale", now: "The only way in. SSH is not on the internet." },
+      { name: "SOPS and age", icon: "key", short: "SOPS", topic: "sops", now: "Secrets encrypted in the repository, so the box is never the source of truth." },
+      { name: "GitHub Actions", icon: "githubactions", topic: "ci-cd", now: "Every deploy here, and the 51 days I once spent not noticing one had stopped." },
     ],
   },
   {
     group: "Front end",
     items: [
-      { name: "TypeScript", topic: "typescript", wakatime: "TypeScript", now: "This site, and anything that reaches a browser." },
-      { name: "Angular and NgRx", short: "Angular", topic: "angular", now: "When the work reaches the front end. A generic NgRx store factory is the piece I would show." },
+      { name: "TypeScript", icon: "typescript", topic: "typescript", wakatime: "TypeScript", now: "This site, and anything that reaches a browser." },
+      { name: "Angular and NgRx", icon: "angular", short: "Angular", topic: "angular", now: "When the work reaches the front end. A generic NgRx store factory is the piece I would show." },
     ],
   },
-  {
-    group: "How I work",
-    items: [
-      { name: "Observability", topic: "observability", now: "Structured logs, Grafana, and the habit of asking what this will look like at 3am before it is 3am." },
-      { name: "Debugging production", short: "Debugging", topic: "debugging", now: "Distributed, job-driven systems, on a rotation. The fastest way I know to learn what a system does when nobody is watching." },
-      { name: "Testing", now: "xUnit and Testcontainers. I wrote tests in university before anyone asked for them, which is either a virtue or a warning." },
-      { name: "Self-hosting", topic: "self-hosting", now: "Everything above, on one box, defined in git and rebuildable from it." },
-    ],
-  },
+];
+
+/**
+ * How the stack gets used, which is not part of the stack.
+ *
+ * These were a fifth group in `skills` — Observability, Debugging, Testing,
+ * Self-hosting — sitting beside Redis and Angular as though they were the same
+ * kind of noun. They are not: nobody installs a habit. They read as a sentence
+ * under the diagram instead of a fifth column of logos.
+ */
+export const practice: { name: string; topic?: TopicSlug; now: string }[] = [
+  { name: "Observability", topic: "observability", now: "Structured logs, Grafana, and the habit of asking what this will look like at 3am before it is 3am." },
+  { name: "Debugging production", topic: "debugging", now: "Distributed, job-driven systems, on a rotation. The fastest way I know to learn what a system does when nobody is watching." },
+  { name: "Testing", now: "xUnit and Testcontainers. I wrote tests in university before anyone asked for them, which is either a virtue or a warning." },
+  { name: "Self-hosting", topic: "self-hosting", now: "Everything above, on one box, defined in git and rebuildable from it." },
 ];
 
 export type Job = {

@@ -7,8 +7,7 @@ export const metadata: Metadata = {
 };
 
 const IDEAS = [
-  { slug: "constellation", name: "A sky", blurb: "Skills as stars, groups as constellations. Brightness is what my editor actually measured this month. The least literal of the three, and the one that treats a stack as something you navigate rather than audit." },
-  { slug: "monitor", name: "An instrument", blurb: "No diagram at all. Monospace, fixed columns, a bar only where something was really measured, and a header of live figures off the box. It looks like the thing it describes." },
+  { slug: "monitor", name: "An instrument", blurb: "Shipped: this is /stack/ now. Kept here so the others can be compared against it." },
   { slug: "strata", name: "Time", blurb: "Not the stack — how it was acquired. One track per role and project on a real time axis, with the technologies each one used. Every pixel comes from the same fields the CV reads, and it shows the gaps." },
 ];
 
