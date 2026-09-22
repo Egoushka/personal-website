@@ -21,6 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/writing/`, lastModified: newest, changeFrequency: "weekly", priority: 0.8 },
     { url: `${base}/projects/`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/stack/`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${base}/journey/`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${base}/about/`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/cv/`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/links/`, changeFrequency: "yearly", priority: 0.4 },
