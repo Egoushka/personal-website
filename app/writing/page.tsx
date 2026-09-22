@@ -7,7 +7,7 @@ import PageHead from "@/components/PageHead";
 import PostList from "@/components/PostList";
 import { site, feedTypes } from "@/lib/site";
 import { getAllPosts, getTopicCounts } from "@/lib/posts";
-import { getReadings, n } from "@/lib/readings";
+import { getReadings, n, latestPhrase } from "@/lib/readings";
 import { topicName } from "@/lib/topics";
 
 const description =
@@ -50,7 +50,7 @@ export default function WritingIndex() {
           <>
             <span>{r.posts} {r.posts === 1 ? "post" : "posts"}</span>
             <span>{n(r.words)} words</span>
-            {r.latest && <span>latest {r.daysSinceLatest} {r.daysSinceLatest === 1 ? "day" : "days"} ago</span>}
+            {r.latest && <span>{latestPhrase(r.daysSinceLatest)}</span>}
             <span><a href="/feed.xml">rss</a></span>
           </>
         }

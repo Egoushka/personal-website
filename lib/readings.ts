@@ -157,3 +157,18 @@ export function getTopicUsage(): TopicUsage[] {
     .filter((t) => t.total > 0)
     .sort((a, b) => b.total - a.total || a.slug.localeCompare(b.slug));
 }
+
+/**
+ * "latest today" / "latest 1 day ago" / "latest 6 days ago".
+ *
+ * Both call sites printed "latest 0 days ago" on the day something shipped,
+ * which is the same class of bug as the "1 days ago" that was fixed in three
+ * places earlier: a plural rule applied to a number whose edge cases are words,
+ * not digits. One function, so the next page to print this cannot disagree.
+ */
+export function latestPhrase(days: number | undefined): string {
+  if (days === undefined) return "";
+  if (days <= 0) return "latest today";
+  if (days === 1) return "latest yesterday";
+  return `latest ${days} days ago`;
+}
