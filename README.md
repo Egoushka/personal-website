@@ -287,7 +287,7 @@ through on a phone and a laptop before it is merged.
 `.github/workflows/prelive.yml` runs on **manual dispatch and on every pull
 request**: `npm ci` → `validate` → `typecheck` → `build` → `caddy validate` →
 rsync `out/` to `/opt/stacks/website/prelive/` → check the container answers.
-Then open <http://100.64.0.4:8091/>.
+Then open <http://100.64.0.2:8091/>.
 
 Three things make it a separate site rather than a second copy of production:
 
@@ -312,7 +312,7 @@ does not own — add both there by hand, once:
     volumes:
       - ./prelive:/srv-prelive:ro     # alongside the existing ./site:/srv:ro
     ports:
-      - "100.64.0.4:8091:81"          # alongside the existing 8090:80
+      - "100.64.0.2:8091:81"          # alongside the existing 8090:80
 ```
 
 Then `docker compose up -d` in `/opt/stacks/website` — this one genuinely needs
@@ -323,11 +323,11 @@ message rather than silently:
 
 1. The `:81` block reaches the box with the **next production deploy**, so the
    branch adding it has to be merged to `main` before prelive can answer.
-2. The tailnet address of the box is written down twice in this repo and the two
-   disagree — `deploy/Caddyfile` says `100.64.0.4`, `CLAUDE.md` and
-   `deploy.yml` say `100.64.0.2`. `PRELIVE_ORIGIN` at the top of
-   `prelive.yml` follows the Caddyfile; if prelive answers on the other one,
-   that env var is the only place to change it.
+2. The address is `100.64.0.2`, settled by the file that binds the port:
+   `website/compose.yaml` in homelab-gitops publishes `100.64.0.2:8090:80`.
+   This repo had it written down twice and disagreeing; the Caddyfile's comment
+   said `.4` and was simply wrong. `PRELIVE_ORIGIN` in `prelive.yml` is still
+   the only place the address reaches a build.
 
 Prelive reuses `DEPLOY_SSH_KEY` and `DEPLOY_KNOWN_HOSTS`. A pull request from a
 fork gets neither, so the job skips itself rather than failing halfway.

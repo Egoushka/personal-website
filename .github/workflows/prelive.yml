@@ -22,12 +22,12 @@ env:
   # Baked into canonicals, both feeds, the sitemap, the OG cards and the URL
   # each post's comment thread is keyed by — see lib/site.ts.
   #
-  # The tailnet address of the box is written down twice in this repo and the
-  # two disagree: deploy/Caddyfile says 100.64.0.4, CLAUDE.md and deploy.yml say
-  # 100.64.0.2. This follows the Caddyfile, which is the file closest to the
-  # actual mount. If prelive answers on the other one, change it here — it is
-  # the only place the address appears.
-  PRELIVE_ORIGIN: http://100.64.0.4:8091
+  # 100.64.0.2, settled by the file that actually binds the port:
+  # homelab-gitops website/compose.yaml publishes "100.64.0.2:8090:80" and now
+  # "100.64.0.2:8091:81". This repo had it written down twice and disagreeing —
+  # the Caddyfile's comment said .4 and was wrong. Still the only place the
+  # address appears in a build.
+  PRELIVE_ORIGIN: http://100.64.0.2:8091
 
 jobs:
   build-and-deploy:

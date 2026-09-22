@@ -1,5 +1,5 @@
 # Internal static server for hrabovskyi.online.
-# Two sites, one config: :80 is production (published to 100.64.0.4:8090) and
+# Two sites, one config: :80 is production (published to 100.64.0.2:8090) and
 # :81 is prelive (8091, tailnet only). They share one snippet — see below.
 # TLS, the public hostname, and the www->apex redirect are handled upstream
 # by the edge. Keep this file plain HTTP.
