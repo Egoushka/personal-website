@@ -1682,12 +1682,12 @@ figure figcaption {
     --step-5:   21.0pt;
   }
 
-  @page { size: A4; margin: 13mm 13mm; }
+  @page { size: A4; margin: 11mm 13mm 10mm; }
 
   html, body {
     background: #fff;
     font-size: 10pt;
-    line-height: 1.42;
+    line-height: 1.4;
   }
 
   /* --- strip the site chrome --------------------------------------------- */
@@ -1696,46 +1696,54 @@ figure figcaption {
     display: none !important;
   }
 
-  /* --- the grid, in millimetres ------------------------------------------ */
-  /* 40mm of a 184mm content width was 22% of the sheet spent on four section
-     labels, and it cost the prose enough measure to wrap an extra line in most
-     bullets. 26mm still fits "Experience" on one line. */
-  .wrap, .row {
-    display: grid;
-    grid-template-columns: 26mm 1fr;
-    gap: 0 6mm;
-    padding: 0;
-    max-width: none;
-  }
-  .wrap > *, .row > *         { grid-column: 2; }
-  .wrap > .rail, .row > .rail { grid-column: 1; }
-  .wrap > .bleed              { grid-column: 1 / -1; }
+  /* --- the grid: ONE column ----------------------------------------------
+     The screen's rail/measure split came to paper and did not survive the
+     trip. 26mm of a 184mm sheet — 14% of the width — held four words and was
+     blank down the rest of the page, while the content it was supposed to
+     annotate wrapped an extra line in most bullets.
+
+     Paper gets the layout paper wants: full measure, and section headings as
+     ruled bands across it. The rail elements are still the headings; they
+     just span the sheet instead of sitting beside it. */
+  .wrap { display: flex; flex-direction: column; padding: 0; max-width: none; }
+  .row  { display: block; padding: 0; max-width: none; }
 
   .rail {
-    font: 400 8.5pt/1.55 var(--figure);
+    display: block;
+    font: 400 8.5pt/1.5 var(--figure);
     letter-spacing: .02em;
     color: var(--ink-2);
-    flex-direction: column;
     padding-top: 0;
   }
   .rail > * + *::before { content: none; }
+
+  /* A section heading, not a margin note: small caps across the full measure
+     with a rule under it, so the eye can find Experience / Projects / Skills
+     / Education without reading. */
   .rail--label {
-    font-weight: 600;
-    font-size: 7.5pt;
-    letter-spacing: .14em;
+    display: block;
+    font: 700 8pt/1 var(--figure);
+    letter-spacing: .18em;
     text-transform: uppercase;
-    color: var(--ink-2);
+    color: #000;
+    margin: 0 0 1mm;
+    padding-bottom: 0.7mm;
+    border-bottom: 0.75pt solid #000;
   }
+  /* A band needs air above it or it reads as a rule under the previous entry. */
+  .cv .section > .rail--label,
+  .cv .cv-era > .rail { margin-top: 1.8mm; }
+  .cv .cv-era:first-of-type > .rail { margin-top: 2mm; }
 
   /* --- CV specifics ------------------------------------------------------- */
   .cv h1 {
-    font: 600 21pt/1.02 var(--prose);
+    font: 600 18pt/1 var(--prose);
     letter-spacing: -0.02em;
     color: #000;
     margin: 0;
   }
-  .cv .role-title { font: 400 11pt/1.4 var(--prose); margin: 2mm 0 0; }
-  .cv .masthead   { border-bottom: 1.5pt solid #000; padding-bottom: 3mm; }
+  .cv .role-title { font: 400 10pt/1.2 var(--prose); margin: 1mm 0 0; }
+  .cv .masthead   { border-bottom: 1.25pt solid #000; padding-bottom: 1.6mm; }
 
   /* The contact rail is five long URLs and the label column is 26mm wide, so on
      paper they printed straight over the name. Below the collapse they already
@@ -1746,15 +1754,18 @@ figure figcaption {
      the contacts under it spanned the sheet, so the name was indented 32mm
      past its own rule and its own address — the first thing on the page and
      the only thing not aligned to anything. */
-  .cv .masthead { order: -1; grid-column: 1 / -1; }
+  .cv .masthead { order: -1; }
   .cv .masthead-rail {
-    grid-column: 1 / -1;
+    display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 0 3mm;
-    margin-top: 1.6mm;
-    /* 8pt is what fits all five on one line. */
-    font-size: 8pt;
+    gap: 0 2.2mm;
+    margin-top: 1mm;
+    /* 7.5pt is what fits all five on ONE line at 184mm. Two lines here
+       costs 4mm, and this block was already 18% of the sheet. */
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    font-size: 7.5pt;
   }
 
   .cv .job           { break-inside: avoid; page-break-inside: avoid; }
@@ -1783,17 +1794,17 @@ figure figcaption {
      was not: the era rails carry years the roles print for themselves, so they
      were hidden and left a 26mm column blank down the whole record. One
      "Experience" at the top, nothing under it. */
-  .cv .cv-era:not(:first-of-type) > .rail { visibility: hidden; }
+  .cv .cv-era:not(:first-of-type) > .rail { display: none; }
 
   /* Every section boundary was drawn twice: an <hr class="bleed"> in the markup
      AND a border-top from `.section + .section`. On screen the hr is the rule;
      on paper the section border is, so the hr goes. */
   .cv hr.bleed { display: none; }
-  .cv .job + .job { margin-top: 1.8mm; }
+  .cv .job + .job { margin-top: 1.2mm; }
   .cv .job-name   { font: 600 11.5pt/1.25 var(--prose); color: #000; }
-  .cv .job-meta   { font: 400 9pt/1.35 var(--figure); color: var(--ink-2); margin-top: 0.6mm; }
-  .cv .job ul     { margin: 1.4mm 0 0; padding-left: 4mm; font-size: 10pt; line-height: 1.38; }
-  .cv .job li + li{ margin-top: 0.4mm; }
+  .cv .job-meta   { font: 400 8.5pt/1.3 var(--figure); color: var(--ink-2); margin-top: 0.4mm; }
+  .cv .job ul     { margin: 1.2mm 0 0; padding-left: 4.2mm; font-size: 10pt; line-height: 1.4; }
+  .cv .job li + li{ margin-top: 0.5mm; }
 
   .cv .job-dates {
     font: 400 9pt/1 var(--figure);
@@ -1802,12 +1813,9 @@ figure figcaption {
     white-space: nowrap;
   }
 
-  .cv .section + .section {
-    margin-top: 2.2mm;
-    border-top: 0.5pt solid var(--rule);
-    padding-top: 2mm;
-  }
-  .cv .skills-run { font-size: 9.5pt; line-height: 1.35; }
+  .cv .section + .section { margin-top: 0; }
+  .cv .cv-era + .cv-era     { margin-top: 1.2mm; }
+  .cv .skills-run { font-size: 9pt; line-height: 1.3; }
 
   /* Skills compress to names, one group per line with its label in the margin
      of the prose column. The "where it stands" line is the argument, and an
@@ -1820,7 +1828,7 @@ figure figcaption {
      whitespace that could be a line break. */
   .cv .skill-groups { display: block; }
   .cv .skill-group   { display: block; margin: 0; }
-  .cv .skill-group + .skill-group { margin-top: 0.9mm; }
+  .cv .skill-group + .skill-group { margin-top: 0.4mm; }
   .cv .skill-group h3 {
     display: inline;
     font-size: 7.5pt;
@@ -1828,7 +1836,7 @@ figure figcaption {
   }
   .cv .skill-group h3::after { content: "  "; letter-spacing: 1.5mm; }
   .cv .skill-group dl { display: inline; margin: 0; }
-  .cv .skill-group dt { display: inline; font-weight: 400; font-size: 9.5pt; margin: 0; }
+  .cv .skill-group dt { display: inline; font-weight: 400; font-size: 9pt; margin: 0; }
   /* NOT `dt + dt` — every dt is followed by its dd, so they are never
      adjacent siblings and the separator silently never rendered. */
   .cv .skill-group dt:not(:first-of-type)::before { content: " · "; color: var(--ink-2); }
@@ -1842,9 +1850,12 @@ figure figcaption {
 
   /* Two schools, one line each: name, subject, place, date. On screen they get
      room; on paper they are the last thing anyone reads. */
-  .cv .edu { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 3mm; }
-  .cv .edu .job-head { flex: 1 1 auto; gap: 3mm; }
-  .cv .edu .job-meta { margin: 0; }
+  /* Same shape as a role: name and date on one line, detail under it. It was
+     a single flex run, so the school, the year, the subject and the city ran
+     together into one unreadable line. */
+  .cv .edu { display: block; }
+  .cv .edu .job-head { display: flex; justify-content: space-between; gap: 3mm; }
+  .cv .edu .job-meta { margin: 0.2mm 0 0; }
   .cv .edu + .edu { margin-top: 1mm; }
 
   /* The 24px touch target on the contact links is a screen concern. Paper has
@@ -1873,9 +1884,13 @@ figure figcaption {
    FITTING ONE PAGE — if the CV grows past a single sheet, cut in this order:
      1. GlobalLogic and LetsData drop to title + dates only (already the case).
      2. UKAD drops from two bullets to one.
-     3. Skills becomes one line, no wrap.
+     3. Skills becomes one line, no wrap.          ← SPENT (9pt)
      4. Body from 10.5pt to 10pt. NOT below 10pt.  ← SPENT
-     5. @page margin from 16mm/15mm to 14mm/13mm.
+     5. @page margin from 16mm/15mm to 14mm/13mm.  ← SPENT (11mm/13mm)
+
+     All five are now spent. The next cut is CONTENT, not CSS: drop a bullet
+     from IT INNOVATIONS via `printBullets` in lib/site.ts. Do not reach for
+     the type size again.
    Do not shrink line-height below 1.4 and do not drop the masthead rule.
    ========================================================================= */
 
