@@ -121,12 +121,12 @@ The rule now is *justify each one*, not *never*. Three exist:
   build clock: **never import it from a client component.**
 - **Three faces, two of them webfonts**, self-hosted by `next/font/google` in
   [app/layout.tsx](app/layout.tsx): Inter as `--font-prose` → `--prose` (body, h3, everything read
-  at length) and Instrument Serif as `--font-display` → `--display` (h1, h2, `.post-row > a`,
-  `.project-name`). `--figure` and `--code` are system monospace with no webfont.
-  **`--display` never goes below ~21px** — it is a high-contrast face whose thin strokes
-  stop rendering, which is why h3 is still Inter and why the previous serif-as-body design
-  read a decade old. It has no Cyrillic and no bold: set it at 400 and let non-latin fall
-  through to Georgia. Do not add a `<link>` to fonts.googleapis.com — it puts a
+  at length) and Bricolage Grotesque as `--font-display` → `--display` (h1, h2,
+  `.post-row > a`, `.project-name`), variable, asked for at 600. `--figure` and `--code`
+  are system monospace with no webfont. **`--display` never goes below ~26px** — below
+  that it is a grotesk beside a grotesk and the reader has downloaded a second font for
+  nothing, which is why h3 is still Inter. No Cyrillic subset: non-latin falls through to
+  the system UI face. Do not add a `<link>` to fonts.googleapis.com — it puts a
   render-blocking cross-origin request back on the critical path and loses the
   `size-adjust` fallback that keeps CLS at 0 (measured: 0.0002).
 - **All styling is one global stylesheet**, [app/globals.css](app/globals.css) — CSS variables at `:root`,

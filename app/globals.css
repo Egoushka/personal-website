@@ -21,11 +21,11 @@
      Vercel, the people who design for them) sets a grotesk around 15-16px at
      ~1.55 and spends the room it saves on whitespace instead. */
   --prose:  var(--font-prose), -apple-system, system-ui, "Segoe UI", sans-serif;
-  /* Titles, and nothing under ~21px. A high-contrast display serif against a
-     grotesk body and a monospace rail is three voices; one grotesk at three
-     sizes is a gradient, which is what this site had and why every page read
-     the same. Falls through to Georgia for anything outside latin. */
-  --display: var(--font-display), Georgia, "Times New Roman", serif;
+  /* Titles. A display grotesk against a neutral one and a monospace rail is
+     three voices; one grotesk at three sizes is a gradient, which is what this
+     site had and why every page read the same. Falls through to the system UI
+     face for anything outside latin. */
+  --display: var(--font-display), -apple-system, system-ui, sans-serif;
   /* Metadata, rails, kickers and counted figures. Monospace on purpose: it is
      the same job the small-caps label used to do, and it reads as a developer
      rather than as a broadsheet. */
@@ -62,11 +62,11 @@
      Smaller body, bigger headings, and negative tracking on everything above
      the body size — which is most of what separates a 2026 heading from a
      2015 one. Linear's h1 ships at 56px, weight 510, -0.022em. */
-  --fs-display: 3.7500rem;  /* 60.0px */
-  --fs-h1:      2.8750rem;  /* 46.0px */
-  --fs-h2:      1.7500rem;  /* 28.0px */
-  --fs-h3:      1.1875rem;  /* 19.0px — still Inter: a serif this small is the
-                               trap the last design fell into */
+  --fs-display: 3.5000rem;  /* 56.0px */
+  --fs-h1:      2.7500rem;  /* 44.0px */
+  --fs-h2:      1.6875rem;  /* 27.0px */
+  --fs-h3:      1.1875rem;  /* 19.0px — still Inter. The display face stops
+                               being a different face once it is this small */
   --fs-body:    0.9688rem;  /* 15.5px */
   --fs-small:   0.8750rem;  /* 14.0px */
   --fs-code:    0.8125rem;  /* 13.0px */
@@ -78,8 +78,8 @@
   --lh-code:  1.6;
   --lh-rail:  1.45;
 
-  --ls-display: -0.018em;
-  --ls-h1:      -0.014em;
+  --ls-display: -0.034em;
+  --ls-h1:      -0.028em;
   --ls-rail:     0.08em;
 
   /* The weight a grotesk wants for a heading. 600 is heavy at these sizes and
@@ -200,28 +200,28 @@ body::before {
 }
 [data-theme="light"] body::before { opacity: .035; }
 
-/* h1 and h2 are the display serif; h3 stays the grotesk.
+/* h1 and h2 are the display face; h3 stays Inter.
 
-   The cut-off is size, not level. Instrument Serif is a high-contrast face —
-   its thin strokes are genuinely thin — and below about 21px those strokes
-   stop rendering and it turns into a blurry Times. So it gets the two levels
-   that are always large and the grotesk keeps the one that is not, which also
-   means a post's sub-subheads read as a different kind of thing from its
-   sections rather than a smaller copy of them.
+   The cut-off is size, not level. Bricolage earns its keep at 27px and up,
+   where the flat bowls and the cut terminals are visible; at 19px it is a
+   grotesk next to a grotesk and the reader gets a second font for nothing. So
+   it takes the two levels that are always large, which also means a post's
+   sub-subheads read as a different kind of thing from its sections rather than
+   a smaller copy of them.
 
-   400, because this face has no bold and does not want one. --w-head is the
-   grotesk's weight and h3 still uses it. */
+   600 rather than --w-head's 560: this face is wider and softer than Inter and
+   needs the extra weight to hold a title. */
 h1, h2, h3 {
   color: var(--ink);
   text-wrap: balance;
 }
 h1, h2 {
   font-family: var(--display);
-  font-weight: 400;
+  font-weight: 600;
   letter-spacing: var(--ls-h1);
 }
 h1 { font-size: var(--fs-h1); line-height: var(--lh-tight); }
-h2 { font-size: var(--fs-h2); line-height: 1.16; letter-spacing: -0.012em; }
+h2 { font-size: var(--fs-h2); line-height: 1.18; letter-spacing: -0.024em; }
 h3 {
   font-size: var(--fs-h3); line-height: var(--lh-head);
   font-weight: var(--w-head); letter-spacing: -0.015em;
@@ -645,10 +645,10 @@ figure.code pre {
   border-top: var(--hair) solid var(--rule);
 }
 /* A title in a list is still a title, whatever heading level the markup gives
-   it. 26px is the floor for this face — below it the thin strokes drop out. */
+   it. 26px is the floor: below it this face stops being a different face. */
 .post-row > a {
-  font: 400 1.625rem/1.2 var(--display);
-  letter-spacing: -0.012em;
+  font: 600 1.625rem/1.22 var(--display);
+  letter-spacing: -0.024em;
   color: var(--ink);
   text-decoration: none;
   display: block;
@@ -918,8 +918,8 @@ figure.code pre {
 }
 
 .project-name {
-  font: 400 1.625rem/1.2 var(--display);
-  letter-spacing: -0.012em;
+  font: 600 1.625rem/1.22 var(--display);
+  letter-spacing: -0.024em;
   margin: 0 0 var(--s-3);
 }
 .project-name a { color: var(--ink); text-decoration: none; }

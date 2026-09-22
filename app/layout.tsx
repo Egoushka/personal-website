@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Instrument_Serif } from "next/font/google";
+import { Inter, Bricolage_Grotesque } from "next/font/google";
 import { site, feedTypes } from "@/lib/site";
 import "./globals.css";
 
@@ -17,22 +17,18 @@ const prose = Inter({
   variable: "--font-prose",
 });
 
-// Titles only, and never below ~21px.
+// Titles only.
 //
-// Literata was here once and it is the cautionary tale: a serif at 19px on a
-// 1.72 leading set the *prose*, which is an editorial setting and made the
-// site read a decade old. This is the opposite use. A high-contrast display
-// serif at 28-52px against a grotesk body and a monospace rail is three clearly
-// different voices, which is the whole point — one face at three sizes is not
-// a hierarchy, it is a gradient.
+// A second grotesk rather than a serif, because the serif this replaced was
+// elegant and belonged to a different kind of site. Bricolage is a display
+// grotesk with actual opinions — flat-sided bowls, a tight double-storey g,
+// terminals cut at angles Inter would never allow — so at 28px and up it does
+// not read as Inter-but-bigger, which is the entire job.
 //
-// 400 only, upright and italic: this face has no bold and does not want one.
-// No Cyrillic subset either, so anything outside latin falls through to the
-// stack below it in globals.css.
-const display = Instrument_Serif({
+// Variable, so `weight` is omitted and globals.css asks for 600 directly. No
+// Cyrillic subset: anything outside latin falls through to the stack below it.
+const display = Bricolage_Grotesque({
   subsets: ["latin"],
-  weight: ["400"],
-  style: ["normal", "italic"],
   display: "swap",
   variable: "--font-display",
 });
