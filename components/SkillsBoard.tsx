@@ -71,21 +71,30 @@ export default function SkillsBoard({ linkable }: { linkable: string[] }) {
 
   return (
     <div className="board">
-      {/* In the prose column, on the title's line. `.row` puts it there and
-          collapses with everything else at 900px. */}
+      {/* The first thing on the page now that the title is gone, so it is a
+          field rather than a box: the whole thing is the target, the glyph
+          says what it does without a label taking a line, and the count lives
+          inside it. `.row` puts it in the prose column and collapses it with
+          everything else at 900px. */}
       <div className="row">
         <div className="board-filter">
-          <label>
-            <span className="visually-hidden">Filter the skills</span>
-            <input
-              type="text"
-              value={q}
-              placeholder="filter"
-              onChange={(e) => setQ(e.target.value)}
-              spellCheck={false}
-            />
+          <span className="board-filter-mark" aria-hidden="true">
+            <Icon name="search" />
+          </span>
+          <label className="visually-hidden" htmlFor="skills-filter">
+            Filter the skills
           </label>
-          {/* Always in the DOM so the count is announced when it changes. */}
+          <input
+            id="skills-filter"
+            type="search"
+            value={q}
+            placeholder="Filter — postgres, docker, jobs"
+            onChange={(e) => setQ(e.target.value)}
+            spellCheck={false}
+            autoComplete="off"
+          />
+          {/* Always in the DOM so a change is announced rather than an
+              insertion. Empty until the list is actually narrowed. */}
           <span className="board-count" aria-live="polite">
             {query ? `${shown} of ${total}` : ""}
           </span>

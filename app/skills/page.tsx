@@ -33,11 +33,12 @@ export const metadata: Metadata = {
  * a machine they run themselves, which is the only version of this page that
  * is hard to copy.
  *
- * The head is a title and nothing else. It carried a figures line and a lede
- * explaining the bars; both were a page describing itself before it showed
- * anything, and the list is legible without either. What the bars are is in
- * the metadata description, where a search result needs it and a reader who is
- * already here does not.
+ * There is no visible head at all. It carried a title, a figures line and a
+ * lede explaining the bars, and all three were the page describing itself
+ * before it showed anything. The nav already says which page this is and the
+ * list is legible without any of it. What the bars are lives in the metadata
+ * description, where a search result needs it and a reader who is already here
+ * does not. The `<h1>` is still in the DOM — see PageHead's `quiet`.
  */
 export default function Skills() {
   const linkable = getTopicUsage().map((t) => t.slug);
@@ -46,7 +47,7 @@ export default function Skills() {
     <main id="main" className="wrap skills-page">
       <Nav current="skills" />
 
-      <PageHead title="Skills" />
+      <PageHead title="Skills" quiet />
 
       <SkillsBoard linkable={linkable} />
 

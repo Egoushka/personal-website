@@ -42,6 +42,7 @@ export default function Projects() {
 
       <PageHead
         title="Projects"
+        quiet
         figures={
           <>
             <span>{projects.length} projects</span>
@@ -49,7 +50,6 @@ export default function Projects() {
             <span><a href={site.github} rel="noopener">GitHub</a></span>
           </>
         }
-        lede="Each one exists because the alternative was worse, and most of them are best described by what they refuse to do. Only the first is something you can install; the rest run for one user, and the repositories are private."
       />
 
       <ProjectFilter projects={projects} topics={topics} />

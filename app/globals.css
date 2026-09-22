@@ -487,6 +487,14 @@ hr.bleed {
 
 .page-head { padding-top: var(--s-8); }
 .page-head h1 { margin: 0; }
+/* No visible title, so the figures line is the first thing and the block that
+   was reserving room for a 40px heading should stop. */
+.page-head--quiet { padding-top: var(--s-7); }
+.page-head--quiet .page-figures { margin-top: 0; }
+/* A quiet head with no figures and no lede renders nothing at all, so it must
+   not go on reserving the room a title would have taken. /skills/ opens on its
+   filter; the space above it belongs to the header rule, not to a ghost. */
+.page-head--quiet:not(:has(.page-figures)):not(:has(.page-lede)) { padding-top: 0; }
 
 /* A RUN — several facts on one line, separated by space.
 
@@ -1859,22 +1867,54 @@ figure figcaption {
    There was a live bar here — containers, uptime, editor hours, health — and
    it was the home page's instrument panel said a second time, on the page
    least about the box. The measured shares still arrive from the same
-   /status.json; they are in the bars, where they mean something. */
-.board-filter { display: flex; align-items: baseline; gap: var(--s-4); }
-.board-filter input {
-  width: 11rem;
-  background: var(--paper);
+   /status.json; they are in the bars, where they mean something.
+
+   It is a field rather than a bare input because it now opens the page: the
+   border is the control, the glyph carries the label, and the count sits
+   inside it rather than floating beside it. The input keeps no border of its
+   own and no focus ring — the ring belongs to the field, via :focus-within,
+   which is what the reader is actually looking at. */
+.board-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 0 var(--s-4);
   border: var(--hair) solid var(--rule-firm);
-  border-radius: 6px;
-  padding: 6px 10px;
-  color: var(--ink);
-  font: 400 var(--fs-code)/1.6 var(--figure);
-  min-height: 30px;                       /* WCAG 2.5.8 */
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
 }
-.board-filter input::placeholder { color: var(--ink-2); opacity: .7; }
+.board-filter:hover { background: var(--surface-2); }
+/* The replacement for the input's own outline, not the absence of one. */
+.board-filter:focus-within {
+  border-color: var(--accent);
+  background: var(--paper);
+  box-shadow: 0 0 0 3px var(--accent-quiet);
+}
+.board-filter-mark { display: flex; color: var(--ink-2); flex: 0 0 auto; }
+.board-filter:focus-within .board-filter-mark { color: var(--accent); }
+
+.board-filter input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 46px;                       /* WCAG 2.5.8, and it reads as a field */
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: var(--w-body) var(--fs-body)/1 var(--prose);
+}
+.board-filter input:focus { outline: none; }   /* the field carries it */
+.board-filter input::placeholder { color: var(--ink-2); }
+/* Safari draws its own clear button on type=search and it lands on the border. */
+.board-filter input::-webkit-search-decoration,
+.board-filter input::-webkit-search-cancel-button { -webkit-appearance: none; }
+
 .board-count {
-  font: 400 var(--fs-rail)/1 var(--figure);
+  flex: 0 0 auto;
+  font: var(--w-body) var(--fs-rail)/1 var(--figure);
+  letter-spacing: var(--ls-rail);
   font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
   color: var(--ink-2);
 }
 
