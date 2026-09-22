@@ -6,9 +6,8 @@ import Footer from "@/components/Footer";
 import PageHead from "@/components/PageHead";
 import Picture, { hasPicture } from "@/components/Picture";
 import UsesStatus from "@/components/UsesStatus";
-import TopicMap from "@/components/TopicMap";
 import { site, feedTypes, experience, now, uses, usesUpdated } from "@/lib/site";
-import { getReadings, getTopicUsage } from "@/lib/readings";
+import { getReadings } from "@/lib/readings";
 
 const description =
   "Backend-leaning full-stack developer in Ukraine. C# / .NET and ASP.NET Core, Angular when the work reaches the front end, and a homelab run like production.";
@@ -112,34 +111,31 @@ export default function About() {
         ))}
       </div>
 
+      {/*
+        The stack used to be listed here in full, and again on /stack/ — the
+        same twenty-odd rows, twice, with the second copy carrying a graph. One
+        of them had to go, and it was this one: a page about a person should
+        say what he is like, and a page about a stack should carry the stack.
+      */}
       <hr className="bleed" />
       <section className="row">
         <span className="rail rail--against-body">
           <span className="rail--label">The stack</span>
           <span>verified {usesUpdated}</span>
-          {/* Adds live state when /status.json is fresh; renders nothing otherwise. */}
           <UsesStatus />
         </span>
         <div>
           <div className="section-head">
-            <h2>Everything I actually use</h2>
+            <h2>What I actually run</h2>
+            <Link href="/stack/">the whole stack</Link>
           </div>
+          <p className="page-lede">
+            One box, every service defined in git. The full list — what I use,
+            what I would put my name to, and what connects to what — is on{" "}
+            <Link href="/stack/">the stack page</Link>.
+          </p>
         </div>
       </section>
-
-      {/*
-        The graph, the filter and the list share one filter query, so they live in
-        one client component. `uses` is plain serialisable data from lib/site.ts —
-        it passes through, it is not fetched.
-      */}
-      <TopicMap groups={uses} linkable={getTopicUsage().map((t) => t.slug)} showGraph={false} />
-
-      <p className="page-figures">
-        <span>
-          The same stack as a graph you can pull apart lives on{" "}
-          <Link href="/stack/">the stack page</Link>.
-        </span>
-      </p>
 
       <Footer />
     </main>

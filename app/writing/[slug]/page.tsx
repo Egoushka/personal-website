@@ -137,33 +137,40 @@ export default async function PostPage(
                 </>
               ),
               /*
-                The code block is hung off the rail: language label and copy
-                button in the margin, the block itself bleeding left into the
-                gutter. The copy button is server-rendered inside React's tree —
-                an earlier version injected it after parse, and hydration
-                reconciled the <pre> and stripped it back out.
+                A code block is one object, not two.
+
+                It used to hang off the rail — language label and copy button
+                out in the margin, the block itself bleeding left into the
+                gutter — so the code started at a different left edge from
+                every sentence around it, and the control that acted on it sat
+                somewhere else entirely. Now it is a figure in the prose
+                column: its own header carrying the language and the copy
+                button, and the code beneath, sharing the paragraph's edge.
+
+                The button is server-rendered inside React's tree. An earlier
+                version injected it after parse and hydration reconciled the
+                <pre> and stripped it straight back out.
               */
               pre: ({ children, className, ...props }) => {
                 const lang = extractLang(children, props);
                 return (
-                  <div className="row">
-                    <div className="rail">
-                      {lang && <span className="rail--label">{lang}</span>}
+                  <figure className="code">
+                    <figcaption className="code-head">
+                      <span className="code-lang">{lang}</span>
                       <button type="button" className="copy-btn" aria-label="Copy code to clipboard">
-                        copy
+                        Copy
                       </button>
-                    </div>
+                    </figcaption>
                     {/*
-                      Shiki puts its own className on the <pre> it produces. It has
-                      to be merged, not spread over the top: `{...props}` after a
-                      literal className silently dropped `bleed-code`, so
-                      highlighted blocks stopped bleeding into the gutter while
-                      untagged ones still did.
+                      Shiki puts its own className on the <pre> it produces, and
+                      it has to be merged rather than spread over the top:
+                      `{...props}` after a literal className silently dropped
+                      ours once already.
                     */}
-                    <pre className={`bleed-code${className ? ` ${className}` : ""}`} {...props}>
+                    <pre className={className} {...props}>
                       {children}
                     </pre>
-                  </div>
+                  </figure>
                 );
               },
             }}
@@ -206,21 +213,20 @@ export default async function PostPage(
           One delegated listener on document, rather than a listener per button:
           it survives any DOM reconciliation and costs nothing per code block.
           Still a plain script and not a client component — a React island for one
-          button would put hydration on every post. The button lives in the rail,
-          so it walks up to .row rather than to its parent.
+          button would put hydration on every post.
         */}
         <script
           dangerouslySetInnerHTML={{
             __html: `document.addEventListener("click",function(e){
   var b=e.target.closest&&e.target.closest(".copy-btn"); if(!b) return;
-  var row=b.closest(".row"); if(!row) return;
-  var pre=row.querySelector("pre"); if(!pre) return;
+  var block=b.closest("figure.code"); if(!block) return;
+  var pre=block.querySelector("pre"); if(!pre) return;
   var code=pre.querySelector("code")||pre;
   // clipboard is undefined outside a secure context; bail rather than throw
   if(!navigator.clipboard){ b.textContent="no clipboard"; return; }
   navigator.clipboard.writeText(code.innerText).then(function(){
-    b.textContent="copied"; b.classList.add("is-copied");
-    setTimeout(function(){b.textContent="copy";b.classList.remove("is-copied")},1600);
+    b.textContent="Copied"; b.classList.add("is-copied");
+    setTimeout(function(){b.textContent="Copy";b.classList.remove("is-copied")},1600);
   },function(){ b.textContent="failed"; });
 });`,
           }}

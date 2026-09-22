@@ -519,7 +519,7 @@ export const eras: Era[] = [
       "It is also where I stopped taking whatever was offered. When it ended I wrote down — for myself, in a message to a friend — exactly which work suits me and which does not: integrations, parsers, CLI tools and data processing on .NET, yes; complex business logic in Python, no; anything without clear business rules, no. I have not deviated from that list since, and this site exists partly to say it out loud.",
     ],
     obstacle:
-      "Day five of the next search is in my own messages, and so is the rejection on the thirteenth. It took until August to land.",
+      "It ended in June and the next one did not start until August. Day five of that search is in my own messages, and so is the rejection on the thirteenth.",
   },
   {
     slug: "umbraco",

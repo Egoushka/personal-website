@@ -497,9 +497,6 @@ main { counter-reset: sect; }
 pre {
   background: var(--surface);
   border: var(--hair) solid var(--rule);
-  /* The 2px accent left edge is what makes a code block read as hung off the
-     rail rather than dropped into the column. */
-  border-left: 2px solid var(--accent);
   border-radius: var(--radius);
   padding: var(--s-4) 18px;
   font: 400 var(--fs-code)/var(--lh-code) var(--code);
@@ -518,22 +515,57 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
   :root:not([data-theme="dark"]) .shiki span { color: var(--s-light); }
 }
 
-/* The copy button lives in the rail, under the language label — not floating
-   over the code. */
+/* A code block is one object: a header carrying the language and the copy
+   button, and the code under it, sharing the left edge of the prose. The old
+   version put the label and the button out in the rail and bled the code into
+   the gutter, so the code and the sentence explaining it started at different
+   places and the control that acted on the block sat somewhere else. */
+figure.code {
+  margin: 0;
+  border: var(--hair) solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+.code-head {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: var(--s-4);
+  padding: var(--s-2) var(--s-3) var(--s-2) var(--s-4);
+  border-bottom: var(--hair) solid var(--rule);
+}
+.code-lang:empty { display: none; }
+.code-lang {
+  margin-inline-end: auto;
+  font: 400 var(--fs-rail)/1 var(--figure);
+  letter-spacing: var(--ls-rail);
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+figure.code pre {
+  border: 0;
+  background: none;
+  border-radius: 0;
+  padding: var(--s-4);
+}
 .copy-btn {
-  font: 400 11.5px/1 var(--figure);
+  font: 400 var(--fs-rail)/1 var(--figure);
   letter-spacing: var(--ls-rail);
   color: var(--ink-2);
   background: none;
-  border: 0;
-  padding: 0;
+  border: var(--hair) solid transparent;
+  border-radius: 6px;
+  padding: 0 var(--s-2);
   cursor: pointer;
-  text-align: left;
-  min-height: 24px; min-width: 24px;   /* WCAG 2.5.8 */
+  min-height: 24px;                     /* WCAG 2.5.8 */
   display: inline-flex; align-items: center;
+  transition: color .12s ease, border-color .12s ease, background .12s ease;
 }
-.copy-btn:hover     { color: var(--accent); }
-.copy-btn.is-copied { color: var(--accent); }
+.copy-btn:hover {
+  color: var(--ink);
+  border-color: var(--rule-firm);
+  background: var(--surface-2);
+}
+.copy-btn.is-copied { color: var(--accent); border-color: var(--accent); }
 
 /* ============================================================================
    TABLE OF CONTENTS — static links in the rail, no scroll-spy
@@ -844,7 +876,7 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
   margin: var(--s-8) 0 var(--s-5);
 }
 
-.project-name { font-size: var(--fs-h3); margin: 0; }
+.project-name { font-size: var(--fs-h3); margin: 0 0 var(--s-3); }
 .project-name a { color: var(--ink); text-decoration: none; }
 .project-name a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
 
@@ -854,7 +886,7 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
   padding-top: var(--s-6);
   border-top: var(--hair) solid var(--rule);
 }
-.project-row p { margin: var(--s-2) 0 0; font-size: var(--fs-small); color: var(--ink-2); }
+.project-row p { margin: var(--s-4) 0 0; font-size: var(--fs-small); color: var(--ink-2); }
 
 /* Status is a word, not a coloured pill. "running" is the normal case and must
    not shout; there is no state here that needs an alarm colour. */
@@ -1825,8 +1857,34 @@ figure figcaption {
 }
 .orbit-figure figcaption strong { color: var(--ink); font-weight: 500; }
 
-.stack-list { grid-column: 1 / -1; margin-top: var(--s-10); }
-.stack-list .row + .row { margin-top: var(--s-8); }
+/* The skills, as columns rather than a stack of definition lists. Three
+   columns of short rows read in one pass; twenty-three rows in a single file
+   is a scroll, and it was the reason this page ended in a wall. */
+.stack-groups {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: var(--s-8) var(--s-7);
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  margin-top: var(--s-10);
+}
+.stack-groups--box { grid-column: auto; margin-top: var(--s-5); }
+
+.stack-group h2, .stack-group h3 { margin: 0 0 var(--s-4); }
+.stack-group ul { list-style: none; margin: 0; padding: 0; }
+.stack-group li {
+  padding: var(--s-3) 0;
+  border-top: var(--hair) solid var(--rule);
+}
+.stack-name {
+  display: flex; align-items: baseline; gap: var(--s-2); flex-wrap: wrap;
+  font-weight: 500;
+}
+.stack-now {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--fs-small);
+  color: var(--ink-2);
+}
 
 @media (prefers-reduced-motion: reduce) {
   .orbit-link, .orbit-node circle, .orbit-node text { transition: none; }

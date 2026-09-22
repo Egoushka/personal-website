@@ -19,12 +19,12 @@ import { skills } from "@/lib/site";
  * of this radius is 80-odd pixels apiece.
  */
 
-const W = 1000;
-const H = 780;
+const W = 1240;
+const H = 900;
 const CX = W / 2;
 const CY = H / 2;
-const R_GROUP = 132;
-const R_SKILL = 268;
+const R_GROUP = 168;
+const R_SKILL = 348;
 
 type Placed = {
   name: string;
@@ -137,7 +137,12 @@ export default function StackOrbit() {
           );
         })}
       </svg>
-      <figcaption>{chosen ? <><strong>{chosen.name}</strong> {chosen.now}</> : "Hover anything."}</figcaption>
+      {/* No placeholder. An empty caption that says "hover anything" is an
+          instruction nobody needs and a line of text that is wrong the moment
+          you do. The space is reserved in CSS so nothing moves. */}
+      <figcaption aria-live="polite">
+        {chosen && <><strong>{chosen.name}</strong> {chosen.now}</>}
+      </figcaption>
     </figure>
   );
 }
