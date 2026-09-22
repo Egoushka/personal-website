@@ -3,7 +3,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import PageHead from "@/components/PageHead";
 import SkillsBoard from "@/components/SkillsBoard";
-import { site, feedTypes, skills } from "@/lib/site";
+import { site, feedTypes } from "@/lib/site";
 import { getTopicUsage } from "@/lib/readings";
 
 const description =
@@ -33,10 +33,11 @@ export const metadata: Metadata = {
  * a machine they run themselves, which is the only version of this page that
  * is hard to copy.
  *
- * The figures line counts groups and says what the bars are not. It used to
- * count the skills too — a total is the one number on this page that invites
- * the reader to compare it with somebody else's, which is the opposite of the
- * argument the page is making.
+ * The head is a title and nothing else. It carried a figures line and a lede
+ * explaining the bars; both were a page describing itself before it showed
+ * anything, and the list is legible without either. What the bars are is in
+ * the metadata description, where a search result needs it and a reader who is
+ * already here does not.
  */
 export default function Skills() {
   const linkable = getTopicUsage().map((t) => t.slug);
@@ -45,16 +46,7 @@ export default function Skills() {
     <main id="main" className="wrap skills-page">
       <Nav current="skills" />
 
-      <PageHead
-        title="Skills"
-        figures={
-          <>
-            <span>{skills.length} groups</span>
-            <span>measured, not rated</span>
-          </>
-        }
-        lede="What I would put my name to. The bars are real: they are the share of my editor time over the last thirty days, read from a Wakapi on my own box, and most rows do not have one because most work is not a language a plugin can see."
-      />
+      <PageHead title="Skills" />
 
       <SkillsBoard linkable={linkable} />
 

@@ -1,23 +1,40 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Instrument_Serif } from "next/font/google";
 import { site, feedTypes } from "@/lib/site";
 import "./globals.css";
 
 // Downloaded and self-hosted at build time — no request to Google from the
 // browser, and no render-blocking cross-origin stylesheet on the critical path.
 //
-// ONE family now. Literata set the prose and it was the single thing that made
-// this site read as older than it is: a serif at 19px on a 1.72 leading is an
-// editorial setting, and this is not a magazine. Inter carries the whole site,
-// and the metadata that used to be set in it has moved to the system monospace
-// — which costs nothing to load and reads as a developer rather than a
-// broadsheet.
+// Inter reads everything. It also set every heading, and one grotesk doing all
+// three jobs is why the site read as one long undifferentiated column: the
+// only thing separating a title from a paragraph was eight points of size.
 const prose = Inter({
   // cyrillic carries "Hrabovskyi" and any Ukrainian strings.
   subsets: ["latin", "cyrillic"],
   weight: ["400", "500", "600"],
   display: "swap",
   variable: "--font-prose",
+});
+
+// Titles only, and never below ~21px.
+//
+// Literata was here once and it is the cautionary tale: a serif at 19px on a
+// 1.72 leading set the *prose*, which is an editorial setting and made the
+// site read a decade old. This is the opposite use. A high-contrast display
+// serif at 28-52px against a grotesk body and a monospace rail is three clearly
+// different voices, which is the whole point — one face at three sizes is not
+// a hierarchy, it is a gradient.
+//
+// 400 only, upright and italic: this face has no bold and does not want one.
+// No Cyrillic subset either, so anything outside latin falls through to the
+// stack below it in globals.css.
+const display = Instrument_Serif({
+  subsets: ["latin"],
+  weight: ["400"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-display",
 });
 
 export const metadata: Metadata = {
@@ -63,7 +80,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={prose.variable}
+      className={`${prose.variable} ${display.variable}`}
     >
       <body>
         {/*

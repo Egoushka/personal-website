@@ -119,11 +119,16 @@ The rule now is *justify each one*, not *never*. Three exist:
   pretending to be evidence. Figures that genuinely cannot be counted here live in
   `Project.readings` and **each names its source**. It reads the filesystem and the
   build clock: **never import it from a client component.**
-- **Fonts are self-hosted by `next/font/google`** in [app/layout.tsx](app/layout.tsx), exposed as
-  `--font-prose` / `--font-figure` and consumed by `--prose` / `--figure` in `globals.css`.
-  Code uses `--code`, a system monospace with no webfont. Do not add a `<link>` to
-  fonts.googleapis.com — it puts a render-blocking cross-origin request back on the critical
-  path and loses the `size-adjust` fallback that keeps CLS at 0.
+- **Three faces, two of them webfonts**, self-hosted by `next/font/google` in
+  [app/layout.tsx](app/layout.tsx): Inter as `--font-prose` → `--prose` (body, h3, everything read
+  at length) and Instrument Serif as `--font-display` → `--display` (h1, h2, `.post-row > a`,
+  `.project-name`). `--figure` and `--code` are system monospace with no webfont.
+  **`--display` never goes below ~21px** — it is a high-contrast face whose thin strokes
+  stop rendering, which is why h3 is still Inter and why the previous serif-as-body design
+  read a decade old. It has no Cyrillic and no bold: set it at 400 and let non-latin fall
+  through to Georgia. Do not add a `<link>` to fonts.googleapis.com — it puts a
+  render-blocking cross-origin request back on the critical path and loses the
+  `size-adjust` fallback that keeps CLS at 0 (measured: 0.0002).
 - **All styling is one global stylesheet**, [app/globals.css](app/globals.css) — CSS variables at `:root`,
   plain class names (`.sheet`, `.ledger-row`, `.entry-line`). No Tailwind, no CSS modules, no
   styled-components. **No inline `style={{}}`** — add a class instead.
