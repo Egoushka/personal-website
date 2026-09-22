@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
-import React from "react";
-import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import PageHead from "@/components/PageHead";
-import PostList from "@/components/PostList";
+import PostFilter, { type PostRow } from "@/components/PostFilter";
 import { site, feedTypes } from "@/lib/site";
-import { getAllPosts, getTopicCounts } from "@/lib/posts";
+import { getAllPosts, getTopicCounts, formatDate } from "@/lib/posts";
 import { getReadings, n, latestPhrase } from "@/lib/readings";
 import { topicName } from "@/lib/topics";
 
@@ -28,16 +26,43 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: `Writing — ${site.name}`, description },
 };
 
+/** `2026-07-28` → `July 2026`. The running head, one step coarser than the date. */
+function formatMonth(iso: string): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return iso.slice(0, 7);
+  return d.toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
+}
+
 export default function WritingIndex() {
   const r = getReadings();
 
-  // Grouped by year, newest first. The year is a running head in the rail, not a
-  // heading in the prose column — it is a fact about the group, not content.
-  const byYear = new Map<string, ReturnType<typeof getAllPosts>>();
-  for (const p of getAllPosts()) {
-    const year = p.date.slice(0, 4);
-    byYear.set(year, [...(byYear.get(year) ?? []), p]);
-  }
+  /*
+    The index used to group by year, with the year set large in the rail. Every
+    post on this site was published in one year, so the grouping drew a heading
+    the width of the page around *all* of them and told the reader nothing. The
+    month is the finest grouping that still varies, and the order is now the
+    reader's to choose — so the running head follows the sort rather than being
+    a fact the page insists on.
+
+    Formatting happens here because PostFilter is a client component and
+    lib/posts.ts reads the filesystem.
+  */
+  const rows: PostRow[] = getAllPosts().map((p) => ({
+    slug: p.slug,
+    title: p.title,
+    description: p.description,
+    dateLabel: formatDate(p.date),
+    month: formatMonth(p.date),
+    readingTime: p.readingTime,
+    wordCount: p.wordCount,
+    topics: p.topics,
+  }));
+
+  const topics = getTopicCounts().map(({ topic, count }) => ({
+    slug: topic,
+    name: topicName(topic),
+    count,
+  }));
 
   return (
     <main id="main" className="wrap">
@@ -56,30 +81,7 @@ export default function WritingIndex() {
         }
       />
 
-      {/*
-        Topics run under the head rather than down the rail. In the rail they land
-        in column one of the row *after* the head, which opens a hole the width of
-        the page between the title and the first post.
-      */}
-      <ul className="topic-run">
-        {getTopicCounts().map(({ topic, count }) => (
-          <li key={topic}>
-            <Link href={`/topics/${topic}/`}>
-              {topicName(topic)} <span className="rail-count">{count}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-
-      {[...byYear.entries()].map(([year, posts]) => (
-        <React.Fragment key={year}>
-          <hr className="bleed" />
-          <section className="row">
-            <span className="rail year-head">{year}</span>
-            <PostList posts={posts} />
-          </section>
-        </React.Fragment>
-      ))}
+      <PostFilter posts={rows} topics={topics} />
 
       <Footer />
     </main>

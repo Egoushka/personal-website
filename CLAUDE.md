@@ -65,15 +65,17 @@ The rule now is *justify each one*, not *never*. Three exist:
 | [UsesStatus.tsx](components/UsesStatus.tsx) | fetches `/status.json` at view time; the build cannot know what is running |
 | [TopicMap.tsx](components/TopicMap.tsx) | filter state shared by a graph and a list; hover/focus selection |
 | [ProjectFilter.tsx](components/ProjectFilter.tsx) | topic filter over the project index |
+| [PostFilter.tsx](components/PostFilter.tsx) | multi-select topic filter + sort order over the writing index |
 
 - Static export still applies. A client component hydrates in the browser; it does
   not get a server. No server actions, no data fetching at request time.
 - **Every one of them must render something useful before JS runs, or degrade to
   nothing.** `TopicMap`'s graph is in the static HTML and its text equivalent is a
   real `<ul>`; `UsesStatus` renders `null` when `/status.json` is missing or older
-  than 48 hours; `ProjectFilter` server-renders every project and the filter only
-  ever *removes* rows, so with JS off the page is a complete list. A client
-  component whose absence leaves a blank hole does not belong on this site.
+  than 48 hours; `ProjectFilter` and `PostFilter` server-render every project and
+  every post, and filtering only *removes* rows while sorting only reorders them,
+  so with JS off each page is a complete list. A client component whose absence
+  leaves a blank hole does not belong on this site.
 - **No `Math.random()` or `Date.now()` in render.** `TopicMap` derives its
   per-node animation delay from the node index for exactly this reason — a random
   value differs between server and client and breaks hydration.
@@ -90,6 +92,20 @@ The rule now is *justify each one*, not *never*. Three exist:
   node's position is a `transform` *attribute*, which maps to the `transform`
   *property* — animating that property replaces the position and collapses every
   node onto the origin. `translate` composes on top of it. See `.graph-node`.
+- **Nothing in the post grid may span rows.** A grid item placed across two
+  auto-sized rows makes those rows grow to hold it, so the old header rail
+  (`grid-row: 1 / span 2`, carrying topics and the contents list) pushed the
+  post's date a quarter of a screen below its title. The post is a title block
+  above a `.post-layout` — one row, sticky `.post-aside` in column one, the
+  article in column two — and the section numbers moved out of the margin into
+  the headings (`.sect-mark`), because the sidebar owns that column now.
+- **The contents list's scroller is `.post-aside`, not `.toc`.** Chrome's
+  `::details-content` puts a box between them that `display: contents` does not
+  remove, so a `max-height` on the `<ol>` is a height the wrapper overflows
+  freely. The scroll-spy that marks the reader's position is a plain script, not
+  a client component — hydrating every post for thirty lines of DOM work is not
+  worth it — and everything it sets (`aria-current`, `--toc-y`, `--toc-h`) is
+  decoration over links that already work.
 - **A closed `<details>` with `display: contents` no longer shows its content.**
   Chrome 131 gave `<details>` a real `::details-content` pseudo-element and moved
   the closed state onto it as `content-visibility: hidden`, which `display:

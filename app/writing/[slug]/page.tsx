@@ -17,8 +17,8 @@ import {
   tableOfContents,
   getRelatedPosts,
 } from "@/lib/posts";
-import { getReadings, n } from "@/lib/readings";
-import { topicName } from "@/lib/topics";
+import { getReadings, getTopicUsage, n } from "@/lib/readings";
+import { TOPICS, isTopic, topicName } from "@/lib/topics";
 
 type Params = { slug: string };
 
@@ -63,6 +63,7 @@ export default async function PostPage(
   const post = getPost(slug);
   const toc = tableOfContents(post.content);
   const related = getRelatedPosts(slug, 1)[0];
+  const usage = getTopicUsage();
   const daysAgo = Math.round(
     (Date.parse(getReadings().builtOn) - Date.parse(post.date)) / 86_400_000,
   );
@@ -73,42 +74,18 @@ export default async function PostPage(
         <Nav current="writing" />
         <BlogPostingLd post={post} />
 
-        <article className="prose">
         {/*
-          The header rail is the article's first child, not a sibling: it has to
-          share grid rows with the h1 and the standfirst, and a sibling of the
-          subgrid can only ever start its own row.
+          The title and its figures are their own block above the two-column
+          body, and not rows the sidebar spans.
+
+          They used to be: the header rail was placed `grid-row: 1 / span 2` so
+          the topics and the contents list could sit beside the h1. A grid item
+          spanning auto-sized rows makes those rows grow to hold it, so an
+          eight-entry table of contents pushed the date roughly 250px clear of
+          the title it belonged to. Nothing spans rows now, so nothing can
+          stretch them.
         */}
-        <div className="rail rail--header">
-          {post.topics.length > 0 && (
-            <span className="rail--topics">
-              {post.topics.map((t) => (
-                <Link key={t} href={`/topics/${t}/`}>{topicName(t)}</Link>
-              ))}
-            </span>
-          )}
-
-          {/*
-            Static links, no current-item highlight: CSS cannot select a TOC entry
-            from a :target further down the document, and scroll-spy JS is not an
-            option on this site. `h2:target` in globals.css gives the reader
-            confirmation of where they landed instead, in the prose column.
-            Below 900px this collapses to a closed <details> — the only place the
-            rail becomes interactive, and it needs no JavaScript.
-          */}
-          {toc.length > 1 && (
-            <details className="toc-details rail--group">
-              <summary>On this page <span className="rail-count">{toc.length}</span></summary>
-              <span className="rail--label">On this page</span>
-              <ol className="toc">
-                {toc.map((h) => (
-                  <li key={h.id}><a href={`#${h.id}`}>{h.text}</a></li>
-                ))}
-              </ol>
-            </details>
-          )}
-        </div>
-
+        <header className="post-head">
           <h1>{post.title}</h1>
           <p className="page-figures">
             <span><time dateTime={post.date}>{formatDate(post.date)}</time></span>
@@ -116,69 +93,105 @@ export default async function PostPage(
             <span>{post.readingTime} min read</span>
             <span>{daysAgo} {daysAgo === 1 ? "day" : "days"} ago</span>
           </p>
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[
-              rehypeSlug,
-              [rehypeShikiFromHighlighter, highlighter, shikiOptions],
-            ]}
-            components={{
-              /*
-                Every h2 gets a full-bleed hairline above it and its number in the
-                rail. The number is a CSS counter, so nothing in the markdown
-                pipeline has to know about section numbering.
-              */
-              h2: ({ children, ...props }) => (
-                <>
-                  <hr className="bleed" />
-                  <div className="row">
-                    <span className="rail rail--section" aria-hidden="true" />
-                    <h2 {...props}>{children}</h2>
-                  </div>
-                </>
-              ),
-              /*
-                A code block is one object, not two.
+        </header>
 
-                It used to hang off the rail — language label and copy button
-                out in the margin, the block itself bleeding left into the
-                gutter — so the code started at a different left edge from
-                every sentence around it, and the control that acted on it sat
-                somewhere else entirely. Now it is a figure in the prose
-                column: its own header carrying the language and the copy
-                button, and the code beneath, sharing the paragraph's edge.
+        {/*
+          One grid row holding a sticky rail and the article, rather than the
+          article spanning both columns. This is what lets the contents list
+          follow the reader the whole way down: a sticky item travels its grid
+          area, and here that area is the full height of the post.
+        */}
+        <div className="post-layout">
+          {toc.length > 1 && (
+            <aside className="post-aside">
+              {/*
+                Below 900px this collapses to a closed <details> — the one place
+                the rail becomes interactive without JavaScript. Above it the
+                disclosure dissolves and the list is a plain sticky column.
 
-                The button is server-rendered inside React's tree. An earlier
-                version injected it after parse and hydration reconciled the
-                <pre> and stripped it straight back out.
-              */
-              pre: ({ children, className, ...props }) => {
-                const lang = extractLang(children, props);
-                return (
-                  <figure className="code">
-                    <figcaption className="code-head">
-                      <span className="code-lang">{lang}</span>
-                      <button type="button" className="copy-btn" aria-label="Copy code to clipboard">
-                        Copy
-                      </button>
-                    </figcaption>
-                    {/*
-                      Shiki puts its own className on the <pre> it produces, and
-                      it has to be merged rather than spread over the top:
-                      `{...props}` after a literal className silently dropped
-                      ours once already.
-                    */}
-                    <pre className={className} {...props}>
+                The current-section mark IS JavaScript, and it is additive: the
+                links are in the static HTML and work with the indicator never
+                moving. See the scroll-spy script at the foot of this file.
+              */}
+              <details className="toc-details rail--group">
+                <summary>On this page <span className="rail-count">{toc.length}</span></summary>
+                <span className="rail--label">On this page</span>
+                <ol className="toc">
+                  {toc.map((h) => (
+                    <li key={h.id}><a href={`#${h.id}`}>{h.text}</a></li>
+                  ))}
+                </ol>
+              </details>
+            </aside>
+          )}
+
+          <article className="prose post-body">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[
+                rehypeSlug,
+                [rehypeShikiFromHighlighter, highlighter, shikiOptions],
+              ]}
+              components={{
+                /*
+                  Every h2 gets a full-width hairline above it and its number on
+                  the line above the words. The number is a CSS counter, so
+                  nothing in the markdown pipeline has to know about section
+                  numbering. It used to live out in the rail; the rail is the
+                  contents list now, and two things cannot share one column.
+                */
+                h2: ({ children, ...props }) => (
+                  <>
+                    <hr className="bleed" />
+                    <h2 {...props}>
+                      <span className="sect-mark" aria-hidden="true" />
                       {children}
-                    </pre>
-                  </figure>
-                );
-              },
-            }}
-          >
-            {post.content}
-          </ReactMarkdown>
-        </article>
+                    </h2>
+                  </>
+                ),
+                /*
+                  A code block is one object, not two.
+
+                  It used to hang off the rail — language label and copy button
+                  out in the margin, the block itself bleeding left into the
+                  gutter — so the code started at a different left edge from
+                  every sentence around it, and the control that acted on it sat
+                  somewhere else entirely. Now it is a figure in the prose
+                  column: its own header carrying the language and the copy
+                  button, and the code beneath, sharing the paragraph's edge.
+
+                  The button is server-rendered inside React's tree. An earlier
+                  version injected it after parse and hydration reconciled the
+                  <pre> and stripped it straight back out.
+                */
+                pre: ({ children, className, ...props }) => {
+                  const lang = extractLang(children, props);
+                  return (
+                    <figure className="code">
+                      <figcaption className="code-head">
+                        <span className="code-lang">{lang}</span>
+                        <button type="button" className="copy-btn" aria-label="Copy code to clipboard">
+                          Copy
+                        </button>
+                      </figcaption>
+                      {/*
+                        Shiki puts its own className on the <pre> it produces, and
+                        it has to be merged rather than spread over the top:
+                        `{...props}` after a literal className silently dropped
+                        ours once already.
+                      */}
+                      <pre className={className} {...props}>
+                        {children}
+                      </pre>
+                    </figure>
+                  );
+                },
+              }}
+            >
+              {post.content}
+            </ReactMarkdown>
+          </article>
+        </div>
 
         {/*
           The one measurement a piece of writing can make about itself: the words
@@ -195,6 +208,41 @@ export default async function PostPage(
             </p>
           </div>
         ) : null}
+
+        {/*
+          Topics, at the end, where a filing decision belongs — and carrying what
+          the reader actually wants from one: what the topic is, and how much
+          else is under it. Two words stacked in the margin said neither, and
+          they said it next to the title, before anyone had read a sentence.
+        */}
+        {post.topics.length > 0 && (
+          <>
+            <hr className="bleed" />
+            <section className="filed bleed" aria-labelledby="filed-under">
+              <h2 className="rail--label" id="filed-under">Filed under</h2>
+              <ul className="filed-list">
+                {post.topics.filter(isTopic).map((t) => {
+                  const u = usage.find((x) => x.slug === t);
+                  return (
+                    <li className="filed-item" key={t}>
+                      <Link href={`/topics/${t}/`}>{topicName(t)}</Link>
+                      <p>{TOPICS[t].blurb}</p>
+                      {/* Only what the topic actually has: "0 projects" is a
+                          true statement that reads as a shortfall. */}
+                      {u && (
+                        <span className="run filed-count">
+                          {u.posts > 0 && <span>{u.posts} {u.posts === 1 ? "post" : "posts"}</span>}
+                          {u.projects > 0 && <span>{u.projects} {u.projects === 1 ? "project" : "projects"}</span>}
+                          {u.jobs > 0 && <span>{u.jobs} {u.jobs === 1 ? "role" : "roles"}</span>}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          </>
+        )}
 
         {/* One link, not a grid of cards. */}
         {related && (
@@ -214,10 +262,19 @@ export default async function PostPage(
         <Comments url={`${site.url}/writing/${post.slug}/`} />
 
         {/*
-          One delegated listener on document, rather than a listener per button:
-          it survives any DOM reconciliation and costs nothing per code block.
-          Still a plain script and not a client component — a React island for one
-          button would put hydration on every post.
+          Two plain scripts rather than client components: a React island for a
+          copy button and a scroll position would put hydration on every post to
+          run about thirty lines of DOM work.
+
+          One — one delegated listener on document, rather than a listener per
+          code block: it survives any DOM reconciliation and costs nothing per
+          block.
+
+          Two — the contents list's current-section mark. Reads positions on a
+          rAF-throttled scroll, sets `aria-current` on the live link and two
+          custom properties the CSS draws the indicator from, and keeps the
+          active row inside the scrolling rail. Everything it touches is
+          decoration: with it removed the list is still a list of working links.
         */}
         <script
           dangerouslySetInnerHTML={{
@@ -232,7 +289,45 @@ export default async function PostPage(
     b.textContent="Copied"; b.classList.add("is-copied");
     setTimeout(function(){b.textContent="Copy";b.classList.remove("is-copied")},1600);
   },function(){ b.textContent="failed"; });
-});`,
+});
+(function(){
+  var ol=document.querySelector(".toc"); if(!ol) return;
+  var links=Array.prototype.slice.call(ol.querySelectorAll("a"));
+  var heads=links.map(function(a){
+    try { return document.getElementById(decodeURIComponent(a.hash.slice(1))); }
+    catch(_) { return null; }
+  });
+  var box=ol.closest(".post-aside")||ol;
+  var still=matchMedia("(prefers-reduced-motion: reduce)");
+  var cur=-1, queued=false;
+  function mark(){
+    queued=false;
+    var i=0;
+    // the last heading whose top has passed the reading line
+    for(var j=0;j<heads.length;j++){
+      if(heads[j] && heads[j].getBoundingClientRect().top<=140) i=j;
+    }
+    if(i===cur) return;
+    cur=i;
+    for(var k=0;k<links.length;k++){
+      if(k===i) links[k].setAttribute("aria-current","location");
+      else links[k].removeAttribute("aria-current");
+    }
+    var li=links[i].parentNode;
+    ol.style.setProperty("--toc-y", li.offsetTop+"px");
+    ol.style.setProperty("--toc-h", li.offsetHeight+"px");
+    // the rail scrolls independently once the list outruns the viewport
+    if(box.scrollHeight>box.clientHeight+1){
+      var top=ol.offsetTop+li.offsetTop-box.clientHeight/2+li.offsetHeight/2;
+      if(box.scrollTo) box.scrollTo({top:top,behavior:still.matches?"auto":"smooth"});
+      else box.scrollTop=top;
+    }
+  }
+  function schedule(){ if(!queued){ queued=true; requestAnimationFrame(mark); } }
+  addEventListener("scroll",schedule,{passive:true});
+  addEventListener("resize",function(){cur=-1;schedule();},{passive:true});
+  mark();
+})();`,
           }}
         />
       </main>
@@ -242,7 +337,7 @@ export default async function PostPage(
 }
 
 /**
- * The source language, for the rail label.
+ * The source language, for the code block's header.
  *
  * Two shapes to handle: rehype-shiki moves the language onto the <pre> as
  * `data-language` and strips `language-*` off the <code>, while an untagged
