@@ -55,36 +55,91 @@
   /* --- grid ---------------------------------------------------------------- */
   --rail:    168px;
   --gutter:   40px;
-  --measure: 640px;   /* ~66ch at --fs-body */
+  /* 640px is 64-69ch across the body step's range — the 60-70ch comfort band.
+     Nothing on this site sets a prose max-width above 66ch; see the audit note
+     on `.jr-note`, which was 74. */
+  --measure: 640px;
   --bleed:   calc(var(--rail) + var(--gutter) + var(--measure));
 
-  /* --- type scale ----------------------------------------------------------
-     Smaller body, bigger headings, and negative tracking on everything above
-     the body size — which is most of what separates a 2026 heading from a
-     2015 one. Linear's h1 ships at 56px, weight 510, -0.022em. */
-  --fs-display: 3.5000rem;  /* 56.0px */
-  --fs-h1:      2.7500rem;  /* 44.0px */
-  --fs-h2:      1.6875rem;  /* 27.0px */
-  --fs-h3:      1.1875rem;  /* 19.0px — still Inter. The display face stops
-                               being a different face once it is this small */
-  --fs-body:    0.9688rem;  /* 15.5px */
-  --fs-small:   0.8750rem;  /* 14.0px */
-  --fs-code:    0.8125rem;  /* 13.0px */
-  --fs-rail:    0.6875rem;  /* 11.0px — stays below body: never the first fixation */
+  /* --- type: ONE modular scale ----------------------------------------------
+     Eight steps, fluid between a 360px and a 1280px viewport. Every size on
+     this site resolves to one of them.
 
-  --lh-tight: 1.06;
-  --lh-head:  1.2;
-  --lh-body:  1.55;
-  --lh-code:  1.6;
-  --lh-rail:  1.45;
+     RATIO. 1.200 (minor third) at 360px widening to 1.250 (major third) at
+     1280px, so the hierarchy opens up where there is room for it and a 44px
+     page title stops eating half the fold on a phone. The two DESCENDING
+     steps use a flat 1.180 instead, deliberately: small text has almost no
+     room to lose before it stops being legible, so the bottom of a scale
+     should compress rather than mirror the top.
 
+     This is what was wrong before. Four sizes — 11, 13, 14, 15.5 — were
+     crowded into the bottom 1.4x, two of them 7% apart, while a single step
+     at the top spanned 1.63x (27 → 44). So labels and metadata were an
+     indistinguishable grey mush and there was no tier at all between a
+     sub-heading and a page title.
+
+     Steps are PRIMITIVES. Nothing outside this block references them: use the
+     semantic aliases below, and when something needs a size that is not
+     there, add an alias rather than a number. @media print redeclares all
+     eight in pt, because a `vw` unit must never reach paper. */
+  --step--2:   clamp(0.6956rem, 0.6780rem + 0.0783vw, 0.7406rem);   /* 11.13 → 11.85 */
+  --step--1:   clamp(0.8213rem, 0.8007rem + 0.0913vw, 0.8738rem);   /* 13.14 → 13.98 */
+  --step-0:    clamp(0.9688rem, 0.9443rem + 0.1087vw, 1.0312rem);   /* 15.50 → 16.50 */
+  --step-1:    clamp(1.1625rem, 1.1131rem + 0.2196vw, 1.2888rem);   /* 18.60 → 20.62 */
+  --step-2:    clamp(1.3950rem, 1.3104rem + 0.3761vw, 1.6113rem);   /* 22.32 → 25.78 */
+  --step-3:    clamp(1.6738rem, 1.5405rem + 0.5924vw, 2.0144rem);   /* 26.78 → 32.23 */
+  --step-4:    clamp(2.0088rem, 1.8097rem + 0.8848vw, 2.5175rem);   /* 32.14 → 40.28 */
+  --step-5:    clamp(2.4106rem, 2.1225rem + 1.2804vw, 3.1469rem);   /* 38.57 → 50.35 */
+
+  /* --- type: what each step is FOR -------------------------------------------
+     `--fs-small` and `--fs-code` resolve to the same step now. They were 14px
+     and 13px: a 7% difference nobody can perceive, maintained in sixty
+     places. `--fs-title` is the tier that did not exist — a title inside a
+     list, which must sit below any section heading above it. */
+  --fs-rail:    var(--step--2);   /* micro labels, uppercase, tracked   */
+  --fs-code:    var(--step--1);   /* code, and monospace metadata       */
+  --fs-small:   var(--step--1);   /* secondary prose: excerpts, notes   */
+  --fs-body:    var(--step-0);    /* anything read at length            */
+  --fs-h3:      var(--step-1);    /* lede, h3, run-in titles            */
+  --fs-title:   var(--step-2);    /* a title in a list — under any h2   */
+  --fs-h2:      var(--step-3);    /* section heads                      */
+  --fs-h1:      var(--step-4);    /* page titles                        */
+  --fs-display: var(--step-5);    /* hero, CV masthead, 404             */
+
+  /* --- leading: a function of size AND measure -------------------------------
+     Leading tracks line length, not taste. `--lh-body` is set for the 60-70ch
+     column that `--measure` produces; every step above it gets tighter as it
+     gets bigger, because a 50px line nineteen characters long needs none of
+     the 1.6 a 66-character line does. Do not put `--lh-body` on anything
+     narrower than ~45ch: it reads as a list, not a paragraph. */
+  --lh-flat:  1.04;   /* step 5,  ≤19ch  */
+  --lh-tight: 1.10;   /* step 4,  ≤24ch  */
+  --lh-head:  1.18;   /* step 3,  ≤30ch  */
+  --lh-snug:  1.28;   /* step 2,  ≤40ch  */
+  --lh-lede:  1.45;   /* step 1,  ≤56ch  */
+  --lh-body:  1.60;   /* step 0,  60-70ch */
+  --lh-rail:  1.45;   /* steps -1/-2, short runs */
+  --lh-code:  1.65;
+
+  /* Tracking tightens as size grows — the display face is a grotesk and wants
+     it. Below step 0 it goes POSITIVE, which is the whole reason 11px
+     uppercase is readable rather than a smudge. */
   --ls-display: -0.034em;
   --ls-h1:      -0.028em;
+  --ls-h2:      -0.024em;
+  --ls-h3:      -0.015em;
   --ls-rail:     0.08em;
+  --ls-label:    0.14em;
 
-  /* The weight a grotesk wants for a heading. 600 is heavy at these sizes and
-     reads as a 2015 hero; the reference value is 510-560. */
-  --w-head: 560;
+  /* --- weight and ink: the other half of the hierarchy -----------------------
+     Rank by weight and ink before reaching for size. Three weights, three
+     inks, and the accent is still only ever a link:
+       primary    --ink   + --w-med or --w-head
+       secondary  --ink-2 + --w-body, at the SAME size as its parent
+       metadata   --ink-2 + --figure at --fs-rail / --fs-code */
+  --w-body: 400;
+  --w-med:  500;
+  --w-head: 600;   /* Bricolage is wider and softer than Inter; 560 read thin */
 
   /* --- space: 4px rhythm --------------------------------------------------- */
   --s-1:  4px;  --s-2:  8px;  --s-3: 12px; --s-4: 16px;
@@ -221,10 +276,10 @@ h1, h2 {
   letter-spacing: var(--ls-h1);
 }
 h1 { font-size: var(--fs-h1); line-height: var(--lh-tight); }
-h2 { font-size: var(--fs-h2); line-height: 1.18; letter-spacing: -0.024em; }
+h2 { font-size: var(--fs-h2); line-height: var(--lh-head); letter-spacing: var(--ls-h2); }
 h3 {
-  font-size: var(--fs-h3); line-height: var(--lh-head);
-  font-weight: var(--w-head); letter-spacing: -0.015em;
+  font-size: var(--fs-h3); line-height: var(--lh-snug);
+  font-weight: var(--w-med); letter-spacing: var(--ls-h3);
 }
 p  { text-wrap: pretty; }
 
@@ -332,11 +387,13 @@ a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; 
 .rail a:hover { text-decoration-thickness: 2px; }
 
 /* Group label: sits above a hairline and introduces the stack beneath it. */
+/* THE MICRO LABEL. This recipe existed in six places, every one of them typed
+   out at 10.5px — outside the scale, and the single biggest reason labels and
+   metadata read as one undifferentiated grey. It is one declaration now and it
+   resolves to step -2. */
 .rail--label {
-  font-weight: 600;
-  font-size: 10.5px;
-  line-height: 1.4;
-  letter-spacing: .14em;
+  font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
+  letter-spacing: var(--ls-label);
   text-transform: uppercase;
   color: var(--ink-2);
 }
@@ -345,7 +402,7 @@ a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; 
   padding-top: 14px;
   margin-top: var(--s-3);
 }
-.rail--section { font-weight: 600; color: var(--accent); }
+.rail--section { font-weight: var(--w-head); color: var(--accent); }
 
 /* Topics in the rail: plain text, one per line. No chips.
    Stacked 11px lines are 16px tall, which is under the 24px floor every other
@@ -374,7 +431,7 @@ a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; 
   flex-wrap: wrap;
 }
 .site-header .brand {
-  font: 560 15px/1 var(--prose);
+  font: var(--w-head) var(--fs-body)/1 var(--prose);
   letter-spacing: -0.015em;
   color: var(--ink);
   text-decoration: none;
@@ -385,7 +442,7 @@ a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; 
 .site-header-controls { display: flex; align-items: center; gap: var(--s-2); }
 .site-header nav { display: flex; gap: 20px; flex-wrap: wrap; }
 .site-header nav a {
-  font: 400 14px/1 var(--prose);
+  font: var(--w-body) var(--fs-small)/1 var(--prose);
   color: var(--ink-2);
   text-decoration: none;
   /* WCAG 2.5.8 — the densest control cluster on the site. */
@@ -647,8 +704,8 @@ figure.code pre {
 /* A title in a list is still a title, whatever heading level the markup gives
    it. 26px is the floor: below it this face stops being a different face. */
 .post-row > a {
-  font: 600 1.625rem/1.22 var(--display);
-  letter-spacing: -0.024em;
+  font: var(--w-head) var(--fs-title)/var(--lh-snug) var(--display);
+  letter-spacing: var(--ls-h2);
   color: var(--ink);
   text-decoration: none;
   display: block;
@@ -854,12 +911,12 @@ figure.code pre {
 .fig { display: block; padding: var(--s-2) 0; }
 .fig-value {
   display: block;
-  font: 500 30px/1.1 var(--prose);
+  font: var(--w-med) var(--fs-title)/var(--lh-snug) var(--prose);
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
 }
 .fig-value em {
-  font-style: normal; font-size: 16px;
+  font-style: normal; font-size: var(--fs-body);
   color: var(--ink-2); margin-left: 2px;
 }
 .fig-label {
@@ -910,16 +967,16 @@ figure.code pre {
    be a fifth thing to keep in step. */
 .project-sublabel {
   display: block;
-  font: 600 10.5px/1.4 var(--figure);
-  letter-spacing: .14em;
+  font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
+  letter-spacing: var(--ls-label);
   text-transform: uppercase;
   color: var(--ink-2);
   margin: var(--s-8) 0 var(--s-5);
 }
 
 .project-name {
-  font: 600 1.625rem/1.22 var(--display);
-  letter-spacing: -0.024em;
+  font: var(--w-head) var(--fs-title)/var(--lh-snug) var(--display);
+  letter-spacing: var(--ls-h2);
   margin: 0 0 var(--s-3);
 }
 .project-name a { color: var(--ink); text-decoration: none; }
@@ -959,8 +1016,8 @@ figure.code pre {
   display: block;
 }
 .reading-label {
-  font: 600 10.5px/1.4 var(--figure);
-  letter-spacing: .14em;
+  font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
+  letter-spacing: var(--ls-label);
   text-transform: uppercase;
   color: var(--ink-2);
   display: block;
@@ -984,7 +1041,7 @@ figure.code pre {
   list-style: none;
 }
 .filter-chip {
-  font: 400 12px/1 var(--figure);
+  font: var(--w-body) var(--fs-rail)/1 var(--figure);
   letter-spacing: var(--ls-rail);
   text-transform: uppercase;
   color: var(--ink-2);
@@ -1092,8 +1149,8 @@ figure.code pre {
    number nobody can check, and this site does not print those. */
 .skill-groups { display: flex; flex-direction: column; gap: var(--s-7); }
 .skill-group h3 {
-  font: 600 10.5px/1.4 var(--figure);
-  letter-spacing: .14em;
+  font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
+  letter-spacing: var(--ls-label);
   text-transform: uppercase;
   color: var(--ink-2);
   margin: 0 0 var(--s-4);
@@ -1171,7 +1228,7 @@ figure.code pre {
 .control kbd { font: inherit; }
 
 kbd {
-  font: 400 10.5px/1 var(--figure);
+  font: var(--w-body) var(--fs-rail)/1 var(--figure);
   color: var(--ink-2);
   border: var(--hair) solid var(--rule);
   border-radius: var(--radius);
@@ -1190,7 +1247,7 @@ kbd {
   border-radius: var(--radius);
   color: var(--ink-2);
   cursor: pointer;
-  font: 400 11px/1 var(--figure);
+  font: var(--w-body) var(--fs-rail)/1 var(--figure);
   letter-spacing: var(--ls-rail);
 }
 .search-trigger:hover { color: var(--ink); border-color: var(--accent); }
@@ -1209,7 +1266,7 @@ kbd {
   border-radius: var(--radius);
   color: var(--ink-2);
   cursor: pointer;
-  font: 400 11px/1 var(--figure);
+  font: var(--w-body) var(--fs-rail)/1 var(--figure);
   letter-spacing: var(--ls-rail);
   text-transform: uppercase;
 }
@@ -1422,6 +1479,8 @@ kbd {
 .dg-arrowhead--accent { fill: var(--accent); }
 .dg-zone line { stroke: var(--rule); stroke-width: 1; stroke-dasharray: 3 4; }
 .dg-zone-label {
+  /* px on purpose: this is inside an SVG viewBox and scales with the drawing,
+     not with the viewport. The type scale does not apply. */
   fill: var(--ink-2); font-family: var(--figure); font-size: 10.5px;
   letter-spacing: .14em; text-transform: uppercase;
 }
@@ -1493,8 +1552,8 @@ figure figcaption {
 }
 .era-obstacle-label {
   display: block;
-  font: 600 10.5px/1.4 var(--figure);
-  letter-spacing: .14em;
+  font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
+  letter-spacing: var(--ls-label);
   text-transform: uppercase;
   color: var(--ink-2);
   margin-bottom: var(--s-2);
@@ -1540,8 +1599,8 @@ figure figcaption {
   .toc-details { display: block; }
   .toc-details > summary {
     display: list-item;
-    font: 600 10.5px/1.4 var(--figure);
-    letter-spacing: .14em;
+    font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
+    letter-spacing: var(--ls-label);
     text-transform: uppercase;
     color: var(--ink-2);
     cursor: pointer;
@@ -1587,6 +1646,23 @@ figure figcaption {
     --accent:    #14120F;   /* no colour on a printed CV             */
   }
   html { color-scheme: light; }
+
+  /* The screen scale is fluid and its `vw` term resolves against the PAPER
+     width in print — an A4 sheet is ~794px at 96dpi, which lands mid-ramp and
+     would silently resize a CV that has to fit one page. Every step is pinned
+     in points here, so the semantic aliases keep working and nothing on this
+     sheet can move when the screen scale is retuned. These eight values are
+     the contract with @page below: change one and re-measure the CV. */
+  :root, [data-theme="dark"], [data-theme="light"] {
+    --step--2:   7.5pt;
+    --step--1:   8.5pt;
+    --step-0:   10.0pt;
+    --step-1:   11.5pt;
+    --step-2:   13.0pt;
+    --step-3:   15.0pt;
+    --step-4:   18.0pt;
+    --step-5:   21.0pt;
+  }
 
   @page { size: A4; margin: 13mm 13mm; }
 
@@ -1965,7 +2041,7 @@ a.jr-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; 
 
 .jr-note {
   display: flex; gap: var(--s-3); align-items: flex-start;
-  margin: var(--s-6) 0 0; max-width: 74ch;
+  margin: var(--s-6) 0 0; max-width: 66ch;
   font-size: var(--fs-small); color: var(--ink-2);
 }
 .jr-note .icon { flex: 0 0 auto; margin-top: 3px; }
@@ -2015,7 +2091,7 @@ a.jr-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; 
 .lab-index ul { list-style: none; margin: var(--s-8) 0 0; padding: 0; }
 .lab-index li { padding: var(--s-5) 0; border-top: var(--hair) solid var(--rule); }
 .lab-index li a { font-size: var(--fs-h3); font-weight: 500; }
-.lab-index li p { margin: var(--s-2) 0 0; color: var(--ink-2); font-size: var(--fs-small); max-width: 68ch; }
+.lab-index li p { margin: var(--s-2) 0 0; color: var(--ink-2); font-size: var(--fs-small); max-width: 66ch; }
 
 /* ── ONE: a sky ─────────────────────────────────────────────────────────── */
 .sky {
@@ -2056,7 +2132,7 @@ a.jr-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; 
 .star:focus-visible text { fill: var(--ink); text-decoration: underline; }
 
 .sky-group {
-  fill: var(--ink-2); font: 400 10.5px/1 var(--figure);
+  fill: var(--ink-2); font: var(--w-body) var(--fs-rail)/1 var(--figure);
   letter-spacing: .16em; text-transform: uppercase; opacity: .65;
 }
 .sky-read {
@@ -2163,7 +2239,7 @@ a.jr-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; 
 .mon-none { display: block; height: 100%; width: 100%; background: repeating-linear-gradient(90deg, var(--rule) 0 3px, transparent 3px 7px); }
 .mon-num { text-align: right; color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .mon-now { grid-column: 1 / -1; color: var(--ink-2); opacity: .75; font-size: var(--fs-rail); margin-top: 2px; }
-.mon-foot { margin-top: var(--s-5); font-size: var(--fs-rail); color: var(--ink-2); max-width: 70ch; }
+.mon-foot { margin-top: var(--s-5); font-size: var(--fs-rail); color: var(--ink-2); max-width: 66ch; }
 
 /* ── THREE: time ────────────────────────────────────────────────────────── */
 .strata { --lab-label: 15rem; }
@@ -2227,7 +2303,7 @@ a.jr-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; 
   font: 400 var(--fs-rail)/1 var(--figure);
   letter-spacing: var(--ls-rail); text-transform: uppercase; color: var(--ink-2);
 }
-.strata-note { margin: var(--s-7) 0 0; max-width: 68ch; font-size: var(--fs-small); color: var(--ink-2); }
+.strata-note { margin: var(--s-7) 0 0; max-width: 66ch; font-size: var(--fs-small); color: var(--ink-2); }
 .strata-legend { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: var(--s-5); }
 .strata-chip {
   font: 400 var(--fs-rail)/1 var(--figure);

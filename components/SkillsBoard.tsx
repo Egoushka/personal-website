@@ -53,13 +53,17 @@ export default function SkillsBoard({ linkable }: { linkable: string[] }) {
                 s.name.toLowerCase().includes(query) ||
                 s.now.toLowerCase().includes(query),
             )
-            // Measured rows first: if the box has an opinion about this month,
-            // that is the most interesting thing on the page.
-            .sort((a, b) => (measured(b.wakatime)?.percent ?? -1) - (measured(a.wakatime)?.percent ?? -1)),
+            // MEASURABLE rows first, not measured ones. Sorting by the
+            // percentage put this page's CLS at 0.017: the shares arrive from
+            // /status.json after hydration, so every row below a measured one
+            // moved down the page while the reader was looking at it. Whether
+            // a skill HAS a wakatime key is build-time data, so the server and
+            // the client agree and the bars fill in place. Sort is stable, so
+            // ties keep the order lib/site.ts authored.
+            .sort((a, b) => Number(!!b.wakatime) - Number(!!a.wakatime)),
         }))
         .filter((g) => g.items.length > 0),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [query, langs],
+    [query],
   );
 
   const total = skills.reduce((n, g) => n + g.items.length, 0);

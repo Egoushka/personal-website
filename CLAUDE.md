@@ -129,6 +129,17 @@ The rule now is *justify each one*, not *never*. Three exist:
   the system UI face. Do not add a `<link>` to fonts.googleapis.com — it puts a
   render-blocking cross-origin request back on the critical path and loses the
   `size-adjust` fallback that keeps CLS at 0 (measured: 0.0002).
+- **One modular type scale**, `--step--2` … `--step-5` at the top of
+  [app/globals.css](app/globals.css): fluid `clamp()` between a 360px and a 1280px viewport,
+  ratio 1.200 → 1.250 upward and a flat 1.180 for the two descending steps.
+  **The steps are primitives — never reference them outside `:root`.** Use the semantic
+  aliases (`--fs-rail`, `--fs-code`/`--fs-small`, `--fs-body`, `--fs-h3`, `--fs-title`,
+  `--fs-h2`, `--fs-h1`, `--fs-display`), and when a size is missing, add an alias rather
+  than a number. Every clamp keeps a `rem` term so text still grows under browser zoom
+  (WCAG 1.4.4) — a pure-`vw` font-size would fail it. Leading is picked by *measure*, not
+  taste (`--lh-flat` … `--lh-body`), and no prose block exceeds 66ch.
+  **`@media print` redeclares all eight steps in `pt`**, because the `vw` term resolves
+  against the paper width and would silently resize the one-page CV.
 - **All styling is one global stylesheet**, [app/globals.css](app/globals.css) — CSS variables at `:root`,
   plain class names (`.sheet`, `.ledger-row`, `.entry-line`). No Tailwind, no CSS modules, no
   styled-components. **No inline `style={{}}`** — add a class instead.
