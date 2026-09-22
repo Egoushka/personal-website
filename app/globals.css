@@ -2104,6 +2104,47 @@ a.jr-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; 
   .sky-haze, .sky-svg { transition: none; transform: none !important; }
 }
 
+/* ── FOUR: a shell ──────────────────────────────────────────────────────── */
+.sh {
+  font: 400 var(--fs-code)/1.7 var(--code);
+  border: var(--hair) solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: var(--s-4);
+  min-height: 60vh;
+  display: flex; flex-direction: column;
+  cursor: text;
+}
+.sh-out { flex: 1; overflow-y: auto; max-height: 62vh; }
+.sh-line { margin: 0; white-space: pre-wrap; }
+.sh-line--out { color: var(--ink-2); }
+.sh-line--err { color: var(--warn); }
+.sh-line--in  { color: var(--ink); }
+.sh-ps { color: var(--accent); margin-right: var(--s-2); }
+.sh-form { display: flex; align-items: baseline; gap: 0; margin-top: var(--s-2); }
+.sh-form input {
+  flex: 1;
+  background: none; border: 0; outline: none;
+  color: var(--ink);
+  font: inherit;
+  padding: 0;
+  min-height: 24px;
+}
+.sh-form input::placeholder { color: var(--ink-2); opacity: .5; }
+.sh-form input:focus-visible { outline: none; }
+.sh-go {
+  background: none;
+  border: var(--hair) solid var(--rule);
+  border-radius: 6px;
+  color: var(--ink-2);
+  font: inherit;
+  padding: 0 var(--s-2);
+  min-height: 24px;
+  cursor: pointer;
+}
+.sh-go:hover { color: var(--ink); border-color: var(--rule-firm); }
+.sh:focus-within { border-color: var(--rule-firm); }
+
 /* ── TWO: an instrument ─────────────────────────────────────────────────── */
 .mon { font-family: var(--figure); }
 .mon-bar {

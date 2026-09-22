@@ -8,7 +8,8 @@ export const metadata: Metadata = {
 
 const IDEAS = [
   { slug: "monitor", name: "An instrument", blurb: "Shipped: this is /stack/ now. Kept here so the others can be compared against it." },
-  { slug: "strata", name: "Time", blurb: "Not the stack — how it was acquired. One track per role and project on a real time axis, with the technologies each one used. Every pixel comes from the same fields the CV reads, and it shows the gaps." },
+  { slug: "shell", name: "A shell", blurb: "Not a picture of a terminal — a small real one. `ls backend`, `cat redis`, `top`, `uptime`, `ps`. It answers from the same data as every other page and gets its live figures from the box. The only idea where the interface is the argument." },
+  { slug: "strata", name: "Time", blurb: "Shipped as /journey/. Kept here as the rough version it grew out of." },
 ];
 
 export default function Lab() {
