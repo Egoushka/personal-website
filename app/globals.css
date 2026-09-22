@@ -1608,38 +1608,40 @@ figure figcaption {
 /* ============================================================================
    DESIGN PREVIEW — /design/, scoped to `.proto`, deletable in one block.
 
-   A direction, not a decision. The live pages are untouched: nothing here
-   escapes `.proto`, so the two can be compared side by side in one build.
+   Take one was correct and boring, which is what copying a product site gets
+   you: Linear is restrained because it sells software to a committee, and the
+   one thing it must not have is a personality. A personal site has the
+   opposite problem.
 
-   What it changes, and why the current site reads as "old":
-     · Warm sepia ground (#191714) and cream ink are PRINT colours. The
-       reference class for a 2026 developer site is a cool near-black —
-       Linear ships #08090a — which reads as a screen rather than as paper.
-     · Literata at 19px/1.72 is an editorial setting. Every site in this class
-       sets 15–16px sans at ~1.55 and spends the saved room on whitespace.
-     · Headings here are serif 600. Modern equivalents are Inter around weight
-       500–560 with NEGATIVE tracking (Linear's h1: 56px, 510, -0.022em).
-     · Small-caps hairline labels are a newspaper device. The same job is done
-       now by a mono kicker, which also reads as "developer" rather than
-       "broadsheet".
-   The counted figures stay, and get louder: they are the one thing on this
-   site nobody else can copy, so the prototype gives them a card and a number
-   at display size.
+   So the cold ground and the tight type stay, and the thing nobody else can
+   copy goes in front — the instrumentation. Every figure is already collected
+   somewhere in his own stack (Wakapi on the box, the container count from
+   cron, Last.fm, NuGet), and hovering one tells you where it came from. That
+   turns the site\'s one rule — counted, never typed — from a footnote into the
+   interaction.
+
+   What still reads as "old" on the live site, and is fixed here: warm sepia
+   and cream are PRINT colours; Literata at 19px/1.72 is an editorial setting;
+   serif headings at weight 600 with no negative tracking; small-caps hairline
+   labels are a newspaper device. The reference values are Linear\'s shipping
+   ones — #08090a, Inter, 16px/1.5, h1 at weight 510 and -0.022em.
    ========================================================================= */
 
 .proto {
-  --p-bg:      #08090A;
-  --p-surface: #101113;
-  --p-raised:  #16181B;
-  --p-line:    #1D1F23;
-  --p-line-2:  #2A2D32;
-  --p-ink:     #F4F5F6;
-  --p-ink-2:   #9BA1A8;
-  --p-accent:  #E6A860;
+  --p-bg:      #0A0B0D;
+  --p-surface: #111316;
+  --p-raised:  #171A1E;
+  --p-line:    #1E2126;
+  --p-line-2:  #2C3037;
+  --p-ink:     #F2F4F6;
+  --p-ink-2:   #98A0A8;
+  --p-accent:  #F2A03D;
+  --p-warn:    #E2725B;
 
   --p-sans: var(--font-figure), -apple-system, system-ui, sans-serif;
   --p-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
+  position: relative;
   display: block;
   min-height: 100vh;
   background: var(--p-bg);
@@ -1651,28 +1653,52 @@ figure figcaption {
   -webkit-font-smoothing: antialiased;
 }
 
-.proto-shell { max-width: 1080px; margin: 0 auto; padding: 28px 28px 80px; }
-
-.proto-nav {
-  display: flex; align-items: center; justify-content: space-between;
-  padding-bottom: 28px;
+/* Grain. Flat near-black is a void; a little noise makes it a surface. Four
+   lines of SVG rather than an image request, and it never repeats visibly. */
+.proto-grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: .05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'160\' height=\'160\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\'/%3E%3C/filter%3E%3Crect width=\'160\' height=\'160\' filter=\'url(%23n)\'/%3E%3C/svg%3E");
 }
+
+.proto-shell { position: relative; z-index: 2; max-width: 1080px; margin: 0 auto; padding: 28px 28px 80px; }
+
+.proto-nav { display: flex; align-items: center; justify-content: space-between; padding-bottom: 28px; }
 .proto-brand { font-weight: 560; letter-spacing: -0.015em; }
 .proto-nav nav { display: flex; gap: 22px; }
 .proto-nav a { color: var(--p-ink-2); text-decoration: none; font-size: 14px; }
 .proto-nav a:hover { color: var(--p-ink); }
 
-/* The hero is one sentence at display size. Tight tracking is most of what
-   separates a 2026 heading from a 2015 one. */
-.proto-hero { padding: 76px 0 64px; }
-.proto-hero h1 {
-  font: 560 clamp(38px, 5.2vw, 60px)/1.06 var(--p-sans);
-  letter-spacing: -0.032em;
-  margin: 0;
-  max-width: 16ch;
-  text-wrap: balance;
+.proto-hero { padding: 64px 0 52px; }
+.proto-eyebrow {
+  display: flex; align-items: center; gap: 8px;
+  font: 500 11.5px/1 var(--p-mono); letter-spacing: .07em; text-transform: uppercase;
+  color: var(--p-ink-2); margin: 0 0 22px;
 }
-.proto-lede { color: var(--p-ink-2); margin: 20px 0 0; font-size: 16px; }
+/* A live dot. It is the smallest possible way to say the site is plugged into
+   something rather than written once and left. */
+.proto-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--p-accent);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--p-accent) 70%, transparent);
+  animation: proto-pulse 2.6s ease-out infinite;
+}
+@keyframes proto-pulse {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--p-accent) 60%, transparent); }
+  70%  { box-shadow: 0 0 0 7px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.proto-hero h1 {
+  font: 560 clamp(36px, 5vw, 56px)/1.07 var(--p-sans);
+  letter-spacing: -0.032em;
+  margin: 0; max-width: 18ch; text-wrap: balance;
+}
+/* The one italic on the page, on the two words the whole site is about. */
+.proto-hero h1 em { font-style: italic; color: var(--p-accent); }
+.proto-lede { color: var(--p-ink-2); margin: 22px 0 0; font-size: 16px; max-width: 52ch; }
 .proto-cta { display: flex; gap: 10px; margin-top: 30px; }
 .proto-btn {
   display: inline-flex; align-items: center; height: 38px; padding: 0 16px;
@@ -1680,87 +1706,106 @@ figure figcaption {
   font-size: 14px; font-weight: 550; text-decoration: none; white-space: nowrap;
   transition: transform .12s ease, opacity .12s ease;
 }
-.proto-btn:hover { opacity: .88; transform: translateY(-1px); }
-.proto-btn--ghost {
-  background: transparent; color: var(--p-ink);
-  border: 1px solid var(--p-line-2);
-}
-.proto-btn--ghost:hover { background: var(--p-surface); }
+.proto-btn:hover { opacity: .9; transform: translateY(-1px); }
+.proto-btn--ghost { background: transparent; color: var(--p-ink); border: 1px solid var(--p-line-2); }
+.proto-btn--ghost:hover { background: var(--p-surface); border-color: var(--p-ink-2); }
 
-/* Cards, which this site has never allowed. On a flat near-black ground a
-   1px line and four points of radius is not decoration — it is the only way
-   to say "these three things are the same kind of thing". */
-.proto-cards {
-  display: grid; gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  margin-bottom: 72px;
-}
-.proto-card {
-  background: var(--p-surface);
+/* ── the instrument panel ───────────────────────────────────────────────── */
+.proto-panel {
   border: 1px solid var(--p-line);
-  border-radius: 12px;
-  padding: 18px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--p-surface), var(--p-bg));
+  padding: 18px 20px 20px;
+  margin-bottom: 64px;
+}
+.proto-panel-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.proto-panel-note { text-transform: none; letter-spacing: 0; opacity: .75; }
+.proto-figs { display: grid; gap: 4px 24px; grid-template-columns: repeat(6, 1fr); }
+@media (max-width: 1000px) { .proto-figs { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 560px)  { .proto-figs { grid-template-columns: repeat(2, 1fr); } }
+
+.fig { display: block; padding: 10px 0; cursor: default; }
+.fig-value {
+  display: block;
+  font: 500 30px/1.1 var(--p-sans);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.fig-value em { font-style: normal; font-size: 16px; color: var(--p-ink-2); margin-left: 2px; }
+.fig-label { display: block; font-size: 13px; color: var(--p-ink-2); margin-top: 2px; }
+/* The rule of this site, as an interaction: ask a number where it came from
+   and it tells you. */
+.fig-source {
+  display: block;
+  font: 400 11.5px/1.4 var(--p-mono);
+  color: var(--p-accent);
+  margin-top: 5px;
+  opacity: 0; transform: translateY(-2px);
+  transition: opacity .16s ease, transform .16s ease;
+}
+.fig:hover .fig-source, .fig:focus-visible .fig-source { opacity: .95; transform: none; }
+.fig:focus-visible { outline: 2px solid var(--p-accent); outline-offset: 4px; border-radius: 6px; }
+
+/* ── cards ──────────────────────────────────────────────────────────────── */
+.proto-split { display: grid; gap: 12px; grid-template-columns: 1.15fr 1fr; margin-bottom: 72px; }
+.proto-card {
+  background: var(--p-surface); border: 1px solid var(--p-line);
+  border-radius: 14px; padding: 20px;
   transition: background .15s ease, border-color .15s ease;
 }
 .proto-card:hover { background: var(--p-raised); border-color: var(--p-line-2); }
+.proto-card h3 { font: 560 19px/1.2 var(--p-sans); letter-spacing: -0.02em; margin: 10px 0 0; }
 .proto-card p { margin: 10px 0 0; color: var(--p-ink-2); font-size: 14px; }
-.proto-card-links { display: flex; gap: 14px; margin-top: 12px; }
+.proto-card-links { display: flex; gap: 14px; margin-top: 14px; }
 .proto-card-links a { color: var(--p-accent); font-size: 13px; text-decoration: none; }
 .proto-card-links a:hover { text-decoration: underline; }
 
-.proto-kicker {
-  font: 500 11px/1 var(--p-mono);
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--p-ink-2);
+.proto-card--broke { border-left: 2px solid var(--p-warn); }
+.proto-broke { list-style: none; margin: 12px 0 0; padding: 0; }
+.proto-broke li {
+  display: flex; gap: 10px; align-items: baseline;
+  padding: 8px 0; border-top: 1px solid var(--p-line);
+  font-size: 13.5px; color: var(--p-ink-2);
 }
-
-.proto-figure {
-  font: 500 54px/1 var(--p-sans);
-  letter-spacing: -0.04em;
+.proto-broke li:first-child { border-top: 0; }
+.proto-broke span {
+  flex: 0 0 54px;
+  font: 500 12px/1.4 var(--p-mono);
+  color: var(--p-warn);
   font-variant-numeric: tabular-nums;
-  color: var(--p-ink) !important;
-  margin: 12px 0 0 !important;
 }
-.proto-figure span { color: var(--p-ink-2); font-size: 26px; }
-.proto-figure-note { font-size: 13px !important; }
+.proto-broke-note { font-size: 12.5px !important; opacity: .8; }
+
+.proto-kicker {
+  font: 500 11px/1.4 var(--p-mono);
+  letter-spacing: .08em; text-transform: uppercase; color: var(--p-ink-2);
+}
 
 .proto-section { margin-bottom: 76px; }
 .proto-section-head {
-  display: flex; align-items: baseline; justify-content: space-between;
-  gap: 16px; margin-bottom: 26px;
-  padding-bottom: 14px; border-bottom: 1px solid var(--p-line);
+  display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+  margin-bottom: 26px; padding-bottom: 14px; border-bottom: 1px solid var(--p-line);
 }
-.proto-section-head h2 {
-  font: 560 22px/1.2 var(--p-sans); letter-spacing: -0.02em; margin: 0;
-}
+.proto-section-head h2 { font: 560 22px/1.2 var(--p-sans); letter-spacing: -0.02em; margin: 0; }
 
 /* ── the radial stack ───────────────────────────────────────────────────── */
 .orbit-figure { margin: 0; }
 .orbit { width: 100%; height: auto; display: block; }
-.orbit-link { fill: none; stroke: var(--p-line-2); stroke-width: 1; }
+.orbit-link { fill: none; stroke: var(--p-line-2); stroke-width: 1; transition: stroke .16s ease; }
 .orbit-link.is-on { stroke: var(--p-accent); }
 .orbit-core { fill: var(--p-surface); stroke: var(--p-line-2); }
-.orbit-core-label {
-  fill: var(--p-ink-2); font: 500 13px/1 var(--p-mono);
-  font-variant-numeric: tabular-nums;
-}
+.orbit-core-label { fill: var(--p-ink-2); font: 500 13px/1 var(--p-mono); font-variant-numeric: tabular-nums; }
 .orbit-hub { fill: var(--p-bg); stroke: var(--p-ink-2); stroke-width: 1.5; }
-.orbit-hub-label {
-  fill: var(--p-ink); font: 500 10.5px/1 var(--p-mono);
-  letter-spacing: .08em; text-transform: uppercase;
-}
+.orbit-hub-label { fill: var(--p-ink); font: 500 10.5px/1 var(--p-mono); letter-spacing: .08em; text-transform: uppercase; }
 .orbit-node { cursor: default; }
-.orbit-node circle { fill: var(--p-bg); stroke: var(--p-ink-2); stroke-width: 1.5; }
-.orbit-node text { fill: var(--p-ink-2); font: 400 13px/1 var(--p-sans); }
-.orbit-node.is-on circle { fill: var(--p-accent); stroke: var(--p-accent); }
+.orbit-node circle { fill: var(--p-bg); stroke: var(--p-ink-2); stroke-width: 1.5; transition: fill .16s ease, stroke .16s ease; }
+.orbit-node text { fill: var(--p-ink-2); font: 400 13px/1 var(--p-sans); transition: fill .16s ease; }
+.orbit-node.is-on circle { fill: var(--p-accent); stroke: var(--p-accent); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--p-accent) 60%, transparent)); }
 .orbit-node.is-on text { fill: var(--p-ink); }
-.orbit-node.is-dim { opacity: .35; }
+.orbit-node.is-dim { opacity: .3; }
 .orbit-node:focus { outline: none; }
 .orbit-node:focus-visible circle { stroke: var(--p-accent); stroke-width: 3; }
-.orbit-figure figcaption {
-  margin-top: 18px; color: var(--p-ink-2); font-size: 14px; min-height: 2.6em;
-}
+.orbit-figure figcaption { margin-top: 18px; color: var(--p-ink-2); font-size: 14px; min-height: 2.6em; }
 .orbit-figure figcaption strong { color: var(--p-ink); font-weight: 550; }
 
 /* ── skills ─────────────────────────────────────────────────────────────── */
@@ -1768,14 +1813,18 @@ figure figcaption {
 .proto-skill-group ul { list-style: none; margin: 14px 0 0; padding: 0; }
 .proto-skill-group li { padding: 9px 0; border-top: 1px solid var(--p-line); }
 .proto-skill-group li span { display: block; font-weight: 500; }
-.proto-skill-group li em {
-  display: block; font-style: normal; color: var(--p-ink-2);
-  font-size: 13px; margin-top: 2px;
-}
+.proto-skill-group li em { display: block; font-style: normal; color: var(--p-ink-2); font-size: 13px; margin-top: 2px; }
 
 .proto-foot {
-  display: flex; justify-content: space-between;
+  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
   padding-top: 24px; border-top: 1px solid var(--p-line);
-  color: var(--p-ink-2); font-size: 13px;
+  color: var(--p-ink-2); font: 400 12.5px/1.5 var(--p-mono);
 }
 .proto-foot a { color: var(--p-ink-2); }
+
+@media (max-width: 760px) {
+  .proto-split { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .proto-dot { animation: none; }
+}
