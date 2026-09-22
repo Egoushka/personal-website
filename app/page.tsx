@@ -3,6 +3,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import PostList from "@/components/PostList";
 import { PersonAndSiteLd } from "@/components/JsonLd";
+import Panel from "@/components/Panel";
 import { site, proof, projects, type Project } from "@/lib/site";
 import { getAllPosts } from "@/lib/posts";
 import { getReadings, getTopicUsage, n } from "@/lib/readings";
@@ -54,20 +55,28 @@ export default function Home() {
       <PersonAndSiteLd />
 
       {/*
-        One line and one call to action. The line used to carry a second
-        sentence with a counted figure in it; the figure is still on the page,
-        in the row below, where it sits next to the post that proves it instead
-        of in front of a reader who has not been told anything yet.
+        The sentence is the h1 now, not the greeting.
+
+        "Hey — I'm Yehor" was the largest thing on the page and it told a
+        stranger nothing; the line that says what I do was set below it at body
+        size. They have swapped. The greeting survives as the line above, where
+        a name belongs, next to the two facts a cold reader needs — where I am
+        and whether I am available.
       */}
       <header className="home-greeting">
-        <h1>{site.greeting}</h1>
-        <p className="home-intro">{site.intro}</p>
+        <p className="home-eyebrow">
+          <span className="live-dot" aria-hidden="true" />
+          {site.location} — {site.availability}
+        </p>
+        <h1>{site.intro}</h1>
         <p className="home-status">
-          <span>{site.location}</span>
-          <span>{site.availability}</span>
-          <span><a className="cta" href={`mailto:${site.email}`}>email me</a></span>
+          <a className="cta" href={`mailto:${site.email}`}>Email me</a>
+          <Link className="cta cta--ghost" href="/writing/">Read the writing</Link>
         </p>
       </header>
+
+      {/* Live, and absent when the box is not publishing. */}
+      <Panel />
 
       {/*
         The proof row. It deliberately does NOT use the rail-left / content-right
@@ -84,7 +93,7 @@ export default function Home() {
         {proof.map((p) => (
           <li key={p.label}>
             <span className="proof-label">{p.label}</span>
-            {p.text}
+            <span className="proof-text">{p.text}</span>
             {p.links.map((l) => (
               <a className="proof-link" key={l.href} href={l.href} rel="noopener">
                 {l.label}
@@ -95,8 +104,10 @@ export default function Home() {
         {r.longestSpan && (
           <li>
             <span className="proof-label">{r.longestSpan.days} days</span>
-            A deployment that reported success while shipping nothing. Found,
-            explained, fixed.
+            <span className="proof-text">
+              A deployment that reported success while shipping nothing. Found,
+              explained, fixed.
+            </span>
             <Link className="proof-link" href={`/writing/${r.longestSpan.slug}/`}>
               read it
             </Link>

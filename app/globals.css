@@ -15,87 +15,106 @@
 
 :root {
   /* --- typefaces (next/font, self-hosted — see app/layout.tsx) ------------ */
-  --prose:  var(--font-prose), Georgia, "Times New Roman", serif;
-  /* Labels, figures, nav, metadata. Was a condensed face drawn for dense tabular
-     setting, which made sense for a ledger and makes none now. */
-  --figure: var(--font-figure), "Helvetica Neue", Arial, sans-serif;
-  /* Code only. Deliberately unhosted: a third webfont to set a few code blocks is
-     not worth the bytes, and every platform ships something correct here. */
+  /* One family sets the whole site now. Literata was a serif at 19px on a
+     1.72 leading — an editorial setting, and the single thing that made this
+     site read as older than it is. Every reference in this class (Linear,
+     Vercel, the people who design for them) sets a grotesk around 15-16px at
+     ~1.55 and spends the room it saves on whitespace instead. */
+  --prose:  var(--font-prose), -apple-system, system-ui, "Segoe UI", sans-serif;
+  /* Metadata, rails, kickers and counted figures. Monospace on purpose: it is
+     the same job the small-caps label used to do, and it reads as a developer
+     rather than as a broadsheet. */
+  --figure: ui-monospace, SFMono-Regular, Menlo, monospace;
   --code:   ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* --- colour: DARK is the default theme ---------------------------------- */
-  --paper:     #191714;
-  --ink:       #EDE8DF;   /* 14.7:1 on --paper — prose and headings          */
-  --ink-2:     #A8A096;   /*  6.9:1 on --paper — figures, labels, detail     */
-  --rule:      #2E2A25;   /* DECORATIVE ONLY — hairlines between rows        */
-  --rule-firm: #6E675E;   /*  3.2:1 on --paper — every control edge          */
-  --accent:    #E0A257;   /*  8.1:1 on --paper — links, and only links       */
+  /* --- colour: DARK is the default theme ----------------------------------
+     Cool near-black, not warm sepia. #191714 and a cream ink are PRINT
+     colours: they say paper, and a site that says paper reads as a decade
+     old. The reference value in this class is Linear's #08090a.
+
+     Contrast ratios are computed, not estimated (WCAG 2.1), and every one is
+     a floor a replacement has to clear. */
+  --paper:     #0A0B0D;
+  --ink:       #F2F4F6;   /* 18.2:1 on --paper — prose and headings          */
+  --ink-2:     #98A0A8;   /*  7.4:1 on --paper — figures, labels, detail     */
+  --rule:      #1E2126;   /* DECORATIVE ONLY — hairlines between rows        */
+  --rule-firm: #5B616A;   /*  3.1:1 on --paper — every control edge          */
+  --accent:    #F2A03D;   /*  9.2:1 on --paper — links, and only links       */
+  --warn:      #E2725B;   /*  5.6:1 on --paper — only ever "this broke"      */
 
   /* Raised surfaces are mixed from the ink so a theme change carries them. */
-  --surface:   color-mix(in srgb, var(--ink) 5%, var(--paper));
-  --surface-2: color-mix(in srgb, var(--ink) 9%, var(--paper));
+  --surface:   color-mix(in srgb, var(--ink) 4%, var(--paper));
+  --surface-2: color-mix(in srgb, var(--ink) 8%, var(--paper));
   --accent-quiet: color-mix(in srgb, var(--accent) 22%, var(--paper));
 
   /* --- grid ---------------------------------------------------------------- */
   --rail:    168px;
   --gutter:   40px;
-  --measure: 660px;   /* ~66ch at --fs-body in Literata */
+  --measure: 640px;   /* ~66ch at --fs-body */
   --bleed:   calc(var(--rail) + var(--gutter) + var(--measure));
 
-  /* --- type scale: 1.26 ratio on a 19px base ------------------------------- */
-  --fs-display: 2.8750rem;  /* 46.0px */
-  --fs-h1:      2.3125rem;  /* 37.0px */
-  --fs-h2:      1.6250rem;  /* 26.0px */
-  --fs-h3:      1.3125rem;  /* 21.0px */
-  --fs-body:    1.1875rem;  /* 19.0px — Literata is comfortable here */
-  --fs-small:   0.9688rem;  /* 15.5px */
-  --fs-code:    0.9063rem;  /* 14.5px */
-  --fs-rail:    0.7500rem;  /* 12.0px — stays below body: never the first fixation */
+  /* --- type scale ----------------------------------------------------------
+     Smaller body, bigger headings, and negative tracking on everything above
+     the body size — which is most of what separates a 2026 heading from a
+     2015 one. Linear's h1 ships at 56px, weight 510, -0.022em. */
+  --fs-display: 3.2500rem;  /* 52.0px */
+  --fs-h1:      2.5000rem;  /* 40.0px */
+  --fs-h2:      1.3750rem;  /* 22.0px */
+  --fs-h3:      1.1875rem;  /* 19.0px */
+  --fs-body:    0.9688rem;  /* 15.5px */
+  --fs-small:   0.8750rem;  /* 14.0px */
+  --fs-code:    0.8125rem;  /* 13.0px */
+  --fs-rail:    0.6875rem;  /* 11.0px — stays below body: never the first fixation */
 
-  --lh-tight: 1.12;
-  --lh-head:  1.25;
-  --lh-body:  1.72;
-  --lh-code:  1.62;
-  --lh-rail:  1.50;
+  --lh-tight: 1.06;
+  --lh-head:  1.2;
+  --lh-body:  1.55;
+  --lh-code:  1.6;
+  --lh-rail:  1.45;
 
-  --ls-display: -0.02em;
-  --ls-h1:      -0.015em;
-  --ls-rail:     0.04em;
+  --ls-display: -0.032em;
+  --ls-h1:      -0.028em;
+  --ls-rail:     0.08em;
+
+  /* The weight a grotesk wants for a heading. 600 is heavy at these sizes and
+     reads as a 2015 hero; the reference value is 510-560. */
+  --w-head: 560;
 
   /* --- space: 4px rhythm --------------------------------------------------- */
   --s-1:  4px;  --s-2:  8px;  --s-3: 12px; --s-4: 16px;
   --s-5: 20px;  --s-6: 26px;  --s-7: 34px; --s-8: 44px;
   --s-9: 54px;  --s-10: 72px;
 
-  --radius: 3px;
+  --radius: 10px;
   --hair:   1px;
 }
 
-/* --- colour: LIGHT is warm stock, NOT an inversion --------------------------
-   #FBF8F2, not #fff. Both themes are drawn from the same recipe at inverted
-   lightness, so neither is a tint of the other. Only the six tokens are
-   redeclared; everything mixed from them follows on its own.
+/* --- colour: LIGHT -----------------------------------------------------------
+   A true white rather than warm stock, for the same reason the dark theme is
+   cool: #FBF8F2 is paper. Only the seven colour tokens are redeclared;
+   everything mixed from them follows on its own.
 
-   There is no theme toggle — the theme follows the OS. [data-theme] is honoured
-   first so a future toggle needs no restructuring, and the media query mirrors
-   it for everyone else. */
+   [data-theme] is honoured first so the toggle wins, and the media query
+   mirrors it for everyone who has not touched it. */
 [data-theme="light"] {
-  --paper:     #FBF8F2;
-  --ink:       #1C1A16;   /* 16.4:1 on --paper */
-  --ink-2:     #55504A;   /*  7.5:1 on --paper */
-  --rule:      #E3DCD0;
-  --rule-firm: #8A8378;   /*  3.5:1 on --paper — non-text AA */
-  --accent:    #9A5B12;   /*  5.1:1 on --paper */
+  --paper:     #FFFFFF;
+  --ink:       #0D0E10;   /* 19.1:1 on --paper */
+  --ink-2:     #5B6169;   /*  6.2:1 on --paper */
+  --rule:      #E9EBEE;
+  --rule-firm: #8A9099;   /*  3.3:1 on --paper — non-text AA */
+  --accent:    #A85D08;   /*  5.1:1 on --paper */
+  --warn:      #A63B22;   /*  5.9:1 on --paper */
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
-    --paper:     #FBF8F2;
-    --ink:       #1C1A16;
-    --ink-2:     #55504A;
-    --rule:      #E3DCD0;
-    --rule-firm: #8A8378;
-    --accent:    #9A5B12;
+    --paper:     #FFFFFF;
+    --ink:       #0D0E10;
+    --ink-2:     #5B6169;
+    --rule:      #E9EBEE;
+    --rule-firm: #8A9099;
+    --accent:    #A85D08;
+    --warn:      #A63B22;
     color-scheme: light;
   }
 }
@@ -107,6 +126,8 @@
    ========================================================================= */
 
 .wrap {
+  position: relative;
+  z-index: 2;
   display: grid;
   grid-template-columns: var(--rail) minmax(0, var(--measure));
   gap: var(--s-5) var(--gutter);
@@ -150,15 +171,37 @@ body {
   background: var(--paper);
   color: var(--ink);
   font: 400 var(--fs-body)/var(--lh-body) var(--prose);
-  font-optical-sizing: auto;   /* Literata carries an optical-size axis */
+  letter-spacing: -0.006em;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-h1, h2, h3 { color: var(--ink); font-weight: 600; text-wrap: balance; }
-h1 { font-size: var(--fs-h1); line-height: var(--lh-tight); letter-spacing: var(--ls-h1); }
-h2 { font-size: var(--fs-h2); line-height: var(--lh-head); }
-h3 { font-size: var(--fs-h3); line-height: var(--lh-head); }
+/* Grain. A flat near-black is a void; a little noise makes it a surface. It is
+   four lines of inline SVG rather than an image request, it never visibly
+   repeats, and it is `pointer-events: none` so it can sit over everything. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: .05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+[data-theme="light"] body::before { opacity: .035; }
+
+/* Headings are a grotesk now, so they need the weight and the tracking a
+   grotesk wants: 560 rather than 600, and negative letter-spacing that grows
+   with the size. */
+h1, h2, h3 {
+  color: var(--ink);
+  font-weight: var(--w-head);
+  letter-spacing: var(--ls-h1);
+  text-wrap: balance;
+}
+h1 { font-size: var(--fs-h1); line-height: var(--lh-tight); }
+h2 { font-size: var(--fs-h2); line-height: var(--lh-head); letter-spacing: -0.02em; }
+h3 { font-size: var(--fs-h3); line-height: var(--lh-head); letter-spacing: -0.015em; }
 p  { text-wrap: pretty; }
 
 /* A link is ink with an amber rule under it.
@@ -299,8 +342,8 @@ a:hover { text-decoration-thickness: 2px; }
   flex-wrap: wrap;
 }
 .site-header .brand {
-  font: 600 15px/1 var(--figure);
-  letter-spacing: -0.01em;
+  font: 560 15px/1 var(--prose);
+  letter-spacing: -0.015em;
   color: var(--ink);
   text-decoration: none;
 }
@@ -310,7 +353,7 @@ a:hover { text-decoration-thickness: 2px; }
 .site-header-controls { display: flex; align-items: center; gap: var(--s-2); }
 .site-header nav { display: flex; gap: 20px; flex-wrap: wrap; }
 .site-header nav a {
-  font: 400 14px/1 var(--figure);
+  font: 400 14px/1 var(--prose);
   color: var(--ink-2);
   text-decoration: none;
   /* WCAG 2.5.8 — the densest control cluster on the site. */
@@ -592,65 +635,177 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
    No hero, no feature. A greeting, then the two things worth looking at.
    ========================================================================= */
 
-.home-greeting {
-  padding-top: var(--s-9);
+.home-greeting { padding-top: var(--s-9); }
+
+/* The name, the place and the availability, above the sentence. Mono, because
+   it is metadata about the person rather than a claim about the work. */
+.home-eyebrow {
+  display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap;
+  font: 400 var(--fs-rail)/1.4 var(--figure);
+  letter-spacing: var(--ls-rail);
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin: 0 0 var(--s-5);
 }
+
+/* The smallest possible way to say the page is plugged into something rather
+   than written once and left. It pulses; `prefers-reduced-motion` stops it. */
+.live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent);
+  animation: live-pulse 2.6s ease-out infinite;
+}
+@keyframes live-pulse {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); }
+  70%  { box-shadow: 0 0 0 7px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
+
 .home-greeting h1 {
   font-size: var(--fs-display);
+  line-height: var(--lh-tight);
   letter-spacing: var(--ls-display);
   margin: 0;
+  max-width: 19ch;
 }
-.home-intro {
-  max-width: 46ch;
-  margin: var(--s-4) 0 0;
-  font-size: var(--fs-h3);
-  line-height: 1.55;
-}
+
 .home-status {
-  font: 400 var(--fs-small)/1.5 var(--figure);
-  color: var(--ink-2);
-  margin: var(--s-5) 0 0;
+  display: flex; flex-wrap: wrap; gap: var(--s-3);
+  margin: var(--s-7) 0 0;
 }
-/* The one primary call to action above the fold. Everything else in this line is
-   metadata; weight, not colour, is what separates them, because --accent already
-   means "link" and cannot also mean "this link matters more". */
-.home-status .cta { font-weight: 600; }
+/* Buttons. This site refused them for two designs and the refusal cost it the
+   one thing a cold reader needs: somewhere obvious to click. */
+.cta {
+  display: inline-flex; align-items: center;
+  height: 38px; padding: 0 16px;
+  border-radius: var(--radius);
+  background: var(--ink); color: var(--paper);
+  font: 500 var(--fs-small)/1 var(--prose);
+  letter-spacing: -0.01em;
+  text-decoration: none; white-space: nowrap;
+  transition: transform .12s ease, opacity .12s ease;
+}
+.cta:hover { opacity: .9; transform: translateY(-1px); text-decoration: none; }
+.cta--ghost {
+  background: transparent; color: var(--ink);
+  border: var(--hair) solid var(--rule-firm);
+}
+.cta--ghost:hover { background: var(--surface); }
 
-/* The proof row.
+/* ============================================================================
+   THE PROOF ROW — three things a stranger can check in under a minute.
 
-   Three checkable lines under the hero, and the only block on the home page
-   that does not use the rail. The label leads the line rather than sitting in
-   the left column on purpose: this is the one place the page has to interrupt
-   its own rhythm, and it borrows the rail's small-caps treatment to do it
-   without introducing a fifth way of setting a label. No cards, no icons, no
-   border the project list does not already use. */
+   Cards, which this site refused for two designs. On a flat near-black ground
+   a 1px line and a corner radius is not decoration: it is the only way to say
+   "these three are the same kind of thing", and the hairline-between-rows
+   version said nothing at all.
+   ========================================================================= */
+
 .proof {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: var(--s-3);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   list-style: none;
-  margin: var(--s-8) 0 0;
+  margin: var(--s-7) 0 0;
   padding: 0;
-  max-width: 62ch;
+}
+.proof li {
+  background: var(--surface);
+  border: var(--hair) solid var(--rule);
+  border-radius: 14px;
+  padding: var(--s-5);
   font-size: var(--fs-small);
-  line-height: 1.6;
+  color: var(--ink-2);
+  transition: background .15s ease, border-color .15s ease;
+}
+.proof li:hover { background: var(--surface-2); border-color: var(--rule-firm); }
+.proof-label {
+  display: block;
+  font: 400 var(--fs-rail)/1.4 var(--figure);
+  letter-spacing: var(--ls-rail);
+  text-transform: uppercase;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: var(--s-3);
+}
+.proof-text { display: block; margin-bottom: var(--s-4); }
+.proof-link {
+  font: 400 var(--fs-small)/1 var(--prose);
+  white-space: nowrap;
+  margin-inline-end: var(--s-4);
+  color: var(--accent);
+  text-decoration: none;
+}
+.proof-link:hover { text-decoration: underline; }
+
+/* ============================================================================
+   THE INSTRUMENT PANEL
+   The part of this site nobody else can copy: not a claim about caring what a
+   system is doing, but what it is doing, tonight, read from the machine.
+   ========================================================================= */
+
+.panel {
+  grid-column: 1 / -1;
+  margin-top: var(--s-9);
+  padding: var(--s-5) var(--s-6) var(--s-6);
+  border: var(--hair) solid var(--rule);
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--surface), var(--paper));
+}
+.panel-head {
+  display: flex; justify-content: space-between; gap: var(--s-4);
+  flex-wrap: wrap; margin-bottom: var(--s-5);
+}
+.panel-note {
+  font: 400 var(--fs-rail)/1.4 var(--figure);
+  color: var(--ink-2);
+  opacity: .8;
+}
+/* The height is reserved so the numbers can arrive without moving the page.
+   CLS on this site has been 0 since it was built, and a panel that pushes
+   three screens down when it loads would be the first thing to break it. */
+.panel-body { min-height: 138px; }
+.panel-empty {
+  margin: 0;
+  max-width: 54ch;
+  font-size: var(--fs-small);
   color: var(--ink-2);
 }
-.proof li + li {
-  border-top: var(--hair) solid var(--rule);
-  margin-top: var(--s-4);
-  padding-top: var(--s-4);
+.panel-figs {
+  display: grid; gap: var(--s-1) var(--s-6);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
-.proof-label {
-  font: 600 10.5px/1.4 var(--figure);
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--ink);
+
+.fig { display: block; padding: var(--s-2) 0; }
+.fig-value {
+  display: block;
+  font: 500 30px/1.1 var(--prose);
+  letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
-  margin-inline-end: var(--s-3);
 }
-.proof-link {
-  font: 400 var(--fs-small)/1 var(--figure);
-  white-space: nowrap;
-  margin-inline-start: var(--s-2);
+.fig-value em {
+  font-style: normal; font-size: 16px;
+  color: var(--ink-2); margin-left: 2px;
 }
+.fig-label {
+  display: block; font-size: var(--fs-small);
+  color: var(--ink-2); margin-top: 2px;
+}
+/* Ask a number where it came from and it tells you. The space is reserved at
+   rest, so revealing it moves nothing. */
+.fig-source {
+  display: block;
+  font: 400 var(--fs-rail)/1.4 var(--figure);
+  color: var(--accent);
+  margin-top: 5px;
+  opacity: 0;
+  transition: opacity .16s ease;
+}
+.fig:hover .fig-source,
+.fig:focus-visible .fig-source { opacity: 1; }
+.fig:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 6px; }
 
 .section-head {
   display: flex;
@@ -661,7 +816,7 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
 }
 .section-head h2 { margin: 0; font-size: var(--fs-h2); }
 .section-head a {
-  font: 400 var(--fs-small)/1 var(--figure);
+  font: 400 var(--fs-small)/1 var(--prose);
   white-space: nowrap;
 }
 
@@ -1605,226 +1760,73 @@ figure figcaption {
    Do not shrink line-height below 1.4 and do not drop the masthead rule.
    ========================================================================= */
 
+
 /* ============================================================================
-   DESIGN PREVIEW — /design/, scoped to `.proto`, deletable in one block.
+   THE STACK, AS A RADIAL TREE — /stack/
 
-   Take one was correct and boring, which is what copying a product site gets
-   you: Linear is restrained because it sells software to a committee, and the
-   one thing it must not have is a personality. A personal site has the
-   opposite problem.
+   This replaced a force simulation, which was the wrong instrument: a physics
+   engine arranges nodes by what does not collide, which is a physical answer
+   to a design question. It settled somewhere slightly different every load and
+   no amount of tuning made "wherever the springs stopped" look deliberate.
 
-   So the cold ground and the tight type stay, and the thing nobody else can
-   copy goes in front — the instrumentation. Every figure is already collected
-   somewhere in his own stack (Wakapi on the box, the container count from
-   cron, Last.fm, NuGet), and hovering one tells you where it came from. That
-   turns the site\'s one rule — counted, never typed — from a footnote into the
-   interaction.
-
-   What still reads as "old" on the live site, and is fixed here: warm sepia
-   and cream are PRINT colours; Literata at 19px/1.72 is an editorial setting;
-   serif headings at weight 600 with no negative tracking; small-caps hairline
-   labels are a newspaper device. The reference values are Linear\'s shipping
-   ones — #08090a, Inter, 16px/1.5, h1 at weight 510 and -0.022em.
+   Laid out instead. The centre is the whole stack, each group owns an angular
+   sector sized by how many skills are in it, and the leaves sit on one ring
+   with their labels flipping anchor on the left half — the standard radial
+   dendrogram treatment, and the reason this reads as drawn. Overlap is
+   impossible by construction rather than something a solver has to fight.
    ========================================================================= */
 
-.proto {
-  --p-bg:      #0A0B0D;
-  --p-surface: #111316;
-  --p-raised:  #171A1E;
-  --p-line:    #1E2126;
-  --p-line-2:  #2C3037;
-  --p-ink:     #F2F4F6;
-  --p-ink-2:   #98A0A8;
-  --p-accent:  #F2A03D;
-  --p-warn:    #E2725B;
-
-  --p-sans: var(--font-figure), -apple-system, system-ui, sans-serif;
-  --p-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-
-  position: relative;
-  display: block;
-  min-height: 100vh;
-  background: var(--p-bg);
-  color: var(--p-ink);
-  font-family: var(--p-sans);
-  font-size: 15.5px;
-  line-height: 1.55;
-  letter-spacing: -0.006em;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Grain. Flat near-black is a void; a little noise makes it a surface. Four
-   lines of SVG rather than an image request, and it never repeats visibly. */
-.proto-grain {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  opacity: .05;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'160\' height=\'160\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\'/%3E%3C/filter%3E%3Crect width=\'160\' height=\'160\' filter=\'url(%23n)\'/%3E%3C/svg%3E");
-}
-
-.proto-shell { position: relative; z-index: 2; max-width: 1080px; margin: 0 auto; padding: 28px 28px 80px; }
-
-.proto-nav { display: flex; align-items: center; justify-content: space-between; padding-bottom: 28px; }
-.proto-brand { font-weight: 560; letter-spacing: -0.015em; }
-.proto-nav nav { display: flex; gap: 22px; }
-.proto-nav a { color: var(--p-ink-2); text-decoration: none; font-size: 14px; }
-.proto-nav a:hover { color: var(--p-ink); }
-
-.proto-hero { padding: 64px 0 52px; }
-.proto-eyebrow {
-  display: flex; align-items: center; gap: 8px;
-  font: 500 11.5px/1 var(--p-mono); letter-spacing: .07em; text-transform: uppercase;
-  color: var(--p-ink-2); margin: 0 0 22px;
-}
-/* A live dot. It is the smallest possible way to say the site is plugged into
-   something rather than written once and left. */
-.proto-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--p-accent);
-  box-shadow: 0 0 0 0 color-mix(in srgb, var(--p-accent) 70%, transparent);
-  animation: proto-pulse 2.6s ease-out infinite;
-}
-@keyframes proto-pulse {
-  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--p-accent) 60%, transparent); }
-  70%  { box-shadow: 0 0 0 7px transparent; }
-  100% { box-shadow: 0 0 0 0 transparent; }
-}
-.proto-hero h1 {
-  font: 560 clamp(36px, 5vw, 56px)/1.07 var(--p-sans);
-  letter-spacing: -0.032em;
-  margin: 0; max-width: 18ch; text-wrap: balance;
-}
-/* The one italic on the page, on the two words the whole site is about. */
-.proto-hero h1 em { font-style: italic; color: var(--p-accent); }
-.proto-lede { color: var(--p-ink-2); margin: 22px 0 0; font-size: 16px; max-width: 52ch; }
-.proto-cta { display: flex; gap: 10px; margin-top: 30px; }
-.proto-btn {
-  display: inline-flex; align-items: center; height: 38px; padding: 0 16px;
-  border-radius: 9px; background: var(--p-ink); color: var(--p-bg);
-  font-size: 14px; font-weight: 550; text-decoration: none; white-space: nowrap;
-  transition: transform .12s ease, opacity .12s ease;
-}
-.proto-btn:hover { opacity: .9; transform: translateY(-1px); }
-.proto-btn--ghost { background: transparent; color: var(--p-ink); border: 1px solid var(--p-line-2); }
-.proto-btn--ghost:hover { background: var(--p-surface); border-color: var(--p-ink-2); }
-
-/* ── the instrument panel ───────────────────────────────────────────────── */
-.proto-panel {
-  border: 1px solid var(--p-line);
-  border-radius: 14px;
-  background: linear-gradient(180deg, var(--p-surface), var(--p-bg));
-  padding: 18px 20px 20px;
-  margin-bottom: 64px;
-}
-.proto-panel-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-.proto-panel-note { text-transform: none; letter-spacing: 0; opacity: .75; }
-.proto-figs { display: grid; gap: 4px 24px; grid-template-columns: repeat(6, 1fr); }
-@media (max-width: 1000px) { .proto-figs { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 560px)  { .proto-figs { grid-template-columns: repeat(2, 1fr); } }
-
-.fig { display: block; padding: 10px 0; cursor: default; }
-.fig-value {
-  display: block;
-  font: 500 30px/1.1 var(--p-sans);
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-}
-.fig-value em { font-style: normal; font-size: 16px; color: var(--p-ink-2); margin-left: 2px; }
-.fig-label { display: block; font-size: 13px; color: var(--p-ink-2); margin-top: 2px; }
-/* The rule of this site, as an interaction: ask a number where it came from
-   and it tells you. */
-.fig-source {
-  display: block;
-  font: 400 11.5px/1.4 var(--p-mono);
-  color: var(--p-accent);
-  margin-top: 5px;
-  opacity: 0; transform: translateY(-2px);
-  transition: opacity .16s ease, transform .16s ease;
-}
-.fig:hover .fig-source, .fig:focus-visible .fig-source { opacity: .95; transform: none; }
-.fig:focus-visible { outline: 2px solid var(--p-accent); outline-offset: 4px; border-radius: 6px; }
-
-/* ── cards ──────────────────────────────────────────────────────────────── */
-.proto-split { display: grid; gap: 12px; grid-template-columns: 1.15fr 1fr; margin-bottom: 72px; }
-.proto-card {
-  background: var(--p-surface); border: 1px solid var(--p-line);
-  border-radius: 14px; padding: 20px;
-  transition: background .15s ease, border-color .15s ease;
-}
-.proto-card:hover { background: var(--p-raised); border-color: var(--p-line-2); }
-.proto-card h3 { font: 560 19px/1.2 var(--p-sans); letter-spacing: -0.02em; margin: 10px 0 0; }
-.proto-card p { margin: 10px 0 0; color: var(--p-ink-2); font-size: 14px; }
-.proto-card-links { display: flex; gap: 14px; margin-top: 14px; }
-.proto-card-links a { color: var(--p-accent); font-size: 13px; text-decoration: none; }
-.proto-card-links a:hover { text-decoration: underline; }
-
-.proto-card--broke { border-left: 2px solid var(--p-warn); }
-.proto-broke { list-style: none; margin: 12px 0 0; padding: 0; }
-.proto-broke li {
-  display: flex; gap: 10px; align-items: baseline;
-  padding: 8px 0; border-top: 1px solid var(--p-line);
-  font-size: 13.5px; color: var(--p-ink-2);
-}
-.proto-broke li:first-child { border-top: 0; }
-.proto-broke span {
-  flex: 0 0 54px;
-  font: 500 12px/1.4 var(--p-mono);
-  color: var(--p-warn);
-  font-variant-numeric: tabular-nums;
-}
-.proto-broke-note { font-size: 12.5px !important; opacity: .8; }
-
-.proto-kicker {
-  font: 500 11px/1.4 var(--p-mono);
-  letter-spacing: .08em; text-transform: uppercase; color: var(--p-ink-2);
-}
-
-.proto-section { margin-bottom: 76px; }
-.proto-section-head {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
-  margin-bottom: 26px; padding-bottom: 14px; border-bottom: 1px solid var(--p-line);
-}
-.proto-section-head h2 { font: 560 22px/1.2 var(--p-sans); letter-spacing: -0.02em; margin: 0; }
-
-/* ── the radial stack ───────────────────────────────────────────────────── */
-.orbit-figure { margin: 0; }
+.orbit-figure { grid-column: 1 / -1; margin: var(--s-6) 0 0; }
 .orbit { width: 100%; height: auto; display: block; }
-.orbit-link { fill: none; stroke: var(--p-line-2); stroke-width: 1; transition: stroke .16s ease; }
-.orbit-link.is-on { stroke: var(--p-accent); }
-.orbit-core { fill: var(--p-surface); stroke: var(--p-line-2); }
-.orbit-core-label { fill: var(--p-ink-2); font: 500 13px/1 var(--p-mono); font-variant-numeric: tabular-nums; }
-.orbit-hub { fill: var(--p-bg); stroke: var(--p-ink-2); stroke-width: 1.5; }
-.orbit-hub-label { fill: var(--p-ink); font: 500 10.5px/1 var(--p-mono); letter-spacing: .08em; text-transform: uppercase; }
-.orbit-node { cursor: default; }
-.orbit-node circle { fill: var(--p-bg); stroke: var(--p-ink-2); stroke-width: 1.5; transition: fill .16s ease, stroke .16s ease; }
-.orbit-node text { fill: var(--p-ink-2); font: 400 13px/1 var(--p-sans); transition: fill .16s ease; }
-.orbit-node.is-on circle { fill: var(--p-accent); stroke: var(--p-accent); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--p-accent) 60%, transparent)); }
-.orbit-node.is-on text { fill: var(--p-ink); }
+
+.orbit-link { fill: none; stroke: var(--rule); stroke-width: 1; transition: stroke .16s ease; }
+.orbit-link.is-on { stroke: var(--accent); }
+
+.orbit-core { fill: var(--surface); stroke: var(--rule-firm); }
+.orbit-core-label {
+  fill: var(--ink-2); font: 400 13px/1 var(--figure);
+  font-variant-numeric: tabular-nums;
+}
+
+.orbit-hub { fill: var(--paper); stroke: var(--ink-2); stroke-width: 1.5; }
+.orbit-hub-label {
+  fill: var(--ink); font: 400 10.5px/1 var(--figure);
+  letter-spacing: var(--ls-rail); text-transform: uppercase;
+}
+
+.orbit-node circle {
+  fill: var(--paper); stroke: var(--ink-2); stroke-width: 1.5;
+  transition: fill .16s ease, stroke .16s ease;
+}
+.orbit-node text {
+  fill: var(--ink-2); font: 400 13px/1 var(--prose);
+  letter-spacing: -0.01em; transition: fill .16s ease;
+}
+.orbit-node.is-on circle {
+  fill: var(--accent); stroke: var(--accent);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 55%, transparent));
+}
+.orbit-node.is-on text { fill: var(--ink); }
 .orbit-node.is-dim { opacity: .3; }
+/* An SVG <g> cannot take an outline reliably, so the ring is drawn on the
+   circle rather than suppressed. */
 .orbit-node:focus { outline: none; }
-.orbit-node:focus-visible circle { stroke: var(--p-accent); stroke-width: 3; }
-.orbit-figure figcaption { margin-top: 18px; color: var(--p-ink-2); font-size: 14px; min-height: 2.6em; }
-.orbit-figure figcaption strong { color: var(--p-ink); font-weight: 550; }
+.orbit-node:focus-visible circle { stroke: var(--accent); stroke-width: 3; }
 
-/* ── skills ─────────────────────────────────────────────────────────────── */
-.proto-skills { display: grid; gap: 34px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-.proto-skill-group ul { list-style: none; margin: 14px 0 0; padding: 0; }
-.proto-skill-group li { padding: 9px 0; border-top: 1px solid var(--p-line); }
-.proto-skill-group li span { display: block; font-weight: 500; }
-.proto-skill-group li em { display: block; font-style: normal; color: var(--p-ink-2); font-size: 13px; margin-top: 2px; }
-
-.proto-foot {
-  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-  padding-top: 24px; border-top: 1px solid var(--p-line);
-  color: var(--p-ink-2); font: 400 12.5px/1.5 var(--p-mono);
+.orbit-figure figcaption {
+  font-family: var(--prose);
+  letter-spacing: -0.006em;
+  margin-top: var(--s-5);
+  max-width: 70ch;
+  font-size: var(--fs-small);
+  color: var(--ink-2);
+  min-height: 3em;
 }
-.proto-foot a { color: var(--p-ink-2); }
+.orbit-figure figcaption strong { color: var(--ink); font-weight: 500; }
 
-@media (max-width: 760px) {
-  .proto-split { grid-template-columns: 1fr; }
-}
+.stack-list { grid-column: 1 / -1; margin-top: var(--s-10); }
+.stack-list .row + .row { margin-top: var(--s-8); }
+
 @media (prefers-reduced-motion: reduce) {
-  .proto-dot { animation: none; }
+  .orbit-link, .orbit-node circle, .orbit-node text { transition: none; }
 }

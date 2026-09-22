@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import PageHead from "@/components/PageHead";
-import StackPlayground from "@/components/StackPlayground";
+import StackOrbit from "@/components/StackOrbit";
 import { site, feedTypes, skills } from "@/lib/site";
 
 const description =
@@ -47,13 +47,34 @@ export default function Stack() {
           <>
             <span>{count} skills</span>
             <span>{skills.length} groups</span>
-            <span>drag them</span>
+            <span>hover them</span>
           </>
         }
-        lede="Everything I would put my name to, and what each one connects to. The lines are not decoration: an edge is only here if it says something true about how the two things are used together."
+        lede="Everything I would put my name to, grouped by what it is for. Laid out rather than simulated: the arrangement is the same every time you open it."
       />
 
-      <StackPlayground />
+      <StackOrbit />
+
+      {/*
+        The text equivalent, and the real content. The figure above is a way of
+        looking at this list; the list is what survives with no JavaScript, no
+        pointer and a screen reader.
+      */}
+      <div className="stack-list">
+        {skills.map((group) => (
+          <section className="row" key={group.group}>
+            <span className="rail rail--label">{group.group}</span>
+            <dl className="uses-list">
+              {group.items.map((skill) => (
+                <div className="uses-item" key={skill.name}>
+                  <dt>{skill.name}</dt>
+                  <dd>{skill.now}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        ))}
+      </div>
 
       <Footer />
     </main>

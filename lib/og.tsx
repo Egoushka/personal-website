@@ -15,11 +15,11 @@ export const OG_CONTENT_TYPE = "image/png";
  * build time and has no access to the stylesheet. Keep them in step with
  * globals.css by hand; there is no way to derive them here.
  */
-const PAPER = "#191714";
-const INK = "#EDE8DF";
-const INK_2 = "#A8A096";
-const RULE = "#2E2A25";
-const ACCENT = "#E0A257";
+const PAPER = "#0A0B0D";
+const INK = "#F2F4F6";
+const INK_2 = "#98A0A8";
+const RULE = "#1E2126";
+const ACCENT = "#F2A03D";
 
 export function ogCard({ title, eyebrow }: { title: string; eyebrow: string }) {
   return new ImageResponse(

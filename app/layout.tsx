@@ -1,31 +1,23 @@
 import type { Metadata, Viewport } from "next";
-import { Literata, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
 import { site, feedTypes } from "@/lib/site";
 import "./globals.css";
 
-// Downloaded and self-hosted at build time — no request to Google from the browser,
-// and no render-blocking cross-origin stylesheet on the critical path.
+// Downloaded and self-hosted at build time — no request to Google from the
+// browser, and no render-blocking cross-origin stylesheet on the critical path.
 //
-// Two faces, and only two. Prose is the serif; every figure, label and nav item is
-// the sans. A third family appearing here means something has started leaking.
-const prose = Literata({
-  // cyrillic-ext carries "Hrabovskyi" and any Ukrainian strings.
-  subsets: ["latin", "cyrillic-ext"],
-  weight: ["400", "600"],
-  style: ["normal", "italic"],
+// ONE family now. Literata set the prose and it was the single thing that made
+// this site read as older than it is: a serif at 19px on a 1.72 leading is an
+// editorial setting, and this is not a magazine. Inter carries the whole site,
+// and the metadata that used to be set in it has moved to the system monospace
+// — which costs nothing to load and reads as a developer rather than a
+// broadsheet.
+const prose = Inter({
+  // cyrillic carries "Hrabovskyi" and any Ukrainian strings.
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500", "600"],
   display: "swap",
   variable: "--font-prose",
-});
-
-// Was Archivo Narrow, a condensed face drawn for dense tabular setting. That made
-// sense when the home page was a four-column ledger; it makes none now, and a
-// condensed face reads as tighter and more clipped than this site's voice. Inter
-// carries tabular figures for the counted numbers and stays friendly at 12px.
-const figure = Inter({
-  subsets: ["latin"],
-  weight: ["400", "600"],
-  display: "swap",
-  variable: "--font-figure",
 });
 
 export const metadata: Metadata = {
@@ -54,10 +46,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // --paper, dark theme. Keep these two in step with globals.css.
+  // --paper, both themes. Keep these two in step with globals.css.
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#191714" },
-    { media: "(prefers-color-scheme: light)", color: "#FBF8F2" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A0B0D" },
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
   ],
   colorScheme: "dark light",
 };
@@ -71,7 +63,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${prose.variable} ${figure.variable}`}
+      className={prose.variable}
     >
       <body>
         {/*
