@@ -69,10 +69,19 @@ and what the OAuth callback is built from.
 
 Route `hrabovskyi.online/c/*` to the remark42 container, in
 `/opt/stacks/pangolin/config/traefik/dynamic_config.yml` (`watch: true`, so it
-applies live).
+applies live), and **strip the `/c` prefix**.
 
-**Do not strip the `/c` prefix.** Remark42 is configured to live at that path
-and builds its own URLs from `REMARK_URL`.
+I had this backwards on the first pass and it cost a broken deploy. Both of
+these are true at once:
+
+- `REMARK_URL` ends in `/c`, because remark42 builds its **outgoing** absolute
+  URLs from it — including the GitHub OAuth callback.
+- Remark42 **serves** at root: `/web/...`, `/api/v1/...`, `/auth/...`. So the
+  public prefix has to come off on the way in.
+
+What hid it: **`/ping` answers under any path.** The container reported
+healthy, the health check passed and the OAuth redirect carried the right
+callback, while `/c/web/embed.js` returned 404. Test a real path, not `/ping`.
 
 ### The one that will bite you
 
@@ -109,15 +118,37 @@ curl -sS "https://hrabovskyi.online/c/api/v1/config?site=hrabovskyi"
 Then open a post and check the thread loads, sign-in reaches GitHub and comes
 back, and the console is clean.
 
-## What was verified here, and what was not
+## Status — this is deployed
 
-Verified locally against a real Remark42 container behind a proxy carrying
-this site's production CSP: `embed.js`, `iframe.html`, `remark.mjs`,
-`remark.css`, `/api/v1/config`, `/auth/status` and the thread query
-`/api/v1/find` all returned 200; the iframe mounted same-origin; CLS stayed at
-0.0003, unchanged from before.
+Live at `hrabovskyi.online/c/`, deployed through the homelab GitOps repo
+(PRs #63 and #65), not by hand: untracked files under `/opt/stacks` do not
+survive, because `gitops-sync` reconciles the box against `origin/main` every
+five minutes.
 
-Not verified, because it needs your secret: the GitHub sign-in round trip.
+Verified against the live site: `/c/ping`, `/c/web/embed.js` and
+`/c/api/v1/config` all 200, `/c/auth/github/login` 302s to github.com with the
+right client id and callback, `/c/*` carries no site CSP, the page CSP has
+`frame-src 'self'`, and the widget mounts a same-origin iframe with a clean
+console.
+
+Not verified, because it needs a browser session: the GitHub sign-in round
+trip and whether `REMARK_ADMIN_ID` matches the id GitHub actually issues. Sign
+in once and check — see below.
+
+## Confirm you are the admin
+
+`REMARK_ADMIN_ID` is set to `github_<sha1 of your login>`, which is how
+remark42 derives ids — but it is a derivation, not something I could read
+before you had signed in. After your first sign-in:
+
+```bash
+curl -sS 'https://hrabovskyi.online/c/api/v1/config?site=hrabovskyi' | grep -o '"admins":\[[^]]*\]'
+```
+
+Compare that with the id on your own comment. If they differ, correct
+`REMARK_ADMIN_ID` in `/opt/stacks/comments/.env`, re-run
+`scripts/encrypt-env.sh comments`, and commit the new `.env.enc`. Until they
+match you have no moderation rights on your own site.
 
 ## Known gaps
 
