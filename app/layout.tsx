@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Bricolage_Grotesque } from "next/font/google";
-import { site, feedTypes } from "@/lib/site";
+import { site, feedTypes, isPrelive } from "@/lib/site";
 import "./globals.css";
 
 // Downloaded and self-hosted at build time — no request to Google from the
@@ -56,6 +56,9 @@ export const metadata: Metadata = {
     title: `${site.name} — ${site.role}`,
     description: site.description,
   },
+  // robots.txt is a request a crawler may ignore for a page it reached by link;
+  // this is the one that binds. Absent entirely on a production build.
+  ...(isPrelive ? { robots: { index: false, follow: false } } : {}),
 };
 
 export const viewport: Viewport = {

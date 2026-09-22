@@ -1,5 +1,6 @@
 # Internal static server for hrabovskyi.online.
-# Listens on :80 inside the container (published to 100.64.0.4:8090).
+# Two sites, one config: :80 is production (published to 100.64.0.4:8090) and
+# :81 is prelive (8091, tailnet only). They share one snippet — see below.
 # TLS, the public hostname, and the www->apex redirect are handled upstream
 # by the edge. Keep this file plain HTTP.
 #
@@ -10,8 +11,15 @@
 # Strict-Transport-Security is deliberately NOT set here: it must come from the
 # layer that terminates TLS for the browser, which is Cloudflare, not this container.
 
-:80 {
-	root * /srv
+# ── one site, served twice ──────────────────────────────────────────────────
+# Everything below is shared by production and prelive. It lives in a snippet
+# because the alternative is two 150-line site blocks that drift: the headers,
+# the CSP, the cache matchers and the 2026-08 redirects all have to be
+# identical, or prelive stops being a test of production.
+#
+# The only difference between the two is the root, so the snippet takes no
+# arguments — each site block sets its own `root` and imports the rest.
+(site) {
 	# zstd and gzip are all the standard Caddy build ships — there is no `br` without
 	# a custom build, and Cloudflare re-compresses at the edge anyway.
 	encode zstd gzip
@@ -131,4 +139,30 @@
 		rewrite * /404.html
 		file_server
 	}
+}
+
+# ── production ──────────────────────────────────────────────────────────────
+# :80, published to the tailnet at 8090. The public hostname and TLS belong to
+# the edge; keep this plain HTTP.
+:80 {
+	root * /srv
+	import site
+}
+
+# ── prelive ─────────────────────────────────────────────────────────────────
+# :81, published to the tailnet at 8091, serving /srv-prelive — a separate
+# bind mount fed by .github/workflows/prelive.yml. It is NOT routed at the
+# edge and has no public DNS: reachable over the tailnet only.
+#
+# Both the mount and the published port live in the compose spec in
+# /opt/stacks, which this repo does not own. Until they are added, this block
+# is inert — Caddy listens on :81 inside the container and nothing outside can
+# reach it. See the Prelive section of README.md for the two lines to add.
+:81 {
+	root * /srv-prelive
+	import site
+
+	# Belt and braces. Nothing can crawl a tailnet address, but the day this
+	# gets routed anywhere else, a staging copy of the site must not be indexable.
+	header X-Robots-Tag "noindex, nofollow"
 }

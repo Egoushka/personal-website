@@ -1,0 +1,120 @@
+name: Prelive
+
+# The same build as production, served from a second root on the same Caddy
+# container, published to the tailnet only. Nothing here touches the live site.
+on:
+  workflow_dispatch:
+  pull_request:
+
+# One prelive, so the newest run wins. Separate from `deploy-production` on
+# purpose: a prelive run must never cancel a real deploy.
+concurrency:
+  group: deploy-prelive
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  VPS_HOST: <origin-ip>
+  VPS_USER: root
+  REMOTE_DIR: /opt/stacks/website
+  # Baked into canonicals, both feeds, the sitemap, the OG cards and the URL
+  # each post's comment thread is keyed by — see lib/site.ts.
+  #
+  # The tailnet address of the box is written down twice in this repo and the
+  # two disagree: deploy/Caddyfile says 100.64.0.4, CLAUDE.md and deploy.yml say
+  # 100.64.0.2. This follows the Caddyfile, which is the file closest to the
+  # actual mount. If prelive answers on the other one, change it here — it is
+  # the only place the address appears.
+  PRELIVE_ORIGIN: http://100.64.0.4:8091
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    # A pull_request from a fork gets no secrets, so the SSH steps would fail
+    # halfway through rather than not run. Skip the whole job instead.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate content
+        run: npm run validate
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # SITE_URL is what makes this a separate site rather than a second copy of
+      # production claiming production's addresses. Without it the comment widget
+      # on a prelive post writes into the live thread for that post.
+      - name: Build static export
+        run: npm run build
+        env:
+          SITE_URL: ${{ env.PRELIVE_ORIGIN }}
+
+      # Prelive does NOT ship deploy/Caddyfile, and that is the point: the file
+      # carries the production :80 block too, so rsyncing it from a branch would
+      # change the live site's config before the change was ever merged. It is
+      # only validated here; it reaches the box with the next production deploy.
+      - name: Validate Caddyfile
+        run: |
+          docker run --rm -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      # A sibling of site/, never inside it: --delete on one must not be able to
+      # reach the other. No status.json exclude here — that file is generated on
+      # the box for production only, and prelive rendering /about/ without live
+      # status is the correct degraded state, not a bug to hide.
+      - name: Sync prelive to VPS
+        run: |
+          ssh -i ~/.ssh/id_ed25519 "$VPS_USER@$VPS_HOST" "mkdir -p $REMOTE_DIR/prelive"
+          rsync -avz --delete -e "ssh -i ~/.ssh/id_ed25519" \
+            out/ "$VPS_USER@$VPS_HOST:$REMOTE_DIR/prelive/"
+
+      # No Caddy reload: only static files moved, and Caddy reads those from disk
+      # per request. The check runs inside the container so it does not depend on
+      # which tailnet address the port happens to be published on.
+      - name: Verify prelive is serving
+        run: |
+          fail() {
+            echo "::error::prelive did not answer for $1"
+            echo "First run? Two things have to land before this can pass:"
+            echo "  1. the :81 block in deploy/Caddyfile reaches the box with the"
+            echo "     next production deploy (merge to main)"
+            echo "  2. the /srv-prelive mount and the 8091 port live in the compose"
+            echo "     spec in /opt/stacks, which this repo does not own"
+            echo "See the Prelive section of README.md."
+            exit 1
+          }
+          for path in / /writing/ /writing/silent-deploys/ /feed.xml; do
+            ssh -i ~/.ssh/id_ed25519 "$VPS_USER@$VPS_HOST" \
+              "docker exec website-caddy wget -q -O /dev/null http://localhost:81$path" \
+              || fail "$path"
+            echo "$path -> ok"
+          done
+
+      - name: Where to look
+        run: |
+          echo "### Prelive updated" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "<$PRELIVE_ORIGIN/> — tailnet only, from \`${GITHUB_REF_NAME}\`" >> "$GITHUB_STEP_SUMMARY"

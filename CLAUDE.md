@@ -205,8 +205,17 @@ The rule now is *justify each one*, not *never*. Three exist:
 push to `main`, then `docker compose up -d`. Pushing to `main` publishes the site. Get
 explicit approval before pushing; don't touch `deploy/` or the workflow casually.
 
+**Prelive is `:81` in the same Caddyfile**, served from `/srv-prelive` and published
+to the tailnet only — [.github/workflows/prelive.yml](.github/workflows/prelive.yml) builds with `SITE_URL` set
+(which is what keeps its comment threads out of production's) and rsyncs to
+`/opt/stacks/website/prelive/`. It deliberately does **not** ship `deploy/Caddyfile`:
+that file carries the `:80` block, so pushing it from a branch would reconfigure the
+live site pre-merge. Both site blocks share one `(site)` snippet — never let them
+drift, or prelive stops being a test of production. See the Prelive section of
+[README.md](README.md).
+
 The container Caddy ([deploy/Caddyfile](deploy/Caddyfile)) is **plain HTTP on :80**, published to the
-tailnet at `100.64.0.2:8090`. TLS, the public hostname and the `www` redirect belong to the
+tailnet at `100.64.0.2:8090` (the Caddyfile's own comment says `100.64.0.4` — unresolved). TLS, the public hostname and the `www` redirect belong to the
 edge — do not add `tls`, a hostname block, or a redirect to `deploy/Caddyfile`.
 
 **The edge is Traefik, not Caddy.** `/opt/stacks/headscale/Caddyfile` is dead config; no

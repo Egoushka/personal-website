@@ -277,6 +277,62 @@ at <https://hrabovskyi.online>.
 
 
 
+## Prelive
+
+A full build of the site, on the same box and the same Caddy container as
+production, served from a second root and published to the **tailnet only**. No
+public DNS, no edge route, nothing to crawl. It exists so a change can be walked
+through on a phone and a laptop before it is merged.
+
+`.github/workflows/prelive.yml` runs on **manual dispatch and on every pull
+request**: `npm ci` → `validate` → `typecheck` → `build` → `caddy validate` →
+rsync `out/` to `/opt/stacks/website/prelive/` → check the container answers.
+Then open <http://100.64.0.4:8091/>.
+
+Three things make it a separate site rather than a second copy of production:
+
+- **`SITE_URL`.** The workflow builds with it set to the prelive origin, and
+  [lib/site.ts](lib/site.ts) reads it once. Canonicals, both feeds, the sitemap
+  and the OG cards follow it — and so does the URL each comment thread is keyed
+  by, which is the one that matters: a prelive build carrying the production URL
+  would post test comments into the live thread.
+- **`noindex`.** `isPrelive` puts `Disallow: /` in `robots.txt`, a
+  `noindex, nofollow` meta on every page, and `X-Robots-Tag` on the `:81` block.
+- **It never ships `deploy/Caddyfile`.** That file carries the production `:80`
+  block too, so rsyncing it from a branch would change the live site's config
+  before the change was merged. Prelive only *validates* it.
+
+### One-time setup
+
+`deploy/Caddyfile` already serves `:81` from `/srv-prelive`. The mount and the
+published port live in the compose spec under `/opt/stacks`, which this repo
+does not own — add both there by hand, once:
+
+```yaml
+    volumes:
+      - ./prelive:/srv-prelive:ro     # alongside the existing ./site:/srv:ro
+    ports:
+      - "100.64.0.4:8091:81"          # alongside the existing 8090:80
+```
+
+Then `docker compose up -d` in `/opt/stacks/website` — this one genuinely needs
+it, because the compose spec changed and the container has to be recreated.
+
+Two ordering notes, both of which will fail the workflow's verify step with a
+message rather than silently:
+
+1. The `:81` block reaches the box with the **next production deploy**, so the
+   branch adding it has to be merged to `main` before prelive can answer.
+2. The tailnet address of the box is written down twice in this repo and the two
+   disagree — `deploy/Caddyfile` says `100.64.0.4`, `CLAUDE.md` and
+   `deploy.yml` say `100.64.0.2`. `PRELIVE_ORIGIN` at the top of
+   `prelive.yml` follows the Caddyfile; if prelive answers on the other one,
+   that env var is the only place to change it.
+
+Prelive reuses `DEPLOY_SSH_KEY` and `DEPLOY_KNOWN_HOSTS`. A pull request from a
+fork gets neither, so the job skips itself rather than failing halfway.
+
+
 ## Editing (`/admin/`)
 
 [Sveltia CMS](https://sveltiacms.app). A static SPA that talks to the GitHub API

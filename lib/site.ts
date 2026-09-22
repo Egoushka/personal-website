@@ -1,11 +1,32 @@
 import type { TopicSlug } from "./topics";
 
+/**
+ * The live origin. Everything absolute on this site is built from it —
+ * canonicals, JSON-LD `@id`s, the sitemap, both feeds, the OG cards, and the
+ * URL each post's comment thread is keyed by.
+ */
+const PRODUCTION_URL = "https://hrabovskyi.online";
+
+/**
+ * Overridden at BUILD time by prelive, never at runtime — a static export has
+ * no runtime env, and `SITE_URL` is read here exactly once so a second copy of
+ * the site cannot claim production's addresses.
+ *
+ * It is not cosmetic. Remark42 keys a thread by the page's URL, so a prelive
+ * build carrying the production URL would post test comments straight into the
+ * live thread for that post.
+ */
+const siteUrl = process.env.SITE_URL ?? PRODUCTION_URL;
+
+/** True on any build that is not aimed at the live origin. */
+export const isPrelive = siteUrl !== PRODUCTION_URL;
+
 export const site = {
   name: "Yehor Hrabovskyi",
   /** The greeting. First thing on the page, and the register everything else matches. */
   greeting: "Hey — I'm Yehor.",
   domain: "hrabovskyi.online",
-  url: "https://hrabovskyi.online",
+  url: siteUrl,
   role: "Backend-first .NET developer",
   /**
    * One line under the greeting. It has been three sentences and a list of
