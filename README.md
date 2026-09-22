@@ -28,6 +28,9 @@ app/                  routes (App Router)
   writing/            index + writing/[slug]/ post pages (static-generated)
   topics/[topic]/     one page per topic — posts, projects AND jobs for it
   projects/           index + projects/[slug]/
+  skills/             what I work with, with the measured share of editor time
+  journey/            the roles on a time axis, gaps included
+  lab/                unlinked prototypes. Not in the nav, not in the sitemap.
   about/              about, what I'm doing now, and the whole stack
   cv/                 /cv/ — prints to exactly one A4 page. No checked-in cv.pdf
                       on purpose, so it can never go stale.
@@ -35,7 +38,8 @@ app/                  routes (App Router)
   sitemap.ts          /sitemap.xml
   robots.ts           /robots.txt
 components/           Nav, Footer, PageHead, PostList, ProjectFilter, TopicMap,
-                      Search, UsesStatus, JsonLd, Picture, HomelabDiagram
+                      SkillsBoard, Journey, Panel, Icon, Search, UsesStatus,
+                      JsonLd, Picture
 content/posts/*.md    posts (frontmatter: title, date, description, topics)
 content/drafts/       drafts. Not built. Moving a file out of here is deliberate.
 lib/site.ts           site content (projects, experience, uses, links)
@@ -83,6 +87,46 @@ It shows up on `/writing/` and at `/writing/my-post/` on the next build, and on 
 page for each of its topics.
 
 ## Deploy
+
+There are **two** deploy paths, and a push to `main` runs both.
+
+| | Path 1 — the VPS (origin) | Path 2 — Cloudflare Pages (mirror) |
+|---|---|---|
+| Workflow | [.github/workflows/deploy.yml](.github/workflows/deploy.yml) | [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) |
+| Serves | container Caddy on the Hetzner box | Cloudflare's own network |
+| Headers, redirects | [deploy/Caddyfile](deploy/Caddyfile) | [deploy/pages/_headers](deploy/pages/_headers), [deploy/pages/_redirects](deploy/pages/_redirects) |
+| What the apex points at | this, today | nothing, until you point it |
+| Survives the box being down | no | yes |
+
+The second path exists because the first one ends at a single machine that also runs
+every other self-hosted thing here. Without it the commercial front of this site goes
+down with the test lab. It is a **failover, not a migration**: the VPS stays the origin,
+and switching is one DNS change.
+
+**Turning path 2 on** — it is gated off so a push cannot fail in red for a deploy that
+was never configured:
+
+1. Create the Pages project (any name; the default the workflow expects is
+   `hrabovskyi-online`, override it with the repo variable `CLOUDFLARE_PAGES_PROJECT`).
+2. Add repo secrets `CLOUDFLARE_API_TOKEN` (scope: Cloudflare Pages → Edit) and
+   `CLOUDFLARE_ACCOUNT_ID`.
+3. Set the repo **variable** `DEPLOY_CLOUDFLARE_PAGES` to `true`.
+
+**Keep the two in step.** Caddy gets its headers and redirects from the Caddyfile; Pages
+gets them from `_headers` and `_redirects`, which are copied into `out/` by the workflow
+rather than living in `public/`. The redirects are not optional on either: `/posts/*` was
+the canonical address of everything published here and is still in feed readers, and
+without the `Content-Type: image/png` line every social scraper rejects the OG cards,
+which `next/og` writes as extensionless files. A rule added to one file and not the other
+is a bug that only appears on whichever path you are not looking at.
+
+**Analytics does not follow the mirror.** `/s/script.js` and `/api/send` are first-party
+only because the edge Traefik routes them to the Umami container; on Pages there is no
+such route and the tracker is silently dead. That is acceptable for a failover — it is
+the one thing on the page nobody is there for — but it is worth knowing before debugging
+it a second time.
+
+### Path 1 — the VPS
 
 The site exports to static files served by a small internal Caddy
 (`/opt/stacks/website`) bound to the tailnet at `100.64.0.2:8090`.
@@ -137,6 +181,22 @@ Traefik. That has consequences worth knowing before you debug anything:
 The original single-layer setup was: A records `@` and `www` → the VPS, with Caddy issuing
 the Let's Encrypt cert once DNS resolved. That still describes the origin; it is no longer
 the whole path.
+
+### Live state on /about/
+
+`scripts/gen-status.sh` runs from cron **on the VPS** and writes `/status.json` next to the
+site. `components/UsesStatus.tsx` fetches it in the browser and renders nothing if it is
+missing or older than 48 hours, so the page never claims live state it does not have.
+
+It publishes aggregates only — container count, unhealthy count, uptime, and, when
+`WAKAPI_API_KEY` is set in the cron environment, hours coded in the last 30 days with the
+top language and editor as shares. Never service names, versions, ports or project names:
+the busiest project is an employer's codebase and this document is public.
+
+```
+WAKAPI_API_KEY=... WAKAPI_URL=http://wakapi:3000 \
+  /opt/stacks/website/gen-status.sh /opt/stacks/website/site/status.json
+```
 
 **Ship a build:**
 

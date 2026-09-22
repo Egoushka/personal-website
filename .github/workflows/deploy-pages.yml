@@ -1,0 +1,68 @@
+name: Deploy (Cloudflare Pages)
+
+# The second deploy path, and the reason it exists: the first one ends at a
+# single Hetzner box that also runs everything else self-hosted here. When that
+# box is down — or being rebuilt, or moved again — the commercial front of this
+# site goes down with the test lab. This job puts the same `out/` behind
+# Cloudflare Pages, which has no origin to lose.
+#
+# It does NOT replace .github/workflows/deploy.yml. Both run on a push to main;
+# the VPS stays the origin the apex points at, and this is the copy to fail over
+# to by changing one DNS record.
+#
+# Off until switched on: set the repository variable DEPLOY_CLOUDFLARE_PAGES to
+# "true" once CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID exist as secrets.
+# Without that gate, every push to main would fail this job in red for a deploy
+# that was never configured.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: vars.DEPLOY_CLOUDFLARE_PAGES == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Validate content
+        run: npm run validate
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build static export
+        run: npm run build
+
+      # Pages reads _headers and _redirects from the root of what it serves.
+      # They live under deploy/pages/ rather than public/ so the VPS copy, which
+      # gets its headers and redirects from Caddy, is not shipped two inert
+      # files that look like configuration.
+      - name: Add the Pages header and redirect rules
+        run: cp deploy/pages/_headers deploy/pages/_redirects out/
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: >-
+            pages deploy out
+            --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT || 'hrabovskyi-online' }}
+            --branch=main

@@ -58,12 +58,22 @@ export type Readings = {
   daysSinceLatest?: number;
   codeLines: number;
   cssLines: number;
-  /** Lines of source per published word. Currently, embarrassingly, above 1. */
-  linesPerWord: number;
   nowUpdated: string;
   daysSinceNow: number;
   usesVerified: string;
   projects: number;
+  /** Of those, how many are still running. Counted, so "all three" cannot rot. */
+  projectsRunning: number;
+  /**
+   * The longest stretch of time any post is *about* (`spanDays`), and the post
+   * that is about it. The hero sentence and the proof row both cite this figure
+   * and neither types it: the 51 in "not 51 days later" is the frontmatter of
+   * content/posts/silent-deploys.md, read at build.
+   *
+   * Undefined when no post carries a span, and every line that cites it is
+   * written to disappear rather than print a blank.
+   */
+  longestSpan?: { days: number; slug: string; title: string };
 };
 
 export function getReadings(): Readings {
@@ -78,6 +88,10 @@ export function getReadings(): Readings {
   const codeLines = countLines(code);
   const cssLines = countLines([STYLESHEET]);
 
+  const spanned = posts
+    .filter((p): p is typeof p & { spanDays: number } => typeof p.spanDays === "number")
+    .sort((a, b) => b.spanDays - a.spanDays)[0];
+
   return {
     builtOn,
     posts: posts.length,
@@ -91,11 +105,16 @@ export function getReadings(): Readings {
     daysSinceLatest: latest ? daysBetween(latest.date, builtOn) : undefined,
     codeLines,
     cssLines,
-    linesPerWord: words ? (codeLines + cssLines) / words : 0,
     nowUpdated: now.updated,
     daysSinceNow: daysBetween(now.updated, builtOn),
     usesVerified: usesUpdated,
     projects: projects.length,
+    projectsRunning: projects.filter((p) => p.status === "running").length,
+    longestSpan: spanned && {
+      days: spanned.spanDays,
+      slug: spanned.slug,
+      title: spanned.title,
+    },
   };
 }
 

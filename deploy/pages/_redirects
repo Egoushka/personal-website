@@ -1,0 +1,19 @@
+# Cloudflare Pages redirects — the second deploy path.
+#
+# This file is the Pages translation of the `handle` blocks in deploy/Caddyfile.
+# A static export cannot redirect on its own, so if these are missing here, every
+# URL this site has ever published under 404s the moment the mirror is the thing
+# answering. Change one file, change the other.
+#
+# Pages syntax: one rule per line, `from to status`, `:splat` carries the
+# wildcard through. Splats are only allowed at the end of a pattern.
+/posts/*   /writing/:splat  301
+/tags/*    /topics/:splat   301
+/blog      /writing/        301
+/blog/*    /writing/        301
+/resume    /cv/             301
+/resume/*  /cv/             301
+/now       /about/          301
+/now/*     /about/          301
+/uses      /about/          301
+/uses/*    /about/          301

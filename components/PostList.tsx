@@ -16,9 +16,9 @@ export default function PostList({ posts }: { posts: PostMeta[] }) {
         <li className="post-row" key={p.slug}>
           <Link href={`/writing/${p.slug}/`}>{p.title}</Link>
           <p>{p.description}</p>
-          <span className="post-meta">
-            <time dateTime={p.date}>{formatDate(p.date)}</time>
-            {` · ${p.readingTime} min read`}
+          <span className="post-meta run">
+            <span><time dateTime={p.date}>{formatDate(p.date)}</time></span>
+            <span>{p.readingTime} min read</span>
           </span>
         </li>
       ))}

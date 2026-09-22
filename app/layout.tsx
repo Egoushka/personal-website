@@ -1,31 +1,36 @@
 import type { Metadata, Viewport } from "next";
-import { Literata, Inter } from "next/font/google";
+import { Inter, Bricolage_Grotesque } from "next/font/google";
 import { site, feedTypes } from "@/lib/site";
 import "./globals.css";
 
-// Downloaded and self-hosted at build time — no request to Google from the browser,
-// and no render-blocking cross-origin stylesheet on the critical path.
+// Downloaded and self-hosted at build time — no request to Google from the
+// browser, and no render-blocking cross-origin stylesheet on the critical path.
 //
-// Two faces, and only two. Prose is the serif; every figure, label and nav item is
-// the sans. A third family appearing here means something has started leaking.
-const prose = Literata({
-  // cyrillic-ext carries "Hrabovskyi" and any Ukrainian strings.
-  subsets: ["latin", "cyrillic-ext"],
-  weight: ["400", "600"],
-  style: ["normal", "italic"],
+// Inter reads everything. It also set every heading, and one grotesk doing all
+// three jobs is why the site read as one long undifferentiated column: the
+// only thing separating a title from a paragraph was eight points of size.
+const prose = Inter({
+  // cyrillic carries "Hrabovskyi" and any Ukrainian strings.
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500", "600"],
   display: "swap",
   variable: "--font-prose",
 });
 
-// Was Archivo Narrow, a condensed face drawn for dense tabular setting. That made
-// sense when the home page was a four-column ledger; it makes none now, and a
-// condensed face reads as tighter and more clipped than this site's voice. Inter
-// carries tabular figures for the counted numbers and stays friendly at 12px.
-const figure = Inter({
+// Titles only.
+//
+// A second grotesk rather than a serif, because the serif this replaced was
+// elegant and belonged to a different kind of site. Bricolage is a display
+// grotesk with actual opinions — flat-sided bowls, a tight double-storey g,
+// terminals cut at angles Inter would never allow — so at 28px and up it does
+// not read as Inter-but-bigger, which is the entire job.
+//
+// Variable, so `weight` is omitted and globals.css asks for 600 directly. No
+// Cyrillic subset: anything outside latin falls through to the stack below it.
+const display = Bricolage_Grotesque({
   subsets: ["latin"],
-  weight: ["400", "600"],
   display: "swap",
-  variable: "--font-figure",
+  variable: "--font-display",
 });
 
 export const metadata: Metadata = {
@@ -54,10 +59,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // --paper, dark theme. Keep these two in step with globals.css.
+  // --paper, both themes. Keep these two in step with globals.css.
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#191714" },
-    { media: "(prefers-color-scheme: light)", color: "#FBF8F2" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A0B0D" },
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
   ],
   colorScheme: "dark light",
 };
@@ -71,9 +76,25 @@ export default function RootLayout({
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${prose.variable} ${figure.variable}`}
+      className={`${prose.variable} ${display.variable}`}
     >
       <body>
+        {/*
+          Runs before anything paints, so a reader who chose a theme never sees
+          the other one first. It is inline and un-deferred on purpose: a
+          request for this would be a request that has to finish before the
+          first frame, which is the flash it exists to prevent.
+
+          Everything it can throw is caught. Blocked storage means no stored
+          choice, which is the same as never having made one, and the media
+          query in globals.css takes over.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}",
+          }}
+        />
         <a className="skip-link" href="#main">Skip to content</a>
         {children}
         {/*

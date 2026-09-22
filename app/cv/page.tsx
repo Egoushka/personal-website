@@ -3,8 +3,10 @@ import Link from "next/link";
 import Nav from "@/components/Nav";
 import { ProfilePageLd } from "@/components/JsonLd";
 import Footer from "@/components/Footer";
-import { site, feedTypes, experience, education, projects } from "@/lib/site";
-import { TOPICS, topicName, type TopicSlug } from "@/lib/topics";
+import React from "react";
+import { site, feedTypes, experience, education, projects, skills, eras } from "@/lib/site";
+import { getTopicUsage } from "@/lib/readings";
+import Measured from "@/components/Measured";
 
 const description =
   "CV of Yehor Hrabovskyi — .NET backend engineer. Clean Architecture, CQRS, ASP.NET Core, Angular, self-hosted infrastructure.";
@@ -43,30 +45,17 @@ function isoDates(when: string): string {
   );
 }
 
-/**
- * The skills line, derived rather than typed.
- *
- * There used to be a hand-maintained `skills` array in lib/site.ts that had
- * drifted from both the jobs and the projects it was supposed to summarise. This
- * is every technology topic that some role or project actually references, in
- * vocabulary order — so it cannot claim anything the rest of the site does not
- * already back up.
- */
-function skillsFromRecord(): string[] {
-  const used = new Set<TopicSlug>();
-  for (const job of experience) for (const t of job.topics) used.add(t);
-  for (const project of projects) for (const t of project.topics) used.add(t);
-  return [...used]
-    .filter((t) => TOPICS[t].kind === "technology")
-    .map(topicName);
-}
-
 export default function CV() {
-  const skills = skillsFromRecord();
+  // Only link a skill whose hub actually exists — the vocabulary is wider than
+  // the pages it has earned, and a static file server cannot redirect its way
+  // out of a dangling link.
+  const hasPage = new Set(getTopicUsage().map((t) => t.slug));
 
   return (
     <main id="main" className="wrap cv">
-      <Nav current="cv" />
+      {/* No `current`: the CV is no longer a navigation section. It lives in the
+          footer now, so there is nothing in the header for it to mark. */}
+      <Nav />
       <ProfilePageLd />
 
       <div className="rail masthead-rail">
@@ -82,53 +71,85 @@ export default function CV() {
       </div>
 
       <p className="control print-hint">
-        <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>P</kbd> → one A4 page
+        <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>P</kbd> prints one A4 page
       </p>
 
-      <hr className="bleed" />
-      <section className="row section">
-        <h2 className="rail rail--label">Experience</h2>
-        <div>
-          {/* `resumeCompact` roles keep their bullets on screen and lose them in
-              print — the compression that makes one A4 sheet possible. Deleting
-              them outright would trade a real record for a layout constraint. */}
-          {experience.map((job) => (
-            <div className={`job${job.resumeCompact ? " job--compact" : ""}`} key={job.company + job.when}>
-              <div className="job-head">
-                <h3 className="job-name">{job.company}</h3>
-                <span className="job-dates">{isoDates(job.when)}</span>
-              </div>
-              <p className="job-meta">
-                {job.role}
-                {job.location && ` · ${job.location}`}
-              </p>
-              <ul>
-                {job.points.map((pt, j) => (
-                  <li key={j}>
-                    {pt.text}
-                    {pt.link && <Link href={pt.link.href}>{pt.link.label}</Link>}
-                    {pt.after}
-                  </li>
-                ))}
-              </ul>
+      {/*
+        The record, told as eras.
+
+        Each era carries its own prose and one obstacle, and wraps the roles of
+        that period. **All of the prose is display:none in print** — the sheet
+        that comes out of Cmd+P is the ordinary reverse-chronological record a
+        reader expects, and the screen is the version that explains it.
+
+        Bullets that survive to paper are chosen by `printBullets` on the data,
+        not by `:nth-child` in the stylesheet: the markup is nested inside eras
+        now, and a positional rule would have kept working while quietly
+        counting the wrong thing.
+      */}
+      {eras.map((era) => (
+        <React.Fragment key={era.slug}>
+          <hr className="bleed" />
+          <section
+            className={`row section cv-era${era.jobs.length === 0 ? " print-hide" : ""}`}
+            id={era.slug}
+          >
+            <div className="rail">
+              <span className="rail--label">{era.years}</span>
             </div>
-          ))}
-        </div>
-      </section>
+            <div>
+              <h2 className="era-title">{era.title}</h2>
+              {era.body.map((paragraph) => (
+                <p className="era-prose" key={paragraph.slice(0, 40)}>{paragraph}</p>
+              ))}
+              {era.obstacle && (
+                <p className="era-obstacle">
+                  <span className="era-obstacle-label">What went wrong</span>
+                  {era.obstacle}
+                </p>
+              )}
+
+              {experience
+                .filter((job) => era.jobs.includes(job.company))
+                .map((job) => (
+                  <div className={`job${job.resumeCompact ? " job--compact" : ""}`} key={job.company + job.when}>
+                    <div className="job-head">
+                      <h3 className="job-name">{job.company}</h3>
+                      <span className="job-dates">{isoDates(job.when)}</span>
+                    </div>
+                    <p className="job-meta run">
+                      <span>{job.role}</span>
+                      {job.focus && <span>{job.focus}</span>}
+                      {job.location && <span>{job.location}</span>}
+                      {job.mode && <span>{job.mode}</span>}
+                    </p>
+                    <ul>
+                      {job.points.map((pt, j) => (
+                        <li key={j} className={j >= (job.printBullets ?? 0) ? "print-hide" : undefined}>
+                          {pt.text}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+            </div>
+          </section>
+        </React.Fragment>
+      ))}
 
       <hr className="bleed" />
       <section className="row section">
         <h2 className="rail rail--label">Projects</h2>
         <div>
           {projects.map((p) => (
-            <div className="job" key={p.slug}>
+            <div className={`job${p.print ? "" : " print-hide"}`} key={p.slug}>
               <div className="job-head">
                 <h3 className="job-name">
                   {p.href ? <a href={p.href} rel="noopener">{p.name}</a> : p.name}
                 </h3>
-                <span className="job-dates">{p.meta}</span>
+                <span className="job-dates">{p.lang}</span>
               </div>
-              <p className="job-meta">{p.topics.map(topicName).join(" · ")}</p>
+              <p className="job-meta run project-stack">{p.tech.slice(0, 6).map((t) => <span key={t}>{t}</span>)}</p>
               {/* One line on paper. The full account is on the project's own
                   page; a CV bullet that runs four lines does not get read. */}
               <ul><li>{p.resumeLine ?? p.summary}</li></ul>
@@ -137,10 +158,42 @@ export default function CV() {
         </div>
       </section>
 
+      {/*
+        Skills, curated and grouped, each saying where it actually stands.
+
+        The previous version was one undifferentiated run of nine words derived
+        from the topic vocabulary, which is why it printed Flutter — one app on
+        my own phone — and could not print Clean Architecture, EF Core or SQL
+        Server at all. The list is chosen now; the honesty moved into the
+        second line, which has to be specific enough to be wrong.
+
+        `Measured` prints the share of my editor time from my own Wakapi, and
+        renders nothing when the box is not publishing. On paper the second
+        lines are hidden and this compresses back to names.
+      */}
       <hr className="bleed" />
       <section className="row section">
         <h2 className="rail rail--label">Skills</h2>
-        <p className="skills-run">{skills.join(" · ")}</p>
+        <div className="skill-groups">
+          {skills.map((group) => (
+            <div className="skill-group" key={group.group}>
+              <h3>{group.group}</h3>
+              <dl>
+                {group.items.map((skill) => (
+                  <React.Fragment key={skill.name}>
+                    <dt>
+                      {skill.topic && hasPage.has(skill.topic)
+                        ? <Link href={`/topics/${skill.topic}/`}>{skill.name}</Link>
+                        : skill.name}
+                      {skill.wakatime && <Measured lang={skill.wakatime} />}
+                    </dt>
+                    <dd>{skill.now}</dd>
+                  </React.Fragment>
+                ))}
+              </dl>
+            </div>
+          ))}
+        </div>
       </section>
 
       <hr className="bleed" />
@@ -148,11 +201,16 @@ export default function CV() {
         <h2 className="rail rail--label">Education</h2>
         <div>
           {education.map((e) => (
-            <div className="job" key={e.school}>
+            <div className="job edu" key={e.school}>
               <div className="job-head">
                 <h3 className="job-name">{e.school}</h3>
+                <span className="job-dates">{e.when}</span>
               </div>
-              <p className="job-meta">{e.detail}</p>
+              <p className="job-meta run">
+                <span>{e.degree}</span>
+                <span>{e.detail}</span>
+              </p>
+              <ul className="print-hide"><li>{e.note}</li></ul>
             </div>
           ))}
         </div>

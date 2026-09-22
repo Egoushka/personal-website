@@ -1,8 +1,14 @@
 import Link from "next/link";
 import Search from "@/components/Search";
+import ThemeToggle from "@/components/ThemeToggle";
 
 /**
- * Wordmark left, four links and search right, hairline underneath.
+ * Wordmark left, three links and search right, hairline underneath.
+ *
+ * The CV used to be the fourth and is now in the footer. A CV answers "should
+ * we hire this person full time", which is not the question this site is
+ * written for any more — but it is the record, so it stays one click away
+ * rather than in the header.
  *
  * The previous design had no primary navigation at all: the home page was a
  * trial balance and every page was reached by opening the claim it was evidence
@@ -18,8 +24,8 @@ import Search from "@/components/Search";
 const SECTIONS = [
   { key: "writing", href: "/writing/", label: "Writing" },
   { key: "projects", href: "/projects/", label: "Projects" },
+  { key: "skills", href: "/skills/", label: "Skills" },
   { key: "about", href: "/about/", label: "About" },
-  { key: "cv", href: "/cv/", label: "CV" },
 ] as const;
 
 export type Section = (typeof SECTIONS)[number]["key"] | "home";
@@ -47,7 +53,12 @@ export default function Nav({ current }: { current?: Section } = {}) {
             </Link>
           ))}
         </nav>
-        <Search />
+        {/* One unit, so the two controls wrap together rather than the theme
+            switch dropping to a line of its own at phone width. */}
+        <span className="site-header-controls">
+          <Search />
+          <ThemeToggle />
+        </span>
       </div>
     </header>
   );

@@ -1,5 +1,5 @@
-import { site, experience, projects } from "@/lib/site";
-import { TOPICS, topicName, type TopicSlug } from "@/lib/topics";
+import { site, experience, projects, skills } from "@/lib/site";
+import { topicName } from "@/lib/topics";
 import type { PostMeta } from "@/lib/posts";
 
 /**
@@ -23,17 +23,15 @@ const personId = `${site.url}/#person`;
 const siteId = `${site.url}/#website`;
 
 /**
- * `knowsAbout`, derived from the record rather than typed.
+ * `knowsAbout`, from the one curated list.
  *
- * Same rule as the CV's skills line: a technology only appears here if a job or
- * a project actually references it, so the structured data cannot claim more
- * than the visible pages do.
+ * It used to derive itself from the topic vocabulary — a near-verbatim copy of
+ * the CV's old helper, kept in sync by hand in two files. Both are gone: this
+ * reads `skills` in lib/site.ts, so the structured data says exactly what the
+ * CV says and cannot drift from it.
  */
 function knowsAbout(): string[] {
-  const used = new Set<TopicSlug>();
-  for (const job of experience) for (const t of job.topics) used.add(t);
-  for (const project of projects) for (const t of project.topics) used.add(t);
-  return [...used].filter((t) => TOPICS[t].kind === "technology").map(topicName);
+  return skills.flatMap((group) => group.items.map((skill) => skill.name));
 }
 
 /** Homepage: who this is, and what site it is. Both get stable @ids so the

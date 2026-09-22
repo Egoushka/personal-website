@@ -6,9 +6,8 @@ import Footer from "@/components/Footer";
 import PageHead from "@/components/PageHead";
 import Picture, { hasPicture } from "@/components/Picture";
 import UsesStatus from "@/components/UsesStatus";
-import TopicMap from "@/components/TopicMap";
 import { site, feedTypes, experience, now, uses, usesUpdated } from "@/lib/site";
-import { getReadings, getTopicUsage } from "@/lib/readings";
+import { getReadings } from "@/lib/readings";
 
 const description =
   "Backend-leaning full-stack developer in Ukraine. C# / .NET and ASP.NET Core, Angular when the work reaches the front end, and a homelab run like production.";
@@ -52,13 +51,13 @@ export default function About() {
         <a href={site.github} rel="noopener">github</a>
         <a href={site.linkedin} rel="noopener">linkedin</a>
         <span className="rail--group rail--label">Also</span>
-        <Link href="/cv/">the CV →</Link>
-        <Link href="/links/">everywhere else →</Link>
+        <Link href="/cv/">the CV</Link>
+        <Link href="/links/">everywhere else</Link>
       </div>
 
       <PageHead
         title="About"
-        lede="The short version, the current version, and the whole stack it all runs on."
+        lede="The short version."
       />
 
       <div className="prose">
@@ -75,38 +74,17 @@ export default function About() {
         )}
 
         <p>
-          I&apos;m a backend-leaning full-stack developer based in Ukraine.
-          {current && ` Right now I'm a ${current.role.split(" · ")[0]} at ${current.company}, `}
-          working on backend services for a white-label crypto trading platform.
+          Backend developer in Ukraine.
+          {current && ` ${current.role} at ${current.company}, `}
+          on a crypto trading platform: C# and ASP.NET Core, and the parts that
+          never show up in a demo — error handling, observability, what happens
+          under load.
         </p>
 
         <p>
-          Day to day that means <strong>C# / .NET and ASP.NET Core</strong>, with
-          Angular and TypeScript when the work reaches the front end. The parts I
-          actually care about are the ones that don&apos;t show up in a demo:
-          error handling, observability, predictable behaviour under load, and
-          code the next person can read without booking a meeting about it.
-        </p>
-
-        <h2>How I got here</h2>
-        <p>
-          I started at GlobalLogic in 2021 and have worked across Umbraco-based
-          .NET systems, greenfield Clean Architecture backends, and now fintech.
-          It wasn&apos;t a straight line — there&apos;s a two-month gap in 2024
-          where I took a sales job while looking for engineering work. It&apos;s
-          on the <Link href="/cv/">CV</Link> rather than quietly removed, because
-          a tidied-up history is worth less than an honest one.
-        </p>
-
-        <h2>The homelab</h2>
-        <p>
-          Outside work I run a small homelab on a single VPS. It&apos;s a
-          deliberate way to learn infrastructure properly: networking, secrets
-          management, reverse proxies, and the difference between &quot;it
-          works&quot; and &quot;it works at 3am.&quot; It&apos;s the cheapest
-          environment I know for breaking production when production is only
-          mine — and I write about it over in{" "}
-          <Link href="/writing/">the writing</Link>.
+          Outside work I run one VPS like a production environment, because it
+          is the cheapest place I know to break things that are only mine. Most
+          of <Link href="/writing/">the writing</Link> comes out of it.
         </p>
       </div>
 
@@ -115,7 +93,7 @@ export default function About() {
         <span className="rail rail--against-body">
           <span className="rail--label">Right now</span>
           <span>edited {r.nowUpdated}</span>
-          <span>{r.daysSinceNow} days ago</span>
+          <span>{r.daysSinceNow} {r.daysSinceNow === 1 ? "day" : "days"} ago</span>
         </span>
         <div className="section-head">
           <h2>What has my attention</h2>
@@ -133,31 +111,31 @@ export default function About() {
         ))}
       </div>
 
+      {/*
+        The stack used to be listed here in full, and again on /skills/ — the
+        same twenty-odd rows, twice, with the second copy carrying a graph. One
+        of them had to go, and it was this one: a page about a person should
+        say what he is like, and a page about the work should carry the tools.
+      */}
       <hr className="bleed" />
       <section className="row">
         <span className="rail rail--against-body">
           <span className="rail--label">The stack</span>
           <span>verified {usesUpdated}</span>
-          {/* Adds live state when /status.json is fresh; renders nothing otherwise. */}
           <UsesStatus />
         </span>
         <div>
           <div className="section-head">
-            <h2>Everything I actually use</h2>
+            <h2>What I actually run</h2>
+            <Link href="/skills/">Skills</Link>
           </div>
           <p className="page-lede">
-            Not aspirational — the current state. The server half of it is
-            version-controlled, so it can be checked rather than believed.
+            One box, every service defined in git. The full list — what I use
+            and what I would put my name to — is on{" "}
+            <Link href="/skills/">the skills page</Link>.
           </p>
         </div>
       </section>
-
-      {/*
-        The graph, the filter and the list share one filter query, so they live in
-        one client component. `uses` is plain serialisable data from lib/site.ts —
-        it passes through, it is not fetched.
-      */}
-      <TopicMap groups={uses} linkable={getTopicUsage().map((t) => t.slug)} />
 
       <Footer />
     </main>

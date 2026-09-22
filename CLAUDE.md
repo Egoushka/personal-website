@@ -119,11 +119,27 @@ The rule now is *justify each one*, not *never*. Three exist:
   pretending to be evidence. Figures that genuinely cannot be counted here live in
   `Project.readings` and **each names its source**. It reads the filesystem and the
   build clock: **never import it from a client component.**
-- **Fonts are self-hosted by `next/font/google`** in [app/layout.tsx](app/layout.tsx), exposed as
-  `--font-prose` / `--font-figure` and consumed by `--prose` / `--figure` in `globals.css`.
-  Code uses `--code`, a system monospace with no webfont. Do not add a `<link>` to
-  fonts.googleapis.com — it puts a render-blocking cross-origin request back on the critical
-  path and loses the `size-adjust` fallback that keeps CLS at 0.
+- **Three faces, two of them webfonts**, self-hosted by `next/font/google` in
+  [app/layout.tsx](app/layout.tsx): Inter as `--font-prose` → `--prose` (body, h3, everything read
+  at length) and Bricolage Grotesque as `--font-display` → `--display` (h1, h2,
+  `.post-row > a`, `.project-name`), variable, asked for at 600. `--figure` and `--code`
+  are system monospace with no webfont. **`--display` never goes below ~26px** — below
+  that it is a grotesk beside a grotesk and the reader has downloaded a second font for
+  nothing, which is why h3 is still Inter. No Cyrillic subset: non-latin falls through to
+  the system UI face. Do not add a `<link>` to fonts.googleapis.com — it puts a
+  render-blocking cross-origin request back on the critical path and loses the
+  `size-adjust` fallback that keeps CLS at 0 (measured: 0.0002).
+- **One modular type scale**, `--step--2` … `--step-5` at the top of
+  [app/globals.css](app/globals.css): fluid `clamp()` between a 360px and a 1280px viewport,
+  ratio 1.200 → 1.250 upward and a flat 1.180 for the two descending steps.
+  **The steps are primitives — never reference them outside `:root`.** Use the semantic
+  aliases (`--fs-rail`, `--fs-code`/`--fs-small`, `--fs-body`, `--fs-h3`, `--fs-title`,
+  `--fs-h2`, `--fs-h1`, `--fs-display`), and when a size is missing, add an alias rather
+  than a number. Every clamp keeps a `rem` term so text still grows under browser zoom
+  (WCAG 1.4.4) — a pure-`vw` font-size would fail it. Leading is picked by *measure*, not
+  taste (`--lh-flat` … `--lh-body`), and no prose block exceeds 66ch.
+  **`@media print` redeclares all eight steps in `pt`**, because the `vw` term resolves
+  against the paper width and would silently resize the one-page CV.
 - **All styling is one global stylesheet**, [app/globals.css](app/globals.css) — CSS variables at `:root`,
   plain class names (`.sheet`, `.ledger-row`, `.entry-line`). No Tailwind, no CSS modules, no
   styled-components. **No inline `style={{}}`** — add a class instead.

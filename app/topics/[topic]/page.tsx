@@ -5,7 +5,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import PageHead from "@/components/PageHead";
 import PostList from "@/components/PostList";
-import { site, feedTypes, projects, experience } from "@/lib/site";
+import { site, feedTypes, projects, experience, skills } from "@/lib/site";
 import { getPostsByTopic } from "@/lib/posts";
 import { TOPICS, isTopic, topicName } from "@/lib/topics";
 import { getTopicUsage } from "@/lib/readings";
@@ -62,6 +62,7 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
   const posts = getPostsByTopic(topic);
   const built = projects.filter((p) => (p.topics as string[]).includes(topic));
   const jobs = experience.filter((j) => (j.topics as string[]).includes(topic));
+  const now = skills.flatMap((g) => g.items).find((s) => s.topic === topic)?.now;
   if (posts.length + built.length + jobs.length === 0) notFound();
 
   const others = getTopicUsage()
@@ -76,17 +77,23 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
         title={topicName(topic)}
         figures={
           <>
-            {posts.length} {posts.length === 1 ? "post" : "posts"}
-            <span className="sep">·</span>
-            {built.length} {built.length === 1 ? "project" : "projects"}
-            <span className="sep">·</span>
-            {jobs.length} {jobs.length === 1 ? "role" : "roles"}
-            <span className="sep">·</span>
-            {TOPICS[topic].kind}
+            <span>{posts.length} {posts.length === 1 ? "post" : "posts"}</span>
+            <span>{built.length} {built.length === 1 ? "project" : "projects"}</span>
+            <span>{jobs.length} {jobs.length === 1 ? "role" : "roles"}</span>
+            <span>{TOPICS[topic].kind}</span>
           </>
         }
         lede={TOPICS[topic].blurb}
       />
+
+      {/*
+        Where this one actually stands, from the curated skills list rather
+        than a second field here. `blurb` is reused in five places — the meta
+        description, the OG card, the graph's hover note and its aria-label —
+        so it cannot grow into a paragraph; `now` can, and it lives beside the
+        claim it qualifies on the CV.
+      */}
+      {now && <p className="topic-now">{now}</p>}
 
       {posts.length > 0 && (
         <>
@@ -109,7 +116,7 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
                   <h2 className="project-name">
                     <Link href={`/projects/${p.slug}/`}>{p.name}</Link>
                   </h2>
-                  <span className="project-status">{p.meta} · {p.status}</span>
+                  <span className="project-status run"><span>{p.lang}</span><span>{p.shape}</span><span>{p.status}</span></span>
                   <p>{p.summary}</p>
                 </li>
               ))}

@@ -14,11 +14,9 @@ export default function NotFound() {
           Nothing at this address. It answered, but it isn&apos;t listening.
         </p>
         <p className="page-figures">
-          <Link href="/">home</Link>
-          <span className="sep">·</span>
-          <Link href="/writing/">writing</Link>
-          <span className="sep">·</span>
-          <Link href="/projects/">projects</Link>
+          <span><Link href="/">home</Link></span>
+          <span><Link href="/writing/">writing</Link></span>
+          <span><Link href="/projects/">projects</Link></span>
         </p>
       </div>
       <Footer />

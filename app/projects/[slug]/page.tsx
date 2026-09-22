@@ -5,6 +5,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import PageHead from "@/components/PageHead";
 import { site, feedTypes, projects } from "@/lib/site";
+import { Downloads } from "@/components/Measured";
 import { topicName } from "@/lib/topics";
 
 type Params = { slug: string };
@@ -63,14 +64,13 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
         title={project.name}
         figures={
           <>
-            {project.meta}
-            <span className="sep">·</span>
-            {project.status}
-            {project.href && (
-              <>
-                <span className="sep">·</span>
-                <a href={project.href} rel="noopener">source ↗</a>
-              </>
+            <span>{project.lang}</span>
+            <span>{project.shape}</span>
+            <span>{project.status}</span>
+            {project.href ? (
+              <span><a href={project.href} rel="noopener">the repository</a></span>
+            ) : (
+              <span>private repository</span>
             )}
           </>
         }
@@ -85,6 +85,24 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
         ))}
       </ul>
 
+      {/*
+        What it is built with, read out of the repository rather than
+        remembered, and where it has got to. The phase line is only ever
+        printed when the project itself declares stages, and it has to name
+        what does not exist yet: that is the half a reader cannot check, and
+        it is what makes the rest believable.
+      */}
+      <hr className="bleed" />
+      <section className="row">
+        <span className="rail rail--label">Built with</span>
+        <div>
+          <p className="tech-run run">
+            {project.tech.map((t) => <span key={t}>{t}</span>)}
+          </p>
+          {project.phase && <p className="project-phase">{project.phase}</p>}
+        </div>
+      </section>
+
       <hr className="bleed" />
       <section className="row">
         <span className="rail rail--label">Readings</span>
@@ -96,6 +114,10 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
               <span className="reading-source">{reading.source}</span>
             </li>
           ))}
+          {/* Counted by NuGet rather than by me, which is the whole point of
+              it. Absent until the box publishes it, like everything else that
+              is true now rather than true at build. */}
+          {project.slug === "attest" && <Downloads />}
         </ul>
       </section>
 
@@ -108,11 +130,20 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
       <hr className="bleed" />
       <div className="row">
         <span className="rail rail--label">Elsewhere</span>
-        <p className="page-figures">
-          <Link href="/projects/">every project</Link>
-          <span className="sep">·</span>
-          <a href={site.github} rel="noopener">github ↗</a>
-        </p>
+        <div>
+          {project.visibility === "private" && (
+            <p className="page-lede">
+              This repository is private, so there is nothing to click. The
+              public half of what I build — including the one thing here anyone
+              can install — is on{" "}
+              <a href={site.github} rel="noopener">my GitHub</a>.
+            </p>
+          )}
+          <p className="page-figures">
+            <span><Link href="/projects/">all projects</Link></span>
+            <span><a href={site.github} rel="noopener">my GitHub</a></span>
+          </p>
+        </div>
       </div>
 
       <Footer />

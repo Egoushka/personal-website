@@ -47,20 +47,12 @@ export default function WritingIndex() {
         title="Writing"
         figures={
           <>
-            {r.posts} {r.posts === 1 ? "post" : "posts"}
-            <span className="sep">·</span>
-            {n(r.words)} words
-            {r.latest && (
-              <>
-                <span className="sep">·</span>
-                latest {r.daysSinceLatest} days ago
-              </>
-            )}
-            <span className="sep">·</span>
-            <a href="/feed.xml">rss</a>
+            <span>{r.posts} {r.posts === 1 ? "post" : "posts"}</span>
+            <span>{n(r.words)} words</span>
+            {r.latest && <span>latest {r.daysSinceLatest} {r.daysSinceLatest === 1 ? "day" : "days"} ago</span>}
+            <span><a href="/feed.xml">rss</a></span>
           </>
         }
-        lede="Mostly the things I'd have wanted to read before I learned them the hard way."
       />
 
       {/*

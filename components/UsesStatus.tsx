@@ -1,51 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useStatus } from "@/lib/status";
 
 /**
- * Live state of the box, in the /uses/ rail.
+ * Live state of the box, in the /about/ rail.
  *
  * This is the honest version of "make the page interactive". A filter box over
  * thirteen static rows would be theatre — it would never filter anything. What
- * makes a uses page worth reading is whether it is *true right now*, so the
+ * makes a stack page worth reading is whether it is *true right now*, so the
  * page fetches what is actually running instead of asserting it.
  *
- * Fails silently and completely. `/status.json` is written by cron on the VPS
- * (scripts/gen-status.sh); it does not exist in a local build, and it will be
- * stale or missing if that cron dies. The static list below is the real content
- * and stands alone — this only ever adds.
+ * The document, its freshness rule and the shared fetch live in lib/status.ts.
+ * Fails silently and completely: no /status.json, no cron, or a document older
+ * than two days, and this renders nothing at all.
  */
-
-/**
- * Aggregates only. The generator deliberately does not emit service names — see
- * the note at the top of scripts/gen-status.sh.
- */
-type Status = {
-  generated: string;
-  uptimeDays: number;
-  containers: number;
-  unhealthy: number;
-};
-
 export default function UsesStatus() {
-  const [status, setStatus] = useState<Status | null>(null);
-
-  useEffect(() => {
-    const ac = new AbortController();
-    fetch("/status.json", { signal: ac.signal, cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d: Status | null) => {
-        // A document older than two days means the generator stopped. Showing
-        // nothing is better than showing a number that quietly went wrong.
-        if (!d?.generated) return;
-        const ageHours = (Date.now() - Date.parse(d.generated)) / 36e5;
-        if (ageHours > 48) return;
-        setStatus(d);
-      })
-      .catch(() => {});
-    return () => ac.abort();
-  }, []);
-
+  const status = useStatus();
   if (!status) return null;
 
   return (
@@ -56,6 +26,19 @@ export default function UsesStatus() {
       <span className={status.unhealthy ? "uses-status-bad" : "uses-status-ok"}>
         {status.unhealthy ? `${status.unhealthy} unhealthy` : "all healthy"}
       </span>
+      {status.coding && status.coding.hours > 0 && (
+        <>
+          <span>{status.coding.hours} h coding, 30 days</span>
+          {status.coding.language && (
+            <>
+              <span>{status.coding.language} {status.coding.languagePercent}%</span>
+              {status.coding.editor && (
+                <span>{status.coding.editor} {status.coding.editorPercent}%</span>
+              )}
+            </>
+          )}
+        </>
+      )}
     </span>
   );
 }

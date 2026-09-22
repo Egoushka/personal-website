@@ -5,7 +5,7 @@ description: "Tailscale, Caddy, Vaultwarden and GitOps on a single Hetzner box �
 topics: ["infrastructure", "self-hosting"]
 ---
 
-My homelab is one Hetzner VPS in Helsinki. No rack, no Raspberry Pi cluster — just a single Ubuntu box I run like a tiny production environment. The goal was never to save money. It was to learn infrastructure the way you only learn it when you're the one who gets paged.
+My homelab is one Hetzner VPS in Nuremberg. No rack, no Raspberry Pi cluster — just a single Ubuntu box I run like a tiny production environment. The goal was never to save money. It was to learn infrastructure the way you only learn it when you're the one who gets paged.
 
 ## The constraints I gave myself
 

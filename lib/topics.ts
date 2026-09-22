@@ -130,7 +130,7 @@ export const TOPICS = {
     graph: { x: 250, y: 224, group: "infra" },
   },
   tailscale: {
-    name: "Tailscale · Headscale",
+    name: "Tailscale and Headscale",
     kind: "technology",
     blurb: "The only way in. SSH isn't exposed to the internet.",
     graph: { x: 108, y: 158, group: "infra" },
@@ -156,7 +156,7 @@ export const TOPICS = {
   hetzner: {
     name: "Hetzner VPS",
     kind: "technology",
-    blurb: "One shared-vCPU box in Helsinki. Everything else runs on it.",
+    blurb: "One shared-vCPU box in Nuremberg. Everything else runs on it.",
     graph: { x: 110, y: 390, group: "infra" },
   },
   python: {

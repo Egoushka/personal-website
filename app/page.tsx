@@ -3,7 +3,8 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import PostList from "@/components/PostList";
 import { PersonAndSiteLd } from "@/components/JsonLd";
-import { site, projects } from "@/lib/site";
+import Panel from "@/components/Panel";
+import { site, proof, projects, type Project } from "@/lib/site";
 import { getAllPosts } from "@/lib/posts";
 import { getReadings, getTopicUsage, n } from "@/lib/readings";
 import { topicName } from "@/lib/topics";
@@ -22,6 +23,18 @@ import { topicName } from "@/lib/topics";
  * survived is the rule underneath it — every figure below is counted at build
  * time, never typed. See ADR 0002.
  */
+function projectRow(p: Project) {
+  return (
+    <li className="project-row" key={p.slug}>
+      <h3 className="project-name">
+        <Link href={`/projects/${p.slug}/`}>{p.name}</Link>
+      </h3>
+      <span className="project-status run"><span>{p.lang}</span><span>{p.shape}</span><span>{p.status}</span></span>
+      <p>{p.summary}</p>
+    </li>
+  );
+}
+
 export default function Home() {
   const r = getReadings();
   const posts = getAllPosts();
@@ -33,71 +46,120 @@ export default function Home() {
     silent about the ones I am paid to come back to.
   */
   const topics = getTopicUsage();
+  const shipped = projects.filter((p) => !p.side);
+  const side = projects.filter((p) => p.side);
 
   return (
     <main id="main" className="wrap">
       <Nav current="home" />
       <PersonAndSiteLd />
 
+      {/*
+        The sentence is the h1 now, not the greeting.
+
+        "Hey — I'm Yehor" was the largest thing on the page and it told a
+        stranger nothing; the line that says what I do was set below it at body
+        size. They have swapped. The greeting survives as the line above, where
+        a name belongs, next to the two facts a cold reader needs — where I am
+        and whether I am available.
+      */}
       <header className="home-greeting">
-        <h1>{site.greeting}</h1>
-        <p className="home-intro">{site.intro}</p>
+        <p className="home-eyebrow">
+          <span className="live-dot" aria-hidden="true" />
+          {site.location} — {site.availability}
+        </p>
+        <h1>{site.intro}</h1>
         <p className="home-status">
-          {site.location}
-          {site.openToWork && (
-            <>
-              <span className="sep">·</span>
-              <span className="is-open">open to work</span>
-            </>
-          )}
-          <span className="sep">·</span>
-          <Link href="/cv/">CV</Link>
-          <span className="sep">·</span>
-          <a href={`mailto:${site.email}`}>email me</a>
+          <a className="cta" href={`mailto:${site.email}`}>Email me</a>
+          <Link className="cta cta--ghost" href="/writing/">Read the writing</Link>
         </p>
       </header>
+
+      {/* Live, and absent when the box is not publishing. */}
+      <Panel />
+
+      {/*
+        The proof row. It deliberately does NOT use the rail-left / content-right
+        rhythm every section below it uses: four screens of identical rhythm is
+        what made this page scroll past unread, and the one block a cold reader
+        must not scroll past is this one.
+
+        The third row is assembled here rather than stored in lib/site.ts with
+        the other two, because both its figure and its link come from the post
+        index — writing "51" into the data file would be typing a number the
+        build already knows. No post with a `spanDays`, no third row.
+      */}
+      <ul className="proof">
+        {proof.map((p) => (
+          <li key={p.label}>
+            <span className="proof-label">{p.label}</span>
+            <span className="proof-text">{p.text}</span>
+            {p.links.map((l) => (
+              <a className="proof-link" key={l.href} href={l.href} rel="noopener">
+                {l.label}
+              </a>
+            ))}
+          </li>
+        ))}
+        {r.longestSpan && (
+          <li>
+            <span className="proof-label">{r.longestSpan.days} days</span>
+            <span className="proof-text">
+              A deployment that reported success while shipping nothing. Found,
+              explained, fixed.
+            </span>
+            <Link className="proof-link" href={`/writing/${r.longestSpan.slug}/`}>
+              read it
+            </Link>
+          </li>
+        )}
+      </ul>
 
       <hr className="bleed" />
       <section className="row">
         <span className="rail rail--against-body">
           <span className="rail--label">Writing</span>
-          <span>
-            {r.posts} {r.posts === 1 ? "post" : "posts"} · {n(r.words)} words
-          </span>
-          {r.latest && <span>latest {r.daysSinceLatest} days ago</span>}
+          <span>{r.posts} {r.posts === 1 ? "post" : "posts"}</span>
+          <span>{n(r.words)} words</span>
+          {r.latest && <span>latest {r.daysSinceLatest} {r.daysSinceLatest === 1 ? "day" : "days"} ago</span>}
         </span>
         <div>
           <div className="section-head">
             <h2>Things I&apos;ve written down</h2>
-            <Link href="/writing/">all posts →</Link>
+            <Link href="/writing/">all posts</Link>
           </div>
           <PostList posts={posts.slice(0, 5)} />
         </div>
       </section>
 
+      {/*
+        Two lists, not one. The thing a stranger can install sits above the two
+        things only I run, because listing them as equals averages the first
+        down to the second. The split is `Project.side`, not array position, so
+        adding a project cannot silently promote it.
+
+        The heading no longer starts "Things I've". Three sections in a row
+        opening with the same four words read as a tic rather than as a voice.
+      */}
       <hr className="bleed" />
       <section className="row">
         <span className="rail rail--against-body">
           <span className="rail--label">Projects</span>
           <span>{r.projects} of them</span>
-          <span>both still running</span>
+          <span>{r.projectsRunning} still running</span>
         </span>
         <div>
           <div className="section-head">
-            <h2>Things I&apos;ve built</h2>
-            <Link href="/projects/">all projects →</Link>
+            <h2>Built, and still running</h2>
+            <Link href="/projects/">all projects</Link>
           </div>
-          <ol className="project-list">
-            {projects.map((p) => (
-              <li className="project-row" key={p.slug}>
-                <h3 className="project-name">
-                  <Link href={`/projects/${p.slug}/`}>{p.name}</Link>
-                </h3>
-                <span className="project-status">{p.meta} · {p.status}</span>
-                <p>{p.summary}</p>
-              </li>
-            ))}
-          </ol>
+          <ol className="project-list">{shipped.map(projectRow)}</ol>
+          {side.length > 0 && (
+            <>
+              <span className="project-sublabel">Side projects</span>
+              <ol className="project-list">{side.map(projectRow)}</ol>
+            </>
+          )}
         </div>
       </section>
 
@@ -118,7 +180,12 @@ export default function Home() {
                 {topics.map((t) => (
                   <li key={t.slug}>
                     <Link href={`/topics/${t.slug}/`}>
-                      {topicName(t.slug)} <span className="rail-count">{t.total}</span>
+                      {topicName(t.slug)}
+                      {/* A count of 1 is not a count, it is a label repeating
+                          itself. The row stays — hiding every topic backed by
+                          one thing would hide debugging, observability and
+                          CI/CD, which is most of what this site is now for. */}
+                      {t.total > 1 && <span className="rail-count">{t.total}</span>}
                     </Link>
                   </li>
                 ))}
@@ -129,17 +196,14 @@ export default function Home() {
       )}
 
       {/*
-        Counted, and left in because it is true and it is funny. It was a row of
-        the old trial balance that could not be closed by a redesign — and this
-        is the third redesign, so it is still open. It closes when I write more,
-        which is the point.
+        The ratio stays because it is counted and it is the site admitting
+        something. The commentary around it is gone: the number was making the
+        joke and the sentence was explaining it.
       */}
       <p className="home-note">
-        For the record: this site is {n(r.codeLines + r.cssLines)} lines of code
-        and CSS serving {n(r.words)} words — {r.linesPerWord.toFixed(1)} lines for
-        every word published. I&apos;m aware of how that looks. Built{" "}
-        <time dateTime={r.builtOn}>{r.builtOn}</time>; every figure on this page
-        was counted then, not typed.
+        {n(r.codeLines + r.cssLines)} lines of code and CSS for {n(r.words)}{" "}
+        words. Counted at build, <time dateTime={r.builtOn}>{r.builtOn}</time> —
+        like every figure on this page.
       </p>
 
       <Footer />

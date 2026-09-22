@@ -12,7 +12,7 @@ import type { Project } from "@/lib/site";
  * rows — that is the rule that keeps this honest as a client component. With JS
  * off you get the full list and no chips, which is the correct degraded state.
  *
- * With two projects a filter is close to decoration, and I know it. It is here
+ * With three projects a filter is close to decoration, and I know it. It is here
  * because the shape has to exist before there are fifteen, and because the chips
  * double as a way into the topic pages, which are not decoration at all.
  */
@@ -63,7 +63,9 @@ export default function ProjectFilter({
               <Link href={`/projects/${p.slug}/`}>{p.name}</Link>
             </h2>
             <span className="project-status">
-              {p.meta} · {p.status}
+              <span>{p.lang}</span>
+              <span>{p.shape}</span>
+              <span>{p.status}</span>
             </span>
             <p>{p.summary}</p>
             <ul className="topic-run">
