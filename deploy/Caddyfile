@@ -82,7 +82,15 @@
 	# file server has nothing to infer a MIME type from and every social scraper
 	# rejects the card. Set it explicitly. A path added here is a path a card is
 	# already being written to: the matcher is the only thing that makes it a PNG.
-	@ogimages path /opengraph-image /writing/*/opengraph-image /projects/*/opengraph-image
+	#
+	# The `file` matcher is why a miss still looks like a miss. A header matched on
+	# path alone is set before the file is looked for, so handle_errors served
+	# /404.html as image/png — a 404 that claims to be a card. Matching the file
+	# too means the header only exists when the card does.
+	@ogimages {
+		path /opengraph-image /writing/*/opengraph-image /projects/*/opengraph-image
+		file
+	}
 	header @ogimages {
 		Content-Type "image/png"
 		Cache-Control "public, max-age=3600, s-maxage=86400"
