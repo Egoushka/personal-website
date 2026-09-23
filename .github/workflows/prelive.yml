@@ -17,8 +17,12 @@ permissions:
 
 env:
   VPS_HOST: <origin-ip>
-  VPS_USER: root
-  REMOTE_DIR: /opt/stacks/website
+  # Deploys as `webdeploy`, not root. Its only command on the box is
+  # `rrsync -wo /opt/stacks/website` (forced in authorized_keys), so every
+  # remote path below is relative to /opt/stacks/website and nothing but a
+  # write-only rsync is possible: no shell, no docker, no reads. Until
+  # 2026-09-24 this key was an unrestricted root login on public :22.
+  VPS_USER: webdeploy
   # Baked into canonicals, both feeds, the sitemap, the OG cards and the URL
   # each post's comment thread is keyed by — see lib/site.ts.
   #
@@ -87,32 +91,13 @@ jobs:
       # status is the correct degraded state, not a bug to hide.
       - name: Sync prelive to VPS
         run: |
-          ssh -i ~/.ssh/id_ed25519 "$VPS_USER@$VPS_HOST" "mkdir -p $REMOTE_DIR/prelive"
           rsync -avz --delete -e "ssh -i ~/.ssh/id_ed25519" \
-            out/ "$VPS_USER@$VPS_HOST:$REMOTE_DIR/prelive/"
+            out/ "$VPS_USER@$VPS_HOST:prelive/"
 
-      # No Caddy reload: only static files moved, and Caddy reads those from disk
-      # per request. The check runs inside the container so it does not depend on
-      # which tailnet address the port happens to be published on.
-      - name: Verify prelive is serving
-        run: |
-          fail() {
-            echo "::error::prelive did not answer for $1"
-            echo "First run? Two things have to land before this can pass:"
-            echo "  1. the :81 block in deploy/Caddyfile reaches the box with the"
-            echo "     next production deploy (merge to main)"
-            echo "  2. the /srv-prelive mount and the 8091 port live in the compose"
-            echo "     spec in /opt/stacks, which this repo does not own"
-            echo "See the Prelive section of README.md."
-            exit 1
-          }
-          for path in / /writing/ /writing/silent-deploys/ /feed.xml; do
-            ssh -i ~/.ssh/id_ed25519 "$VPS_USER@$VPS_HOST" \
-              "docker exec website-caddy wget -q -O /dev/null http://localhost:81$path" \
-              || fail "$path"
-            echo "$path -> ok"
-          done
-
+      # No verification step: prelive is tailnet-only (100.64.0.2:8091), the
+      # runner cannot reach it, and the deploy key can no longer `docker exec`
+      # a probe on the box. rsync failing still fails the job. Open the link
+      # below from a tailnet device.
       - name: Where to look
         run: |
           echo "### Prelive updated" >> "$GITHUB_STEP_SUMMARY"

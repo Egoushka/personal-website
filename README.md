@@ -207,31 +207,32 @@ codebase and this document is public.
 **Ship a build:**
 
 ```bash
-./deploy/deploy.sh   # builds ./out, rsyncs to the VPS, brings Caddy up
+./deploy/deploy.sh   # builds ./out, rsyncs to the VPS; Caddy --watch reloads itself
 ```
 
 Or manually:
 
 ```bash
 npm run build                                   # -> ./out
-rsync -avz --delete out/  root@<origin-ip>:/opt/stacks/website/site/
-rsync -avz deploy/Caddyfile root@<origin-ip>:/opt/stacks/website/
-ssh root@<origin-ip> 'cd /opt/stacks/website && docker compose up -d'
+rsync -avz --delete --exclude=status.json out/ webdeploy@<origin-ip>:site/
+rsync -avz --inplace deploy/Caddyfile webdeploy@<origin-ip>:Caddyfile
 ```
 
 The container Caddy is plain HTTP — TLS is terminated at the edge Traefik (and in front of
 that, Cloudflare). Nothing here issues a certificate.
 
-`docker compose up -d` alone will **not** apply a Caddyfile change: the compose spec is
-unchanged so the container is not recreated, and the file is a single-file bind mount that
-rsync re-creates with a new inode. Hence `rsync --inplace` plus an explicit `caddy reload`
-in both `deploy.sh` and the workflow.
+The deploy key logs in as `webdeploy`, whose only command on the box is
+`rrsync -wo /opt/stacks/website` (forced in its `authorized_keys`): remote paths are relative
+to that directory and nothing but a write-only rsync works — no shell, no docker. Caddy runs
+with `--watch` (homelab-gitops `website/compose.yaml`), so a new Caddyfile loads by itself.
+The file is a single-file bind mount, hence `rsync --inplace`: a rename would leave the
+container pinned to the old inode.
 
 ## Continuous deployment (GitHub Actions)
 
 `.github/workflows/deploy.yml` runs on every push to `main` (and on manual dispatch):
 `npm ci` → `validate` → `typecheck` → `build` → `caddy validate` → rsync `out/` to the
-VPS → `docker compose up -d` → verify `/`, `/writing/` and `/feed.xml` return 200. The
+VPS as `webdeploy` → wait for Caddy's `--watch` → verify pages and redirects. The
 runner reaches the VPS over SSH on port 22.
 
 `.github/workflows/ci.yml` runs the same checks on branches and PRs, plus an offline
@@ -254,8 +255,9 @@ link check, so failures surface before anything reaches `main`.
 2. **Authorize it on the VPS:**
 
    ```bash
-   ssh-copy-id -i deploy_key.pub root@<origin-ip>
-   # or: cat deploy_key.pub | ssh root@<origin-ip> 'cat >> ~/.ssh/authorized_keys'
+   # on the VPS, as root — never into root's own authorized_keys:
+   printf 'restrict,command="/usr/bin/rrsync -wo /opt/stacks/website" %s\n' "$(cat deploy_key.pub)" \
+     > /home/webdeploy/.ssh/authorized_keys
    ```
 
 3. **Pin the VPS host key** (so the runner won't trust-on-first-use):

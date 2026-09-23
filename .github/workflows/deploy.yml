@@ -19,8 +19,12 @@ env:
   # port 22 closed, which is why every deploy since 2026-06-06 was dead in the
   # water. Host is <vps-host>, tailnet 100.64.0.2.
   VPS_HOST: <origin-ip>
-  VPS_USER: root
-  REMOTE_DIR: /opt/stacks/website
+  # Deploys as `webdeploy`, not root. Its only command on the box is
+  # `rrsync -wo /opt/stacks/website` (forced in authorized_keys), so every
+  # remote path below is relative to /opt/stacks/website and nothing but a
+  # write-only rsync is possible: no shell, no docker, no reads. Until
+  # 2026-09-24 this key was an unrestricted root login on public :22.
+  VPS_USER: webdeploy
 
 jobs:
   build-and-deploy:
@@ -70,29 +74,25 @@ jobs:
       # sources of truth that silently disagree.
       - name: Sync site to VPS
         run: |
-          ssh -i ~/.ssh/id_ed25519 "$VPS_USER@$VPS_HOST" "mkdir -p $REMOTE_DIR/site"
           # status.json is generated ON THE BOX by cron (gen-status.sh, homelab-gitops) and
           # is not part of the build output. Without the exclude, --delete removes
           # it on every deploy and /uses/ silently loses its live state until the
           # next cron tick.
           rsync -avz --delete --exclude=status.json -e "ssh -i ~/.ssh/id_ed25519" \
-            out/ "$VPS_USER@$VPS_HOST:$REMOTE_DIR/site/"
+            out/ "$VPS_USER@$VPS_HOST:site/"
           # --inplace is load-bearing: Caddyfile is a SINGLE-FILE bind mount, and
           # rsync's default write-temp-then-rename gives it a new inode. The mount
           # stays pinned to the old one, so the container keeps serving the old
           # config no matter how many times you reload it.
           rsync -avz --inplace -e "ssh -i ~/.ssh/id_ed25519" \
-            deploy/Caddyfile "$VPS_USER@$VPS_HOST:$REMOTE_DIR/"
+            deploy/Caddyfile "$VPS_USER@$VPS_HOST:Caddyfile"
 
-      # Static files are already live at this point; this only applies a Caddyfile
-      # change. `docker compose up -d` alone is a no-op here — the compose spec is
-      # unchanged, so the container is not recreated and Caddy never re-reads its
-      # config. Reload explicitly, and fail loudly if the config is invalid.
-      - name: Reload Caddy
-        run: |
-          ssh -i ~/.ssh/id_ed25519 "$VPS_USER@$VPS_HOST" \
-            "cd $REMOTE_DIR && docker compose up -d && \
-             docker exec website-caddy caddy reload --config /etc/caddy/Caddyfile"
+      # Static files are live as soon as rsync returns. A Caddyfile change is
+      # picked up by Caddy's --watch (homelab-gitops website/compose.yaml); this
+      # key cannot `docker exec` a reload any more. The Caddyfile was validated
+      # above, and the redirect checks below fail if the new one did not load.
+      - name: Wait for Caddy to reload
+        run: sleep 10
 
       # Every request carries a cache-busting query so this tests what was just
       # deployed rather than Cloudflare's copy of what was there before. HTML is
