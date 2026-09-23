@@ -52,29 +52,54 @@
 	}
 
 	# Content-hashed assets never change under the same URL.
-	@immutable path /_next/static/*
+	#
+	# `file` is not decoration here, it is the worst case of the trap below the OG
+	# block: a 404 for a deleted chunk was being served `immutable, max-age=1y`, so
+	# a browser or the edge could hold a miss for a year at a URL that is content
+	# -hashed and will never come back. rsync --delete removes old chunks on every
+	# deploy while HTML that references them is still cached for 600s.
+	@immutable {
+		path /_next/static/*
+		file
+	}
 	header @immutable Cache-Control "public, max-age=31536000, immutable"
 
 	# HTML had no Cache-Control at all, so Cloudflare returned cf-cache-status:
 	# DYNAMIC and every page view reached the origin. s-maxage lets the edge cache
 	# while keeping browsers revalidating, so a deploy is visible immediately.
+	# The one matcher deliberately left keyed on path alone. It matches directories,
+	# so pinning it to a file would mean restating the try_files list from the handle
+	# block below inside the matcher, where the two would drift. What it costs is a
+	# 404 page edge-cached for ten minutes, and /404.html is a real page.
 	@html path / *.html */
 	header @html Cache-Control "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
 
-	@feeds path /feed.xml /atom.xml /feed.json /sitemap.xml /robots.txt
+	@feeds {
+		path /feed.xml /atom.xml /feed.json /sitemap.xml /robots.txt
+		file
+	}
 	header @feeds Cache-Control "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400"
 
 	# Not content-hashed, so it must not be immutable — it gets replaced in place.
-	@downloads path /icon.svg /apple-icon.png /manifest.webmanifest
+	@downloads {
+		path /icon.svg /apple-icon.png /manifest.webmanifest
+		file
+	}
 	header @downloads Cache-Control "public, max-age=3600, s-maxage=86400"
 
 	# The CMS bundle is vendored at build and only changes when the dep does.
-	@admin path /admin/sveltia-cms.js
+	@admin {
+		path /admin/sveltia-cms.js
+		file
+	}
 	header @admin Cache-Control "public, max-age=86400, s-maxage=604800"
 
 	# Pagefind's index is rewritten on every deploy, so it caches like an asset
 	# but must not be immutable.
-	@pagefind path /pagefind/*
+	@pagefind {
+		path /pagefind/*
+		file
+	}
 	header @pagefind Cache-Control "public, max-age=3600, s-maxage=86400"
 
 	# next/og writes these as EXTENSIONLESS files (out/opengraph-image,

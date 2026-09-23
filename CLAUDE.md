@@ -188,10 +188,16 @@ The rule now is *justify each one*, not *never*. Three exist:
   matcher is the other half.
   **That matcher must match the `file`, not just the path** — a `header` keyed on path
   alone is applied before the file is looked for, so `handle_errors` served `/404.html`
-  as `image/png` and every miss claimed to be a card. The same trap is waiting for any
-  other header matched on a path a file server might not find. The card's colours are
-  hard-coded there: a card renders once at build and has no access to the stylesheet, so
-  keep them in step with the tokens by hand.
+  as `image/png` and every miss claimed to be a card. **Every matcher in the `(site)`
+  snippet that names files now carries `file` for the same reason**, and the worst case
+  was not the card: `@immutable` was serving a 404 for a deleted `/_next/static/*` chunk
+  with `max-age=31536000, immutable`, so a browser or Cloudflare could pin a miss for a
+  year at a content-hashed URL that never comes back. `@html` is the one deliberate
+  exception — it matches directories, so pinning it to a file means restating the
+  `try_files` list inside the matcher, where the two would drift; the cost is a 404 page
+  edge-cached for ten minutes. The card's colours are hard-coded there: a card renders
+  once at build and has no access to the stylesheet, so keep them in step with the tokens
+  by hand.
 - **JSON-LD** lives in [components/JsonLd.tsx](components/JsonLd.tsx): `Person` + `WebSite` on the homepage,
   `BlogPosting` + `BreadcrumbList` on posts, `ProfilePage` on `/cv/`. Stable `@id`s let
   the per-page graphs reference the Person rather than repeat it. `knowsAbout` is derived
