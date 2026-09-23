@@ -184,18 +184,24 @@ the whole path.
 
 ### Live state on /about/
 
-`scripts/gen-status.sh` runs from cron **on the VPS** and writes `/status.json` next to the
-site. `components/UsesStatus.tsx` fetches it in the browser and renders nothing if it is
-missing or older than 48 hours, so the page never claims live state it does not have.
+**The generator lives in `homelab-gitops`, not here** — `scripts/gen-status.sh` in that
+repo, run by `host/cron.d/website-status` every ten minutes from `/opt/stacks/scripts/`.
+This repo kept its own copy until 2026-09-23 and the two drifted: the copy here grew the
+coding and package figures, the copy the box actually runs never had them, and the live
+panel sat two thirds empty for weeks. One file, in the repo that deploys it.
 
-It publishes aggregates only — container count, unhealthy count, uptime, and, when
-`WAKAPI_API_KEY` is set in the cron environment, hours coded in the last 30 days with the
-top language and editor as shares. Never service names, versions, ports or project names:
-the busiest project is an employer's codebase and this document is public.
+It writes `/status.json` next to the site. `components/Panel.tsx` and
+`components/UsesStatus.tsx` fetch it in the browser and render nothing when it is missing
+or older than 48 hours, so no page claims live state it does not have.
+
+Aggregates only — container count, unhealthy count, uptime, hours coded in the last 30
+days with the top language and editor as shares, and the NuGet download count. Never
+service names, versions, ports or project names: the busiest project is an employer's
+codebase and this document is public.
 
 ```
-WAKAPI_API_KEY=... WAKAPI_URL=http://wakapi:3000 \
-  /opt/stacks/website/gen-status.sh /opt/stacks/website/site/status.json
+# on the VPS; the Wakapi key is read from its SQLite, so there is nothing to pass
+/opt/stacks/scripts/gen-status.sh /opt/stacks/website/site/status.json
 ```
 
 **Ship a build:**

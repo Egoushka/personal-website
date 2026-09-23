@@ -14,7 +14,7 @@ npm run build           # produces ./out (output: 'export')
 
 echo "==> Syncing site content -> ${VPS}:${REMOTE_DIR}/site"
 ssh "$VPS" "mkdir -p ${REMOTE_DIR}/site"
-# status.json is generated ON THE BOX by cron (scripts/gen-status.sh) and is not
+# status.json is generated ON THE BOX by cron (gen-status.sh, in homelab-gitops) and is not
 # part of the build output. Without the exclude, --delete removes it on every
 # deploy and /uses/ silently loses its live state until the next cron tick.
 rsync -avz --delete --exclude=status.json out/ "${VPS}:${REMOTE_DIR}/site/"

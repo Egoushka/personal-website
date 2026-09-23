@@ -463,7 +463,7 @@ export const projects: Project[] = [
  * whose `now` line would have to be vague is not a skill I present.
  *
  * `wakatime` is the key my own Wakapi reports the language under. When the
- * box is publishing (see scripts/gen-status.sh) the page prints the measured
+ * box is publishing (see gen-status.sh in homelab-gitops) the page prints the measured
  * share beside the claim; when it is not, the claim stands alone. Nothing here
  * depends on the figure existing.
  */
@@ -797,7 +797,7 @@ export const usesUpdated = "2026-09";
  * What is deliberately NOT here: versions, ports, hostnames, and the other
  * ninety-odd containers on that machine. Naming a dozen mainstream services is
  * an explanation; enumerating the whole stack with versions is a CVE list for a
- * box whose address is already public. Same rule as scripts/gen-status.sh.
+ * box whose address is already public. Same rule as gen-status.sh.
  *
  * There was a third group here, "Day to day", and it was the same six languages
  * already listed in `skills` — including Flutter, which `skills` had deliberately

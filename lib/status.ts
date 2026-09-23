@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
  * `/status.json` — the only thing on this site that is true *now* rather than
  * true at build time.
  *
- * It is written by cron on the box (scripts/gen-status.sh) and served next to
+ * It is written by cron on the box (gen-status.sh, in homelab-gitops) and served next to
  * the static export. The build cannot produce any of it: CI has no view of what
  * is running, and the Wakapi it reads is on the tailnet.
  *
