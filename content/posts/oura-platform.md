@@ -95,15 +95,25 @@ integration; it is a demo with a fuse on it.
 Working: the authentication, the storage, the history walk, the scheduled
 poll. The database fills itself and stays correct.
 
-Not built: the dashboards, the webhooks that would let Oura push instead of
-being polled, and the MCP server that would let my assistant query any of it.
+For the first weeks nothing read from it, and that was deliberate. A dashboard
+over a history walk with gaps in it is worse than no dashboard — it is a chart
+that looks authoritative and is wrong in a way nobody checks. [The last thing I
+trusted that reported success](/writing/silent-deploys/) had been shipping
+nothing for fifty-one days.
 
-So right now it is a database nothing reads from. That is a strange place to
-stop, and it is the right one — a dashboard over a history walk with gaps in
-it is worse than no dashboard. It is a chart that looks authoritative and is
-wrong in a way nobody checks. [The last thing I trusted that reported
-success](/writing/silent-deploys/) had been shipping nothing for fifty-one
-days.
+The read path waited for a backfill I could prove complete, and then arrived in
+one piece: three Grafana dashboards drawing the things the Oura app will not,
+an importer that puts calendar meetings and the ring's own tags into the same
+table, and an MCP server so my assistant queries the warehouse instead of
+guessing at it.
+
+The webhooks are skipped rather than pending. They would let Oura push instead
+of being polled, which is a latency optimisation on a pipeline that already
+works, and the night's data lands mid-morning either way.
+
+What genuinely does not exist is the other half of every question I opened
+with: the CO₂ sensor in the bedroom, the chest strap, the glucose curve. The
+ring's side of the join is done. The room is not.
 
 ## The part I do not know yet
 
