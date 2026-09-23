@@ -180,10 +180,12 @@ The rule now is *justify each one*, not *never*. Three exist:
   boundary of a control; anything animated needs a `prefers-reduced-motion` escape.
 - `@/*` path alias maps to the repo root.
 - `app/sitemap.ts` and `app/robots.ts` generate `/sitemap.xml` and `/robots.txt` at build.
-- **OG cards** come from `lib/og.tsx` via `opengraph-image.tsx` routes. next/og writes them
-  as **extensionless files**, so `deploy/Caddyfile` sets `Content-Type: image/png` for
-  `/opengraph-image` and `/writing/*/opengraph-image` — without that every scraper rejects
-  the card. The card's colours are hard-coded there: a card renders once at build and has
+- **OG cards** come from `lib/og.tsx` via `opengraph-image.tsx` routes — the homepage, every
+  post and every project. next/og writes them as **extensionless files**, so
+  `deploy/Caddyfile` sets `Content-Type: image/png` for `/opengraph-image`,
+  `/writing/*/opengraph-image` and `/projects/*/opengraph-image` — without that every
+  scraper rejects the card. A new route that renders a card is half the change; the
+  matcher is the other half. The card's colours are hard-coded there: a card renders once at build and has
   no access to the stylesheet, so keep them in step with the tokens by hand.
 - **JSON-LD** lives in [components/JsonLd.tsx](components/JsonLd.tsx): `Person` + `WebSite` on the homepage,
   `BlogPosting` + `BreadcrumbList` on posts, `ProfilePage` on `/cv/`. Stable `@id`s let

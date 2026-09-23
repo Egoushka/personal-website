@@ -78,9 +78,11 @@
 	header @pagefind Cache-Control "public, max-age=3600, s-maxage=86400"
 
 	# next/og writes these as EXTENSIONLESS files (out/opengraph-image,
-	# out/writing/<slug>/opengraph-image), so a file server has nothing to infer a
-	# MIME type from and every social scraper rejects the card. Set it explicitly.
-	@ogimages path /opengraph-image /writing/*/opengraph-image
+	# out/writing/<slug>/opengraph-image, out/projects/<slug>/opengraph-image), so a
+	# file server has nothing to infer a MIME type from and every social scraper
+	# rejects the card. Set it explicitly. A path added here is a path a card is
+	# already being written to: the matcher is the only thing that makes it a PNG.
+	@ogimages path /opengraph-image /writing/*/opengraph-image /projects/*/opengraph-image
 	header @ogimages {
 		Content-Type "image/png"
 		Cache-Control "public, max-age=3600, s-maxage=86400"
