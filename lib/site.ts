@@ -263,22 +263,50 @@ export const projects: Project[] = [
     summary:
       "Makes seven years of chat history searchable by an assistant, by refusing to index the 65% of it that says “ok”.",
     description:
-      "A personal event store that makes seven years of chat history searchable by an assistant. I measured the archive before touching it rather than guessing at it, and the measurement is the whole story: 681,331 messages across 487 chats, of which 65% are under twenty characters. My previous setup embedded every one of them, so roughly 442,000 vectors stood for “ок”, “+1” and “да” — crowding out the 1.5% that carry an actual proposition. Chronicle groups events into episodes using a time gap fitted per conversation, which cuts the index about elevenfold and improves retrieval at the same time. It serves the result over MCP, so the assistant queries it directly.",
+      "A personal event store that makes seven years of chat history searchable by an assistant. I measured the archive before touching it rather than guessing at it, and the measurement is the whole story: 681,331 messages across 487 chats, of which 65% are under twenty characters. My previous setup embedded every one of them, so roughly 442,000 vectors stood for “ок”, “+1” and “да” — crowding out the 1.5% that carry an actual proposition. Chronicle groups events into segments using a time gap fitted per conversation, which cuts the index about elevenfold and improves retrieval at the same time. It serves the result over MCP, so the assistant queries it directly — and the first version of that query path was 45× slower than it had to be, because a CTE hid the full-text index from the planner.",
     resumeLine:
-      "Event store over a 681k-message archive. Aggregates events into episodes before indexing — ~11× smaller vector index, better retrieval — served over MCP.",
+      "Event store over a 681k-message archive. Aggregates events into segments before indexing — ~11× smaller vector index, better retrieval — served over MCP.",
     topics: ["python", "retrieval"],
     readings: [
       { label: "Archive", value: "681,331 messages · 487 chats", source: "counted, not sampled, before any embedding ran" },
       { label: "Noise", value: "65% under 20 characters", source: "same pass over the same archive" },
       { label: "Index", value: "~11× smaller", source: "Chronicle's own measurement pass — not recomputable from this repo" },
+      { label: "Retrieval", value: "45× faster", source: "hybrid_search, measured before and after the CTE that hid the FTS index" },
       { label: "Users", value: "1 — me", source: "counted" },
+    ],
+  },
+  {
+    slug: "synapse",
+    side: true,
+    visibility: "private",
+    tech: ["Python", "FastAPI", "Postgres", "Hindsight", "LiteLLM", "Docker"],
+    phase:
+      "Reading, classification, grounding and the nightly sweep run on the box. `apply` is deliberately not scheduled and every scope ships closed, so nothing is retired without me saying so.",
+    status: "running",
+    name: "Synapse",
+    lang: "Python", shape: "control plane",
+    href: "",
+    summary:
+      "Decides what my assistant’s memory should stop believing — 5,369 stored claims, not one of which had ever been marked wrong.",
+    description:
+      "A memory control plane. It stores no knowledge of its own: it governs claims held in other systems — Hindsight first — deciding which are still true, which have been superseded and which should stop being recalled, so dropping its database loses decisions rather than knowledge. The census that started it is the argument for it: 5,369 claims, every one marked valid, 97% asserted exactly once and never corroborated, 99.8% older than thirty days, in a backend that has the columns to mark a memory wrong and had never written to one. Five rules are database CHECK constraints rather than application code, because the failure this exists to fix is policy written as prose that the engine quietly ignores — identity claims are never auto-superseded, a closed scope cannot be opened by editing policy, anything a model judged waits for a human, a flagged finding never reaches a backend, and nothing is ever destroyed. One claim has been retired so far, then reversed through the UI, then re-applied, with all four events in the ledger.",
+    resumeLine:
+      "Memory control plane in Python over 5.4k agent-memory claims: nightly classification and grounding, five invariants enforced as database constraints, every model-judged change human-gated.",
+    topics: ["python", "architecture", "retrieval", "postgres"],
+    readings: [
+      { label: "Claims governed", value: "5,369", source: "first census of the live backend, 2026-09-22" },
+      { label: "Ever marked wrong", value: "0, before this", source: "the backend’s own state column: valid=5,369" },
+      { label: "Classified", value: "1,094 — 20%", source: "stalled on a free-tier daily token quota, not on the model" },
+      { label: "Applied automatically", value: "0", source: "every scope ships closed; findings wait as proposals" },
     ],
   },
   {
     slug: "baseline",
     side: true,
     visibility: "private",
-    tech: ["Flutter", "Dart", "Drift", "SQLite", "AES-GCM"],
+    tech: ["Flutter", "Dart", "Drift", "SQLite", "SQLCipher", "AES-GCM", "ASP.NET Core"],
+    phase:
+      "Encryption at rest, multi-device sync over an op-log the relay cannot read, and an Android home-screen widget all ship. Nothing has been committed since 28 July: it is in use, not in development.",
     name: "Baseline",
     status: "running",
     lang: "Flutter", shape: "instrument",
@@ -293,6 +321,7 @@ export const projects: Project[] = [
     readings: [
       { label: "Break", value: "7-day gap", source: "the threshold in the app's source" },
       { label: "Scale", value: "none, deliberately", source: "there is no global score to read" },
+      { label: "Tests", value: "194 passing", source: "the suite in the repo; `dart analyze` clean" },
       { label: "Users", value: "1 — me", source: "counted" },
     ],
   },
@@ -301,7 +330,8 @@ export const projects: Project[] = [
     side: true,
     visibility: "private",
     tech: ["C#", ".NET", "Postgres", "TimescaleDB", "Dapper", "DbUp", "Serilog", "Grafana", "OAuth", "xUnit", "Testcontainers"],
-    phase: "Stage 1 of 8. OAuth, storage, backfill and the scheduled poll work; the dashboards, the webhooks and the MCP server do not exist yet.",
+    phase:
+      "Stages 1, 2 and 4 of 8. Ingestion, three Grafana dashboards, the calendar and tag importers and an MCP server over the warehouse all run. Stage 3’s webhooks are skipped deliberately; the bedroom sensors, the chest strap and the glucose curve (5–8) do not exist.",
     status: "building",
     name: "Oura Platform",
     lang: "C#", shape: "health warehouse",
@@ -309,13 +339,37 @@ export const projects: Project[] = [
     summary:
       "Pulls Oura Ring data into a database I own, so it can be joined against everything Oura will never see.",
     description:
-      "A self-hosted health warehouse. Oura's own app will show you last night's sleep; it will never show you last night's sleep against the meetings in the calendar, the training load, the CO₂ in the bedroom or the glucose curve, because it does not have any of those. This pulls the ring's data out over OAuth into Postgres with TimescaleDB, on the same box as everything else, where SQL and Grafana can ask questions across all of it. Two processes, one database, no Kubernetes. It is stage 1 of 8 and the plan says so: OAuth, storage, backfill and the scheduled poll work; dashboards, webhooks and the MCP server do not exist yet.",
+      "A self-hosted health warehouse. Oura's own app will show you last night's sleep; it will never show you last night's sleep against the meetings in the calendar, the training load, the CO₂ in the bedroom or the glucose curve, because it does not have any of those. This pulls the ring's data out over OAuth into Postgres with TimescaleDB, on the same box as everything else, where SQL and Grafana can ask questions across all of it. Two processes, one database, no Kubernetes. Stages 1, 2 and 4 of 8 are done — ingestion, three dashboards the Oura app cannot draw, the calendar and tag importers that put meetings beside sleep, and an MCP server so the assistant reads the warehouse directly. Stage 3’s webhooks are skipped on purpose rather than pending: they are a latency optimisation on a pipeline that already works, and the night’s data lands mid-morning either way. What is missing is the other half of every question — the room, the chest strap, the glucose curve.",
     resumeLine:
       "Self-hosted health warehouse in .NET: OAuth ingestion of wearable data into Postgres/TimescaleDB on a single VPS, joined against calendar and environment data.",
     topics: ["dotnet", "postgres", "self-hosting"],
     readings: [
-      { label: "Stage", value: "1 of 8", source: "the staged plan in the repo; stages 2–4 are not built" },
+      { label: "Stage", value: "1, 2 and 4 of 8", source: "the staged plan in the repo; 3 is skipped deliberately, 5–8 are unbuilt" },
       { label: "Storage", value: "Postgres + TimescaleDB", source: "hypertables, on the same box as the rest of the lab" },
+      { label: "Read path", value: "Grafana + MCP", source: "three provisioned dashboards and an MCP server over the same database" },
+      { label: "Users", value: "1 — me", source: "counted" },
+    ],
+  },
+  {
+    slug: "oura-mcp-app",
+    side: true,
+    visibility: "private",
+    tech: ["TypeScript", "MCP Apps", "Express", "Vite", "Postgres"],
+    phase:
+      "One tool and one chart, run against the warehouse from my laptop. It has no stack in the homelab repo yet, so nothing on the box serves it.",
+    status: "building",
+    name: "Oura MCP App",
+    lang: "TypeScript", shape: "MCP app",
+    href: "",
+    summary:
+      "Answers a question about my sleep with a chart rather than a paragraph, rendered inside whichever assistant asked.",
+    description:
+      "An MCP App over the Oura Platform warehouse. One tool, `oura_trend`, reads eight columns of the daily table — sleep, readiness and activity scores, HRV, resting heart rate, temperature deviation, SpO₂ and steps — and returns the series and an interactive chart together. Hosts that implement MCP Apps render the chart inline and let you change metric and range without another model turn, because the app calls the tool itself over the host bridge rather than asking the model to; hosts that do not still get a useful text summary out of the same call. The database user is read-only and the column names come from a fixed map rather than from tool input, because a tool the model can aim is a tool an injected instruction can aim.",
+    topics: ["typescript", "postgres"],
+    readings: [
+      { label: "Surface", value: "1 tool, 8 metrics", source: "the server’s registration; three ranges, one chart resource" },
+      { label: "UI", value: "one inlined HTML file", source: "Vite single-file build — the host fetches exactly one resource" },
+      { label: "Database access", value: "read-only, fixed column map", source: "db.ts; no tool input reaches the SQL" },
       { label: "Users", value: "1 — me", source: "counted" },
     ],
   },
@@ -338,7 +392,7 @@ export const projects: Project[] = [
     readings: [
       { label: "Host", value: "one cx53, 32 GB", source: "the repo's own README; tailnet address, not a public one" },
       { label: "Secrets", value: "encrypted in git", source: "*.enc committed, plaintext gitignored — checkable in the tree" },
-      { label: "Stacks", value: "one directory each", source: "the layout of the repository" },
+      { label: "Stacks", value: "51, one directory each", source: "FACTS.md, regenerated by CI so the count cannot drift from the tree" },
     ],
   },
   {
@@ -346,22 +400,49 @@ export const projects: Project[] = [
     side: true,
     visibility: "private",
     tech: ["Python", "nautilus_trader", "ccxt", "polars", "DuckDB", "Parquet"],
-    phase: "Phase 3 of 7. The backtesting framework is built and the gate was not passed: both opening hypotheses are dead, and no live order has ever been placed.",
-    status: "building",
+    phase:
+      "Phase 4 of 7, closed on 2026-09-22. Six hypotheses registered, five falsified or suspended, and the survivor beat buy-and-hold by −0.021 Sharpe. Forward paper trading ran one session before it was stopped; no live order has ever been placed.",
+    status: "paused",
     name: "Trader",
     lang: "Python", shape: "backtesting",
     href: "",
     summary:
-      "A systematic crypto trading system whose result so far is two pre-registered hypotheses, both rejected, and no orders.",
+      "A systematic crypto trading system whose result is six pre-registered hypotheses, none of which survived, and no order ever placed.",
     description:
-      "Trend following and funding-carry capture on crypto perpetuals, built in the order that makes the answer trustworthy rather than the order that gets to a chart fastest: hypotheses pre-registered before the data was touched, a conservative cost model every strategy has to route through, a second-source reconciliation against another exchange, and Deflated Sharpe and PBO reporting on top of walk-forward selection. The gate for phase 3 was that at least one candidate survives all of it. None did — the known-bad control is correctly rejected at Sharpe −0.43 and PBO 0.82, and both opening hypotheses are dead. That is the project working. A backtest that finds an edge on the first try has usually found a bug, and the expensive version of this lesson is paid for with real money.",
+      "Trend following and funding-carry capture on crypto perpetuals, built in the order that makes the answer trustworthy rather than the order that gets to a chart fastest: hypotheses pre-registered before the data was touched, a conservative cost model every strategy has to route through, a second-source reconciliation against another exchange, and Deflated Sharpe and PBO reporting on top of walk-forward selection. The gate is that at least one candidate survives all of it. Across six hypotheses none has — the known-bad control is correctly rejected at Sharpe −0.43 and PBO 0.82, trend on an 87-symbol point-in-time basket returned +0.045, and the cross-asset book that did clear the paper gate turned out to add −0.021 Sharpe over simply holding it. What ended the search is a measurement rather than a mood: 87 crypto perpetuals carry 1.90 independent bets between them, eighteen cross-asset ETFs carry 5.02, so a crypto-only book cannot diversify its way to an edge no matter how many symbols it holds. The search is closed, the collectors keep running, and the reopening conditions are written down. A backtest that finds an edge on the first try has usually found a bug, and the expensive version of that lesson is paid for with real money.",
     resumeLine:
-      "Systematic trading research in Python: pre-registered hypotheses, conservative cost model, cross-exchange reconciliation, walk-forward with Deflated Sharpe/PBO. Both opening hypotheses rejected.",
+      "Systematic trading research in Python: pre-registered hypotheses, conservative cost model, cross-exchange reconciliation, walk-forward with Deflated Sharpe/PBO. Six hypotheses tested, none survived, no capital ever at risk.",
     topics: ["python", "architecture"],
     readings: [
-      { label: "Phase", value: "3 of 7", source: "the phase gates in the repo's plan, which are not skippable" },
-      { label: "Hypotheses", value: "2 pre-registered, 2 rejected", source: "the research log, which records failures too" },
+      { label: "Phase", value: "4 of 7, closed", source: "the phase gates in the repo's plan, which are not skippable" },
+      { label: "Hypotheses", value: "6 registered, 0 survived", source: "the research log, which records the failures too" },
+      { label: "Effective bets", value: "1.90 of 87", source: "mean pairwise correlation across the crypto basket; 18 cross-asset ETFs give 5.02" },
       { label: "Capital at risk", value: "none", source: "testnet only; there are no live orders" },
+    ],
+  },
+  {
+    slug: "oberih",
+    side: true,
+    visibility: "private",
+    tech: ["Python", "FastAPI", "python-stdnum", "Docker"],
+    phase:
+      "v0. The five identifier types and the address joining work; names are untouched, and the better model measured for them will not load in the upstream image.",
+    status: "building",
+    name: "Oberih",
+    lang: "Python", shape: "detector",
+    href: "",
+    summary:
+      "Catches the Ukrainian and Russian ID numbers a PII filter has no notion of, before the paste reaches a model.",
+    description:
+      "A PII detector that sits between PasteGuard’s proxy and its own detector, speaks the same /analyze contract, and adds what the upstream has no concept of: РНОКПП, ИНН, СНИЛС and both passport formats, each recognised by the checksum its issuer publishes rather than by shape, plus the postal addresses the upstream returns as fragments. It started from a measurement rather than an impression: on a 159-case Ukrainian and Russian set the shipped detector emits none of those five types — 0 of 36 spans — and scores F1 0.773 overall. Adding them takes it to 0.890, with 63 of 63 unchanged on PasteGuard’s own multilingual set. The rule that decides its shape is that it fails closed: if the upstream detector is unhealthy, /analyze answers 503 rather than an empty result, because an empty result from a masking proxy is an unmasked paste.",
+    resumeLine:
+      "Cyrillic-aware PII detector in Python over PasteGuard: checksum-validated UA/RU identifiers and address assembly, F1 0.773 → 0.890 on a 159-case set.",
+    topics: ["python"],
+    readings: [
+      { label: "Accuracy", value: "F1 0.773 → 0.890", source: "159-case uk/ru set, run against the production upstream" },
+      { label: "What upstream finds", value: "0 of 36 identifiers", source: "same run; five UA/RU types, none emitted" },
+      { label: "Characters masked", value: "80.6% → 91.2%", source: "same run" },
+      { label: "On upstream failure", value: "503, never an empty result", source: "the health rule in the service" },
     ],
   },
 ];
@@ -766,7 +847,7 @@ export const uses: { group: string; items: StackItem[] }[] = [
  * beats a route that has to justify its own freshness.
  */
 export const now = {
-  updated: "2026-09-21",
+  updated: "2026-09-23",
   items: [
     {
       label: "Work",
@@ -774,7 +855,7 @@ export const now = {
     },
     {
       label: "Building",
-      text: "Chronicle — turning seven years of chat history into something an assistant can actually search.",
+      text: "Synapse — deciding which of the 5,369 facts my assistant has stored it should stop believing.",
     },
     {
       label: "Homelab",
