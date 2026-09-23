@@ -185,8 +185,13 @@ The rule now is *justify each one*, not *never*. Three exist:
   `deploy/Caddyfile` sets `Content-Type: image/png` for `/opengraph-image`,
   `/writing/*/opengraph-image` and `/projects/*/opengraph-image` — without that every
   scraper rejects the card. A new route that renders a card is half the change; the
-  matcher is the other half. The card's colours are hard-coded there: a card renders once at build and has
-  no access to the stylesheet, so keep them in step with the tokens by hand.
+  matcher is the other half.
+  **That matcher must match the `file`, not just the path** — a `header` keyed on path
+  alone is applied before the file is looked for, so `handle_errors` served `/404.html`
+  as `image/png` and every miss claimed to be a card. The same trap is waiting for any
+  other header matched on a path a file server might not find. The card's colours are
+  hard-coded there: a card renders once at build and has no access to the stylesheet, so
+  keep them in step with the tokens by hand.
 - **JSON-LD** lives in [components/JsonLd.tsx](components/JsonLd.tsx): `Person` + `WebSite` on the homepage,
   `BlogPosting` + `BreadcrumbList` on posts, `ProfilePage` on `/cv/`. Stable `@id`s let
   the per-page graphs reference the Person rather than repeat it. `knowsAbout` is derived
