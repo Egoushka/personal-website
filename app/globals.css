@@ -1041,6 +1041,15 @@ figure.code pre {
   font-size: var(--fs-small);
   color: var(--ink-2);
 }
+/* A document that arrived but came up short. Sits under the figures it is
+   explaining, in the same register as the note in the header. */
+.panel-thin {
+  margin: var(--s-2) 0 0;
+  max-width: 54ch;
+  font: 400 var(--fs-rail)/1.4 var(--figure);
+  color: var(--ink-2);
+  opacity: .8;
+}
 .panel-figs {
   display: grid; gap: var(--s-1) var(--s-6);
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));

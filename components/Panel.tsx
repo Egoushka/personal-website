@@ -24,6 +24,14 @@ import { useStatus } from "@/lib/status";
  * document more than two days old — the panel says so rather than showing a
  * row of dashes. An instrument that is not reading should say it is not
  * reading; zeroes would be a lie and an empty space would be a bug.
+ *
+ * A *thin* document is the case that was missed, and it is the one that
+ * actually happened: the generator on the box was an old copy that emitted the
+ * container count and nothing else, so three of these five figures rendered
+ * nothing at all and the panel sat two thirds empty for weeks, looking like a
+ * styling bug. Absent optional figures now get a line naming them. A silent gap
+ * in an instrument is indistinguishable from a broken instrument — the same
+ * failure this site keeps writing about.
  */
 
 function Fig({
@@ -44,6 +52,16 @@ export default function Panel() {
   const status = useStatus();
   const coding = status?.coding;
   const pkg = status?.package;
+
+  /**
+   * Optional halves of the document, named so the panel can say which one is
+   * absent. `unhealthy` is not here: it is always written, and zero is a real
+   * reading rather than a missing one.
+   */
+  const absent = [
+    !(coding && coding.hours > 0) && "the editor hours",
+    !pkg?.downloads && "the package count",
+  ].filter((x): x is string => typeof x === "string");
 
   return (
     <section className="panel" aria-label="Live figures from my own machine">
@@ -97,6 +115,12 @@ export default function Panel() {
           />
         ) : null}
       </div>
+        )}
+        {status && absent.length > 0 && (
+          <p className="panel-thin">
+            Tonight's document arrived without {absent.join(" or ")}. Missing is
+            not zero, so there is nothing in its place.
+          </p>
         )}
       </div>
     </section>
