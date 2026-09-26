@@ -28,6 +28,10 @@ export type PostMeta = {
    * is not printed; there is no default and nothing is estimated.
    */
   spanDays?: number;
+  /** Optional frontmatter, read as-is. Validated by validate-content, rendered by the post page. */
+  updated?: string;
+  /** Optional frontmatter: a note describing what a later edit corrected. */
+  correction?: string;
 };
 
 export type Post = PostMeta & { content: string };
@@ -48,6 +52,8 @@ function readPostFile(slug: string): Post {
     spanDays: Number.isFinite(Number(data.spanDays)) && data.spanDays != null
       ? Number(data.spanDays)
       : undefined,
+    updated: typeof data.updated === "string" ? data.updated : undefined,
+    correction: typeof data.correction === "string" ? data.correction : undefined,
     content,
   };
 }
