@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
+import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import PostList from "@/components/PostList";
-import { site, feedTypes, projects, experience, skills } from "@/lib/site";
+import { site, projects, experience, skills } from "@/lib/site";
+import { pageMetadata } from "@/lib/metadata";
+import { formatSpan } from "@/lib/dates";
 import { getPostsByTopic } from "@/lib/posts";
 import { TOPICS, isTopic, topicName } from "@/lib/topics";
 import { getTopicUsage } from "@/lib/readings";
@@ -38,21 +39,7 @@ export async function generateMetadata(
   const description = isTopic(topic)
     ? TOPICS[topic].blurb
     : `Everything about ${label} by ${site.name}.`;
-  const url = `${site.url}/topics/${topic}/`;
-  return {
-    title: label,
-    description,
-    alternates: { canonical: url, types: feedTypes },
-    openGraph: {
-      type: "website",
-      title: `${label} — ${site.name}`,
-      description,
-      url,
-      siteName: site.name,
-      locale: site.locale,
-    },
-    twitter: { card: "summary_large_image", title: `${label} — ${site.name}`, description },
-  };
+  return pageMetadata({ title: label, description, path: `/topics/${topic}/` });
 }
 
 export default async function TopicPage({ params }: { params: Promise<Params> }) {
@@ -70,8 +57,7 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
     .filter((t) => t !== topic);
 
   return (
-    <main id="main" className="wrap">
-      <Nav />
+    <Shell>
 
       <PageHead
         title={topicName(topic)}
@@ -136,10 +122,10 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
             <span className="rail rail--label">Used at work</span>
             <div>
               {jobs.map((job) => (
-                <div className="job" key={job.company + job.when}>
+                <div className="job" key={job.company + job.start}>
                   <div className="job-head">
                     <h2 className="job-name">{job.company}</h2>
-                    <span className="job-dates">{job.when}</span>
+                    <span className="job-dates">{formatSpan(job)}</span>
                   </div>
                   <p className="job-meta">{job.role}</p>
                 </div>
@@ -168,7 +154,6 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
         </>
       )}
 
-      <Footer />
-    </main>
+    </Shell>
   );
 }

@@ -1,31 +1,18 @@
 import type { Metadata } from "next";
 import React from "react";
 import Link from "next/link";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
+import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import Picture, { hasPicture } from "@/components/Picture";
 import UsesStatus from "@/components/UsesStatus";
-import { site, feedTypes, experience, now, uses, usesUpdated } from "@/lib/site";
+import { site, experience, now, uses, usesUpdated } from "@/lib/site";
+import { pageMetadata } from "@/lib/metadata";
 import { getReadings } from "@/lib/readings";
 
 const description =
   "Backend-leaning full-stack developer in Ukraine. C# / .NET and ASP.NET Core, Angular when the work reaches the front end, and a homelab run like production.";
 
-export const metadata: Metadata = {
-  title: "About",
-  description,
-  alternates: { canonical: "/about/", types: feedTypes },
-  openGraph: {
-    type: "profile",
-    title: `About — ${site.name}`,
-    description,
-    url: `${site.url}/about/`,
-    siteName: site.name,
-    locale: site.locale,
-  },
-  twitter: { card: "summary_large_image", title: `About — ${site.name}`, description },
-};
+export const metadata: Metadata = pageMetadata({ title: "About", description, path: "/about/", type: "profile" });
 
 /**
  * About, and everything that used to be scattered across /now/ and /uses/.
@@ -37,12 +24,11 @@ export const metadata: Metadata = {
  * freshness, and neither one ever had enough on it to be a destination.
  */
 export default function About() {
-  const current = experience.find((j) => j.when.includes("present"));
+  const current = experience.find((j) => j.end === null);
   const r = getReadings();
 
   return (
-    <main id="main" className="wrap">
-      <Nav current="about" />
+    <Shell current="about">
 
       <div className="rail rail--against-body">
         <span>{site.location}</span>
@@ -134,7 +120,6 @@ export default function About() {
         </div>
       </section>
 
-      <Footer />
-    </main>
+    </Shell>
   );
 }

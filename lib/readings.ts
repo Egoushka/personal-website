@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { getAllPosts } from "./posts";
-import { now, projects, experience, usesUpdated } from "./site";
+import { now, projects, experience } from "./site";
 import { ALL_TOPICS, type TopicSlug } from "./topics";
 
 /**
@@ -60,7 +60,6 @@ export type Readings = {
   cssLines: number;
   nowUpdated: string;
   daysSinceNow: number;
-  usesVerified: string;
   projects: number;
   /** Of those, how many are still running. Counted, so "all three" cannot rot. */
   projectsRunning: number;
@@ -107,7 +106,6 @@ export function getReadings(): Readings {
     cssLines,
     nowUpdated: now.updated,
     daysSinceNow: daysBetween(now.updated, builtOn),
-    usesVerified: usesUpdated,
     projects: projects.length,
     projectsRunning: projects.filter((p) => p.status === "running").length,
     longestSpan: spanned && {

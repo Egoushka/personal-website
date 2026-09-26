@@ -1,13 +1,20 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
+import Shell from "@/components/Shell";
 import PostList from "@/components/PostList";
 import { PersonAndSiteLd } from "@/components/JsonLd";
 import Panel from "@/components/Panel";
 import { site, proof, projects, type Project } from "@/lib/site";
+import { pageMetadata } from "@/lib/metadata";
 import { getAllPosts } from "@/lib/posts";
 import { getReadings, getTopicUsage, n, latestPhrase } from "@/lib/readings";
 import { topicName } from "@/lib/topics";
+
+export const metadata: Metadata = pageMetadata({
+  title: { absolute: `${site.name} — ${site.role}` },
+  description: site.description,
+  path: "/",
+});
 
 /**
  * The home page.
@@ -50,8 +57,7 @@ export default function Home() {
   const side = projects.filter((p) => p.side);
 
   return (
-    <main id="main" className="wrap">
-      <Nav current="home" />
+    <Shell current="home">
       <PersonAndSiteLd />
 
       {/*
@@ -206,7 +212,6 @@ export default function Home() {
         like every figure on this page.
       </p>
 
-      <Footer />
-    </main>
+    </Shell>
   );
 }

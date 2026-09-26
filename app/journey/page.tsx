@@ -1,28 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
+import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import Journey from "@/components/Journey";
-import { site, feedTypes } from "@/lib/site";
+import { pageMetadata } from "@/lib/metadata";
 
 const description =
   "Five years on a time axis: every paid role, what it was built with, and the months in between with no employer at all.";
 
-export const metadata: Metadata = {
-  title: "Journey",
-  description,
-  alternates: { canonical: "/journey/", types: feedTypes },
-  openGraph: {
-    type: "website",
-    title: `Journey — ${site.name}`,
-    description,
-    url: `${site.url}/journey/`,
-    siteName: site.name,
-    locale: site.locale,
-  },
-  twitter: { card: "summary_large_image", title: `Journey — ${site.name}`, description },
-};
+export const metadata: Metadata = pageMetadata({ title: "Journey", description, path: "/journey/" });
 
 /**
  * /journey/ — the record as a shape.
@@ -38,8 +24,7 @@ export default function JourneyPage() {
   const nowYear = now.getFullYear() + now.getMonth() / 12;
 
   return (
-    <main id="main" className="wrap">
-      <Nav />
+    <Shell>
 
       <PageHead
         title="Journey"
@@ -60,7 +45,6 @@ export default function JourneyPage() {
         <span>The same record, told as chapters, is on <Link href="/cv/">the CV</Link>.</span>
       </p>
 
-      <Footer />
-    </main>
+    </Shell>
   );
 }
