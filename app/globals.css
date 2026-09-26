@@ -416,8 +416,8 @@ a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; 
    SITE HEADER / FOOTER
    ========================================================================= */
 
-/* The header sits in its own .wrap, above <main>, so the grid's row gap no
-   longer separates it from the page; the margin is that gap. */
+/* The header sits in its own .wrap, above <main>, where the grid's row gap
+   cannot reach it; this margin is that gap. */
 .site-header {
   padding: var(--s-6) 0 var(--s-4);
   margin-bottom: var(--s-5);

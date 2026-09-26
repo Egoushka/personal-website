@@ -215,7 +215,7 @@ export type Project = {
   side?: boolean;
   /** Slug of the published post in content/posts/ that is this project's write-up. */
   writeup?: string;
-  /** A home-page candidate: the home page lists Attest and the featured projects that are running. */
+  /** Eligible for the home page's project list, beside Attest, while `status` is "running". */
   featured?: boolean;
   topics: TopicSlug[];
   readings: Reading[];
@@ -589,10 +589,9 @@ export type Job = {
    */
   resumeCompact?: boolean;
   /**
-   * How many bullets survive to paper. Explicit, because the CSS used to do
-   * this with `:nth-child(n+4)` and `:nth-of-type(n+3)` — which counts
-   * position in the DOM, and the DOM is now nested inside eras. A positional
-   * rule fails silently the moment the markup changes; a number does not.
+   * How many bullets survive to paper. A number, not a positional CSS rule:
+   * `:nth-child` counts DOM position, the roles are nested inside eras, and a
+   * positional rule fails silently the moment the markup changes.
    */
   printBullets?: number;
 };

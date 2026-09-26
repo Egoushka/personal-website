@@ -42,9 +42,9 @@ export const metadata: Metadata = {
   description: site.description,
   authors: [{ name: site.name, url: site.url }],
   creator: site.name,
-  // Feeds only. Whatever sits here is inherited by every page that does not
-  // set its own, so a canonical here made each 404 a copy of the home page.
-  // Canonicals and cards are per page, from pageMetadata() in lib/metadata.ts.
+  // Feeds only. Anything here is inherited by every page that sets none, so a
+  // canonical here would make each 404 a copy of the home page. Canonicals
+  // and cards are per page, from pageMetadata() in lib/metadata.ts.
   alternates: { types: feedTypes },
   // robots.txt is a request a crawler may ignore for a page it reached by link;
   // this is the one that binds. Absent entirely on a production build.
