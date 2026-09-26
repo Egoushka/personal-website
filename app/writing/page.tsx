@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
+import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import PostFilter, { type PostRow } from "@/components/PostFilter";
-import { site, feedTypes } from "@/lib/site";
+import { pageMetadata } from "@/lib/metadata";
 import { getAllPosts, getTopicCounts, formatDate } from "@/lib/posts";
 import { getReadings, n, latestPhrase } from "@/lib/readings";
 import { topicName } from "@/lib/topics";
@@ -11,20 +10,7 @@ import { topicName } from "@/lib/topics";
 const description =
   "Notes on backend engineering, debugging, and running a homelab on one box — by Yehor Hrabovskyi.";
 
-export const metadata: Metadata = {
-  title: "Writing",
-  description,
-  alternates: { canonical: "/writing/", types: feedTypes },
-  openGraph: {
-    type: "website",
-    title: `Writing — ${site.name}`,
-    description,
-    url: `${site.url}/writing/`,
-    siteName: site.name,
-    locale: site.locale,
-  },
-  twitter: { card: "summary_large_image", title: `Writing — ${site.name}`, description },
-};
+export const metadata: Metadata = pageMetadata({ title: "Writing", description, path: "/writing/" });
 
 /** `2026-07-28` → `July 2026`. The running head, one step coarser than the date. */
 function formatMonth(iso: string): string {
@@ -65,8 +51,7 @@ export default function WritingIndex() {
   }));
 
   return (
-    <main id="main" className="wrap">
-      <Nav current="writing" />
+    <Shell current="writing">
 
       <PageHead
         title="Writing"
@@ -83,7 +68,6 @@ export default function WritingIndex() {
 
       <PostFilter posts={rows} topics={topics} />
 
-      <Footer />
-    </main>
+    </Shell>
   );
 }

@@ -416,8 +416,11 @@ a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; 
    SITE HEADER / FOOTER
    ========================================================================= */
 
+/* The header sits in its own .wrap, above <main>, where the grid's row gap
+   cannot reach it; this margin is that gap. */
 .site-header {
   padding: var(--s-6) 0 var(--s-4);
+  margin-bottom: var(--s-5);
   border-bottom: var(--hair) solid var(--rule);
   display: flex;
   align-items: baseline;
@@ -463,6 +466,18 @@ a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; 
 }
 .site-footer a { color: var(--ink-2); text-decoration: none; }
 .site-footer a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
+
+/* ============================================================================
+   BYLINE — who wrote this and how to reach me, where a reader finishes
+   ========================================================================= */
+
+.byline {
+  font: 400 var(--fs-small)/1.5 var(--figure);
+  color: var(--ink-2);
+  margin: 0;
+}
+/* A line of targets, not a sentence, so each gets the 24px floor (WCAG 2.5.8). */
+.byline a { display: inline-flex; align-items: center; min-height: 24px; }
 
 /* ============================================================================
    RULES

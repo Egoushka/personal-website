@@ -37,7 +37,7 @@ function knowsAbout(): string[] {
 /** Homepage: who this is, and what site it is. Both get stable @ids so the
  *  per-page graphs below can reference them instead of repeating themselves. */
 export function PersonAndSiteLd() {
-  const current = experience.find((j) => j.when.includes("present"));
+  const current = experience.find((j) => j.end === null);
   return (
     <Ld
       data={{

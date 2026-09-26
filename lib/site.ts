@@ -44,6 +44,11 @@ export const site = {
    * buying a week of work, not filling a role.
    */
   availability: "available for contract work",
+  /**
+   * What I can be hired for, in one line: scope, never rates or capacity.
+   * Empty renders nothing. Only I write this; it is never inferred.
+   */
+  engagement: "",
   email: "egorgrabovskij@gmail.com",
   github: "https://github.com/Egoushka",
   githubHandle: "Egoushka",
@@ -208,6 +213,10 @@ export type Project = {
    * them in one list quietly averages the first down to the second.
    */
   side?: boolean;
+  /** Slug of the published post in content/posts/ that is this project's write-up. */
+  writeup?: string;
+  /** Eligible for the home page's project list, beside Attest, while `status` is "running". */
+  featured?: boolean;
   topics: TopicSlug[];
   readings: Reading[];
 };
@@ -230,6 +239,7 @@ export type Project = {
 export const projects: Project[] = [
   {
     slug: "attest",
+    writeup: "attest",
     print: true,
     name: "Attest",
     status: "running",
@@ -252,6 +262,8 @@ export const projects: Project[] = [
   },
   {
     slug: "chronicle",
+    writeup: "chronicle",
+    featured: true,
     print: true,
     side: true,
     visibility: "private",
@@ -277,6 +289,8 @@ export const projects: Project[] = [
   },
   {
     slug: "synapse",
+    writeup: "synapse",
+    featured: true,
     side: true,
     visibility: "private",
     tech: ["Python", "FastAPI", "Postgres", "Hindsight", "LiteLLM", "Docker"],
@@ -327,6 +341,7 @@ export const projects: Project[] = [
   },
   {
     slug: "oura-platform",
+    writeup: "oura-platform",
     side: true,
     visibility: "private",
     tech: ["C#", ".NET", "Postgres", "TimescaleDB", "Dapper", "DbUp", "Serilog", "Grafana", "OAuth", "xUnit", "Testcontainers"],
@@ -375,6 +390,8 @@ export const projects: Project[] = [
   },
   {
     slug: "homelab-gitops",
+    writeup: "homelab",
+    featured: true,
     side: true,
     visibility: "private",
     tech: ["Docker Compose", "Traefik", "SOPS", "age", "Tailscale", "Headscale", "Caddy", "Grafana", "Python", "Shell"],
@@ -546,7 +563,10 @@ export const practice: { name: string; topic?: TopicSlug; now: string }[] = [
 ];
 
 export type Job = {
-  when: string;
+  /** First month in the role, `"YYYY-MM"`. Read and printed only through lib/dates.ts. */
+  start: string;
+  /** Last month in the role, inclusive, `"YYYY-MM"`; `null` while it is current. */
+  end: string | null;
   company: string;
   role: string;
   /** What the role was pointed at, when the title does not say. */
@@ -569,10 +589,9 @@ export type Job = {
    */
   resumeCompact?: boolean;
   /**
-   * How many bullets survive to paper. Explicit, because the CSS used to do
-   * this with `:nth-child(n+4)` and `:nth-of-type(n+3)` — which counts
-   * position in the DOM, and the DOM is now nested inside eras. A positional
-   * rule fails silently the moment the markup changes; a number does not.
+   * How many bullets survive to paper. A number, not a positional CSS rule:
+   * `:nth-child` counts DOM position, the roles are nested inside eras, and a
+   * positional rule fails silently the moment the markup changes.
    */
   printBullets?: number;
 };
@@ -669,10 +688,10 @@ export const eras: Era[] = [
   },
 ];
 
-/** Source of truth for /about/, /cv/ and every topic page. Mirrors LinkedIn. */
+/** Source of truth for /about/, /cv/, /journey/, the JSON-LD and every topic page. Mirrors LinkedIn. */
 export const experience: Job[] = [
   {
-    when: "Aug 2025 — present",
+    start: "2025-08", end: null,
     company: "Boerse Stuttgart Digital",
     printBullets: 3,
     role: "Software Engineer",
@@ -687,7 +706,7 @@ export const experience: Job[] = [
     ],
   },
   {
-    when: "Dec 2024 — Jun 2025",
+    start: "2024-12", end: "2025-06",
     company: "IT INNOVATIONS",
     printBullets: 3,
     role: "Software Engineer",
@@ -702,7 +721,7 @@ export const experience: Job[] = [
     ],
   },
   {
-    when: "Sep 2024 — Oct 2024",
+    start: "2024-09", end: "2024-10",
     company: "Atlas Recruiting",
     resumeCompact: true,
     role: "Sales Representative",
@@ -715,7 +734,7 @@ export const experience: Job[] = [
     ],
   },
   {
-    when: "Apr 2023 — Jun 2024",
+    start: "2023-04", end: "2024-06",
     company: "UKAD",
     printBullets: 1,
     role: "Software Engineer",
@@ -731,7 +750,7 @@ export const experience: Job[] = [
     ],
   },
   {
-    when: "Oct 2022 — Feb 2023",
+    start: "2022-10", end: "2023-02",
     company: "LetsData",
     resumeCompact: true,
     role: "Junior Software Engineer",
@@ -743,7 +762,7 @@ export const experience: Job[] = [
     ],
   },
   {
-    when: "Mar 2021 — Mar 2022",
+    start: "2021-03", end: "2022-03",
     company: "GlobalLogic",
     resumeCompact: true,
     role: "Junior Software Engineer",

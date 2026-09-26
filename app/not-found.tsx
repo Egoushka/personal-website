@@ -1,12 +1,10 @@
 import Link from "next/link";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
+import Shell from "@/components/Shell";
 
 /** The joke is from the deploy post. It earns its place on exactly one page. */
 export default function NotFound() {
   return (
-    <main id="main" className="wrap">
-      <Nav />
+    <Shell>
       <span className="rail rail--against-body">404</span>
       <div className="notfound">
         <h1>404</h1>
@@ -19,7 +17,6 @@ export default function NotFound() {
           <span><Link href="/projects/">projects</Link></span>
         </p>
       </div>
-      <Footer />
-    </main>
+    </Shell>
   );
 }
