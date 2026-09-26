@@ -11,11 +11,7 @@ export type PostMeta = {
   title: string;
   date: string;
   description: string;
-  /**
-   * Slugs from lib/topics.ts. The frontmatter key is `topics`, not `tags` — one
-   * vocabulary now covers posts, projects and jobs, so calling the post's half
-   * of it something different was the thing keeping them apart.
-   */
+  /** Slugs from lib/topics.ts, the one vocabulary posts, projects and jobs share. */
   topics: TopicSlug[];
   /** Whole minutes at 200 wpm, floored to 1. */
   readingTime: number;

@@ -16,9 +16,8 @@ type Params = { topic: string };
 /**
  * Everything about one topic, in one place.
  *
- * This is the page the whole single-vocabulary refactor exists for: somebody who
- * cares about Postgres should see the posts, the projects **and the paid work**
- * in one view. `Job.topics` is what makes the last one possible, and it is the
+ * Somebody who cares about Postgres should see the posts, the projects **and
+ * the paid work** in one view. `Job.topics` is what makes the last one possible, and it is the
  * difference between a topic page that proves something and one that just proves
  * I have a side project.
  *
