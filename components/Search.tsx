@@ -15,9 +15,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
  * All of that would otherwise be hand-written and half-wrong.
  *
  * Pagefind only exists after `next build` — `npm run dev` has no /pagefind/
- * path, so loading fails there by design. The empty state says so rather than
- * looking broken.
+ * path, so loading fails there by design. On the dev server's port the empty
+ * state says why; everywhere else it says only that search is unavailable.
  */
+
+const PAGEFIND = "/pagefind/pagefind.js";
 
 type PagefindResult = {
   id: string;
@@ -40,6 +42,7 @@ export default function Search() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const pagefind = useRef<Pagefind | null>(null);
+  const failedLoads = useRef(0);
 
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -55,6 +58,9 @@ export default function Search() {
   const show = useCallback(() => {
     dialogRef.current?.showModal();
     setOpen(true);
+    // A failed load is retried on the next open, not remembered for the life
+    // of the page. Here rather than in close(): Esc closes the dialog without it.
+    setState((s) => (s === "unavailable" ? "idle" : s));
     // Focus after the dialog is in the top layer, or Safari drops it.
     requestAnimationFrame(() => inputRef.current?.focus());
   }, []);
@@ -72,20 +78,28 @@ export default function Search() {
     return () => document.removeEventListener("keydown", onKey);
   }, [show, close]);
 
-  // Load the index on first open, never on page load: it is ~740 KB of wasm and
-  // index shards that most visitors will never ask for.
+  // Load the index on first open, never on page load: it is wasm and index
+  // shards that most visitors will never ask for. Only from "idle" — this
+  // effect re-runs when it sets "busy" and must not start a second load.
   useEffect(() => {
-    if (!open || pagefind.current || state === "unavailable") return;
+    if (!open || pagefind.current || state !== "idle") return;
     (async () => {
       setState("busy");
       try {
-        // Hidden from the bundler on purpose — this path only exists in the
-        // built output, so a static import would fail the build.
-        const mod = (await (new Function('return import("/pagefind/pagefind.js")')() as Promise<Pagefind>));
+        // A real dynamic import the bundler leaves alone: the file only exists
+        // in the built output, and a literal specifier fails tsc (TS2307).
+        // Never route this through eval or `new Function` — the CSP has no
+        // 'unsafe-eval', so that loader throws in production.
+        // A retry needs a fresh URL: the browser remembers a failed module
+        // fetch for the life of the page and rejects a second import() of it
+        // without asking the server. Pagefind's base path ignores the query.
+        const url = failedLoads.current ? `${PAGEFIND}?retry=${failedLoads.current}` : PAGEFIND;
+        const mod = (await import(/* webpackIgnore: true */ /* turbopackIgnore: true */ url)) as Pagefind;
         await mod.init();
         pagefind.current = mod;
         setState("ready");
       } catch {
+        failedLoads.current += 1;
         setState("unavailable");
       }
     })();
@@ -179,13 +193,23 @@ export default function Search() {
           </div>
 
           <div className="search-results" role="listbox" aria-label="Results">
+            {/* Only ever rendered after a failed load on the client, so reading
+                `location` here cannot differ from the server's HTML. */}
             {state === "unavailable" && (
               <p className="search-note">
-                The search index is only built by <code>npm run build</code>, so it is
-                unavailable on the dev server.
+                Search is unavailable right now.
+                {location.port === "3000" && (
+                  <>
+                    {" "}The index is only built by <code>npm run build</code>, so it
+                    does not exist on the dev server.
+                  </>
+                )}
               </p>
             )}
-            {state !== "unavailable" && query && !hits.length && (
+            {state === "busy" && query && (
+              <p className="search-note">Loading the index…</p>
+            )}
+            {state === "ready" && query && !hits.length && (
               <p className="search-note">No matches for “{query}”.</p>
             )}
             {!query && (

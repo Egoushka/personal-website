@@ -28,6 +28,10 @@ export type PostMeta = {
    * is not printed; there is no default and nothing is estimated.
    */
   spanDays?: number;
+  /** Optional frontmatter, read as-is. Validated by validate-content, rendered by the post page. */
+  updated?: string;
+  /** Optional frontmatter: a note describing what a later edit corrected. */
+  correction?: string;
 };
 
 export type Post = PostMeta & { content: string };
@@ -48,6 +52,8 @@ function readPostFile(slug: string): Post {
     spanDays: Number.isFinite(Number(data.spanDays)) && data.spanDays != null
       ? Number(data.spanDays)
       : undefined,
+    updated: typeof data.updated === "string" ? data.updated : undefined,
+    correction: typeof data.correction === "string" ? data.correction : undefined,
     content,
   };
 }
@@ -136,12 +142,4 @@ export function getRelatedPosts(slug: string, limit = 3): PostMeta[] {
     .sort((a, b) => b.shared - a.shared || (a.post.date < b.post.date ? 1 : -1))
     .slice(0, limit)
     .map((x) => x.post);
-}
-
-/** Previous (older) and next (newer) post in publication order. */
-export function getAdjacentPosts(slug: string): { prev?: PostMeta; next?: PostMeta } {
-  const all = getAllPosts(); // newest first
-  const i = all.findIndex((p) => p.slug === slug);
-  if (i === -1) return {};
-  return { next: all[i - 1], prev: all[i + 1] };
 }
