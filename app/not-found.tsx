@@ -1,5 +1,9 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Shell from "@/components/Shell";
+
+// Through the layout's template: "Not found — Yehor Hrabovskyi".
+export const metadata: Metadata = { title: "Not found" };
 
 /** The joke is from the deploy post. It earns its place on exactly one page. */
 export default function NotFound() {
