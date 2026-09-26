@@ -4,30 +4,44 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      full:
+        description: "Also prune: delete the /_next/ files this build no longer has"
+        type: boolean
+        default: false
 
-# Avoid overlapping deploys; let the newest push win.
+# One deploy at a time, and a running one is never cancelled: a cancelled rsync
+# leaves the live site half old, half new. A push during a deploy waits; a newer
+# push replaces a deploy that is still waiting (a pending `full` prune included,
+# so dispatch it again).
 concurrency:
   group: deploy-production
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 # The job only reads the repo; it authenticates to the VPS with a deploy key.
 permissions:
   contents: read
 
+# bash, not the default shell, so every step also runs with -o pipefail.
+defaults:
+  run:
+    shell: bash
+
 env:
-  # The box moved in 2026-07; the previous address still answered ping but had
-  # port 22 closed, which is why every deploy since 2026-06-06 was dead in the
-  # water. Host is <vps-host>, tailnet 100.64.0.2.
+  # <vps-host>, tailnet 100.64.0.2.
   VPS_HOST: <origin-ip>
-  # Deploys as `webdeploy`, not root. Its only command on the box is
-  # `rrsync -wo /opt/stacks/website` (forced in authorized_keys), so every
-  # remote path below is relative to /opt/stacks/website and nothing but a
-  # write-only rsync is possible: no shell, no docker, no reads. Until
-  # 2026-09-24 this key was an unrestricted root login on public :22.
+  # Its only command on the box is `rrsync -wo /opt/stacks/website`, forced in
+  # authorized_keys: every remote path below is relative to /opt/stacks/website,
+  # and a write-only rsync is all it can do — no shell, no docker, no reads.
   VPS_USER: webdeploy
+  SITE: https://hrabovskyi.online
+  # The Caddy that validates and tests the Caddyfile. Pin it to the box's.
+  CADDY_IMAGE: caddy:2-alpine
 
 jobs:
   build-and-deploy:
+    # A dispatch can run this file from any ref. Only main deploys.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -42,91 +56,119 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Everything below the deploy line is irreversible — rsync --delete overwrites
-      # the live site. Fail here instead.
+      # Everything before "Configure SSH" is a gate: nothing has reached the box
+      # yet. It is CI's chain without the browser smoke test.
       - name: Validate content
         run: npm run validate
 
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Unit tests
+        run: npm test
+
       - name: Build static export
         run: npm run build
 
-      # A syntax error here takes the site down on `docker compose up -d`.
+      - name: Check the build output
+        run: npm run check
+
+      # Caddy's --watch keeps the old config when a new file fails to load, so a
+      # broken Caddyfile would fail silently on the box. It fails here instead.
       - name: Validate Caddyfile
         run: |
           docker run --rm -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
-            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
+            "$CADDY_IMAGE" caddy validate --config /etc/caddy/Caddyfile
+
+      - name: Test the Caddyfile against this build
+        run: bash scripts/caddy-test.sh
+
+      # --index-files is what lets --include-fragments see into a directory link:
+      # /cv/#umbraco resolves to out/cv/index.html, as the server resolves it.
+      - name: Check links in the built site
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --offline
+            --include-fragments
+            --index-files index.html
+            --no-progress
+            --root-dir ${{ github.workspace }}/out
+            --exclude-path out/_next
+            "out/**/*.html"
+          fail: true
+
+      - name: Stamp the commit into the Caddyfile
+        run: |
+          sed "s/__DEPLOY_REV__/$GITHUB_SHA/" deploy/Caddyfile > "$RUNNER_TEMP/Caddyfile"
+          grep -qF "X-Site-Rev \"$GITHUB_SHA\"" "$RUNNER_TEMP/Caddyfile"
 
       - name: Configure SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-      # This repo owns the site content and the Caddy config. It does NOT own
-      # compose.yaml — /opt/stacks is a governed GitOps repo and the stack
-      # definition (mem limits, security_opt, tailnet binding) lives there.
-      # Pushing a second docker-compose.yml alongside it is how you get two
-      # sources of truth that silently disagree.
-      - name: Sync site to VPS
+      # Three passes, in this order, so no reader gets a page whose assets are
+      # missing:
+      #  1. /_next/ first, deleting nothing: new pages need the new chunks, and
+      #     HTML still cached at the edge (s-maxage=600) needs the old ones.
+      #  2. The Caddyfile, before the pages, so a page that moves has its redirect
+      #     in place first. --inplace is load-bearing: the Caddyfile is a
+      #     single-file bind mount, and rsync's usual write-then-rename gives it a
+      #     new inode the container never sees.
+      #  3. Everything else, deleting what the build no longer has, except
+      #     /_next/ (pass 1 keeps the old chunks) and /status.json (cron writes it
+      #     on the box; no build has it).
+      # Old chunks accumulate until a dispatch with `full` prunes them.
+      - name: Sync to the VPS
+        id: sync
         run: |
-          # status.json is generated ON THE BOX by cron (gen-status.sh, homelab-gitops) and
-          # is not part of the build output. Without the exclude, --delete removes
-          # it on every deploy and /uses/ silently loses its live state until the
-          # next cron tick.
-          rsync -avz --delete --exclude=status.json -e "ssh -i ~/.ssh/id_ed25519" \
+          ssh="ssh -i $HOME/.ssh/id_ed25519"
+          box="$VPS_USER@$VPS_HOST"
+          rsync -azi -e "$ssh" out/_next/ "$box:site/_next/"
+          rsync -azi --inplace -e "$ssh" "$RUNNER_TEMP/Caddyfile" "$box:Caddyfile"
+          rsync -azi --delete --exclude=/status.json --exclude=/_next/ -e "$ssh" out/ "$box:site/"
+
+      # Optional, and only with both secrets. Without them, HTML reaches readers
+      # when the edge's copy expires (s-maxage=600).
+      - name: Purge the Cloudflare cache
+        id: purge
+        env:
+          CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
+          CF_PURGE_TOKEN: ${{ secrets.CF_PURGE_TOKEN }}
+        run: |
+          if [ -z "$CF_ZONE_ID" ] || [ -z "$CF_PURGE_TOKEN" ]; then exit 0; fi
+          curl -fsS -X POST "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/purge_cache" \
+            -H "Authorization: Bearer $CF_PURGE_TOKEN" -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}' | jq -e .success >/dev/null
+          echo "purged=true" >> "$GITHUB_OUTPUT"
+          echo "Cloudflare cache purged"
+
+      # After the purge, not before it: once the edge has dropped the old HTML,
+      # nothing it serves names the chunks this deletes.
+      - name: Prune old chunks
+        if: inputs.full
+        env:
+          PURGED: ${{ steps.purge.outputs.purged }}
+        run: |
+          if [ "$PURGED" != true ]; then
+            echo "::warning::No Cloudflare purge ran, so HTML the edge still holds may name chunks this deletes."
+          fi
+          rsync -azi --delete --exclude=/status.json -e "ssh -i $HOME/.ssh/id_ed25519" \
             out/ "$VPS_USER@$VPS_HOST:site/"
-          # --inplace is load-bearing: Caddyfile is a SINGLE-FILE bind mount, and
-          # rsync's default write-temp-then-rename gives it a new inode. The mount
-          # stays pinned to the old one, so the container keeps serving the old
-          # config no matter how many times you reload it.
-          rsync -avz --inplace -e "ssh -i ~/.ssh/id_ed25519" \
-            deploy/Caddyfile "$VPS_USER@$VPS_HOST:Caddyfile"
 
-      # Static files are live as soon as rsync returns. A Caddyfile change is
-      # picked up by Caddy's --watch (homelab-gitops website/compose.yaml); this
-      # key cannot `docker exec` a reload any more. The Caddyfile was validated
-      # above, and the redirect checks below fail if the new one did not load.
-      - name: Wait for Caddy to reload
-        run: sleep 10
-
-      # Every request carries a cache-busting query so this tests what was just
-      # deployed rather than Cloudflare's copy of what was there before. HTML is
-      # served with s-maxage=600, so without it /blog/ can answer 200 from the
-      # edge for ten minutes after the page has stopped existing. The redirect
-      # matchers use `path`, which ignores the query, so the buster cannot change
-      # what is being tested.
-      - name: Verify the site is serving
-        run: |
-          CB="cb=${GITHUB_SHA}"
-          for path in / /writing/ /projects/ /about/ /cv/ /links/ /feed.xml; do
-            code=$(curl -sS -o /dev/null -w '%{http_code}' "https://hrabovskyi.online$path?$CB")
-            echo "$path -> $code"
-            [ "$code" = "200" ] || exit 1
-          done
-
-          # Routes moved in 2026-08 and these redirects are the only thing keeping
-          # the old URLs alive — a static export cannot redirect, so if the
-          # Caddyfile did not reload, every one of these 404s. Both published post
-          # addresses are in feed readers, so this is not a cosmetic check.
-          # Caddy's `redir` emits the destination verbatim, so the cache-buster is
-          # dropped from Location rather than carried through — verified against a
-          # real Caddy serving a real build, not assumed.
-          check_redirect() {
-            got=$(curl -sS -o /dev/null -w '%{http_code} %{redirect_url}' "https://hrabovskyi.online$1?$CB")
-            echo "$1 -> $got"
-            if [ "$got" != "301 https://hrabovskyi.online$2" ]; then
-              echo "  expected: 301 https://hrabovskyi.online$2"
-              exit 1
-            fi
-          }
-          check_redirect /blog/                  /writing/
-          check_redirect /posts/silent-deploys/  /writing/silent-deploys/
-          check_redirect /tags/debugging/        /topics/debugging/
-          check_redirect /resume/                /cv/
-          check_redirect /now/                   /about/
-          check_redirect /uses/                  /about/
+      # Waits up to 60 s for X-Site-Rev to name this commit (Caddy has loaded the
+      # new Caddyfile), then repeats the build's tests on the live site: this
+      # build's id in /, the pages, the redirects, the cards, the 404s, the CSP
+      # and robots.txt. Cache-Control is left to the local run (see the script).
+      # Runs even when the purge or prune failed: once the sync has happened,
+      # whether the live site is healthy is the thing to know.
+      - name: Verify the live site
+        if: ${{ !cancelled() && steps.sync.outcome == 'success' }}
+        run: BASE_URL="$SITE" EXPECT_REV="$GITHUB_SHA" bash scripts/caddy-test.sh
