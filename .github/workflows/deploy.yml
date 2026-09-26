@@ -10,8 +10,10 @@ on:
         type: boolean
         default: false
 
-# One deploy at a time, and none is ever cancelled: a cancelled rsync leaves the
-# live site half old, half new. A push during a deploy waits for it.
+# One deploy at a time, and a running one is never cancelled: a cancelled rsync
+# leaves the live site half old, half new. A push during a deploy waits; a newer
+# push replaces a deploy that is still waiting (a pending `full` prune included,
+# so dispatch it again).
 concurrency:
   group: deploy-production
   cancel-in-progress: false
@@ -125,6 +127,7 @@ jobs:
       #     on the box; no build has it).
       # Old chunks accumulate until a dispatch with `full` prunes them.
       - name: Sync to the VPS
+        id: sync
         run: |
           ssh="ssh -i $HOME/.ssh/id_ed25519"
           box="$VPS_USER@$VPS_HOST"
@@ -164,5 +167,8 @@ jobs:
       # new Caddyfile), then repeats the build's tests on the live site: this
       # build's id in /, the pages, the redirects, the cards, the 404s, the CSP
       # and robots.txt. Cache-Control is left to the local run (see the script).
+      # Runs even when the purge or prune failed: once the sync has happened,
+      # whether the live site is healthy is the thing to know.
       - name: Verify the live site
+        if: ${{ !cancelled() && steps.sync.outcome == 'success' }}
         run: BASE_URL="$SITE" EXPECT_REV="$GITHUB_SHA" bash scripts/caddy-test.sh

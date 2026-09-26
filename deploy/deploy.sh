@@ -29,6 +29,12 @@ if [ -n "$(git status --porcelain)" ]; then
   git status --short >&2
   exit 1
 fi
+# macOS ships openrsync as rsync, and rrsync on the box rejects the options it
+# sends (--dirs), so every pass would fail after the whole gate had run.
+if ! rsync --version 2>/dev/null | grep -q '^rsync  *version 3'; then
+  echo "deploy.sh: refusing: rsync here is not rsync 3 ($(rsync --version 2>&1 | head -1)). The box's rrsync rejects it; install it (brew install rsync) and put it first on PATH." >&2
+  exit 1
+fi
 
 echo "==> Checks"
 npm run validate

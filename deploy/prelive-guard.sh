@@ -9,6 +9,9 @@
 #   Caddyfile    the live config, at any depth: a root higher still puts it deeper
 #   status.json  at the top: only production's site/ has it, because cron writes
 #                it there, so the root is the live site itself
+#   .anything    a dotfile at the top: the build has none, so the root is a home
+#                directory — a key line without command=, where --delete would
+#                take .ssh/authorized_keys and lock out the production key too
 set -euo pipefail
 
 bad=$(awk '
@@ -18,7 +21,7 @@ bad=$(awk '
     path = substr($0, 13)
     sub(/ -> .*$/, "", path)
     name = path; sub(/\/$/, "", name); sub(/.*\//, "", name)
-    if (path ~ /^site(\/|$)/ || name == "Caddyfile" || path == "status.json") print
+    if (path ~ /^site(\/|$)/ || name == "Caddyfile" || path == "status.json" || path ~ /^\./) print
   }')
 
 if [ -n "$bad" ]; then
