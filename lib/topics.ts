@@ -101,7 +101,7 @@ export const TOPICS = {
   tailscale: {
     name: "Tailscale and Headscale",
     kind: "technology",
-    blurb: "The only way in. SSH isn't exposed to the internet.",
+    blurb: "The only way in for administration. Public SSH takes only deploy keys that can do nothing but rsync into this site.",
   },
   sops: {
     name: "SOPS + age",
