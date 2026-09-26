@@ -1455,7 +1455,13 @@ kbd {
 }
 .search-trigger:hover { color: var(--ink); border-color: var(--accent); }
 .search-trigger svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.6; }
-.search-trigger-key { color: var(--ink-2); }
+.search-trigger-key {
+  color: var(--ink-2);
+  /* The server paints ⌘K and a PC swaps in Ctrl K after mount; the box is
+     sized for the longer one so that swap moves nothing in the header. */
+  min-inline-size: 6ch;
+  text-align: center;
+}
 
 /* The theme switch. Same control edge and the same 24px minimum target as the
    search trigger beside it — one control shape, two controls. The label names
@@ -1474,6 +1480,13 @@ kbd {
   text-transform: uppercase;
 }
 .theme-toggle:hover { color: var(--ink); border-color: var(--accent); }
+/* Before mount: the same box, unpainted, so the header is laid out once. */
+.theme-toggle--pending { visibility: hidden; }
+
+/* Neither control works without JavaScript, so neither is painted. */
+@media (scripting: none) {
+  .search-trigger, .theme-toggle { display: none; }
+}
 
 .search-dialog {
   margin: 0 auto;
@@ -1497,6 +1510,8 @@ kbd {
   padding: var(--s-4) var(--s-5);
   border-bottom: var(--hair) solid var(--rule);
 }
+/* The input draws no outline of its own, so the field carries the ring. */
+.search-field:focus-within { outline: 2px solid var(--accent); outline-offset: -2px; }
 .search-field svg { width: 15px; height: 15px; flex: none; fill: none; stroke: var(--ink-2); stroke-width: 1.6; }
 .search-field input {
   flex: 1; min-width: 0;
@@ -1507,7 +1522,7 @@ kbd {
 .search-field input::placeholder { color: var(--ink-2); }
 .search-field input::-webkit-search-cancel-button { display: none; }
 
-.search-results { overflow-y: auto; padding: var(--s-3) 0; }
+.search-body { overflow-y: auto; padding: var(--s-3) 0; }
 
 .search-note {
   margin: 0; padding: var(--s-3) var(--s-5);
