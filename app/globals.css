@@ -1606,6 +1606,9 @@ figure figcaption {
   min-height: 24px;
 }
 .print-hint { margin: var(--s-5) 0 0; width: max-content; }
+/* The server paints the hint and the browser swaps in the button row after
+   mount. One height for both, taller than either, so the swap moves nothing. */
+.print-hint, .print-actions { min-block-size: 2.75rem; box-sizing: border-box; }
 /* The button and its shortcut. `.run` supplies the gap. */
 .print-actions { margin: var(--s-5) 0 0; align-items: center; }
 .print-actions button.control { cursor: pointer; font-family: var(--prose); }
@@ -1836,15 +1839,11 @@ figure figcaption {
   .cv .role-title { font: 400 10pt/1.2 var(--prose); margin: 1mm 0 0; }
   .cv .masthead   { border-bottom: 1.25pt solid #000; padding-bottom: 1.6mm; }
 
-  /* The contact rail is five long URLs and the label column is 26mm wide, so on
-     paper they printed straight over the name. Below the collapse they already
-     run inline; do the same here. `order` moves the masthead ahead of the rail
-     without touching DOM order, so the sheet reads name, rule, contacts.
-
-     The masthead spans BOTH columns. It used to sit in the prose column while
-     the contacts under it spanned the sheet, so the name was indented 32mm
-     past its own rule and its own address — the first thing on the page and
-     the only thing not aligned to anything. */
+  /* The contact rail is long URLs and the label column is 26mm wide, so on
+     paper they would print over the name. Below the collapse they already run
+     inline; do the same here. `order` moves the masthead ahead of the rail
+     without touching DOM order, so the sheet reads name, rule, contacts. The
+     masthead spans BOTH columns, so the name aligns with its rule and address. */
   .cv .masthead { order: -1; }
   .cv .masthead-rail {
     display: flex;
@@ -2026,14 +2025,10 @@ figure figcaption {
 
 .board { grid-column: 1 / -1; margin-top: var(--s-6); }
 
-/* The filter, and nothing else above the list.
+/* The filter, and nothing else above the list. The measured shares from
+   /status.json are in the bars, where they mean something.
 
-   There was a live bar here — containers, uptime, editor hours, health — and
-   it was the home page's instrument panel said a second time, on the page
-   least about the box. The measured shares still arrive from the same
-   /status.json; they are in the bars, where they mean something.
-
-   It is a field rather than a bare input because it now opens the page: the
+   It is a field rather than a bare input because it opens the page: the
    border is the control, the glyph carries the label, and the count sits
    inside it rather than floating beside it. The input keeps no border of its
    own and no focus ring — the ring belongs to the field, via :focus-within,
@@ -2108,8 +2103,7 @@ figure figcaption {
 .board-list > li.is-measured .board-meter { background: var(--surface-2); }
 .board-fill { display: block; width: var(--w); height: 100%; border-radius: 3px; background: var(--accent); }
 
-/* Only a measured row prints one. The em-dash that used to sit here on fifteen
-   rows was a column of punctuation that had to be explained. */
+/* Only a measured row prints one; an unmeasured row prints nothing. */
 .board-num {
   grid-column: 4;
   text-align: right;
@@ -2158,6 +2152,9 @@ figure figcaption {
 @media (max-width: 560px) {
   .board-list > li { grid-template-columns: 22px minmax(0, 1fr) 2.6rem; }
   .board-meter { display: none; }
+  /* The last column here is 3. Left at 4, a measured row arriving from
+     /status.json opens an implicit column and rewraps the name beside it. */
+  .board-num { grid-column: 3; }
 }
 
 /* ============================================================================
