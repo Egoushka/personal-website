@@ -3,8 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
+import PostList from "@/components/PostList";
+import Byline from "@/components/Byline";
 import { site, projects } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
+import { getAllPosts } from "@/lib/posts";
 import { Downloads } from "@/components/Measured";
 import { topicName } from "@/lib/topics";
 
@@ -44,28 +47,34 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
   const { slug } = await params;
   const project = projects.find((p) => p.slug === slug);
   if (!project) notFound();
+  const writeup = project.writeup
+    ? getAllPosts().find((p) => p.slug === project.writeup)
+    : undefined;
 
   return (
     <Shell current="projects">
 
-      <PageHead
-        title={project.name}
-        figures={
-          <>
-            <span>{project.lang}</span>
-            <span>{project.shape}</span>
-            <span>{project.status}</span>
-            {project.href ? (
-              <span><a href={project.href} rel="noopener">the repository</a></span>
-            ) : (
-              <span>private repository</span>
-            )}
-          </>
-        }
-        lede={project.summary}
-      />
+      {/* Search indexes what describes the project, not the links around it. */}
+      <div data-pagefind-body>
+        <PageHead
+          title={project.name}
+          figures={
+            <>
+              <span>{project.lang}</span>
+              <span>{project.shape}</span>
+              <span>{project.status}</span>
+              {project.href ? (
+                <span><a href={project.href} rel="noopener">the repository</a></span>
+              ) : (
+                <span>private repository</span>
+              )}
+            </>
+          }
+          lede={project.summary}
+        />
+      </div>
 
-      <ul className="topic-run">
+      <ul className="topic-run" data-pagefind-body>
         {project.topics.map((t) => (
           <li key={t}>
             <Link href={`/topics/${t}/`}>{topicName(t)}</Link>
@@ -81,7 +90,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
         it is what makes the rest believable.
       */}
       <hr className="bleed" />
-      <section className="row">
+      <section className="row" data-pagefind-body>
         <span className="rail rail--label">Built with</span>
         <div>
           <p className="tech-run run">
@@ -92,7 +101,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
       </section>
 
       <hr className="bleed" />
-      <section className="row">
+      <section className="row" data-pagefind-body>
         <span className="rail rail--label">Readings</span>
         <ul className="readings">
           {project.readings.map((reading) => (
@@ -110,13 +119,23 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
       </section>
 
       <hr className="bleed" />
-      <section className="row">
+      <section className="row" data-pagefind-body>
         <span className="rail rail--label">What it is</span>
         <p>{project.description}</p>
       </section>
 
+      {writeup && (
+        <>
+          <hr className="bleed" />
+          <section className="row">
+            <span className="rail rail--label">Write-up</span>
+            <PostList posts={[writeup]} />
+          </section>
+        </>
+      )}
+
       <hr className="bleed" />
-      <div className="row">
+      <div className="row project-elsewhere">
         <span className="rail rail--label">Elsewhere</span>
         <div>
           {project.visibility === "private" && (
@@ -131,6 +150,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
             <span><Link href="/projects/">all projects</Link></span>
             <span><a href={site.github} rel="noopener">my GitHub</a></span>
           </p>
+          <Byline title={project.name} />
         </div>
       </div>
 
