@@ -44,7 +44,7 @@ export default function About() {
         <div>
           <PageHead title="About" quiet />
 
-          <div className="prose">
+          <div className="about-copy">
             {/* Appears as soon as assets/images/portrait.jpg exists — see
                 assets/images/README.md. No code change needed to turn it on. */}
             {hasPicture("portrait") && (

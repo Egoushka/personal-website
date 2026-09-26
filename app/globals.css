@@ -1049,8 +1049,8 @@ figure.code pre {
 }
 /* The body reserves the height the figures fill with a complete document, so
    they arrive without moving anything below. Measured, not derived: the
-   populated body with tests/fixtures/status.json routed in, swept 300–2000 px
-   a pixel at a time, taking the tallest height in each band plus 2 px. Phones
+   populated body with tests/fixtures/status.json routed in, swept 300–1700 px
+   two pixels at a time, taking the tallest height in each band plus 2 px. Phones
    need the most steps because each figure's source line wraps differently as a
    column narrows. The loading line and the apology sit in the same box; a thin
    document is shorter. Re-measure when a figure, its source text or the type
@@ -1058,12 +1058,9 @@ figure.code pre {
 .panel-body { min-height: 230px; }
 @media (max-width: 900px) { .panel-body { min-height: 238px; } }
 @media (max-width: 610px) { .panel-body { min-height: 339px; } }
-@media (max-width: 560px) {
-  /* Two figures a row on a phone: one a row is five screens of thumb. */
-  .panel-figs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (max-width: 434px) { .panel-body { min-height: 477px; } }
-@media (max-width: 359px) { .panel-body { min-height: 506px; } }
+@media (max-width: 402px) { .panel-body { min-height: 354px; } }
+@media (max-width: 336px) { .panel-body { min-height: 368px; } }
+@media (max-width: 314px) { .panel-body { min-height: 405px; } }
 .panel-empty {
   margin: 0;
   max-width: 54ch;
@@ -1082,6 +1079,10 @@ figure.code pre {
 .panel-figs {
   display: grid; gap: var(--s-1) var(--s-6);
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+/* Two figures a row on a phone: one a row is five screens of thumb. */
+@media (max-width: 560px) {
+  .panel-figs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-1) var(--s-4); }
 }
 
 .fig { display: block; padding: var(--s-2) 0; }
@@ -1124,6 +1125,8 @@ figure.code pre {
 }
 .section-head h2 { margin: 0; font-size: var(--fs-h2); }
 .section-head a {
+  display: inline-flex; align-items: center;
+  min-block-size: 24px;                     /* WCAG 2.5.8: a standalone link */
   font: 400 var(--fs-small)/1 var(--prose);
   white-space: nowrap;
 }
@@ -1282,11 +1285,16 @@ figure.code pre {
    ABOUT — the stack and the "now" list live here since /uses/ and /now/ went
    ========================================================================= */
 
-/* The intro is the largest body text on the page; the lists under it are not. */
-.about-intro .prose > p {
+/* The intro is the largest body text on the page; the lists under it are not.
+   A plain block, not `.prose`: that is a subgrid for the page's own columns,
+   and inside a `.row` it would pin the copy to a second, nested column. */
+.about-copy p {
+  margin: 0;
+  max-width: 56ch;
   font-size: var(--fs-h3);
   line-height: var(--lh-lede);
 }
+.about-copy p + p { margin-top: var(--s-5); }
 .about-intro > .rail { padding-top: 0.5em; }  /* first baseline, against --fs-h3 */
 
 /* The rail's links are the page's only quick contact. On screen each gets a
