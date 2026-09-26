@@ -1455,13 +1455,9 @@ kbd {
 }
 .search-trigger:hover { color: var(--ink); border-color: var(--accent); }
 .search-trigger svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.6; }
-.search-trigger-key {
-  color: var(--ink-2);
-  /* The server paints ⌘K and a PC swaps in Ctrl K after mount; the box is
-     sized for the longer one so that swap moves nothing in the header. */
-  min-inline-size: 6ch;
-  text-align: center;
-}
+/* The server paints ⌘K and a PC swaps in Ctrl K after mount. Hidden on
+   phones, so that swap only ever nudges a desktop header sideways. */
+.search-trigger-key { color: var(--ink-2); }
 
 /* The theme switch. Same control edge and the same 24px minimum target as the
    search trigger beside it — one control shape, two controls. The label names
@@ -2155,6 +2151,9 @@ figure figcaption {
   /* The last column here is 3. Left at 4, a measured row arriving from
      /status.json opens an implicit column and rewraps the name beside it. */
   .board-num { grid-column: 3; }
+  /* Restated after the rule above, which otherwise squeezes the notes into
+     the 22px icon column, one word per line. */
+  .board-list--notes > li { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ============================================================================
