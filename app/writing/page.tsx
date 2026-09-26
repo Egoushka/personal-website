@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
+import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import PostFilter, { type PostRow } from "@/components/PostFilter";
 import { site, feedTypes } from "@/lib/site";
@@ -65,8 +64,7 @@ export default function WritingIndex() {
   }));
 
   return (
-    <main id="main" className="wrap">
-      <Nav current="writing" />
+    <Shell current="writing">
 
       <PageHead
         title="Writing"
@@ -83,7 +81,6 @@ export default function WritingIndex() {
 
       <PostFilter posts={rows} topics={topics} />
 
-      <Footer />
-    </main>
+    </Shell>
   );
 }

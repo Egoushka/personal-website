@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Nav from "@/components/Nav";
+import Shell from "@/components/Shell";
 import { ProfilePageLd } from "@/components/JsonLd";
-import Footer from "@/components/Footer";
 import PrintCv from "@/components/PrintCv";
 import React from "react";
 import { site, feedTypes, experience, education, projects, skills, eras } from "@/lib/site";
@@ -53,10 +52,7 @@ export default function CV() {
   const hasPage = new Set(getTopicUsage().map((t) => t.slug));
 
   return (
-    <main id="main" className="wrap cv">
-      {/* No `current`: the CV is no longer a navigation section. It lives in the
-          footer now, so there is nothing in the header for it to mark. */}
-      <Nav />
+    <Shell current="cv" className="cv">
       <ProfilePageLd />
 
       <div className="rail masthead-rail">
@@ -176,7 +172,7 @@ export default function CV() {
       */}
       <hr className="bleed" />
       <section className="row section">
-        <h2 className="rail rail--label">Skills</h2>
+        <h2 className="rail rail--label"><Link href="/skills/">Skills</Link></h2>
         <div className="skill-groups">
           {skills.map((group) => (
             <div className="skill-group" key={group.group}>
@@ -218,8 +214,6 @@ export default function CV() {
           ))}
         </div>
       </section>
-
-      <Footer />
-    </main>
+    </Shell>
   );
 }

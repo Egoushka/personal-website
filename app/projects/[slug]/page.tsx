@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
+import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import { site, feedTypes, projects } from "@/lib/site";
 import { Downloads } from "@/components/Measured";
@@ -57,8 +56,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
   if (!project) notFound();
 
   return (
-    <main id="main" className="wrap">
-      <Nav current="projects" />
+    <Shell current="projects">
 
       <PageHead
         title={project.name}
@@ -146,7 +144,6 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
         </div>
       </div>
 
-      <Footer />
-    </main>
+    </Shell>
   );
 }

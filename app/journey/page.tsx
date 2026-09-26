@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
+import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import Journey from "@/components/Journey";
 import { site, feedTypes } from "@/lib/site";
@@ -38,8 +37,7 @@ export default function JourneyPage() {
   const nowYear = now.getFullYear() + now.getMonth() / 12;
 
   return (
-    <main id="main" className="wrap">
-      <Nav />
+    <Shell>
 
       <PageHead
         title="Journey"
@@ -60,7 +58,6 @@ export default function JourneyPage() {
         <span>The same record, told as chapters, is on <Link href="/cv/">the CV</Link>.</span>
       </p>
 
-      <Footer />
-    </main>
+    </Shell>
   );
 }

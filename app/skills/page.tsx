@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
+import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import SkillsBoard from "@/components/SkillsBoard";
 import { site, feedTypes } from "@/lib/site";
@@ -44,14 +43,12 @@ export default function Skills() {
   const linkable = getTopicUsage().map((t) => t.slug);
 
   return (
-    <main id="main" className="wrap skills-page">
-      <Nav current="skills" />
+    <Shell className="skills-page">
 
       <PageHead title="Skills" quiet />
 
       <SkillsBoard linkable={linkable} />
 
-      <Footer />
-    </main>
+    </Shell>
   );
 }

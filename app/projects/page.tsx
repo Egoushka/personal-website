@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
+import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import ProjectFilter from "@/components/ProjectFilter";
 import { site, feedTypes, projects } from "@/lib/site";
@@ -37,8 +36,7 @@ export default function Projects() {
   const shipped = projects.filter((p) => !p.side).length;
 
   return (
-    <main id="main" className="wrap">
-      <Nav current="projects" />
+    <Shell current="projects">
 
       <PageHead
         title="Projects"
@@ -54,7 +52,6 @@ export default function Projects() {
 
       <ProjectFilter projects={projects} topics={topics} />
 
-      <Footer />
-    </main>
+    </Shell>
   );
 }

@@ -1,6 +1,5 @@
 import Link from "next/link";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
+import Shell from "@/components/Shell";
 import PostList from "@/components/PostList";
 import { PersonAndSiteLd } from "@/components/JsonLd";
 import Panel from "@/components/Panel";
@@ -50,8 +49,7 @@ export default function Home() {
   const side = projects.filter((p) => p.side);
 
   return (
-    <main id="main" className="wrap">
-      <Nav current="home" />
+    <Shell current="home">
       <PersonAndSiteLd />
 
       {/*
@@ -206,7 +204,6 @@ export default function Home() {
         like every figure on this page.
       </p>
 
-      <Footer />
-    </main>
+    </Shell>
   );
 }

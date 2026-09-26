@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
+import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import PostList from "@/components/PostList";
 import { site, feedTypes, projects, experience, skills } from "@/lib/site";
@@ -70,8 +69,7 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
     .filter((t) => t !== topic);
 
   return (
-    <main id="main" className="wrap">
-      <Nav />
+    <Shell>
 
       <PageHead
         title={topicName(topic)}
@@ -168,7 +166,6 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
         </>
       )}
 
-      <Footer />
-    </main>
+    </Shell>
   );
 }

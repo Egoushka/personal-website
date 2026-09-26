@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import React from "react";
 import Link from "next/link";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
+import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import Picture, { hasPicture } from "@/components/Picture";
 import UsesStatus from "@/components/UsesStatus";
@@ -41,8 +40,7 @@ export default function About() {
   const r = getReadings();
 
   return (
-    <main id="main" className="wrap">
-      <Nav current="about" />
+    <Shell current="about">
 
       <div className="rail rail--against-body">
         <span>{site.location}</span>
@@ -134,7 +132,6 @@ export default function About() {
         </div>
       </section>
 
-      <Footer />
-    </main>
+    </Shell>
   );
 }
