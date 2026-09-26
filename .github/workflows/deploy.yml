@@ -155,14 +155,14 @@ jobs:
           PURGED: ${{ steps.purge.outputs.purged }}
         run: |
           if [ "$PURGED" != true ]; then
-            echo "::warning::No Cloudflare purge ran: HTML the edge still holds may name chunks this deletes until it expires (up to ten minutes)."
+            echo "::warning::No Cloudflare purge ran, so HTML the edge still holds may name chunks this deletes."
           fi
           rsync -azi --delete --exclude=/status.json -e "ssh -i $HOME/.ssh/id_ed25519" \
             out/ "$VPS_USER@$VPS_HOST:site/"
 
       # Waits up to 60 s for X-Site-Rev to name this commit (Caddy has loaded the
-      # new Caddyfile), then runs the tests that passed against the build above
-      # against the live site: this build's id in /, the pages, the redirects,
-      # the cards, the 404s, the CSP and robots.txt.
+      # new Caddyfile), then repeats the build's tests on the live site: this
+      # build's id in /, the pages, the redirects, the cards, the 404s, the CSP
+      # and robots.txt. Cache-Control is left to the local run (see the script).
       - name: Verify the live site
         run: BASE_URL="$SITE" EXPECT_REV="$GITHUB_SHA" bash scripts/caddy-test.sh
