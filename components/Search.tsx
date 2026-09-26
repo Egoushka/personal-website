@@ -270,8 +270,6 @@ export default function Search() {
                   role="option"
                   aria-selected={i === active}
                   aria-labelledby={`hit-${i}-title`}
-                  // Focus stays in the field; the arrows move the selection.
-                  tabIndex={-1}
                   className={`search-hit${i === active ? " is-active" : ""}`}
                   onMouseEnter={() => setActive(i)}
                 >
