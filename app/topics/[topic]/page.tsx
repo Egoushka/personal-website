@@ -37,9 +37,13 @@ export async function generateMetadata(
   const { topic } = await params;
   const label = topicName(topic);
   const description = isTopic(topic)
-    ? TOPICS[topic].blurb
+    ? `${label} — ${TOPICS[topic].blurb}`
     : `Everything about ${label} by ${site.name}.`;
-  return pageMetadata({ title: label, description, path: `/topics/${topic}/` });
+  const metadata = pageMetadata({ title: label, description, path: `/topics/${topic}/` });
+  // One post, project or role is not a hub worth a search result, but its links
+  // still lead somewhere. Kept out of app/sitemap.ts by the same test.
+  const usage = getTopicUsage().find((t) => t.slug === topic);
+  return usage && usage.total >= 2 ? metadata : { ...metadata, robots: { index: false, follow: true } };
 }
 
 export default async function TopicPage({ params }: { params: Promise<Params> }) {
