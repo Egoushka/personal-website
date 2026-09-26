@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { experience, projects, skills } from "@/lib/site";
 import { topicName } from "@/lib/topics";
+import { formatSpan } from "@/lib/dates";
 
 /**
  * IDEA THREE — time.
@@ -42,12 +43,12 @@ export default function Strata({ nowYear }: { nowYear: number }) {
   const { rows, from, to } = useMemo(() => {
     const rows = experience
       .map((job) => {
-        const [a, b] = job.when.split("—");
+        const [a, b] = formatSpan(job).split("—");
         return {
           kind: "role" as const,
           label: job.company,
           detail: job.role,
-          when: job.when,
+          when: formatSpan(job),
           start: toYear(a, nowYear),
           end: toYear(b ?? "present", nowYear),
           tags: job.topics.map(topicName),

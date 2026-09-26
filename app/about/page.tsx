@@ -24,7 +24,7 @@ export const metadata: Metadata = pageMetadata({ title: "About", description, pa
  * freshness, and neither one ever had enough on it to be a destination.
  */
 export default function About() {
-  const current = experience.find((j) => j.when.includes("present"));
+  const current = experience.find((j) => j.end === null);
   const r = getReadings();
 
   return (

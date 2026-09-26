@@ -6,6 +6,7 @@ import PrintCv from "@/components/PrintCv";
 import React from "react";
 import { site, experience, education, projects, skills, eras } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
+import { formatSpan } from "@/lib/dates";
 import { getTopicUsage } from "@/lib/readings";
 import Measured from "@/components/Measured";
 
@@ -13,25 +14,6 @@ const description =
   "CV of Yehor Hrabovskyi — .NET backend engineer. Clean Architecture, CQRS, ASP.NET Core, Angular, self-hosted infrastructure.";
 
 export const metadata: Metadata = pageMetadata({ title: "CV", description, path: "/cv/", type: "profile" });
-
-const MONTHS: Record<string, string> = {
-  Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06",
-  Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12",
-};
-
-/**
- * "Aug 2025 — present" -> "2025-08 — present".
- *
- * Numeric dates set in tabular figures, so the right-hand column of a printed CV
- * is a straight line instead of a ragged one. Derived rather than stored:
- * lib/site.ts stays the single human-readable source, and this is the only page
- * that wants this form.
- */
-function isoDates(when: string): string {
-  return when.replace(/([A-Z][a-z]{2}) (\d{4})/g, (_, mon: string, year: string) =>
-    MONTHS[mon] ? `${year}-${MONTHS[mon]}` : `${mon} ${year}`,
-  );
-}
 
 export default function CV() {
   // Only link a skill whose hub actually exists — the vocabulary is wider than
@@ -99,10 +81,10 @@ export default function CV() {
               {experience
                 .filter((job) => era.jobs.includes(job.company))
                 .map((job) => (
-                  <div className={`job${job.resumeCompact ? " job--compact" : ""}`} key={job.company + job.when}>
+                  <div className={`job${job.resumeCompact ? " job--compact" : ""}`} key={job.company + job.start}>
                     <div className="job-head">
                       <h3 className="job-name">{job.company}</h3>
-                      <span className="job-dates">{isoDates(job.when)}</span>
+                      <span className="job-dates">{formatSpan(job, "numeric")}</span>
                     </div>
                     <p className="job-meta run">
                       <span>{job.role}</span>

@@ -546,7 +546,10 @@ export const practice: { name: string; topic?: TopicSlug; now: string }[] = [
 ];
 
 export type Job = {
-  when: string;
+  /** First month in the role, `"YYYY-MM"`. Read and printed only through lib/dates.ts. */
+  start: string;
+  /** Last month in the role, inclusive, `"YYYY-MM"`; `null` while it is current. */
+  end: string | null;
   company: string;
   role: string;
   /** What the role was pointed at, when the title does not say. */
@@ -669,10 +672,10 @@ export const eras: Era[] = [
   },
 ];
 
-/** Source of truth for /about/, /cv/ and every topic page. Mirrors LinkedIn. */
+/** Source of truth for /about/, /cv/, /journey/, the JSON-LD and every topic page. Mirrors LinkedIn. */
 export const experience: Job[] = [
   {
-    when: "Aug 2025 — present",
+    start: "2025-08", end: null,
     company: "Boerse Stuttgart Digital",
     printBullets: 3,
     role: "Software Engineer",
@@ -687,7 +690,7 @@ export const experience: Job[] = [
     ],
   },
   {
-    when: "Dec 2024 — Jun 2025",
+    start: "2024-12", end: "2025-06",
     company: "IT INNOVATIONS",
     printBullets: 3,
     role: "Software Engineer",
@@ -702,7 +705,7 @@ export const experience: Job[] = [
     ],
   },
   {
-    when: "Sep 2024 — Oct 2024",
+    start: "2024-09", end: "2024-10",
     company: "Atlas Recruiting",
     resumeCompact: true,
     role: "Sales Representative",
@@ -715,7 +718,7 @@ export const experience: Job[] = [
     ],
   },
   {
-    when: "Apr 2023 — Jun 2024",
+    start: "2023-04", end: "2024-06",
     company: "UKAD",
     printBullets: 1,
     role: "Software Engineer",
@@ -731,7 +734,7 @@ export const experience: Job[] = [
     ],
   },
   {
-    when: "Oct 2022 — Feb 2023",
+    start: "2022-10", end: "2023-02",
     company: "LetsData",
     resumeCompact: true,
     role: "Junior Software Engineer",
@@ -743,7 +746,7 @@ export const experience: Job[] = [
     ],
   },
   {
-    when: "Mar 2021 — Mar 2022",
+    start: "2021-03", end: "2022-03",
     company: "GlobalLogic",
     resumeCompact: true,
     role: "Junior Software Engineer",

@@ -5,12 +5,13 @@ import Link from "next/link";
 import Icon from "@/components/Icon";
 import { experience, projects, eras } from "@/lib/site";
 import { topicName } from "@/lib/topics";
+import { formatSpan, yearFraction } from "@/lib/dates";
 
 /**
  * The record on a time axis.
  *
  * Not the stack — how it was acquired. Every pixel is already backed: the dates
- * come from `experience[].when`, the technologies from `experience[].topics`
+ * come from `experience[].start`/`end`, the technologies from `experience[].topics`
  * and `Project.tech`, which are the same fields the CV and the topic pages
  * read. Nothing here rates anything. It says when I was being paid to use
  * something, which is the only version of that claim a stranger can check.
@@ -20,19 +21,6 @@ import { topicName } from "@/lib/topics";
  * no public artefact. A CV closes those by listing only the good parts; a
  * timeline cannot, which is why this is worth a page.
  */
-
-const MONTHS: Record<string, number> = {
-  Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
-  Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
-};
-
-/** "Aug 2025" → 2025.58. "present" → now. */
-function toYear(part: string, now: number): number {
-  const t = part.trim();
-  if (/present/i.test(t)) return now;
-  const m = /([A-Z][a-z]{2})\s+(\d{4})/.exec(t);
-  return m ? Number(m[2]) + (MONTHS[m[1]] ?? 0) / 12 : now;
-}
 
 type Row = {
   kind: "role" | "project";
@@ -52,19 +40,16 @@ export default function Journey({ nowYear }: { nowYear: number }) {
 
   const { rows, from, to, gaps } = useMemo(() => {
     const roles: Row[] = experience
-      .map((job) => {
-        const [a, b] = job.when.split("—");
-        return {
-          kind: "role" as const,
-          label: job.company,
-          detail: job.role,
-          when: job.when,
-          start: toYear(a, nowYear),
-          end: toYear(b ?? "present", nowYear),
-          tags: job.topics.map(topicName),
-          era: eras.find((e) => e.jobs.includes(job.company))?.slug,
-        };
-      })
+      .map((job) => ({
+        kind: "role" as const,
+        label: job.company,
+        detail: job.role,
+        when: formatSpan(job),
+        start: yearFraction(job.start),
+        end: job.end === null ? nowYear : yearFraction(job.end),
+        tags: job.topics.map(topicName),
+        era: eras.find((e) => e.jobs.includes(job.company))?.slug,
+      }))
       .sort((x, y) => x.start - y.start);
 
     // Projects have no start date on record — only that they are running now.

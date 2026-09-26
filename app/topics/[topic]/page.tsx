@@ -6,6 +6,7 @@ import PageHead from "@/components/PageHead";
 import PostList from "@/components/PostList";
 import { site, projects, experience, skills } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
+import { formatSpan } from "@/lib/dates";
 import { getPostsByTopic } from "@/lib/posts";
 import { TOPICS, isTopic, topicName } from "@/lib/topics";
 import { getTopicUsage } from "@/lib/readings";
@@ -121,10 +122,10 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
             <span className="rail rail--label">Used at work</span>
             <div>
               {jobs.map((job) => (
-                <div className="job" key={job.company + job.when}>
+                <div className="job" key={job.company + job.start}>
                   <div className="job-head">
                     <h2 className="job-name">{job.company}</h2>
-                    <span className="job-dates">{job.when}</span>
+                    <span className="job-dates">{formatSpan(job)}</span>
                   </div>
                   <p className="job-meta">{job.role}</p>
                 </div>
