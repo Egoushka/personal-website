@@ -46,7 +46,11 @@
 		# nobody frames this site.
 		# The directives that DO close real surface here are object-src, base-uri,
 		# form-action and frame-ancestors.
-		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+		# No upgrade-insecure-requests: TLS ends at Cloudflare and every subresource
+		# is relative, so production gains nothing from it, while on prelive's
+		# plain-HTTP tailnet origin it would rewrite every asset to https and leave
+		# the page unstyled.
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 
 		-Server
 	}
