@@ -10,12 +10,16 @@
 #
 # Strict-Transport-Security is deliberately NOT set here: it must come from the
 # layer that terminates TLS for the browser, which is Cloudflare, not this container.
+#
+# Caddy runs with --watch and reloads this file about a second after it changes.
+# A file that fails to load leaves the previous config running, so test it
+# before it ships: `bash scripts/caddy-test.sh`.
 
 # ── one site, served twice ──────────────────────────────────────────────────
 # Everything below is shared by production and prelive. It lives in a snippet
-# because the alternative is two 150-line site blocks that drift: the headers,
-# the CSP, the cache matchers and the 2026-08 redirects all have to be
-# identical, or prelive stops being a test of production.
+# because two copies of it would drift: the headers, the CSP, the cache
+# matchers and the redirects all have to be identical, or prelive stops being
+# a test of production.
 #
 # The only difference between the two is the root, so the snippet takes no
 # arguments — each site block sets its own `root` and imports the rest.
@@ -34,6 +38,9 @@
 		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
 
 		# 'wasm-unsafe-eval' is for Pagefind, which loads its search index as WASM.
+		# There is no 'unsafe-eval', so the header search must load Pagefind's JS
+		# with a real dynamic import(). eval or new Function throws EvalError here
+		# and nowhere else: the dev server sends no CSP.
 		# 'unsafe-inline' in script-src is unavoidable in a Next.js static export:
 		# nonces require server-side rendering, and the App Router serialises its RSC
 		# payload into inline <script>self.__next_f.push(...)</script> tags in every
@@ -52,31 +59,47 @@
 		# the page unstyled.
 		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 
+		# The commit this file was deployed from. deploy.yml and deploy/deploy.sh
+		# write it over the placeholder before shipping and poll for it afterwards:
+		# it is how a deploy knows Caddy has loaded the new file. On :81 it names
+		# the production deploy, not the prelive build.
+		X-Site-Rev "__DEPLOY_REV__"
+
 		-Server
 	}
 
 	# Content-hashed assets never change under the same URL.
 	#
-	# `file` is not decoration here, it is the worst case of the trap below the OG
-	# block: a 404 for a deleted chunk was being served `immutable, max-age=1y`, so
-	# a browser or the edge could hold a miss for a year at a URL that is content
-	# -hashed and will never come back. rsync --delete removes old chunks on every
-	# deploy while HTML that references them is still cached for 600s.
+	# `file` stops a miss from being pinned — the worst case of the trap below the
+	# OG block. Without it, a 404 for a missing chunk goes out as `immutable,
+	# max-age=1y`, and a browser or the edge keeps that miss for a year at a
+	# content-hashed URL that never comes back.
 	@immutable {
 		path /_next/static/*
 		file
 	}
 	header @immutable Cache-Control "public, max-age=31536000, immutable"
 
-	# HTML had no Cache-Control at all, so Cloudflare returned cf-cache-status:
-	# DYNAMIC and every page view reached the origin. s-maxage lets the edge cache
-	# while keeping browsers revalidating, so a deploy is visible immediately.
+	# Browsers revalidate HTML on every view; the edge may keep it for ten minutes
+	# (s-maxage). A deploy reaches readers when the edge's copy expires, or at
+	# once when deploy.yml purges the Cloudflare cache.
 	# The one matcher deliberately left keyed on path alone. It matches directories,
 	# so pinning it to a file would mean restating the try_files list from the handle
 	# block below inside the matcher, where the two would drift. What it costs is a
 	# 404 page edge-cached for ten minutes, and /404.html is a real page.
 	@html path / *.html */
 	header @html Cache-Control "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
+
+	# RSC payloads — index.txt and __next.*.txt beside every page — are what
+	# client-side navigation fetches instead of the HTML. They are rewritten in
+	# place on every deploy, so they cache like the HTML they stand in for.
+	# robots.txt is the one .txt that is not a payload; @feeds covers it.
+	@rsc {
+		path *.txt
+		not path /robots.txt
+		file
+	}
+	header @rsc Cache-Control "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
 
 	@feeds {
 		path /feed.xml /atom.xml /feed.json /sitemap.xml /robots.txt
@@ -90,13 +113,6 @@
 		file
 	}
 	header @downloads Cache-Control "public, max-age=3600, s-maxage=86400"
-
-	# The CMS bundle is vendored at build and only changes when the dep does.
-	@admin {
-		path /admin/sveltia-cms.js
-		file
-	}
-	header @admin Cache-Control "public, max-age=86400, s-maxage=604800"
 
 	# Pagefind's index is rewritten on every deploy, so it caches like an asset
 	# but must not be immutable.
@@ -125,7 +141,7 @@
 		Cache-Control "public, max-age=3600, s-maxage=86400"
 	}
 
-	# ── routes that moved, 2026-08 ────────────────────────────────────────────
+	# ── routes that moved ─────────────────────────────────────────────────────
 	# A static export cannot redirect — `redirects` in next.config hard-errors
 	# under output: "export" — so the old URLs live here or they 404. These are
 	# permanent and they are load-bearing: /posts/<slug>/ was the canonical
@@ -167,6 +183,10 @@
 	handle /uses* {
 		redir * /about/ permanent
 	}
+	# /links/ is the contact block on /about/.
+	handle /links* {
+		redir * /about/ permanent
+	}
 
 	handle {
 		# Next static export uses trailingSlash: dir/index.html
@@ -193,10 +213,9 @@
 # bind mount fed by .github/workflows/prelive.yml. It is NOT routed at the
 # edge and has no public DNS: reachable over the tailnet only.
 #
-# Both the mount and the published port live in the compose spec in
-# /opt/stacks, which this repo does not own. Until they are added, this block
-# is inert — Caddy listens on :81 inside the container and nothing outside can
-# reach it. See the Prelive section of README.md for the two lines to add.
+# Both the mount and the published port live in homelab-gitops'
+# website/compose.yaml, which this repo does not own. See the Prelive section
+# of README.md.
 :81 {
 	root * /srv-prelive
 	import site
