@@ -4,6 +4,7 @@ import { site, feedTypes } from "./site";
 /** The root card, app/opengraph-image.tsx. Same alt as that route exports. */
 const CARD = {
   url: "/opengraph-image",
+  type: "image/png",
   width: 1200,
   height: 630,
   alt: `${site.name} — ${site.role}`,
