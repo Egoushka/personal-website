@@ -1,5 +1,10 @@
 # CLAUDE.md
 
+> **Audit in progress (2026-09).** Parts of this file are false — among them the
+> Pagefind loader it prescribes, which is what broke search in production. Until the
+> audit's DOCS stream rewrites it, `docs/audit-2026-09/BRIEF.md` and
+> `docs/audit-2026-09/PLAN.md` win wherever they disagree with this file.
+
 Personal portfolio + blog for hrabovskyi.online. Next.js 16 App Router + React 19 +
 TypeScript, **statically exported** and served by Caddy on a Hetzner VPS.
 
