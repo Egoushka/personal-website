@@ -34,3 +34,8 @@ export function yearFraction(month: string): number {
   const p = parse(month);
   return p.year + (p.month - 1) / 12;
 }
+
+/** `"2025-08"` → `2025.667`: the end of that month, for an inclusive `end`. */
+export function yearFractionEnd(month: string): number {
+  return yearFraction(month) + 1 / 12;
+}

@@ -2106,7 +2106,7 @@ figure figcaption {
 /* The track exists only where there is something to put in it. */
 .board-meter { height: 5px; border-radius: 3px; }
 .board-list > li.is-measured .board-meter { background: var(--surface-2); }
-.board-fill { display: block; height: 100%; border-radius: 3px; background: var(--accent); }
+.board-fill { display: block; width: var(--w); height: 100%; border-radius: 3px; background: var(--accent); }
 
 /* Only a measured row prints one. The em-dash that used to sit here on fifteen
    rows was a column of punctuation that had to be explained. */
@@ -2168,30 +2168,38 @@ figure figcaption {
    reason it exists.
    ========================================================================= */
 
-.jr { grid-column: 1 / -1; margin-top: var(--s-8); --jr-label: 14rem; }
+.jr {
+  grid-column: 1 / -1; margin-top: var(--s-8);
+  --jr-label: 14rem;
+  /* Where the track starts: the label column plus the row's gap. The scale
+     and the grid use it too, or the bars sit a gap's width off the years. */
+  --jr-inset: calc(var(--jr-label) + var(--s-4));
+}
 
+/* Geometry arrives as custom properties set per element: --l and --w in
+   percent of the axis, --i the row's index. */
 .jr-scale {
   position: relative; height: 20px;
-  margin-left: var(--jr-label);
+  margin-left: var(--jr-inset);
 }
 .jr-year {
-  position: absolute; transform: translateX(-50%);
+  position: absolute; left: var(--l); transform: translateX(-50%);
   font: 400 var(--fs-rail)/1 var(--figure);
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
 
 .jr-field { position: relative; }
-.jr-grid { position: absolute; inset: 0 0 0 var(--jr-label); pointer-events: none; }
-.jr-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--rule); }
+.jr-grid { position: absolute; inset: 0 0 0 var(--jr-inset); pointer-events: none; }
+.jr-line { position: absolute; top: 0; bottom: 0; left: var(--l); width: 1px; background: var(--rule); }
 /* The months with no employer, computed from the same dates as the bars so
    they cannot be quietly dropped. */
 .jr-gap {
-  position: absolute; top: 0; bottom: 0;
+  position: absolute; top: 0; bottom: 0; left: var(--l); width: var(--w);
   background: repeating-linear-gradient(
     45deg, color-mix(in srgb, var(--warn) 6%, transparent) 0 4px, transparent 4px 11px);
 }
-.jr-now { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--accent); opacity: .5; }
+.jr-now { position: absolute; top: 0; bottom: 0; left: var(--l); width: 1px; background: var(--accent); opacity: .5; }
 
 .jr-rows { list-style: none; margin: 0; padding: 0; position: relative; }
 .jr-row {
@@ -2204,19 +2212,20 @@ figure figcaption {
 .jr-track { position: relative; height: 42px; }
 
 .jr-bar {
-  position: absolute; top: 7px; bottom: 7px;
+  position: absolute; top: 7px; bottom: 7px; left: var(--l); width: var(--w);
   display: block;
   border: var(--hair) solid var(--rule-firm);
   border-radius: 7px;
   background: var(--surface-2);
   text-decoration: none;
-  /* Drawn in once, from the left, when the page is first looked at. */
+  /* Visible as served. Journey.tsx arms the draw-in only when the chart
+     mounts below the fold; it then runs once, from the left. */
   transform-origin: left center;
-  transform: scaleX(0);
   transition: transform .5s cubic-bezier(.2,.8,.2,1), background .16s ease, border-color .16s ease;
+  transition-delay: calc(var(--i, 0) * 45ms), 0s, 0s;
 }
-.jr.is-drawn .jr-bar { transform: scaleX(1); }
-.jr-row--project .jr-bar { border-style: dashed; background: transparent; }
+.jr.is-armed .jr-bar { transform: scaleX(0); }
+.jr.is-armed.is-drawn .jr-bar { transform: none; }
 .jr-row:hover .jr-bar,
 .jr-row.is-on .jr-bar { background: var(--accent-quiet); border-color: var(--accent); }
 a.jr-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
@@ -2255,5 +2264,6 @@ a.jr-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; 
   .jr-track { height: 38px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .jr-bar { transition: background .16s ease, border-color .16s ease; transform: scaleX(1); }
+  .jr-bar,
+  .jr.is-armed .jr-bar { transition: background .16s ease, border-color .16s ease; transform: none; }
 }

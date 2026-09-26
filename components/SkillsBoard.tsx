@@ -2,41 +2,53 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import Icon from "@/components/Icon";
-import { skills, practice, uses } from "@/lib/site";
 import { useStatus } from "@/lib/status";
+
+/** One row, reduced on the server to what the board renders. */
+export type BoardSkill = {
+  name: string;
+  now: string;
+  /** Wakapi's name for it, when it can be measured. */
+  wakatime?: string;
+  /** The topic hub, when one exists. */
+  href?: string;
+  /** Rendered on the server, so lib/icons.ts stays out of this bundle. */
+  icon?: React.ReactNode;
+};
+
+export type BoardData = {
+  skills: { group: string; items: BoardSkill[] }[];
+  practice: { name: string; now: string }[];
+  uses: { group: string; items: { name: string; href?: string }[] }[];
+};
 
 /**
  * The skills as a readout.
  *
- * Not a diagram. Four lists, a mark per row, and a bar only where something
- * was genuinely measured. An unmeasured row simply says nothing: it is not a
- * zero, it is certainly not seven out of ten, and the em-dash that used to
- * stand in for it was a column of punctuation that needed explaining. There
- * are no proficiency ratings anywhere on this page and there never will be,
- * because nobody can check them; the whole argument of this site is that a
- * number should be checkable.
+ * Four lists, a mark per row, and a bar only where something was genuinely
+ * measured. An unmeasured row says nothing: it is not a zero and it is not
+ * seven out of ten. There are no proficiency ratings anywhere on this page,
+ * because nobody can check them.
  *
- * Group names sit in the page's own rail rather than in a card header, so every
- * row starts on the same line as the title above it. The four bordered panels
- * this replaced were the reason the page read as small: a card inside a card
- * sets its own margin, and what was left for the sentence that matters was
- * eleven pixels of monospace.
+ * Group names sit in the page's own rail, so every row starts on the same
+ * line as the title above it.
  *
- * The filter is the reason it is a client component, and it is now the only
- * thing above the list. Twenty-odd rows is a scroll, and a reader who came
- * here for "does he know Postgres" should be one keystroke from the answer. It
+ * The filter is the reason it is a client component. A reader who came here
+ * for "does he know Postgres" should be one keystroke from the answer, and it
  * says how much it hid, so nothing disappears silently.
  *
- * `practice` is deliberately NOT one of the groups. Observability and testing
- * were once a fifth column of rows beside Redis and Angular, as though they
- * were the same kind of noun — they are not, nobody installs a habit, and they
- * read as notes underneath instead.
+ * `practice` is deliberately NOT one of the groups: nobody installs a habit,
+ * so those read as notes underneath instead.
  */
-export default function SkillsBoard({ linkable }: { linkable: string[] }) {
+export default function SkillsBoard({
+  data: { skills, practice, uses },
+  searchMark,
+}: {
+  data: BoardData;
+  searchMark: React.ReactNode;
+}) {
   const status = useStatus();
   const [q, setQ] = useState("");
-  const hasPage = useMemo(() => new Set(linkable), [linkable]);
   const langs = status?.coding?.languages ?? [];
   const measured = (key?: string) => (key ? langs.find((l) => l.name === key) : undefined);
 
@@ -63,7 +75,7 @@ export default function SkillsBoard({ linkable }: { linkable: string[] }) {
             .sort((a, b) => Number(!!b.wakatime) - Number(!!a.wakatime)),
         }))
         .filter((g) => g.items.length > 0),
-    [query],
+    [query, skills],
   );
 
   const total = skills.reduce((n, g) => n + g.items.length, 0);
@@ -79,7 +91,7 @@ export default function SkillsBoard({ linkable }: { linkable: string[] }) {
       <div className="row">
         <div className="board-filter">
           <span className="board-filter-mark" aria-hidden="true">
-            <Icon name="search" />
+            {searchMark}
           </span>
           <label className="visually-hidden" htmlFor="skills-filter">
             Filter the skills
@@ -111,10 +123,10 @@ export default function SkillsBoard({ linkable }: { linkable: string[] }) {
               const row = measured(skill.wakatime);
               return (
                 <li key={skill.name} className={row ? "is-measured" : undefined}>
-                  <span className="board-mark"><Icon name={skill.icon} /></span>
+                  <span className="board-mark">{skill.icon}</span>
                   <span className="board-name">
-                    {skill.topic && hasPage.has(skill.topic) ? (
-                      <Link href={`/topics/${skill.topic}/`}>{skill.name}</Link>
+                    {skill.href ? (
+                      <Link href={skill.href}>{skill.name}</Link>
                     ) : (
                       skill.name
                     )}
@@ -123,7 +135,7 @@ export default function SkillsBoard({ linkable }: { linkable: string[] }) {
                       fifteen of nineteen rows read as the main event on a page
                       whose main event is the sentence underneath it. */}
                   <span className="board-meter" aria-hidden="true">
-                    {row && <span className="board-fill" style={{ width: `${Math.min(row.percent, 100)}%` }} />}
+                    {row && <span className="board-fill" style={{ "--w": `${Math.min(row.percent, 100)}%` } as React.CSSProperties} />}
                   </span>
                   {row && <span className="board-num">{row.percent}%</span>}
                   <span className="board-now">{skill.now}</span>
