@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import PostList from "@/components/PostList";
-import { site, feedTypes, projects, experience, skills } from "@/lib/site";
+import { site, projects, experience, skills } from "@/lib/site";
+import { pageMetadata } from "@/lib/metadata";
 import { getPostsByTopic } from "@/lib/posts";
 import { TOPICS, isTopic, topicName } from "@/lib/topics";
 import { getTopicUsage } from "@/lib/readings";
@@ -37,21 +38,7 @@ export async function generateMetadata(
   const description = isTopic(topic)
     ? TOPICS[topic].blurb
     : `Everything about ${label} by ${site.name}.`;
-  const url = `${site.url}/topics/${topic}/`;
-  return {
-    title: label,
-    description,
-    alternates: { canonical: url, types: feedTypes },
-    openGraph: {
-      type: "website",
-      title: `${label} — ${site.name}`,
-      description,
-      url,
-      siteName: site.name,
-      locale: site.locale,
-    },
-    twitter: { card: "summary_large_image", title: `${label} — ${site.name}`, description },
-  };
+  return pageMetadata({ title: label, description, path: `/topics/${topic}/` });
 }
 
 export default async function TopicPage({ params }: { params: Promise<Params> }) {

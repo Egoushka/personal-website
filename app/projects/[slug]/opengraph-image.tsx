@@ -1,9 +1,11 @@
 import { ogCard, OG_SIZE, OG_CONTENT_TYPE } from "@/lib/og";
-import { projects } from "@/lib/site";
+import { site, projects } from "@/lib/site";
 
 export const dynamic = "force-static";
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
+// One string for every project: a segment card's alt cannot read its params.
+export const alt = `Projects — ${site.name}`;
 
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));

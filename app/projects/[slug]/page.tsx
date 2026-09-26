@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
-import { site, feedTypes, projects } from "@/lib/site";
+import { site, projects } from "@/lib/site";
+import { pageMetadata } from "@/lib/metadata";
 import { Downloads } from "@/components/Measured";
 import { topicName } from "@/lib/topics";
 
@@ -19,25 +20,14 @@ export async function generateMetadata(
   const { slug } = await params;
   const project = projects.find((p) => p.slug === slug);
   if (!project) return {};
-  const url = `${site.url}/projects/${slug}/`;
   return {
-    title: project.name,
-    description: project.summary,
+    ...pageMetadata({
+      title: project.name,
+      description: project.summary,
+      path: `/projects/${slug}/`,
+      ownCard: true,
+    }),
     keywords: project.topics,
-    alternates: { canonical: url, types: feedTypes },
-    openGraph: {
-      type: "website",
-      title: `${project.name} — ${site.name}`,
-      description: project.summary,
-      url,
-      siteName: site.name,
-      locale: site.locale,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `${project.name} — ${site.name}`,
-      description: project.summary,
-    },
   };
 }
 

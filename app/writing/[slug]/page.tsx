@@ -8,7 +8,8 @@ import rehypeSlug from "rehype-slug";
 import Shell from "@/components/Shell";
 import { BlogPostingLd } from "@/components/JsonLd";
 import Comments from "@/components/Comments";
-import { site, feedTypes } from "@/lib/site";
+import { site } from "@/lib/site";
+import { pageMetadata } from "@/lib/metadata";
 import {
   getAllSlugs,
   getPost,
@@ -30,27 +31,24 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { slug } = await params;
   const post = getPost(slug);
-  const url = `${site.url}/writing/${slug}/`;
-  return {
+  const base = pageMetadata({
     title: post.title,
     description: post.description,
+    path: `/writing/${slug}/`,
+    type: "article",
+    ownCard: true,
+  });
+  return {
+    ...base,
     keywords: post.topics,
-    alternates: { canonical: url, types: feedTypes },
     openGraph: {
+      ...base.openGraph,
       type: "article",
+      // The bare title: the site name is og:site_name, and the card says it too.
       title: post.title,
-      description: post.description,
-      url,
-      siteName: site.name,
-      locale: site.locale,
       publishedTime: post.date,
       authors: [site.name],
-      tags: post.topics,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: post.title,
-      description: post.description,
+      tags: post.topics.map(topicName),
     },
   };
 }

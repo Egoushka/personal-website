@@ -2,26 +2,13 @@ import type { Metadata } from "next";
 import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import SkillsBoard from "@/components/SkillsBoard";
-import { site, feedTypes } from "@/lib/site";
+import { pageMetadata } from "@/lib/metadata";
 import { getTopicUsage } from "@/lib/readings";
 
 const description =
   "What I work with, and what my own editor measured over the last thirty days on the box I run myself.";
 
-export const metadata: Metadata = {
-  title: "Skills",
-  description,
-  alternates: { canonical: "/skills/", types: feedTypes },
-  openGraph: {
-    type: "website",
-    title: `Skills — ${site.name}`,
-    description,
-    url: `${site.url}/skills/`,
-    siteName: site.name,
-    locale: site.locale,
-  },
-  twitter: { card: "summary_large_image", title: `Skills — ${site.name}`, description },
-};
+export const metadata: Metadata = pageMetadata({ title: "Skills", description, path: "/skills/" });
 
 /**
  * /skills/ — a readout, not a diagram.

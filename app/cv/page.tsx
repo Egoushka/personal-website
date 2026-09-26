@@ -4,27 +4,15 @@ import Shell from "@/components/Shell";
 import { ProfilePageLd } from "@/components/JsonLd";
 import PrintCv from "@/components/PrintCv";
 import React from "react";
-import { site, feedTypes, experience, education, projects, skills, eras } from "@/lib/site";
+import { site, experience, education, projects, skills, eras } from "@/lib/site";
+import { pageMetadata } from "@/lib/metadata";
 import { getTopicUsage } from "@/lib/readings";
 import Measured from "@/components/Measured";
 
 const description =
   "CV of Yehor Hrabovskyi — .NET backend engineer. Clean Architecture, CQRS, ASP.NET Core, Angular, self-hosted infrastructure.";
 
-export const metadata: Metadata = {
-  title: "CV",
-  description,
-  alternates: { canonical: "/cv/", types: feedTypes },
-  openGraph: {
-    type: "profile",
-    title: `CV — ${site.name}`,
-    description,
-    url: `${site.url}/cv/`,
-    siteName: site.name,
-    locale: site.locale,
-  },
-  twitter: { card: "summary_large_image", title: `CV — ${site.name}`, description },
-};
+export const metadata: Metadata = pageMetadata({ title: "CV", description, path: "/cv/", type: "profile" });
 
 const MONTHS: Record<string, string> = {
   Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06",
