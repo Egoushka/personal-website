@@ -10,6 +10,11 @@ on:
 permissions:
   contents: read
 
+# One Caddy for every step that runs one: caddy validate, caddy-test, serve:prod.
+# Pin it to the version the box runs.
+env:
+  CADDY_IMAGE: caddy:2-alpine
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -50,9 +55,10 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: |
           docker run --rm -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
-            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
+            "$CADDY_IMAGE" caddy validate --config /etc/caddy/Caddyfile
 
       # Redirects, content types, 404s and headers, from the real Caddyfile over out/.
+      # It leaves that container serving on :8080, which the smoke test uses.
       - name: Caddy behaviour
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: npm run caddy-test
@@ -69,9 +75,7 @@ jobs:
         env:
           # serve:prod publishes on 127.0.0.1 only; "localhost" may resolve to ::1 first.
           BASE_URL: http://127.0.0.1:8080
-        run: |
-          npm run serve:prod
-          npm run smoke
+        run: npm run smoke
 
       # --offline checks that internal hrefs resolve to real files and skips the
       # network entirely, so external link rot can never make this gate flaky.
