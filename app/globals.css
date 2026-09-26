@@ -468,6 +468,18 @@ a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; 
 .site-footer a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
 
 /* ============================================================================
+   BYLINE — who wrote this and how to reach me, where a reader finishes
+   ========================================================================= */
+
+.byline {
+  font: 400 var(--fs-small)/1.5 var(--figure);
+  color: var(--ink-2);
+  margin: 0;
+}
+/* A line of targets, not a sentence, so each gets the 24px floor (WCAG 2.5.8). */
+.byline a { display: inline-flex; align-items: center; min-height: 24px; }
+
+/* ============================================================================
    RULES
    ========================================================================= */
 

@@ -44,6 +44,11 @@ export const site = {
    * buying a week of work, not filling a role.
    */
   availability: "available for contract work",
+  /**
+   * What I can be hired for, in one line: scope, never rates or capacity.
+   * Empty renders nothing. Only I write this; it is never inferred.
+   */
+  engagement: "",
   email: "egorgrabovskij@gmail.com",
   github: "https://github.com/Egoushka",
   githubHandle: "Egoushka",
@@ -208,6 +213,10 @@ export type Project = {
    * them in one list quietly averages the first down to the second.
    */
   side?: boolean;
+  /** Slug of the published post in content/posts/ that is this project's write-up. */
+  writeup?: string;
+  /** A home-page candidate: the home page lists Attest and the featured projects that are running. */
+  featured?: boolean;
   topics: TopicSlug[];
   readings: Reading[];
 };
@@ -230,6 +239,7 @@ export type Project = {
 export const projects: Project[] = [
   {
     slug: "attest",
+    writeup: "attest",
     print: true,
     name: "Attest",
     status: "running",
@@ -252,6 +262,8 @@ export const projects: Project[] = [
   },
   {
     slug: "chronicle",
+    writeup: "chronicle",
+    featured: true,
     print: true,
     side: true,
     visibility: "private",
@@ -277,6 +289,8 @@ export const projects: Project[] = [
   },
   {
     slug: "synapse",
+    writeup: "synapse",
+    featured: true,
     side: true,
     visibility: "private",
     tech: ["Python", "FastAPI", "Postgres", "Hindsight", "LiteLLM", "Docker"],
@@ -327,6 +341,7 @@ export const projects: Project[] = [
   },
   {
     slug: "oura-platform",
+    writeup: "oura-platform",
     side: true,
     visibility: "private",
     tech: ["C#", ".NET", "Postgres", "TimescaleDB", "Dapper", "DbUp", "Serilog", "Grafana", "OAuth", "xUnit", "Testcontainers"],
@@ -375,6 +390,8 @@ export const projects: Project[] = [
   },
   {
     slug: "homelab-gitops",
+    writeup: "homelab",
+    featured: true,
     side: true,
     visibility: "private",
     tech: ["Docker Compose", "Traefik", "SOPS", "age", "Tailscale", "Headscale", "Caddy", "Grafana", "Python", "Shell"],
