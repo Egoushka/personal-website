@@ -15,13 +15,11 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      // /admin/ is the CMS shell, /search/ has nothing to index, and /lab/ is
-      // three unfinished prototypes kept so the directions can be compared —
-      // two of them superseded by /skills/ and /journey/. None is secret: this
-      // is about keeping junk out of results, not access control. They stay
-      // reachable by URL on purpose.
+      // /search/ has nothing to index, and /lab/ is unfinished prototypes kept
+      // so the directions can be compared. Neither is secret: this is about
+      // keeping junk out of results, not access control.
       // (Cloudflare prepends its own managed block to this file; see README.)
-      disallow: ["/admin/", "/search/", "/lab/"],
+      disallow: ["/search/", "/lab/"],
     },
     sitemap: `${site.url}/sitemap.xml`,
   };

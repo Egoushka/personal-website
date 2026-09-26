@@ -5,12 +5,11 @@
   "description": "hrabovskyi.online — personal portfolio + blog",
   "scripts": {
     "dev": "next dev",
-    "build": "npm run images && npm run cms:vendor && next build && npm run index",
+    "build": "npm run images && next build && npm run index",
     "typecheck": "tsc --noEmit",
     "validate": "node scripts/validate-content.mjs",
     "index": "pagefind --site out --output-subdir pagefind",
     "images": "node scripts/optimize-images.mjs",
-    "cms:vendor": "cp node_modules/@sveltia/cms/dist/sveltia-cms.js public/admin/sveltia-cms.js",
     "test": "node --import tsx --test \"tests/**/*.test.ts\"",
     "check": "node scripts/check-build.mjs",
     "smoke": "node scripts/smoke.mjs",
@@ -19,7 +18,6 @@
   },
   "dependencies": {
     "@shikijs/rehype": "^4.3.1",
-    "@sveltia/cms": "^0.174.0",
     "feed": "^6.0.0",
     "github-slugger": "^2.0.0",
     "gray-matter": "^4.0.3",
