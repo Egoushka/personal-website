@@ -8,7 +8,9 @@ import rehypeSlug from "rehype-slug";
 import Shell from "@/components/Shell";
 import { BlogPostingLd } from "@/components/JsonLd";
 import Comments from "@/components/Comments";
-import { site } from "@/lib/site";
+import Byline from "@/components/Byline";
+import PostEnhancements from "@/components/PostEnhancements";
+import { projects, site } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
 import {
   getAllSlugs,
@@ -17,7 +19,7 @@ import {
   tableOfContents,
   getRelatedPosts,
 } from "@/lib/posts";
-import { getReadings, getTopicUsage, n } from "@/lib/readings";
+import { getTopicUsage, n } from "@/lib/readings";
 import { TOPICS, isTopic, topicName } from "@/lib/topics";
 
 type Params = { slug: string };
@@ -61,32 +63,30 @@ export default async function PostPage(
   const toc = tableOfContents(post.content);
   const related = getRelatedPosts(slug, 1)[0];
   const usage = getTopicUsage();
-  const daysAgo = Math.round(
-    (Date.parse(getReadings().builtOn) - Date.parse(post.date)) / 86_400_000,
-  );
+  const project = projects.find((p) => p.writeup === slug);
 
   return (
     <Shell current="writing">
       <BlogPostingLd post={post} />
+      <PostEnhancements key={slug} />
 
       {/*
         The title and its figures are their own block above the two-column
-        body, and not rows the sidebar spans.
+        body, not rows the sidebar spans: a grid item spanning auto-sized rows
+        makes those rows grow to hold it, and a long contents list would push
+        the date far below the title it belongs to.
 
-        They used to be: the header rail was placed `grid-row: 1 / span 2` so
-        the topics and the contents list could sit beside the h1. A grid item
-        spanning auto-sized rows makes those rows grow to hold it, so an
-        eight-entry table of contents pushed the date roughly 250px clear of
-        the title it belonged to. Nothing spans rows now, so nothing can
-        stretch them.
+        Search indexes this block and the article, and nothing else on the page.
       */}
-      <header className="post-head">
+      <header className="post-head" data-pagefind-body>
         <h1>{post.title}</h1>
-        <p className="page-figures">
-          <span><time dateTime={post.date}>{formatDate(post.date)}</time></span>
-          <span>{n(post.wordCount)} words</span>
+        <p className="page-figures" data-pagefind-ignore>
+          <span><time dateTime={post.date}>{formatDate(post.date)}</time></span>{" "}
+          {post.updated && (
+            <><span>Updated <time dateTime={post.updated}>{formatDate(post.updated)}</time></span>{" "}</>
+          )}
+          <span>{n(post.wordCount)} words</span>{" "}
           <span>{post.readingTime} min read</span>
-          <span>{daysAgo} {daysAgo === 1 ? "day" : "days"} ago</span>
         </p>
       </header>
 
@@ -104,12 +104,12 @@ export default async function PostPage(
               the rail becomes interactive without JavaScript. Above it the
               disclosure dissolves and the list is a plain sticky column.
 
-              The current-section mark IS JavaScript, and it is additive: the
-              links are in the static HTML and work with the indicator never
-              moving. See the scroll-spy script at the foot of this file.
+              The current-section mark is JavaScript (PostEnhancements), and
+              it is additive: the links are in the static HTML and work with
+              the indicator never moving.
             */}
             <details className="toc-details rail--group">
-              <summary>On this page <span className="rail-count">{toc.length}</span></summary>
+              <summary data-pagefind-ignore>On this page <span className="rail-count">{toc.length}</span></summary>
               <span className="rail--label">On this page</span>
               <ol className="toc">
                 {toc.map((h) => (
@@ -120,7 +120,12 @@ export default async function PostPage(
           </aside>
         )}
 
-        <article className="prose post-body">
+        <article className="prose post-body" data-pagefind-body>
+          {post.correction && (
+            <p className="post-correction" role="note">
+              <span className="rail--label">Correction</span> {post.correction}
+            </p>
+          )}
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[
@@ -132,50 +137,60 @@ export default async function PostPage(
                 Every h2 gets a full-width hairline above it and its number on
                 the line above the words. The number is a CSS counter, so
                 nothing in the markdown pipeline has to know about section
-                numbering. It used to live out in the rail; the rail is the
-                contents list now, and two things cannot share one column.
+                numbering, and it is the section's permalink. `node` is
+                react-markdown's hast node: spread, it prints as
+                node="[object Object]".
               */
-              h2: ({ children, ...props }) => (
+              h2: ({ node: _node, children, ...props }) => (
                 <>
                   <hr className="bleed" />
                   <h2 {...props}>
-                    <span className="sect-mark" aria-hidden="true" />
+                    <a
+                      className="sect-mark"
+                      href={`#${props.id}`}
+                      aria-label="Link to this section"
+                      data-pagefind-ignore
+                    />
                     {children}
                   </h2>
                 </>
               ),
               /*
-                A code block is one object, not two.
+                A code block is one object: a figure in the prose column with a
+                header carrying the language and the Copy button, and the code
+                beneath it, sharing the paragraph's edge.
 
-                It used to hang off the rail — language label and copy button
-                out in the margin, the block itself bleeding left into the
-                gutter — so the code started at a different left edge from
-                every sentence around it, and the control that acted on it sat
-                somewhere else entirely. Now it is a figure in the prose
-                column: its own header carrying the language and the copy
-                button, and the code beneath, sharing the paragraph's edge.
-
-                The button is server-rendered inside React's tree. An earlier
-                version injected it after parse and hydration reconciled the
-                <pre> and stripped it straight back out.
+                The button is server-rendered inside React's tree: injected
+                after parse, hydration reconciles the <pre> and strips it out.
+                The language is a <figcaption> only when the fence declared
+                one; otherwise the header is a plain box holding the button,
+                and it goes with the button when there is no JavaScript.
               */
-              pre: ({ children, className, ...props }) => {
+              pre: ({ node: _node, children, className, ...props }) => {
                 const lang = extractLang(children, props);
+                const controls = (
+                  <>
+                    <button type="button" className="copy-btn">Copy</button>
+                    <span className="copy-status visually-hidden" role="status" />
+                  </>
+                );
                 return (
                   <figure className="code">
-                    <figcaption className="code-head">
-                      <span className="code-lang">{lang}</span>
-                      <button type="button" className="copy-btn" aria-label="Copy code to clipboard">
-                        Copy
-                      </button>
-                    </figcaption>
+                    {lang ? (
+                      <figcaption className="code-head">
+                        <span className="code-lang">{lang}</span>
+                        {controls}
+                      </figcaption>
+                    ) : (
+                      <div className="code-head code-head--bare">{controls}</div>
+                    )}
                     {/*
-                      Shiki puts its own className on the <pre> it produces, and
-                      it has to be merged rather than spread over the top:
-                      `{...props}` after a literal className silently dropped
-                      ours once already.
+                      Shiki's className on the <pre> is merged, not spread over:
+                      `{...props}` after a literal className drops ours.
+                      tabIndex comes first so a scrollable block is reachable
+                      by keyboard whatever the props carry.
                     */}
-                    <pre className={className} {...props}>
+                    <pre tabIndex={0} className={className} {...props}>
                       {children}
                     </pre>
                   </figure>
@@ -186,6 +201,10 @@ export default async function PostPage(
             {post.content}
           </ReactMarkdown>
         </article>
+      </div>
+
+      <div className="row post-byline">
+        <Byline title={post.title} />
       </div>
 
       {/*
@@ -204,16 +223,28 @@ export default async function PostPage(
         </div>
       ) : null}
 
+      {project && (
+        <>
+          <hr className="bleed" />
+          <div className="row">
+            <span className="rail rail--label">About the project</span>
+            <div className="post-item">
+              <h2><Link href={`/projects/${project.slug}/`}>{project.name}</Link></h2>
+              <p className="run"><span>{project.status}</span></p>
+              <p>{project.summary}</p>
+            </div>
+          </div>
+        </>
+      )}
+
       {/*
-        Topics, at the end, where a filing decision belongs — and carrying what
-        the reader actually wants from one: what the topic is, and how much
-        else is under it. Two words stacked in the margin said neither, and
-        they said it next to the title, before anyone had read a sentence.
+        Topics, at the end, where a filing decision belongs, carrying what the
+        reader wants from one: what the topic is, and how much else is under it.
       */}
       {post.topics.length > 0 && (
         <>
           <hr className="bleed" />
-          <section className="filed bleed" aria-labelledby="filed-under">
+          <section className="filed bleed" aria-labelledby="filed-under" data-pagefind-ignore>
             <h2 className="rail--label" id="filed-under">Filed under</h2>
             <ul className="filed-list">
               {post.topics.filter(isTopic).map((t) => {
@@ -243,7 +274,7 @@ export default async function PostPage(
       {related && (
         <>
           <hr className="bleed" />
-          <div className="row">
+          <div className="row" data-pagefind-ignore>
             <span className="rail rail--label">Read next</span>
             <div className="post-item">
               <h2><Link href={`/writing/${related.slug}/`}>{related.title}</Link></h2>
@@ -254,77 +285,7 @@ export default async function PostPage(
       )}
 
       <hr className="bleed" />
-      <Comments url={`${site.url}/writing/${post.slug}/`} />
-
-      {/*
-        Two plain scripts rather than client components: a React island for a
-        copy button and a scroll position would put hydration on every post to
-        run about thirty lines of DOM work.
-
-        One — one delegated listener on document, rather than a listener per
-        code block: it survives any DOM reconciliation and costs nothing per
-        block.
-
-        Two — the contents list's current-section mark. Reads positions on a
-        rAF-throttled scroll, sets `aria-current` on the live link and two
-        custom properties the CSS draws the indicator from, and keeps the
-        active row inside the scrolling rail. Everything it touches is
-        decoration: with it removed the list is still a list of working links.
-      */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `document.addEventListener("click",function(e){
-  var b=e.target.closest&&e.target.closest(".copy-btn"); if(!b) return;
-  var block=b.closest("figure.code"); if(!block) return;
-  var pre=block.querySelector("pre"); if(!pre) return;
-  var code=pre.querySelector("code")||pre;
-  // clipboard is undefined outside a secure context; bail rather than throw
-  if(!navigator.clipboard){ b.textContent="no clipboard"; return; }
-  navigator.clipboard.writeText(code.innerText).then(function(){
-    b.textContent="Copied"; b.classList.add("is-copied");
-    setTimeout(function(){b.textContent="Copy";b.classList.remove("is-copied")},1600);
-  },function(){ b.textContent="failed"; });
-});
-(function(){
-  var ol=document.querySelector(".toc"); if(!ol) return;
-  var links=Array.prototype.slice.call(ol.querySelectorAll("a"));
-  var heads=links.map(function(a){
-    try { return document.getElementById(decodeURIComponent(a.hash.slice(1))); }
-    catch(_) { return null; }
-  });
-  var box=ol.closest(".post-aside")||ol;
-  var still=matchMedia("(prefers-reduced-motion: reduce)");
-  var cur=-1, queued=false;
-  function mark(){
-    queued=false;
-    var i=0;
-    // the last heading whose top has passed the reading line
-    for(var j=0;j<heads.length;j++){
-      if(heads[j] && heads[j].getBoundingClientRect().top<=140) i=j;
-    }
-    if(i===cur) return;
-    cur=i;
-    for(var k=0;k<links.length;k++){
-      if(k===i) links[k].setAttribute("aria-current","location");
-      else links[k].removeAttribute("aria-current");
-    }
-    var li=links[i].parentNode;
-    ol.style.setProperty("--toc-y", li.offsetTop+"px");
-    ol.style.setProperty("--toc-h", li.offsetHeight+"px");
-    // the rail scrolls independently once the list outruns the viewport
-    if(box.scrollHeight>box.clientHeight+1){
-      var top=ol.offsetTop+li.offsetTop-box.clientHeight/2+li.offsetHeight/2;
-      if(box.scrollTo) box.scrollTo({top:top,behavior:still.matches?"auto":"smooth"});
-      else box.scrollTop=top;
-    }
-  }
-  function schedule(){ if(!queued){ queued=true; requestAnimationFrame(mark); } }
-  addEventListener("scroll",schedule,{passive:true});
-  addEventListener("resize",function(){cur=-1;schedule();},{passive:true});
-  mark();
-})();`,
-        }}
-      />
+      <Comments key={slug} url={`${site.url}/writing/${post.slug}/`} />
     </Shell>
   );
 }
@@ -347,5 +308,5 @@ function extractLang(
   const child = Array.isArray(children) ? children[0] : children;
   const cls = (child as { props?: { className?: string } })?.props?.className ?? "";
   const hit = /language-([\w-]+)/.exec(cls);
-  return hit ? hit[1] : null;
+  return hit && hit[1] !== "text" ? hit[1] : null;
 }

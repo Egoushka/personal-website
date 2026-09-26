@@ -591,28 +591,33 @@ hr.bleed {
 .prose img { max-width: 100%; height: auto; }
 
 /* Section numbers are a CSS counter, so the markdown pipeline never has to know
-   about them. They sit on their own line above the heading — in the margin they
-   would collide with the sticky contents list, which owns that column now. */
+   about them, and each is its section's permalink. They sit on their own line
+   above the heading: in the margin they would collide with the sticky contents
+   list, which owns that column. */
 main { counter-reset: sect; }
 .sect-mark {
-  display: block;
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 24px;                     /* WCAG 2.5.8 */
   font: var(--w-head) var(--fs-rail)/1 var(--figure);
   letter-spacing: var(--ls-label);
   color: var(--accent);
-  margin-bottom: var(--s-2);
+  text-decoration: none;
   counter-increment: sect;
 }
 .sect-mark::before { content: "§ " counter(sect, decimal-leading-zero); }
+.sect-mark:hover { text-decoration: underline; text-underline-offset: 2px; }
 
-/* Heading anchors — rehype-slug puts the id on, this makes it visible on hover. */
-.prose h2 { position: relative; }
-.prose h2:hover::after {
-  content: "#";
+/* A note that the post was corrected, above the body it corrects. */
+.post-correction {
+  font-size: var(--fs-small);
   color: var(--ink-2);
-  font-weight: 400;
-  position: absolute;
-  margin-left: 10px;
+  border-left: 2px solid var(--rule-firm);
+  padding-left: 18px;
 }
+.post-correction .rail--label { margin-inline-end: var(--s-2); }
+
 /* Confirmation of where you landed, for free — the zero-JS current-item mark. */
 .prose h2:target { color: var(--accent); }
 
@@ -642,10 +647,8 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
 }
 
 /* A code block is one object: a header carrying the language and the copy
-   button, and the code under it, sharing the left edge of the prose. The old
-   version put the label and the button out in the rail and bled the code into
-   the gutter, so the code and the sentence explaining it started at different
-   places and the control that acted on the block sat somewhere else. */
+   button, and the code under it, sharing the left edge of the prose, so the
+   control sits on the block it acts on. */
 figure.code {
   margin: 0;
   border: var(--hair) solid var(--rule);
@@ -653,13 +656,20 @@ figure.code {
   background: var(--surface);
   overflow: hidden;
 }
-.code-head {
+/* Its own font and box: when a language is declared the header is a
+   <figcaption>, and the FIGURES rule would otherwise give it a caption's
+   margin and measure. */
+.code-head,
+figure.code > figcaption.code-head {
   display: flex; align-items: center; justify-content: flex-end;
   gap: var(--s-4);
+  margin: 0;
+  max-width: none;
+  font: 400 var(--fs-rail)/var(--lh-rail) var(--figure);
+  color: var(--ink-2);
   padding: var(--s-2) var(--s-3) var(--s-2) var(--s-4);
   border-bottom: var(--hair) solid var(--rule);
 }
-.code-lang:empty { display: none; }
 .code-lang {
   margin-inline-end: auto;
   font: 400 var(--fs-rail)/1 var(--figure);
@@ -692,6 +702,11 @@ figure.code pre {
   background: var(--surface-2);
 }
 .copy-btn.is-copied { color: var(--accent); border-color: var(--accent); }
+/* No JavaScript, no Copy: a button that does nothing is worse than none, and a
+   header that held only the button goes with it. */
+@media (scripting: none) {
+  .copy-btn, .code-head--bare { display: none; }
+}
 
 /* ============================================================================
    THE POST — title block, then a sticky contents rail beside the article
@@ -699,6 +714,9 @@ figure.code pre {
 
 .post-head { padding-top: var(--s-8); }
 .post-head h1 { margin: 0; }
+
+/* The byline has no outer margin of its own; the post gives it room. */
+.post-byline { margin-top: var(--s-8); }
 
 /* One grid row holding both columns for the whole post. Row-spanning is what
    broke the old header: a tall item in a spanned auto row grows that row, so an
@@ -768,6 +786,9 @@ figure.code pre {
   height: var(--toc-h, 0);
   background: var(--accent);
   transition: top 180ms ease, height 180ms ease;
+}
+@media (forced-colors: active) {
+  .toc::before { background: Highlight; }
 }
 
 /* Below the collapse the TOC is the one place the rail becomes interactive —
