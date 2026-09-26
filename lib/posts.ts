@@ -137,11 +137,3 @@ export function getRelatedPosts(slug: string, limit = 3): PostMeta[] {
     .slice(0, limit)
     .map((x) => x.post);
 }
-
-/** Previous (older) and next (newer) post in publication order. */
-export function getAdjacentPosts(slug: string): { prev?: PostMeta; next?: PostMeta } {
-  const all = getAllPosts(); // newest first
-  const i = all.findIndex((p) => p.slug === slug);
-  if (i === -1) return {};
-  return { next: all[i - 1], prev: all[i + 1] };
-}
