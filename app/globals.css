@@ -1538,22 +1538,6 @@ kbd {
   .search-dialog { margin-top: var(--s-5); }
 }
 
-/* /search/ — the no-JS fallback route, still using Pagefind's own UI */
-:root {
-  --pagefind-ui-primary: var(--ink);
-  --pagefind-ui-text: var(--ink);
-  --pagefind-ui-background: var(--paper);
-  --pagefind-ui-border: var(--rule-firm);
-  --pagefind-ui-tag: var(--surface);
-  --pagefind-ui-border-width: 1px;
-  --pagefind-ui-border-radius: var(--radius);
-  --pagefind-ui-font: var(--prose);
-}
-.pagefind-ui__result-title { font: 600 var(--fs-h3)/1.35 var(--prose); }
-.pagefind-ui__result-excerpt { font-size: var(--fs-small); }
-.pagefind-ui__result-tags,
-.pagefind-ui__result-link + p { font: 400 var(--fs-rail)/var(--lh-rail) var(--figure); }
-
 /* ============================================================================
    THE STACK GRAPH — topics with coordinates, on /about/
    Lines, not fills. The accent is used only for what the reader has selected.

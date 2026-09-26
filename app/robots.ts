@@ -15,11 +15,10 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      // /search/ has nothing to index, and /lab/ is unfinished prototypes kept
-      // so the directions can be compared. Neither is secret: this is about
-      // keeping junk out of results, not access control.
+      // /lab/ is unfinished prototypes kept so the directions can be compared.
+      // Not secret: this is about keeping junk out of results, not access control.
       // (Cloudflare prepends its own managed block to this file; see README.)
-      disallow: ["/search/", "/lab/"],
+      disallow: ["/lab/"],
     },
     sitemap: `${site.url}/sitemap.xml`,
   };
