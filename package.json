@@ -11,6 +11,7 @@
     "index": "pagefind --site out --output-subdir pagefind",
     "images": "node scripts/optimize-images.mjs",
     "cms:vendor": "cp node_modules/@sveltia/cms/dist/sveltia-cms.js public/admin/sveltia-cms.js",
+    "test": "node --import tsx --test \"tests/**/*.test.ts\"",
     "check": "node scripts/check-build.mjs",
     "smoke": "node scripts/smoke.mjs",
     "caddy-test": "bash scripts/caddy-test.sh",
@@ -43,6 +44,7 @@
     "@types/react-dom": "^19.0.0",
     "pagefind": "^1.5.2",
     "playwright": "1.56.1",
+    "tsx": "^4.23.15",
     "typescript": "^5.6.0"
   }
 }
