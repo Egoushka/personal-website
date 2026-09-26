@@ -4,7 +4,7 @@ import PageHead from "@/components/PageHead";
 import PostFilter, { type PostRow } from "@/components/PostFilter";
 import { pageMetadata } from "@/lib/metadata";
 import { getAllPosts, getTopicCounts, formatDate } from "@/lib/posts";
-import { getReadings, n, latestPhrase } from "@/lib/readings";
+import { getReadings, n } from "@/lib/readings";
 import { topicName } from "@/lib/topics";
 
 const description =
@@ -23,20 +23,16 @@ export default function WritingIndex() {
   const r = getReadings();
 
   /*
-    The index used to group by year, with the year set large in the rail. Every
-    post on this site was published in one year, so the grouping drew a heading
-    the width of the page around *all* of them and told the reader nothing. The
-    month is the finest grouping that still varies, and the order is now the
-    reader's to choose — so the running head follows the sort rather than being
-    a fact the page insists on.
-
-    Formatting happens here because PostFilter is a client component and
+    Grouped by month: the finest grouping that still varies on a blog this
+    size. The order is the reader's to choose, so the running head follows the
+    sort. Formatting happens here because PostFilter is a client component and
     lib/posts.ts reads the filesystem.
   */
   const rows: PostRow[] = getAllPosts().map((p) => ({
     slug: p.slug,
     title: p.title,
     description: p.description,
+    date: p.date,
     dateLabel: formatDate(p.date),
     month: formatMonth(p.date),
     readingTime: p.readingTime,
@@ -44,7 +40,8 @@ export default function WritingIndex() {
     topics: p.topics,
   }));
 
-  const topics = getTopicCounts().map(({ topic, count }) => ({
+  // Chips only for topics with at least two posts: one post is a link, not a filter.
+  const topics = getTopicCounts().filter(({ count }) => count >= 2).map(({ topic, count }) => ({
     slug: topic,
     name: topicName(topic),
     count,
@@ -60,7 +57,7 @@ export default function WritingIndex() {
           <>
             <span>{r.posts} {r.posts === 1 ? "post" : "posts"}</span>
             <span>{n(r.words)} words</span>
-            {r.latest && <span>{latestPhrase(r.daysSinceLatest)}</span>}
+            {r.latest && <span>latest {formatDate(r.latest.date)}</span>}
             <span><a href="/feed.xml">rss</a></span>
           </>
         }

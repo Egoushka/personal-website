@@ -8,8 +8,8 @@ import Link from "next/link";
  *
  * Every post is server-rendered into the static HTML, so the page is a complete
  * list before any JavaScript runs — the filter only ever *removes* rows, and the
- * sort only ever reorders ones already present. With JS off you get every post,
- * newest first, grouped by month, which is the correct degraded state.
+ * sort only ever reorders ones already present. With JS off the controls are
+ * hidden by CSS and you get every post, newest first, grouped by month.
  *
  * Topics are multi-select and union, not intersection: picking Python and
  * Postgres shows everything about either. Intersection reads like a mistake on a
@@ -23,6 +23,8 @@ export type PostRow = {
   slug: string;
   title: string;
   description: string;
+  /** ISO `YYYY-MM-DD`, for ordering. */
+  date: string;
   dateLabel: string;
   /** "July 2026" — the running head when the order is chronological. */
   month: string;
@@ -53,14 +55,16 @@ export default function PostFilter({
     (p) => active.length === 0 || p.topics.some((t) => active.includes(t)),
   );
 
-  // `posts` arrives newest first, so chronological order is free in both
-  // directions and only length has to be computed.
-  const ordered =
+  // Every order breaks ties by slug, so two posts from the same day land the
+  // same way on the server and in the browser, and on every build.
+  const bySlug = (a: PostRow, b: PostRow) => a.slug.localeCompare(b.slug);
+  const ordered = [...shown].sort(
     sort === "longest"
-      ? [...shown].sort((a, b) => b.wordCount - a.wordCount)
+      ? (a, b) => b.wordCount - a.wordCount || bySlug(a, b)
       : sort === "oldest"
-        ? [...shown].reverse()
-        : shown;
+        ? (a, b) => a.date.localeCompare(b.date) || bySlug(a, b)
+        : (a, b) => b.date.localeCompare(a.date) || bySlug(a, b),
+  );
 
   // A running head only where it means something. Sorted by length, a month is
   // not a fact about the group — it is noise beside a list that is no longer in
@@ -120,7 +124,8 @@ export default function PostFilter({
             </button>
           ))}
         </div>
-        <span className="sort-count" aria-live="polite">
+        {/* Announces the count after a change; the page figures already show it. */}
+        <span className="sort-count visually-hidden" aria-live="polite">
           {ordered.length === posts.length
             ? `${posts.length} ${posts.length === 1 ? "post" : "posts"}`
             : `${ordered.length} of ${posts.length}`}

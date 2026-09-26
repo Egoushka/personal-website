@@ -55,7 +55,9 @@
   /* --- grid ---------------------------------------------------------------- */
   --rail:    168px;
   --gutter:   40px;
-  /* 640px is 64-69ch across the body step's range — the 60-70ch comfort band.
+  /* 640px of body text sets about 83 characters per line at 768–900px and
+     79–80 above 900px (Inter, measured 2026-09 on a post, a project page and
+     /about/) — wider than the 60-70 comfort band.
      Nothing on this site sets a prose max-width above 66ch; see the audit note
      on `.jr-note`, which was 74. */
   --measure: 640px;
@@ -829,10 +831,8 @@ figure.code pre {
 }
 
 /* /writing/ groups by month while the order is chronological, with the head in
-   the rail. The year used to sit here at h2 size: every post on this site is
-   from the same year, so it drew a heading the width of the page around all of
-   them and told the reader nothing. A month varies, and when the reader sorts
-   by length instead, the head says so rather than lying about dates. */
+   the rail. When the reader sorts by length, the head says so rather than
+   printing a month that no longer describes the group. */
 .post-group {
   border-top: var(--hair) solid var(--rule);
   padding-top: var(--s-5);
@@ -1162,6 +1162,9 @@ figure.code pre {
   color: var(--ink-2);
 }
 
+/* The byline closes the page under the links; it has no outer margin of its own. */
+.project-elsewhere .byline { margin-top: var(--s-4); }
+
 /* Readings on a project page: label, value, and where the figure came from.
    The source line is not optional — a number with no provenance is the failure
    this whole site is built to avoid. */
@@ -1192,8 +1195,9 @@ figure.code pre {
   margin-top: 2px;
 }
 
-/* Filter over the project index. Renders every project server-side; the filter
-   only ever removes rows, so with JS off the page is a complete list. */
+/* Filters over /writing/ and /projects/. Both lists are server-rendered in
+   full and the controls only remove or reorder rows, so without JavaScript
+   they would be buttons that do nothing: hide them, and the list stands. */
 .filter-bar {
   display: flex;
   flex-wrap: wrap;
@@ -1254,12 +1258,24 @@ figure.code pre {
   background: var(--accent);
   border-color: var(--accent);
 }
-.sort-count {
-  margin-inline-start: auto;
-  font: 400 var(--fs-rail)/1 var(--figure);
-  letter-spacing: var(--ls-rail);
-  font-variant-numeric: tabular-nums;
-  color: var(--ink-2);
+/* `.sort-count` is the filters' polite live region and is visually hidden: the
+   page figures already print the count. */
+
+/* After the rules above, which it overrides. */
+@media (scripting: none) {
+  .filter-bar, .sort-bar { display: none; }
+}
+
+/* Forced colours drop the amber fill, and with it the only sign of which chip
+   or order is on. */
+@media (forced-colors: active) {
+  .filter-chip[aria-pressed="true"],
+  .sort-btn[aria-pressed="true"] {
+    forced-color-adjust: none;
+    color: SelectedItemText;
+    background: SelectedItem;
+    border-color: SelectedItem;
+  }
 }
 
 /* ============================================================================
@@ -1649,6 +1665,10 @@ figure figcaption {
 
 @media (max-width: 900px) {
   .wrap, .row { grid-template-columns: minmax(0, 1fr); }
+  /* One column is the viewport's width, so reading text alone gets the measure
+     back. Not .wrap or .row: the header, panel and figures use the width. */
+  .prose > p, .prose > ul, .prose > ol, .prose > blockquote,
+  .page-lede, .row > p { max-inline-size: var(--measure); }
   .wrap > *, .wrap > .rail, .wrap > .bleed, .wrap > .bleed-code,
   .row > *, .row > .rail, .row > .bleed-code { grid-column: 1; }
   .wrap > .bleed-code, .row > .bleed-code { margin-inline-start: 0; }
