@@ -1050,10 +1050,11 @@ figure.code pre {
    system is doing, but what it is doing, tonight, read from the machine.
    ========================================================================= */
 
+/* Below the proof row, in its gap, so the two read as one group of cards. */
 .panel {
   grid-column: 1 / -1;
-  margin-top: var(--s-9);
-  padding: var(--s-5) var(--s-6) var(--s-6);
+  margin-top: var(--s-3);
+  padding: var(--s-5);
   border: var(--hair) solid var(--rule);
   border-radius: 14px;
   background: linear-gradient(180deg, var(--surface), var(--paper));
@@ -1067,10 +1068,20 @@ figure.code pre {
   color: var(--ink-2);
   opacity: .8;
 }
-/* The height is reserved so the numbers can arrive without moving the page.
-   CLS on this site has been 0 since it was built, and a panel that pushes
-   three screens down when it loads would be the first thing to break it. */
-.panel-body { min-height: 138px; }
+/* The body reserves the height the figures fill with a complete document, so
+   they arrive without moving anything below. Measured, not derived: the
+   populated body with tests/fixtures/status.json routed in, swept 300–1700 px
+   two pixels at a time, taking the tallest height in each band plus 2 px. Phones
+   need the most steps because each figure's source line wraps differently as a
+   column narrows. The loading line and the apology sit in the same box; a thin
+   document is shorter. Re-measure when a figure, its source text or the type
+   scale changes. */
+.panel-body { min-height: 230px; }
+@media (max-width: 900px) { .panel-body { min-height: 238px; } }
+@media (max-width: 610px) { .panel-body { min-height: 339px; } }
+@media (max-width: 402px) { .panel-body { min-height: 354px; } }
+@media (max-width: 336px) { .panel-body { min-height: 368px; } }
+@media (max-width: 314px) { .panel-body { min-height: 405px; } }
 .panel-empty {
   margin: 0;
   max-width: 54ch;
@@ -1089,6 +1100,10 @@ figure.code pre {
 .panel-figs {
   display: grid; gap: var(--s-1) var(--s-6);
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+/* Two figures a row on a phone: one a row is five screens of thumb. */
+@media (max-width: 560px) {
+  .panel-figs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-1) var(--s-4); }
 }
 
 .fig { display: block; padding: var(--s-2) 0; }
@@ -1111,13 +1126,15 @@ figure.code pre {
 .fig-source {
   display: block;
   font: 400 var(--fs-rail)/1.4 var(--figure);
-  color: var(--accent);
+  color: var(--ink-2);
   margin-top: 5px;
   opacity: 0;
   transition: opacity .16s ease;
 }
 .fig:hover .fig-source,
 .fig:focus-visible .fig-source { opacity: 1; }
+/* Nothing hovers on a touch screen, and the space is reserved anyway. */
+@media (hover: none) { .fig-source { opacity: 1; } }
 .fig:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 6px; }
 
 .section-head {
@@ -1129,6 +1146,8 @@ figure.code pre {
 }
 .section-head h2 { margin: 0; font-size: var(--fs-h2); }
 .section-head a {
+  display: inline-flex; align-items: center;
+  min-block-size: 24px;                     /* WCAG 2.5.8: a standalone link */
   font: 400 var(--fs-small)/1 var(--prose);
   white-space: nowrap;
 }
@@ -1284,43 +1303,49 @@ figure.code pre {
 }
 
 /* ============================================================================
-   LINKS
-   ========================================================================= */
-
-.link-list { list-style: none; margin: 0; padding: 0; }
-.link-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s-4);
-  padding: var(--s-4) 0;
-  border-bottom: var(--hair) solid var(--rule);
-}
-.link-row:first-child { border-top: var(--hair) solid var(--rule); }
-.link-row > a {
-  font: 600 var(--fs-h3)/1.3 var(--prose);
-  text-decoration: none;
-  color: var(--ink);
-}
-.link-row > a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
-.link-handle {
-  font: 400 var(--fs-rail)/1.5 var(--figure);
-  color: var(--ink-2);
-  flex: none;
-}
-.link-note { margin: var(--s-1) 0 0; font-size: var(--fs-small); color: var(--ink-2); }
-
-/* ============================================================================
    ABOUT — the stack and the "now" list live here since /uses/ and /now/ went
    ========================================================================= */
+
+/* The intro is the largest body text on the page; the lists under it are not.
+   A plain block, not `.prose`: that is a subgrid for the page's own columns,
+   and inside a `.row` it would pin the copy to a second, nested column. */
+.about-copy p {
+  margin: 0;
+  max-width: 56ch;
+  font-size: var(--fs-h3);
+  line-height: var(--lh-lede);
+}
+.about-copy p + p { margin-top: var(--s-5); }
+.about-intro > .rail { padding-top: 0.5em; }  /* first baseline, against --fs-h3 */
+
+/* The rail's links are the page's only quick contact. On screen each gets a
+   24px-tall target (WCAG 2.5.8); paper keeps the rail's own leading. */
+@media screen {
+  .about-rail a { display: inline-flex; align-items: center; min-block-size: 24px; }
+}
 
 .now-list { row-gap: var(--s-7); }          /* .row already sets the grid */
 .now-item {
   margin: 0;
-  font-size: var(--fs-h3);                  /* one step above body        */
+  font-size: var(--fs-body);
   line-height: var(--lh-body);
 }
-.now-list > .rail { padding-top: 0.62em; }  /* label baseline at 21px     */
+.now-list > .rail { padding-top: 0.30em; }  /* label baseline against body */
+
+/* Working with me. Plain lines, not cards: the address is the thing to copy. */
+.contact-lede { margin: 0 0 var(--s-4); max-width: 60ch; }
+.contact-email { margin: 0 0 var(--s-5); }
+.contact-email > a { font-size: var(--fs-h3); }
+.contact-links { list-style: none; margin: 0; padding: 0; }
+.contact-links li + li { margin-top: var(--s-3); }
+.contact-email > a,
+.contact-links a { display: inline-flex; align-items: center; min-block-size: 24px; }
+.contact-links a { font-weight: 600; }
+.contact-note {
+  display: block;
+  font-size: var(--fs-small);
+  color: var(--ink-2);
+}
 
 /* Name + description as a run-in definition list, not a card grid. A two-column
    dl inside the measure would plant a second vertical rule a few tens of pixels
@@ -1724,9 +1749,11 @@ figure figcaption {
   .post-head { padding-top: var(--s-7); }
 
   .uses-item { font-size: var(--fs-small); }
-  .now-item  { font-size: var(--fs-body); }
-  .now-list  { row-gap: var(--s-6); }
-  .now-list > .rail { padding-top: 0; }
+  /* One column: each label must sit nearer its own item than the one above. */
+  .now-list  { row-gap: 0; }
+  .now-list > .rail { padding-top: 0; margin-bottom: var(--s-1); }
+  .now-list > .now-item:not(:last-child) { margin-bottom: var(--s-6); }
+  .about-intro > .rail { padding-top: 0; }
 
   .uses-status { flex-direction: row; flex-wrap: wrap; gap: 0 var(--s-5); }
 }
@@ -1734,7 +1761,6 @@ figure figcaption {
 @media (max-width: 560px) {
   .site-header { gap: var(--s-3); }
   .site-header nav { gap: var(--s-4); }
-  .link-row { flex-direction: column; gap: var(--s-1); }
 }
 
 /* ============================================================================
