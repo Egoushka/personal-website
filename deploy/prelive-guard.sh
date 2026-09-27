@@ -21,7 +21,9 @@ bad=$(awk '
     path = substr($0, 13)
     sub(/ -> .*$/, "", path)
     name = path; sub(/\/$/, "", name); sub(/.*\//, "", name)
-    if (path ~ /^site(\/|$)/ || name == "Caddyfile" || path == "status.json" || path ~ /^\./) print
+    # "./" is the root itself, not a dotfile. rsync itemizes it whenever its
+    # mtime differs, which is every run: the build makes out/ fresh.
+    if (path ~ /^site(\/|$)/ || name == "Caddyfile" || path == "status.json" || (path ~ /^\./ && path != "./")) print
   }')
 
 if [ -n "$bad" ]; then
