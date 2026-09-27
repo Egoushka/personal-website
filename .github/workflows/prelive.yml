@@ -12,8 +12,10 @@ concurrency:
   group: deploy-prelive
   cancel-in-progress: true
 
+# contents: write publishes the build to the deploy-prelive release, which the
+# VPS pulls. A fork PR never gets here (the job's `if`).
 permissions:
-  contents: read
+  contents: write
 
 env:
   VPS_HOST: <origin-ip>
@@ -76,6 +78,29 @@ jobs:
         run: |
           docker run --rm -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
             caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
+
+      # The pull path (homelab-gitops host/website-pull.sh, M5.7): the box fetches
+      # this archive from the `deploy-prelive` release every 2 minutes and checks its
+      # sha256, so it needs no inbound SSH. It runs alongside the rsync below until
+      # it is verified; then the rsync and the deploy key go.
+      - name: Package the build
+        run: |
+          echo "$GITHUB_SHA" > out/build.txt
+          mkdir pkg && cp -r out pkg/out
+          tar -czf site.tar.gz -C pkg .
+          sha256sum site.tar.gz | awk '{print $1"  site.tar.gz"}' > site.tar.gz.sha256
+
+      # A moving prerelease, never "latest": it is a mailbox, not a release.
+      # --clobber swaps the two assets one after the other; the box tolerates a
+      # run that lands in between.
+      - name: Publish to the deploy-prelive release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view deploy-prelive >/dev/null 2>&1 || gh release create deploy-prelive \
+            --prerelease --latest=false --target "$GITHUB_SHA" \
+            --title "deploy-prelive (moving)" --notes "Pulled by the VPS every 2 minutes. Replaced on every prelive run; out/ only, never the Caddyfile."
+          gh release upload deploy-prelive site.tar.gz site.tar.gz.sha256 --clobber
 
       - name: Configure SSH
         run: |

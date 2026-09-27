@@ -10,9 +10,10 @@ concurrency:
   group: deploy-production
   cancel-in-progress: true
 
-# The job only reads the repo; it authenticates to the VPS with a deploy key.
+# contents: write publishes the build to the deploy-site release, which the VPS
+# pulls. The rsync still authenticates to the VPS with a deploy key.
 permissions:
-  contents: read
+  contents: write
 
 env:
   # The box moved in 2026-07; the previous address still answered ping but had
@@ -58,6 +59,29 @@ jobs:
         run: |
           docker run --rm -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
             caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
+
+      # The pull path (homelab-gitops host/website-pull.sh, M5.7): the box fetches
+      # this archive from the `deploy-site` release every 2 minutes and checks its
+      # sha256, so it needs no inbound SSH. It runs alongside the rsync below until
+      # it is verified; then the rsync and the deploy key go.
+      - name: Package the build
+        run: |
+          echo "$GITHUB_SHA" > out/build.txt
+          mkdir pkg && cp -r out pkg/out && cp deploy/Caddyfile pkg/Caddyfile
+          tar -czf site.tar.gz -C pkg .
+          sha256sum site.tar.gz | awk '{print $1"  site.tar.gz"}' > site.tar.gz.sha256
+
+      # A moving prerelease, never "latest": it is a mailbox, not a release.
+      # --clobber swaps the two assets one after the other; the box tolerates a
+      # run that lands in between.
+      - name: Publish to the deploy-site release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view deploy-site >/dev/null 2>&1 || gh release create deploy-site \
+            --prerelease --latest=false --target "$GITHUB_SHA" \
+            --title "deploy-site (moving)" --notes "Pulled by the VPS every 2 minutes. Replaced on every push to main."
+          gh release upload deploy-site site.tar.gz site.tar.gz.sha256 --clobber
 
       - name: Configure SSH
         run: |
