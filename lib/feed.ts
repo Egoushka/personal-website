@@ -8,6 +8,7 @@ import rehypeStringify from "rehype-stringify";
 import { site } from "./site";
 import { getAllPosts, getPost } from "./posts";
 import { topicName } from "./topics";
+import { rehypeCyrillic, type CyrillicLang } from "./lang";
 
 type HastNode = { type: string; properties?: Record<string, unknown>; children?: HastNode[] };
 
@@ -34,7 +35,7 @@ function absoluteLinks(postUrl: string) {
  * The post body as HTML for a feed reader: the page's own markdown pipeline
  * minus the highlighter, whose inline colours a reader would restyle anyway.
  */
-function bodyHtml(markdown: string, postUrl: string): string {
+function bodyHtml(markdown: string, postUrl: string, lang?: CyrillicLang): string {
   return String(
     unified()
       .use(remarkParse)
@@ -42,6 +43,7 @@ function bodyHtml(markdown: string, postUrl: string): string {
       .use(remarkRehype)
       .use(rehypeSlug)
       .use(absoluteLinks(postUrl))
+      .use(rehypeCyrillic(lang))
       .use(rehypeStringify)
       .processSync(markdown),
   );
@@ -75,7 +77,7 @@ export function buildFeed(): Feed {
       id: url,
       link: url,
       description: post.description,
-      content: bodyHtml(getPost(post.slug).content, url),
+      content: bodyHtml(getPost(post.slug).content, url, post.cyrillic),
       published: new Date(post.date),
       date: new Date(post.updated ?? post.date),
       category: post.topics.map((slug) => ({ name: topicName(slug) })),

@@ -1,5 +1,6 @@
 import { getSpanDays, inWords } from "./posts";
 import type { TopicSlug } from "./topics";
+import type { CyrillicLang } from "./lang";
 
 /**
  * How long the deploy shipped nothing, read from that post's `spanDays`. The prose
@@ -214,6 +215,13 @@ export type Project = {
   summary: string;
   /** The full account, on the project's own page. */
   description: string;
+  /**
+   * The language of each Cyrillic term in `description`, which the project page
+   * marks with `lang` (components/Lang.tsx). Per term, because one sentence can
+   * name a Ukrainian identifier beside two Russian ones. `npm run check` fails on
+   * a Cyrillic word that renders unmarked.
+   */
+  cyrillic?: Readonly<Record<string, CyrillicLang>>;
   /** One line, for the CV. A four-line bullet on paper does not get read. */
   resumeLine?: string;
   /**
@@ -292,6 +300,7 @@ export const projects: Project[] = [
       "Makes seven years of chat history searchable by an assistant, by refusing to index the 65% of it that says “ok”.",
     description:
       "A personal event store that makes seven years of chat history searchable by an assistant. I measured the archive before touching it rather than guessing at it, and the measurement is the whole story: 681,331 messages across 487 chats, of which 65% are under twenty characters. My previous setup embedded every one of them, so roughly 442,000 vectors stood for “ок”, “+1” and “да” — crowding out the 1.5% that carry an actual proposition. Chronicle groups events into segments using a time gap fitted per conversation, which cuts the index about elevenfold and improves retrieval at the same time. It serves the result over MCP, so the assistant queries it directly — and the first version of that query path was 45× slower than it had to be, because a CTE hid the full-text index from the planner.",
+    cyrillic: { "ок": "ru", "да": "ru" },
     resumeLine:
       "Event store over a 681k-message archive. Aggregates events into segments before indexing — ~11× smaller vector index, better retrieval — served over MCP.",
     topics: ["python", "retrieval"],
@@ -468,6 +477,7 @@ export const projects: Project[] = [
       "Catches the Ukrainian and Russian ID numbers a PII filter has no notion of, before the paste reaches a model.",
     description:
       "A PII detector that sits between PasteGuard’s proxy and its own detector, speaks the same /analyze contract, and adds what the upstream has no concept of: РНОКПП, ИНН, СНИЛС and both passport formats, each recognised by the checksum its issuer publishes rather than by shape, plus the postal addresses the upstream returns as fragments. It started from a measurement rather than an impression: on a 159-case Ukrainian and Russian set the shipped detector emits none of those five types — 0 of 36 spans — and scores F1 0.773 overall. Adding them takes it to 0.890, with 63 of 63 unchanged on PasteGuard’s own multilingual set. The rule that decides its shape is that it fails closed: if the upstream detector is unhealthy, /analyze answers 503 rather than an empty result, because an empty result from a masking proxy is an unmasked paste.",
+    cyrillic: { "РНОКПП": "uk", "ИНН": "ru", "СНИЛС": "ru" },
     resumeLine:
       "Cyrillic-aware PII detector in Python over PasteGuard: checksum-validated UA/RU identifiers and address assembly, F1 0.773 → 0.890 on a 159-case set.",
     topics: ["python"],

@@ -46,6 +46,8 @@ bullet lists standing in for prose, a lesson stated before it was earned.
   and the language is one `lib/highlight.ts` loads (bash, yaml, json, csharp,
   typescript, sql), or it silently renders as plain text.
 - No "click here" link text.
+- Cyrillic words carry `cyrillic: "uk"` or `"ru"` in the frontmatter, and it is the
+  right one — `npm run validate` only checks that it exists.
 
 ## Finish by
 

@@ -107,6 +107,9 @@ Body in Markdown. Fenced code blocks are highlighted at build time.
 Optional frontmatter: `spanDays` (how many days the piece is about), and `updated`
 (quoted date, not before `date`) with an optional `correction` note, which requires
 `updated`. Use `updated`/`correction` for factual changes only, not for rewording.
+A post whose title or prose has Cyrillic declares its language, `cyrillic: "uk"` or
+`"ru"`, so screen readers read those words in the right voice; `npm run validate`
+requires it.
 
 `topics` is a **closed vocabulary** — `npm run validate` fails on anything not in
 `lib/topics.ts`. Adding a topic means editing that file. A post appears on `/writing/`,

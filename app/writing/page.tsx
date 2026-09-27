@@ -31,6 +31,7 @@ export default function WritingIndex() {
   const rows: PostRow[] = getAllPosts().map((p) => ({
     slug: p.slug,
     title: p.title,
+    cyrillic: p.cyrillic,
     description: p.description,
     date: p.date,
     dateLabel: formatDate(p.date),

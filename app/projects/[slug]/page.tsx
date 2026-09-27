@@ -9,6 +9,7 @@ import { site, projects } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
 import { getAllPosts } from "@/lib/posts";
 import { Downloads } from "@/components/Measured";
+import Lang from "@/components/Lang";
 import { topicName } from "@/lib/topics";
 
 type Params = { slug: string };
@@ -121,7 +122,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
       <hr className="bleed" />
       <section className="row" data-pagefind-body>
         <span className="rail rail--label">What it is</span>
-        <p>{project.description}</p>
+        <p><Lang text={project.description} lang={project.cyrillic} /></p>
       </section>
 
       {writeup && (

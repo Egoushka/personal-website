@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { PostMeta } from "@/lib/posts";
 import { formatDate } from "@/lib/posts";
+import Lang from "@/components/Lang";
 
 /**
  * Shared post row — used by the home page, /writing/ and /topics/<topic>/.
@@ -14,7 +15,7 @@ export default function PostList({ posts }: { posts: PostMeta[] }) {
     <ol className="post-list">
       {posts.map((p) => (
         <li className="post-row" key={p.slug}>
-          <Link prefetch={false} href={`/writing/${p.slug}/`}>{p.title}</Link>
+          <Link prefetch={false} href={`/writing/${p.slug}/`}><Lang text={p.title} lang={p.cyrillic} /></Link>
           <p>{p.description}</p>
           <span className="post-meta run">
             <span><time dateTime={p.date}>{formatDate(p.date)}</time></span>{" "}

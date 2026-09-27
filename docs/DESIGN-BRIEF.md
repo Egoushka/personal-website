@@ -210,6 +210,6 @@ Do not shrink line-height below 1.38 and do not drop the masthead rule.
 - The gate is `npm run validate && npm run typecheck && npm test && npm run build && npm run check`;
   CI adds `caddy-test`, the Playwright + axe smoke and a lychee link check. No ESLint.
 - **Push to `main` publishes the live site.** Work on a branch.
-- Posts are `content/posts/*.md`; the filename is the slug. Frontmatter is `title, date, description, topics`, plus optional `spanDays`, `updated` and `correction`.
+- Posts are `content/posts/*.md`; the filename is the slug. Frontmatter is `title, date, description, topics`, plus optional `spanDays`, `updated`, `correction` and `cyrillic` (the language of any Cyrillic words, marked with `lang`).
 - **Topics are a closed vocabulary** in [lib/topics.ts](../lib/topics.ts). Adding one means editing that file.
 - **A Caddyfile change ships with the deploy**: `rsync --inplace` (it is a single-file bind mount, so a normal rsync gives it a new inode the container never sees), after which Caddy's `--watch` loads it. There is no reload step.

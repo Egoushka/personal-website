@@ -214,13 +214,25 @@ for (const chunk of chunks) {
   if (shipped.length) fail("B7", file, `carries ${shipped.length} project description(s), e.g. "${shipped[0]}"`);
 }
 
-// ── Text in the HTML (R-03, R-04, R-17) ──────────────────────────────────────
+// ── Text in the HTML (R-03, R-04, R-17, R-38) ────────────────────────────────
+// Cyrillic a reader sees must sit in an element with `lang` (lib/lang.ts). Scripts,
+// <title>, code blocks and attributes are not page text, so they go first.
+const CYRILLIC = /[\u0400-\u04FF]+/;
+const unmarkedText = (html) =>
+  decode(
+    text(html)
+      .replace(/<(script|style|title|pre)\b[\s\S]*?<\/\1>/gi, "")
+      .replace(/<span lang="(?:uk|ru)">[^<]*<\/span>/g, "")
+      .replace(/<[^>]*>/g, ""),
+  );
 const RELATIVE_AGE = /\bdays? ago\b|\blatest (?:today|yesterday)\b/i;
 for (const { file, html } of pages) {
   const age = text(html).match(RELATIVE_AGE);
   if (age) fail("R-03", file, `prints a build-time relative age ("${age[0]}")`);
   const leaked = (html.match(/node="\[object Object\]"/g) ?? []).length;
   if (leaked) fail("R-17", file, `node="[object Object]" on ${leaked} element(s)`);
+  const cyrillic = unmarkedText(html).match(CYRILLIC);
+  if (cyrillic) fail("R-38", file, `"${cyrillic[0]}" is Cyrillic with no lang: declare it (post frontmatter \`cyrillic\`, Project.cyrillic)`);
 }
 
 if (/not reporting/i.test(text(read(at("index.html"))))) {

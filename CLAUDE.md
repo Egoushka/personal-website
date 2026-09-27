@@ -91,7 +91,10 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
   only — no "N days ago".
 - **Posts**: `content/posts/<slug>.md`, frontmatter `title`, `date` (quoted `YYYY-MM-DD`,
   not future), `description`, `topics`, optional `spanDays`, `updated`, `correction`
-  (needs `updated`; both for factual changes only). [lib/markdown.mjs](lib/markdown.mjs)
+  (needs `updated`; both for factual changes only), and `cyrillic` (`"uk"`/`"ru"`,
+  required once the title or prose has Cyrillic; never guessed — `ок` is both).
+  [lib/lang.ts](lib/lang.ts) marks those runs with `lang`, `Project.cyrillic` does it per
+  term for project text, and `npm run check` fails on unmarked Cyrillic. [lib/markdown.mjs](lib/markdown.mjs)
   parses for both `lib/posts.ts` and the validator, so word counts and heading ids
   (`rehype-slug`, `github-slugger`) cannot disagree. Code blocks: Shiki ([lib/highlight.ts](lib/highlight.ts)).
 - **Topics**: [lib/topics.ts](lib/topics.ts) is the one closed vocabulary for posts,

@@ -7,7 +7,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
-import { parseMarkdown, countWords, headings } from "../lib/markdown.mjs";
+import { parseMarkdown, countWords, headings, proseText } from "../lib/markdown.mjs";
 
 const ROOT = process.cwd();
 const POSTS_DIR = path.join(ROOT, "content", "posts");
@@ -139,6 +139,14 @@ for (const { file, slug, data, content, tree } of posts) {
     } else if (data.updated === undefined) {
       fail("frontmatter: correction needs `updated` — the date the correction was made");
     }
+  }
+
+  // Cyrillic in the title or the prose carries its language (lib/lang.ts marks
+  // it with `lang`). Declared, never guessed: "ок" is Ukrainian and Russian alike.
+  if (data.cyrillic !== undefined && data.cyrillic !== "uk" && data.cyrillic !== "ru") {
+    fail(`frontmatter: cyrillic must be "uk" or "ru", got ${JSON.stringify(data.cyrillic)}`);
+  } else if (data.cyrillic === undefined && /[\u0400-\u04FF]/.test(`${data.title ?? ""} ${proseText(tree)}`)) {
+    fail('frontmatter: the post has Cyrillic text, so it needs `cyrillic: "uk"` or `"ru"` — the language its words are marked with');
   }
 
   if (data.spanDays !== undefined && !(Number.isInteger(data.spanDays) && data.spanDays > 0)) {

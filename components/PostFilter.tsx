@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Lang from "@/components/Lang";
+import type { CyrillicLang } from "@/lib/lang";
 
 /**
  * The writing index, with the vocabulary as a filter over it.
@@ -22,6 +24,8 @@ import Link from "next/link";
 export type PostRow = {
   slug: string;
   title: string;
+  /** The post's `cyrillic` frontmatter: the language its title's Cyrillic is marked with. */
+  cyrillic?: CyrillicLang;
   description: string;
   /** ISO `YYYY-MM-DD`, for ordering. */
   date: string;
@@ -138,7 +142,7 @@ export default function PostFilter({
           <ol className="post-list">
             {g.rows.map((p) => (
               <li className="post-row" key={p.slug}>
-                <Link prefetch={false} href={`/writing/${p.slug}/`}>{p.title}</Link>
+                <Link prefetch={false} href={`/writing/${p.slug}/`}><Lang text={p.title} lang={p.cyrillic} /></Link>
                 <p>{p.description}</p>
                 <span className="post-meta run">
                   <span>{p.dateLabel}</span>{" "}

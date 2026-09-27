@@ -3,6 +3,7 @@ import path from "node:path";
 import matter from "gray-matter";
 import { parseMarkdown, countWords, headings } from "./markdown.mjs";
 import type { TopicSlug } from "./topics";
+import type { CyrillicLang } from "./lang";
 
 const POSTS_DIR = path.join(process.cwd(), "content", "posts");
 
@@ -29,6 +30,8 @@ export type PostMeta = {
   updated?: string;
   /** Optional frontmatter: a note describing what a later edit corrected. */
   correction?: string;
+  /** Optional frontmatter: the language of the post's Cyrillic text, for `lang` (lib/lang.ts). */
+  cyrillic?: CyrillicLang;
 };
 
 export type Post = PostMeta & { content: string };
@@ -51,6 +54,7 @@ function readPostFile(slug: string): Post {
       : undefined,
     updated: typeof data.updated === "string" ? data.updated : undefined,
     correction: typeof data.correction === "string" ? data.correction : undefined,
+    cyrillic: data.cyrillic === "uk" || data.cyrillic === "ru" ? data.cyrillic : undefined,
     content,
   };
 }

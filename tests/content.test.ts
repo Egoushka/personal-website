@@ -156,6 +156,15 @@ test("validator: topics and spanDays", () => {
   passes({ a: post({ ...BASE, spanDays: "51" }, "") });
 });
 
+test("validator: Cyrillic text declares its language", () => {
+  passes({ a: post({ ...BASE, cyrillic: '"ru"' }, "Mostly `ок`.") });
+  fails({ a: post(BASE, "Mostly `ок`.") }, /has Cyrillic text, so it needs `cyrillic/);
+  fails({ a: post({ ...BASE, title: '"The word ок"' }, "") }, /has Cyrillic text/);
+  fails({ a: post({ ...BASE, cyrillic: '"ua"' }, "") }, /cyrillic must be "uk" or "ru", got "ua"/);
+  // A code block is code: lib/lang.ts leaves it alone, so it needs no declaration.
+  passes({ a: post(BASE, "```txt\nпривіт\n```") });
+});
+
 test("validator: a write-up must be a published post", () => {
   passes({ a: TARGET }, 'const p = { writeup: "a" };\n');
   fails({ a: TARGET }, /writeup "draft-only" has no content\/posts\/draft-only.md/, 'const p = { writeup: "draft-only" };\n');

@@ -10,6 +10,8 @@ import { BlogPostingLd } from "@/components/JsonLd";
 import Comments from "@/components/Comments";
 import Byline from "@/components/Byline";
 import PostEnhancements from "@/components/PostEnhancements";
+import Lang from "@/components/Lang";
+import { rehypeCyrillic } from "@/lib/lang";
 import { projects, site } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
 import {
@@ -79,7 +81,7 @@ export default async function PostPage(
         Search indexes this block and the article, and nothing else on the page.
       */}
       <header className="post-head" data-pagefind-body>
-        <h1>{post.title}</h1>
+        <h1><Lang text={post.title} lang={post.cyrillic} /></h1>
         <p className="page-figures" data-pagefind-ignore>
           <span><time dateTime={post.date}>{formatDate(post.date)}</time></span>{" "}
           {post.updated && (
@@ -131,6 +133,7 @@ export default async function PostPage(
             rehypePlugins={[
               rehypeSlug,
               [rehypeShikiFromHighlighter, highlighter, shikiOptions],
+              rehypeCyrillic(post.cyrillic),
             ]}
             components={{
               /*
@@ -277,7 +280,7 @@ export default async function PostPage(
           <div className="row" data-pagefind-ignore>
             <span className="rail rail--label">Read next</span>
             <div className="post-item">
-              <h2><Link prefetch={false} href={`/writing/${related.slug}/`}>{related.title}</Link></h2>
+              <h2><Link prefetch={false} href={`/writing/${related.slug}/`}><Lang text={related.title} lang={related.cyrillic} /></Link></h2>
               <p className="run"><span>{formatDate(related.date)}</span>{" "}<span>{related.readingTime} min read</span></p>
             </div>
           </div>

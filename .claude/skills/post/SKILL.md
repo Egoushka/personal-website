@@ -51,6 +51,8 @@ Optional, and only when true:
   changed, never for rewording or typo fixes. `updated` is not before `date`;
   `correction` requires `updated` and renders as a note above the body. A new draft
   has neither.
+- `cyrillic: "uk"` or `"ru"` — required when the title or prose has Cyrillic words;
+  they are marked with that `lang`. Ask which, never guess: `ок` and `ага` are both.
 
 Slug = filename, lowercase kebab-case. It becomes the URL and cannot change later
 without breaking links.
