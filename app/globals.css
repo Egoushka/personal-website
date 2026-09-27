@@ -1889,7 +1889,7 @@ figure figcaption {
   }
   /* A band needs air above it or it reads as a rule under the previous entry. */
   .cv .section > .rail--label,
-  .cv .cv-era > .rail { margin-top: 1.8mm; }
+  .cv .cv-era > .rail { margin-top: 1.4mm; }
   .cv .cv-era:first-of-type > .rail { margin-top: 2mm; }
 
   /* --- CV specifics ------------------------------------------------------- */
@@ -1912,7 +1912,7 @@ figure figcaption {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 0 2.2mm;
+    gap: 0 1.6mm;   /* 2.2mm ran the last contact past the edge on macOS */
     margin-top: 1mm;
     /* 7.5pt is what fits all five on ONE line at 184mm. Two lines here
        costs 4mm, and this block was already 18% of the sheet. */
@@ -1953,11 +1953,11 @@ figure figcaption {
      AND a border-top from `.section + .section`. On screen the hr is the rule;
      on paper the section border is, so the hr goes. */
   .cv hr.bleed { display: none; }
-  .cv .job + .job { margin-top: 1.2mm; }
+  .cv .job + .job { margin-top: 0.8mm; }
   .cv .job-name   { font: 600 11.5pt/1.25 var(--prose); color: #000; }
   .cv .job-meta   { font: 400 8.5pt/1.3 var(--figure); color: var(--ink-2); margin-top: 0.4mm; }
-  .cv .job ul     { margin: 1.2mm 0 0; padding-left: 4.2mm; font-size: 10pt; line-height: 1.4; }
-  .cv .job li + li{ margin-top: 0.5mm; }
+  .cv .job ul     { margin: 0.8mm 0 0; padding-left: 4.2mm; font-size: 10pt; line-height: 1.4; }
+  .cv .job li + li{ margin-top: 0.3mm; }
 
   .cv .job-dates {
     font: 400 9pt/1 var(--figure);
@@ -2040,10 +2040,14 @@ figure figcaption {
      3. Skills becomes one line, no wrap.          ← SPENT (9pt)
      4. Body from 10.5pt to 10pt. NOT below 10pt.  ← SPENT
      5. @page margin from 16mm/15mm to 14mm/13mm.  ← SPENT (11mm/13mm)
+     6. IT INNOVATIONS from three bullets to two.   ← SPENT (printBullets)
+     7. Spacing between blocks: bands 1.4mm, roles 0.8mm, bullet lists 0.8mm,
+        bullets 0.3mm.                              ← SPENT
 
-     All five are now spent. The next cut is CONTENT, not CSS: drop a bullet
-     from IT INNOVATIONS via `printBullets` in lib/site.ts. Do not reach for
-     the type size again.
+     All seven are spent. Linux Chromium (CI) lays the sheet out taller than
+     macOS; measured there, it has about 20px to spare. The next cut is
+     CONTENT again — a bullet, a project or a skill group — and the owner
+     chooses it. Do not reach for the type size or the gaps again.
    Do not shrink line-height below 1.4 and do not drop the masthead rule.
    ========================================================================= */
 
