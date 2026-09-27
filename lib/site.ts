@@ -1,4 +1,11 @@
+import { getSpanDays, inWords } from "./posts";
 import type { TopicSlug } from "./topics";
+
+/**
+ * How long the deploy shipped nothing, read from that post's `spanDays`. The prose
+ * below names the stretch in several places; none of them types the number.
+ */
+const silentDays = getSpanDays("silent-deploys");
 
 /**
  * The live origin. Everything absolute on this site is built from it —
@@ -411,7 +418,7 @@ export const projects: Project[] = [
     summary:
       "Every stack on the box, one directory each, with the secrets encrypted in the repository rather than living on the machine.",
     description:
-      "The whole homelab as a git repository: one directory per Docker Compose stack, secrets committed as SOPS+age encrypted files with the plaintext gitignored, and Traefik at the edge deciding what the internet is allowed to reach. The point of doing it this way is falsifiable — if the box disappeared, this repository is what would rebuild it, and the only way to know that is that it has had to. It is also the reason the writing on this site exists: the deploy that shipped nothing for fifty-one days was found because the state of the machine is supposed to be reconstructable from here, and for fifty-one days it was not.",
+      `The whole homelab as a git repository: one directory per Docker Compose stack, secrets committed as SOPS+age encrypted files with the plaintext gitignored, and Traefik at the edge deciding what the internet is allowed to reach. The point of doing it this way is falsifiable — if the box disappeared, this repository is what would rebuild it, and the only way to know that is that it has had to. It is also the reason the writing on this site exists: the deploy that shipped nothing for ${inWords(silentDays)} days was found because the state of the machine is supposed to be reconstructable from here, and for ${inWords(silentDays)} days it was not.`,
     resumeLine:
       "Single-VPS homelab defined entirely in git: Compose stacks per service, SOPS+age encrypted secrets, Traefik edge, rebuildable from the repository.",
     topics: ["self-hosting", "infrastructure", "docker", "sops"],
@@ -540,7 +547,7 @@ export const skills: { group: string; items: Skill[] }[] = [
       { name: "Traefik and Caddy", icon: "traefikproxy", short: "Traefik", topic: "caddy", now: "The edge and the origin of everything I self-host, including this page." },
       { name: "Tailscale and Headscale", icon: "tailscale", short: "Tailscale", topic: "tailscale", now: "The only way in for administration. The public SSH port takes only deploy keys that can do nothing but rsync into this site." },
       { name: "SOPS and age", icon: "key", short: "SOPS", topic: "sops", now: "Secrets encrypted in the repository, so the box is never the source of truth." },
-      { name: "GitHub Actions", icon: "githubactions", topic: "ci-cd", now: "Every deploy here, and the 51 days I once spent not noticing one had stopped." },
+      { name: "GitHub Actions", icon: "githubactions", topic: "ci-cd", now: `Every deploy here, and the ${silentDays} days I once spent not noticing one had stopped.` },
     ],
   },
   {
@@ -640,7 +647,7 @@ export const eras: Era[] = [
       "Alongside it, the homelab moved into git and became the busiest repository I own. That is also where Attest came from: work needed a validation library, the one that existed had been abandoned, so I forked it, fixed 197 of its defects in six days and published it. It is the only thing I have built that fails in public when I get it wrong.",
     ],
     obstacle:
-      "My own migration moved the box, and the deploy kept reporting success for fifty-one days while shipping nothing. I found it by accident, while adding a header.",
+      `My own migration moved the box, and the deploy kept reporting success for ${inWords(silentDays)} days while shipping nothing. I found it by accident, while adding a header.`,
   },
   {
     slug: "greenfield",
@@ -662,7 +669,7 @@ export const eras: Era[] = [
     body: [
       "Umbraco, Optimizely and Azure: features across several .NET systems, legacy applications modernised, a VPN-to-Azure Identity migration tool. I got in on a take-home I put 348 commits into over eight days, with three rounds of feedback from someone who had no obligation to give any.",
       "When it ended I worked for myself for most of a year. A WordPress estate rescued while it was half down, Telegram bots, Python scrapers and parsers, sites in .NET, PHP and JS frameworks. None of it is on GitHub and none of it has a public URL I can show you — it was other people's businesses — but it is where the scraping and automation work in my side projects actually comes from.",
-      "Then two months selling logistics over the phone to US clients, which I took deliberately rather than sit still. It is on this page for the same reason the fifty-one days are: a record with the awkward parts removed is worth less than one without.",
+      `Then two months selling logistics over the phone to US clients, which I took deliberately rather than sit still. It is on this page for the same reason the ${inWords(silentDays)} days are: a record with the awkward parts removed is worth less than one without.`,
     ],
     obstacle:
       "One rejection that year was for being too young — the manager wanted candidates aged 27 and over. It was in writing, which at least made it quick.",

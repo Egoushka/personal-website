@@ -1,8 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { formatDate, getAllPosts, getAllSlugs } from "../lib/posts";
+import { formatDate, getAllPosts, getAllSlugs, getSpanDays, inWords } from "../lib/posts";
 import { getReadings, n } from "../lib/readings";
+import { projects } from "../lib/site";
 
 // `npm test` runs under tsx because Node's own type stripping cannot follow
 // lib/readings.ts's extensionless `./posts` import (ERR_MODULE_NOT_FOUND).
@@ -31,4 +32,21 @@ test("lib/readings.ts counts the posts it reports", () => {
   assert.equal(r.posts, posts.length);
   assert.equal(r.latest?.slug, posts[0]?.slug);
   assert.equal(n(1394), "1,394");
+});
+
+test("prose names a post's span from the post, never typed", () => {
+  assert.deepEqual([0, 7, 19, 20, 40, 51, 99].map(inWords),
+    ["zero", "seven", "nineteen", "twenty", "forty", "fifty-one", "ninety-nine"]);
+  assert.equal(inWords(100), "100");
+  assert.equal(inWords(1394), "1,394");
+
+  const days = getSpanDays("silent-deploys");
+  const homelab = projects.find((p) => p.slug === "homelab-gitops");
+  assert.ok(homelab?.description.includes(`nothing for ${inWords(days)} days`));
+  // The number itself, in figures or words, appears in neither source file.
+  for (const file of ["lib/site.ts", "app/journey/page.tsx"]) {
+    const typed = new RegExp(`\\b(${days}|${inWords(days)}) days\\b`, "i");
+    assert.doesNotMatch(fs.readFileSync(file, "utf8"), typed, file);
+  }
+  assert.throws(() => getSpanDays("homelab"), /no spanDays/);
 });

@@ -8,6 +8,7 @@ import { experience, eras } from "@/lib/site";
 import { topicName } from "@/lib/topics";
 import { formatSpan, yearFraction, yearFractionEnd } from "@/lib/dates";
 import { n } from "@/lib/readings";
+import { getSpanDays, inWords } from "@/lib/posts";
 import { pageMetadata } from "@/lib/metadata";
 
 /**
@@ -108,7 +109,7 @@ export default function JourneyPage() {
           technology that role actually used — the same fields the CV reads. The
           shaded stretches are months with no employer: two of them are a
           freelance year and a deliberate detour into sales, and they are on the
-          page for the same reason the fifty-one days are.
+          page for the same reason the {inWords(getSpanDays("silent-deploys"))} days are.
         </p>
       </Journey>
 

@@ -89,6 +89,30 @@ export function getPost(slug: string): Post {
   return readPostFile(slug);
 }
 
+/**
+ * A published post's `spanDays`, for prose elsewhere that names the same stretch,
+ * so the figure is read from the post rather than typed again (ADR 0002). Throws
+ * when the post or its span is missing: the build fails instead of printing it.
+ */
+export function getSpanDays(slug: string): number {
+  const days = getPost(slug).spanDays;
+  if (!days) throw new Error(`post "${slug}" has no spanDays`);
+  return days;
+}
+
+const ONES = [
+  "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+  "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen",
+];
+const TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+
+/** `51` → `fifty-one`: a whole number below a hundred in words, as prose writes it; figures above. */
+export function inWords(x: number): string {
+  if (!Number.isInteger(x) || x < 0 || x >= 100) return x.toLocaleString("en-US");
+  if (x < 20) return ONES[x];
+  return TENS[Math.floor(x / 10)] + (x % 10 ? `-${ONES[x % 10]}` : "");
+}
+
 /** `2026-07-28` → `28 July 2026`. Written out, because the site reads like a person. */
 export function formatDate(iso: string): string {
   if (!iso) return "";
