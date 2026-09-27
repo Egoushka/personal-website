@@ -16,9 +16,9 @@ export default function NotFound() {
           Nothing at this address. It answered, but it isn&apos;t listening.
         </p>
         <p className="page-figures">
-          <span><Link href="/">home</Link></span>
-          <span><Link href="/writing/">writing</Link></span>
-          <span><Link href="/projects/">projects</Link></span>
+          <span><Link prefetch={false} href="/">home</Link></span>{" "}
+          <span><Link prefetch={false} href="/writing/">writing</Link></span>{" "}
+          <span><Link prefetch={false} href="/projects/">projects</Link></span>
         </p>
       </div>
     </Shell>

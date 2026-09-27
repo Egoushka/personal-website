@@ -126,7 +126,7 @@ export default function SkillsBoard({
                   <span className="board-mark">{skill.icon}</span>
                   <span className="board-name">
                     {skill.href ? (
-                      <Link href={skill.href}>{skill.name}</Link>
+                      <Link prefetch={false} href={skill.href}>{skill.name}</Link>
                     ) : (
                       skill.name
                     )}

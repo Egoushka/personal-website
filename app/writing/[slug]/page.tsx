@@ -109,7 +109,7 @@ export default async function PostPage(
               the indicator never moving.
             */}
             <details className="toc-details rail--group">
-              <summary data-pagefind-ignore>On this page <span className="rail-count">{toc.length}</span></summary>
+              <summary data-pagefind-ignore>On this page <span className="rail-count">{toc.length}<span className="visually-hidden"> sections</span></span></summary>
               <span className="rail--label">On this page</span>
               <ol className="toc">
                 {toc.map((h) => (
@@ -229,7 +229,7 @@ export default async function PostPage(
           <div className="row">
             <span className="rail rail--label">About the project</span>
             <div className="post-item">
-              <h2><Link href={`/projects/${project.slug}/`}>{project.name}</Link></h2>
+              <h2><Link prefetch={false} href={`/projects/${project.slug}/`}>{project.name}</Link></h2>
               <p className="run"><span>{project.status}</span></p>
               <p>{project.summary}</p>
             </div>
@@ -251,14 +251,14 @@ export default async function PostPage(
                 const u = usage.find((x) => x.slug === t);
                 return (
                   <li className="filed-item" key={t}>
-                    <Link href={`/topics/${t}/`}>{topicName(t)}</Link>
+                    <Link prefetch={false} href={`/topics/${t}/`}>{topicName(t)}</Link>
                     <p>{TOPICS[t].blurb}</p>
                     {/* Only what the topic actually has: "0 projects" is a
                         true statement that reads as a shortfall. */}
                     {u && (
                       <span className="run filed-count">
-                        {u.posts > 0 && <span>{u.posts} {u.posts === 1 ? "post" : "posts"}</span>}
-                        {u.projects > 0 && <span>{u.projects} {u.projects === 1 ? "project" : "projects"}</span>}
+                        {u.posts > 0 && <span>{u.posts} {u.posts === 1 ? "post" : "posts"}</span>}{" "}
+                        {u.projects > 0 && <span>{u.projects} {u.projects === 1 ? "project" : "projects"}</span>}{" "}
                         {u.jobs > 0 && <span>{u.jobs} {u.jobs === 1 ? "role" : "roles"}</span>}
                       </span>
                     )}
@@ -277,8 +277,8 @@ export default async function PostPage(
           <div className="row" data-pagefind-ignore>
             <span className="rail rail--label">Read next</span>
             <div className="post-item">
-              <h2><Link href={`/writing/${related.slug}/`}>{related.title}</Link></h2>
-              <p className="run"><span>{formatDate(related.date)}</span><span>{related.readingTime} min read</span></p>
+              <h2><Link prefetch={false} href={`/writing/${related.slug}/`}>{related.title}</Link></h2>
+              <p className="run"><span>{formatDate(related.date)}</span>{" "}<span>{related.readingTime} min read</span></p>
             </div>
           </div>
         </>

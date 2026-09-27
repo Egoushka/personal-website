@@ -66,9 +66,9 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
         title={topicName(topic)}
         figures={
           <>
-            <span>{posts.length} {posts.length === 1 ? "post" : "posts"}</span>
-            <span>{built.length} {built.length === 1 ? "project" : "projects"}</span>
-            <span>{jobs.length} {jobs.length === 1 ? "role" : "roles"}</span>
+            <span>{posts.length} {posts.length === 1 ? "post" : "posts"}</span>{" "}
+            <span>{built.length} {built.length === 1 ? "project" : "projects"}</span>{" "}
+            <span>{jobs.length} {jobs.length === 1 ? "role" : "roles"}</span>{" "}
             <span>{TOPICS[topic].kind}</span>
           </>
         }
@@ -103,9 +103,9 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
               {built.map((p) => (
                 <li className="project-row" key={p.slug}>
                   <h2 className="project-name">
-                    <Link href={`/projects/${p.slug}/`}>{p.name}</Link>
+                    <Link prefetch={false} href={`/projects/${p.slug}/`}>{p.name}</Link>
                   </h2>
-                  <span className="project-status run"><span>{p.lang}</span><span>{p.shape}</span><span>{p.status}</span></span>
+                  <span className="project-status run"><span>{p.lang}</span>{" "}<span>{p.shape}</span>{" "}<span className="project-state">{p.status}</span></span>
                   <p>{p.summary}</p>
                 </li>
               ))}
@@ -134,7 +134,7 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
                 </div>
               ))}
               <p className="page-figures">
-                The whole record is on the <Link href="/cv/">CV</Link>.
+                The whole record is on the <Link prefetch={false} href="/cv/">CV</Link>.
               </p>
             </div>
           </section>
@@ -149,7 +149,7 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
             <ul className="topic-run">
               {others.map((t) => (
                 <li key={t}>
-                  <Link href={`/topics/${t}/`}>{topicName(t)}</Link>
+                  <Link prefetch={false} href={`/topics/${t}/`}>{topicName(t)}</Link>
                 </li>
               ))}
             </ul>

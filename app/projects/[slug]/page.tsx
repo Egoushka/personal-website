@@ -60,9 +60,9 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
           title={project.name}
           figures={
             <>
-              <span>{project.lang}</span>
-              <span>{project.shape}</span>
-              <span>{project.status}</span>
+              <span>{project.lang}</span>{" "}
+              <span>{project.shape}</span>{" "}
+              <span>{project.status}</span>{" "}
               {project.href ? (
                 <span><a href={project.href} rel="noopener">the repository</a></span>
               ) : (
@@ -77,7 +77,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
       <ul className="topic-run" data-pagefind-body>
         {project.topics.map((t) => (
           <li key={t}>
-            <Link href={`/topics/${t}/`}>{topicName(t)}</Link>
+            <Link prefetch={false} href={`/topics/${t}/`}>{topicName(t)}</Link>
           </li>
         ))}
       </ul>
@@ -94,7 +94,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
         <span className="rail rail--label">Built with</span>
         <div>
           <p className="tech-run run">
-            {project.tech.map((t) => <span key={t}>{t}</span>)}
+            {project.tech.flatMap((t) => [<span key={t}>{t}</span>, " "])}
           </p>
           {project.phase && <p className="project-phase">{project.phase}</p>}
         </div>
@@ -106,8 +106,8 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
         <ul className="readings">
           {project.readings.map((reading) => (
             <li key={reading.label}>
-              <span className="reading-label">{reading.label}</span>
-              <span className="reading-value">{reading.value}</span>
+              <span className="reading-label">{reading.label}</span>{" "}
+              <span className="reading-value">{reading.value}</span>{" "}
               <span className="reading-source">{reading.source}</span>
             </li>
           ))}
@@ -147,7 +147,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
             </p>
           )}
           <p className="page-figures">
-            <span><Link href="/projects/">all projects</Link></span>
+            <span><Link prefetch={false} href="/projects/">all projects</Link></span>{" "}
             <span><a href={site.github} rel="noopener">my GitHub</a></span>
           </p>
           <Byline title={project.name} />

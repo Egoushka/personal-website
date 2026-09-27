@@ -201,8 +201,6 @@
 .wrap > *           { grid-column: 2; }        /* prose column — the default  */
 .wrap > .rail       { grid-column: 1; }        /* metadata                    */
 .wrap > .bleed      { grid-column: 1 / -1; }   /* section rules, wide figures */
-.wrap > .bleed-code { grid-column: 2 / -1;     /* code: prose + gutter        */
-                      margin-inline-start: calc(-1 * var(--gutter)); }
 
 /* A rail child and its prose sibling must share a row. Wrap the pair in `.row`
    when they must align to the same baseline. */
@@ -214,7 +212,6 @@
 }
 .row > .rail       { grid-column: 1; }
 .row > *           { grid-column: 2; }
-.row > .bleed-code { grid-column: 2 / -1; margin-inline-start: calc(-1 * var(--gutter)); }
 
 /* ============================================================================
    BASE
@@ -408,10 +405,14 @@ a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; 
 /* Paper and screen want different words in the same slot. */
 .print-only { display: none; }
 
+/* A count beside a name must not read as part of it ("C# / .NET 9"): a
+   hairline sets it apart, and the markup carries a hidden " items". */
 .rail-count {
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
   margin-inline-start: var(--s-2);
+  padding-inline-start: var(--s-2);
+  border-inline-start: var(--hair) solid currentColor;
 }
 
 /* ============================================================================
@@ -465,8 +466,16 @@ a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; 
   font: 400 var(--fs-rail)/var(--lh-rail) var(--figure);
   letter-spacing: var(--ls-rail);
   color: var(--ink-2);
+  align-items: baseline;
 }
-.site-footer a { color: var(--ink-2); text-decoration: none; }
+/* Standalone links, so no inline-text exception: 24px tall (WCAG 2.5.8). */
+.site-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  color: var(--ink-2);
+  text-decoration: none;
+}
 .site-footer a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
 
 /* ============================================================================
@@ -508,16 +517,14 @@ hr.bleed {
    filter; the space above it belongs to the header rule, not to a ghost. */
 .page-head--quiet:not(:has(.page-figures)):not(:has(.page-lede)) { padding-top: 0; }
 
-/* A RUN — several facts on one line, separated by space.
+/* A RUN — several facts on one line, separated by space. A flex line with a
+   gap: the separator is the absence of a glyph, so it cannot drift between
+   call sites.
 
-   This replaced the interpunct. There were three mechanisms for that dot: a
-   <span className="sep"> in twenty-odd JSX sites, a " · " baked into data
-   strings and joins, and five CSS `content:` rules — so "change the separator"
-   meant editing three unrelated things and missing one. A run is a flex line
-   with a gap: the separator is now the absence of a glyph, which cannot drift.
-
-   Children must be elements, not bare text nodes: an anonymous flex item gets
-   no gap. Every call site wraps its facts in <span>. */
+   Children must be elements, not bare text: an anonymous flex item gets no
+   gap. And put a {" "} between them — flex ignores a whitespace-only node, but
+   without one, extracted text (search excerpts, reader mode) runs the facts
+   together: "28 July 2026982 words". */
 .run, .page-figures, .home-status, .site-footer, .post-row .post-meta {
   display: flex;
   flex-wrap: wrap;
@@ -556,13 +563,7 @@ hr.bleed {
   align-content: start;
 }
 .prose > *           { grid-column: 2; }
-.prose > .rail       { grid-column: 1; }
 .prose > .bleed      { grid-column: 1 / -1; }
-.prose > .bleed-code { grid-column: 2 / -1; margin-inline-start: calc(-1 * var(--gutter)); }
-/* A .row inside the article must span both columns and inherit the parent's
-   tracks — otherwise `.prose > *` pins it to column 2 and its own grid
-   overflows the measure. */
-.prose > .row        { grid-column: 1 / -1; grid-template-columns: subgrid; }
 
 /* THE POST BODY — a block in the prose column, not a subgrid.
    The article used to span both columns so a header rail could sit beside the
@@ -923,11 +924,9 @@ figure.code pre {
   letter-spacing: var(--ls-rail);
   text-transform: uppercase;
 }
-/* Every item here is a link, so nothing is being told apart from anything —
-   the underline is pure decoration until the pointer is on one. */
+/* Links, so they carry the resting underline every other link does. */
 .topic-run a {
   color: var(--ink-2);
-  text-decoration-line: none;
   display: inline-flex;
   align-items: center;
   min-height: 24px;      /* WCAG 2.5.8 */
@@ -985,6 +984,7 @@ figure.code pre {
   height: 38px; padding: 0 16px;
   border-radius: var(--radius);
   background: var(--ink); color: var(--paper);
+  border: var(--hair) solid transparent;   /* the only boundary left in forced colours */
   font: 500 var(--fs-small)/1 var(--prose);
   letter-spacing: -0.01em;
   text-decoration: none; white-space: nowrap;
@@ -1024,7 +1024,9 @@ figure.code pre {
   color: var(--ink-2);
   transition: background .15s ease, border-color .15s ease;
 }
-.proof li:hover { background: var(--surface-2); border-color: var(--rule-firm); }
+/* Only a card that holds a link answers the pointer; a card that lifts and
+   leads nowhere promises a click it cannot keep. */
+.proof li:has(a):hover { background: var(--surface-2); border-color: var(--rule-firm); }
 .proof-label {
   display: block;
   font: 400 var(--fs-rail)/1.4 var(--figure);
@@ -1035,14 +1037,17 @@ figure.code pre {
   margin-bottom: var(--s-3);
 }
 .proof-text { display: block; margin-bottom: var(--s-4); }
+/* A link like every other link — ink, resting underline — not an accent-coloured
+   word that only underlines on hover. The flex box gives it a 24px target. */
 .proof-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;      /* WCAG 2.5.8 */
   font: 400 var(--fs-small)/1 var(--prose);
   white-space: nowrap;
   margin-inline-end: var(--s-4);
-  color: var(--accent);
-  text-decoration: none;
+  color: var(--ink);
 }
-.proof-link:hover { text-decoration: underline; }
 
 /* ============================================================================
    THE INSTRUMENT PANEL
@@ -1201,6 +1206,8 @@ figure.code pre {
   text-transform: uppercase;
   color: var(--ink-2);
 }
+/* Status set apart by weight, not colour: no state here needs an alarm. */
+.project-state { font-weight: var(--w-head); color: var(--ink); }
 
 /* The byline closes the page under the links; it has no outer margin of its own. */
 .project-elsewhere .byline { margin-top: var(--s-4); }
@@ -1363,51 +1370,11 @@ figure.code pre {
   color: var(--ink-2);
 }
 
-/* Name + description as a run-in definition list, not a card grid. A two-column
-   dl inside the measure would plant a second vertical rule a few tens of pixels
-   from the real rail's gutter: two margins at two scales. One rail per page. */
-.uses-group + .uses-group { margin-top: var(--s-8); }
-.uses-list { margin: 0; }
-.uses-item {
-  font: 400 var(--fs-small)/var(--lh-body) var(--prose);
-  color: var(--ink-2);
-}
-.uses-item + .uses-item { margin-top: var(--s-4); }
-.uses-item dt,
-.uses-item dd { display: inline; margin: 0; }
-.uses-item dt {
-  font-size: var(--fs-body);
-  font-weight: 600;
-  color: var(--ink);
-}
-.uses-item dd::before {
-  /* NBSPs, not plain spaces: the trailing space of generated content collapses
-     and the dash ends up glued to the description. */
-  content: "\00a0\2014\00a0";
-  color: var(--rule-firm);
-}
-
-/* Optional outbound link. It used to be a ↗ glyph in a 24px box, which is a
-   mark you have to learn; it is the word "site" now, which is one you do not.
-   The box stays for the 24×24 target (WCAG 2.5.8). */
-.uses-link {
-  display: inline-block;
-  min-height: 24px;
-  padding-inline: 2px;
-  font: 400 var(--fs-rail)/24px var(--figure);
-  color: inherit;
-  text-decoration-color: var(--accent);
-  vertical-align: -7px;
-}
-.uses-link:hover { text-decoration-thickness: 2px; }
-
 /* Live box state, appended when /status.json is fresh. Renders nothing when it
    is missing or older than 48 hours. */
 .uses-status { display: flex; flex-direction: column; gap: 5px; }
 .uses-status-ok  { color: var(--accent); }
 .uses-status-bad { color: var(--ink); }
-
-.skills-run { font-size: var(--fs-small); margin: 0; }
 
 /* SKILLS — a definition list per group. Name on one line, where it stands on
    the next. Not a bar chart, not a five-dot rating: a proficiency bar is a
@@ -1729,9 +1696,8 @@ figure figcaption {
      back. Not .wrap or .row: the header, panel and figures use the width. */
   .prose > p, .prose > ul, .prose > ol, .prose > blockquote,
   .page-lede, .row > p { max-inline-size: var(--measure); }
-  .wrap > *, .wrap > .rail, .wrap > .bleed, .wrap > .bleed-code,
-  .row > *, .row > .rail, .row > .bleed-code { grid-column: 1; }
-  .wrap > .bleed-code, .row > .bleed-code { margin-inline-start: 0; }
+  .wrap > *, .wrap > .rail, .wrap > .bleed,
+  .row > *, .row > .rail { grid-column: 1; }
 
   .rail {
     flex-direction: row;
@@ -1741,17 +1707,13 @@ figure figcaption {
     padding-top: 0 !important;
   }
   .rail { gap: 0 var(--s-5); }
-  /* The TOC takes its own line and drops the separator — it is a disclosure,
-     not another fact in the run. */
-  .rail > .toc-details { flex-basis: 100%; margin-top: var(--s-2); }
-  .rail > .toc-details::before { content: none !important; }
+  /* The summary names the list here, so its label would say it twice. */
   .toc-details > .rail--label { display: none; }
   /* A group label starts a new strip rather than continuing the run. */
   .rail--group { border-top: 0; padding-top: 0; margin-top: 0; }
 
   .page-head, .home-greeting { padding-top: var(--s-7); }
   .home-greeting h1 { font-size: var(--fs-h1); }
-  .home-intro { font-size: var(--fs-body); }
 
   /* The TOC becomes a closed <details> — the only interactive rail element, and
      it needs no JavaScript. */
@@ -1782,7 +1744,6 @@ figure figcaption {
   .post-aside { position: static; max-height: none; overflow: visible; }
   .post-head { padding-top: var(--s-7); }
 
-  .uses-item { font-size: var(--fs-small); }
   /* One column: each label must sit nearer its own item than the one above. */
   .now-list  { row-gap: 0; }
   .now-list > .rail { padding-top: 0; margin-bottom: var(--s-1); }
@@ -2165,6 +2126,11 @@ figure figcaption {
 .board-meter { height: 5px; border-radius: 3px; }
 .board-list > li.is-measured .board-meter { background: var(--surface-2); }
 .board-fill { display: block; width: var(--w); height: 100%; border-radius: 3px; background: var(--accent); }
+@media (forced-colors: active) {
+  .board-meter, .board-fill { forced-color-adjust: none; }
+  .board-list > li.is-measured .board-meter { background: Canvas; outline: 1px solid GrayText; }
+  .board-fill { background: Highlight; }
+}
 
 /* Only a measured row prints one; an unmeasured row prints nothing. */
 .board-num {
@@ -2263,6 +2229,14 @@ figure figcaption {
     45deg, color-mix(in srgb, var(--warn) 6%, transparent) 0 4px, transparent 4px 11px);
 }
 .jr-now { position: absolute; top: 0; bottom: 0; left: var(--l); width: 1px; background: var(--accent); opacity: .5; }
+/* Forced colours drop backgrounds, and with them the gridlines, "now" and the
+   gaps the lede promises. Hand them back in system colours. */
+@media (forced-colors: active) {
+  .jr-line, .jr-now, .jr-gap { forced-color-adjust: none; }
+  .jr-line { background: GrayText; }
+  .jr-now { background: Highlight; opacity: 1; }
+  .jr-gap { background: repeating-linear-gradient(45deg, GrayText 0 1px, transparent 1px 8px); }
+}
 
 .jr-rows { list-style: none; margin: 0; padding: 0; position: relative; }
 .jr-row {

@@ -115,6 +115,7 @@ export default function Journey({
                 <span className="jr-track">
                   {r.era ? (
                     <Link
+                      prefetch={false}
                       href={`/cv/#${r.era}`}
                       className="jr-bar"
                       style={geometry}
@@ -138,7 +139,7 @@ export default function Journey({
             <span className="jr-read-head">
               <strong>{shown.label}</strong>
               <span>{shown.when}</span>
-              {shown.era && <Link href={`/cv/#${shown.era}`}>read the chapter</Link>}
+              {shown.era && <Link prefetch={false} href={`/cv/#${shown.era}`}>read the chapter</Link>}
             </span>
             <span className="jr-read-tags">
               {shown.tags.map((t) => <span key={t}>{t}</span>)}
