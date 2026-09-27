@@ -70,8 +70,8 @@ Rules:
 
 **No figure on this site is typed by hand if the build can count it.**
 
-[lib/readings.ts](../lib/readings.ts) counts post totals, word counts, ages and the
-code-to-prose ratio from `content/posts`, `lib/site.ts` and the source tree, on every
+[lib/readings.ts](../lib/readings.ts) counts post totals, word counts, lines of code
+and CSS, and project totals from `content/posts`, `lib/site.ts` and the source tree, on every
 build. Any page printing a figure imports it from there rather than restating it, so a
 page and a claim cannot drift.
 
@@ -95,12 +95,12 @@ Caddy behind Traefik behind Cloudflare. There is no Node runtime in production.
 
 | Constraint | Consequence for design |
 |---|---|
-| **No server.** No server actions, middleware, ISR, `revalidate`, rewrites, redirects or `headers` in `next.config`. | Redirects for moved routes live in [deploy/Caddyfile](../deploy/Caddyfile). There are six of them and they are load-bearing. |
-| **Client components are allowed, sparingly.** Three exist: `Search`, `UsesStatus`, `TopicMap`, plus `ProjectFilter`. | Each must render something useful before JS runs or degrade to nothing. `ProjectFilter` server-renders the full list and only ever *removes* rows. |
-| **One global stylesheet**, [app/globals.css](../app/globals.css). No Tailwind, no CSS modules, no `style={{}}`. | Deliver CSS as plain class names and custom properties that drop into that file. |
+| **No server.** No server actions, middleware, ISR, `revalidate`, rewrites, redirects or `headers` in `next.config`. | Redirects for moved routes live in [deploy/Caddyfile](../deploy/Caddyfile). There are seven of them and they are load-bearing. |
+| **Client components are allowed, sparingly** — each one justified; the current list and reasons are in [CLAUDE.md](../CLAUDE.md). | Each must render something true before JS runs, or nothing. The filters server-render the full list and only ever remove or reorder rows; with scripting off their controls are hidden. No relative dates, no `Date.now()` or `Math.random()` in render. |
+| **One global stylesheet**, [app/globals.css](../app/globals.css). No Tailwind, no CSS modules, no CSS-in-JS. The only inline style sets a custom property for data-driven geometry, read by a class. | Deliver CSS as plain class names and custom properties that drop into that file. |
 | **Self-hosted fonts only**, via `next/font/google`. | You may change the typefaces, but they must load through `next/font`. Never add a `<link>` to fonts.googleapis.com — it puts a render-blocking cross-origin request on the critical path and loses the `size-adjust` fallback metric that keeps CLS at 0. |
 | **`next/image` optimization is off.** | Plain `<img>`, or `next/image` with `unoptimized`. |
-| **A strict CSP** — `script-src 'self'`. | No CDN scripts, no external stylesheets, no remote fonts, no third-party embeds. |
+| **A strict CSP** — `script-src 'self'`, no `'unsafe-eval'`. | No CDN scripts, no external stylesheets, no remote fonts, no third-party embeds, no eval. The one embed, comments, is first-party at `/c/` ([ADR 0005](adr/0005-comments-are-a-bounded-exception.md)). |
 | **`trailingSlash: true`.** | Every internal link carries the slash. A link to `/writing` costs a redirect. |
 | **OG images via `next/og`.** | Satori supports **flexbox only — no CSS grid** — and caps the bundle at 500 KB. Its colours are hard-coded in [lib/og.tsx](../lib/og.tsx); keep them in step with the tokens by hand. |
 
@@ -125,67 +125,71 @@ this rewrite. That is the bar; a redesign shipping at 92 accessibility is a regr
 
 ## Design tokens
 
-Six colours, from `:root` in [app/globals.css](../app/globals.css). Warm paper, one
-amber accent. The previous design banned an accent on purpose and shipped a site the
-colour of a tax return; the accent is now allowed to be an accent, and it means
-**link**.
+Seven colours, from `:root` in [app/globals.css](../app/globals.css). Cool near-black
+by default, true white in light, one amber accent that means **link**, and one warning
+colour that means only "this broke".
 
 ```css
 /* dark — the default */
---paper:     #191714;
---ink:       #EDE8DF;   /* 14.7:1 on --paper */
---ink-2:     #A8A096;   /*  6.9:1 */
---rule:      #2E2A25;   /* decorative hairline only */
---rule-firm: #6E675E;   /*  3.2:1 — every control edge */
---accent:    #E0A257;   /*  8.1:1 — links, and only links */
+--paper:     #0A0B0D;
+--ink:       #F2F4F6;   /* 18.2:1 on --paper */
+--ink-2:     #98A0A8;   /*  7.4:1 */
+--rule:      #1E2126;   /* decorative hairline only */
+--rule-firm: #5B616A;   /*  3.1:1 — every control edge */
+--accent:    #F2A03D;   /*  9.2:1 — links, and only links */
+--warn:      #E2725B;   /*  5.6:1 — only ever "this broke" */
 
-/* light — warm stock, not an inversion */
---paper: #FBF8F2;  --ink: #1C1A16;   /* 16.4:1 */
---ink-2: #55504A;  /* 7.5:1 */
---rule:  #E3DCD0;  --rule-firm: #8A8378;  /* 3.5:1 */
---accent: #9A5B12; /* 5.1:1 */
+/* light */
+--paper: #FFFFFF;  --ink: #0D0E10;   /* 19.1:1 */
+--ink-2: #5B6169;  /* 6.2:1 */
+--rule:  #E9EBEE;  --rule-firm: #8A9099;  /* 3.3:1 */
+--accent: #A85D08; /* 5.1:1 */
+--warn:  #A63B22;  /* 5.9:1 */
 ```
 
 Those ratios are computed, not estimated. They are floors a replacement has to clear.
+Raised surfaces (`--surface`, `--surface-2`) are mixed from `--ink` and `--paper`, so a
+theme change carries them.
 
-Two faces: **Literata** for prose, **Inter** for figures, labels and nav. Inter
-replaced Archivo Narrow, which was a condensed face drawn for dense tabular setting —
-correct for a four-column ledger, wrong for this. Code uses a system monospace with no
-webfont. Figures set in `--figure` need `font-variant-numeric: tabular-nums`.
+Two webfonts: **Inter** for everything read (body, h3, labels), **Bricolage Grotesque**
+for display (h1, h2, list titles) and never below about 26px — smaller, it is a grotesk
+beside a grotesk and a second download for nothing. Figures, rails and code use the
+system monospace with no webfont; figures need `font-variant-numeric: tabular-nums`.
+Type sizes come from one fluid modular scale (`--step-*`), used only through the
+`--fs-*` aliases.
 
 ---
 
 ## Pages
 
 `/` · `/writing/` · `/writing/[slug]/` · `/topics/[topic]/` · `/projects/` ·
-`/projects/[slug]/` · `/about/` · `/cv/` · `/links/` · `/search/` · feeds
+`/projects/[slug]/` · `/about/` · `/cv/` · `/skills/` · `/journey/` · feeds · the 404
 
-- **`/` (home)** — greeting, latest posts, projects, topics, one counted note. No hero, no feature, no metaphor.
-- **`/writing/[slug]/`** — the page that matters most and has the most machinery: TOC, heading anchors, per-block copy buttons, Shiki with separate light and dark themes, related post. Long-form reading is the primary job.
-- **`/topics/[topic]/`** — gathers posts, projects **and jobs** for one topic. `Job.topics[]` is what makes this more than a tag page: it can show that a technology was used in paid work, not just in a side project. Generated only for topics something actually references.
+- **`/` (home)** — greeting and email, a proof row of things a stranger can check, the live instrument panel, then latest writing, running projects and topics.
+- **`/writing/[slug]/`** — the page that matters most and has the most machinery: a contents list with the reader's position, numbered section permalinks, Copy on each code block, Shiki with separate light and dark themes, the project it is about, related post, lazy-loaded comments. Long-form reading is the primary job.
+- **`/topics/[topic]/`** — gathers posts, projects **and jobs** for one topic. `Job.topics[]` is what makes this more than a tag page: it can show that a technology was used in paid work, not just in a side project. Generated only for topics something actually references; below two items it is `noindex`.
 - **`/cv/`** — must print to exactly **one A4 page**. Verified by rendering, not by eye; see below.
-- **`/about/`** — absorbed `/now/` and `/uses/`, both of which were routes whose whole job was proving they were fresh. Carries the stack graph.
+- **`/about/`** — absorbed `/now/`, `/uses/` and `/links/`; ends in "Working with me" (`#contact`).
+- **`/skills/`** is reached from About and the CV; **`/journey/`** from the footer. Neither is in the nav.
 
-There is a primary nav again — Writing · Projects · About · CV. The previous design
-had none by explicit rule, on the grounds that the trial balance was the index. A
-stranger cannot navigate by claims they do not know exist.
+The primary nav is **Writing · Projects · About · CV**, with search (⌘K / Ctrl+K) and
+the theme toggle beside it. The CV is in the nav because the home page advertises
+contract work, and the CV is what a buyer forwards.
 
 ---
 
 ## Verifying the CV print sheet
 
-The print block in `globals.css` used to carry a comment saying pagination "cannot be
-measured from this repo's tooling". It can:
+`npm run smoke` prints `/cv/` to A4 in Chromium and fails unless it is one page. The
+page count depends on the platform — the same build has printed one page on macOS and
+two on Linux, which is what CI runs — so trust CI's result, or run the smoke in
+`mcr.microsoft.com/playwright:v1.56.1-jammy`. To look at the sheet yourself, serve the
+build (`npm run serve:prod`) and print to PDF:
 
 ```bash
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --disable-gpu \
-  --no-pdf-header-footer --print-to-pdf=/tmp/cv.pdf http://localhost:4321/cv/
+  --no-pdf-header-footer --print-to-pdf=/tmp/cv.pdf http://127.0.0.1:8080/cv/
 ```
-
-Count `/Type /Page` occurrences in the PDF, or `qlmanage -t -s 1400 -o /tmp /tmp/cv.pdf`
-to look at it. Serve `./out` on :4321 with the `static` launch config first. It was
-**two pages** when measured this way, despite a comment claiming the cuts had been
-made; the cuts below are what brought it to one.
 
 If it grows past a single sheet again, cut in this order:
 
@@ -203,10 +207,9 @@ Do not shrink line-height below 1.38 and do not drop the masthead rule.
 ## Repo facts
 
 - Next.js 16 App Router, React 19, TypeScript. `@/*` maps to the repo root.
-- `npm run build` is the real gate — it type-checks and renders every route.
-- No tests, no ESLint config.
-- CI on every PR: `validate → typecheck → build → caddy validate → lychee` link check.
+- The gate is `npm run validate && npm run typecheck && npm test && npm run build && npm run check`;
+  CI adds `caddy-test`, the Playwright + axe smoke and a lychee link check. No ESLint.
 - **Push to `main` publishes the live site.** Work on a branch.
-- Posts are `content/posts/*.md`; the filename is the slug. Frontmatter is `title, date, description, topics`, plus optional `spanDays`.
-- **Topics are a closed vocabulary** in [lib/topics.ts](../lib/topics.ts). Adding one means editing that file *and* `public/admin/config.yml`.
-- **A Caddyfile change needs `rsync --inplace` and an explicit `caddy reload`** — it is a single-file bind mount, so a normal rsync gives it a new inode the container never sees.
+- Posts are `content/posts/*.md`; the filename is the slug. Frontmatter is `title, date, description, topics`, plus optional `spanDays`, `updated` and `correction`.
+- **Topics are a closed vocabulary** in [lib/topics.ts](../lib/topics.ts). Adding one means editing that file.
+- **A Caddyfile change ships with the deploy**: `rsync --inplace` (it is a single-file bind mount, so a normal rsync gives it a new inode the container never sees), after which Caddy's `--watch` loads it. There is no reload step.
