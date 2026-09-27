@@ -405,12 +405,15 @@ a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; 
 /* Paper and screen want different words in the same slot. */
 .print-only { display: none; }
 
-/* A count beside a name must not read as part of it ("C# / .NET 9"): a
-   hairline sets it apart, and the markup carries a hidden " items". */
+/* A count beside a name must not read as part of it ("C# / .NET 9"). The
+   markup carries a hidden unit; where name and count share a colour — the
+   topic run — a hairline sets the count apart. A chip's border already does. */
 .rail-count {
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
   margin-inline-start: var(--s-2);
+}
+.topic-run .rail-count {
   padding-inline-start: var(--s-2);
   border-inline-start: var(--hair) solid currentColor;
 }
@@ -432,6 +435,10 @@ a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; 
   flex-wrap: wrap;
 }
 .site-header .brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;      /* WCAG 2.5.8: line-height 1 left it 17px tall */
+  margin-block: calc((1lh - 24px) / 2);   /* the target grows, the line does not */
   font: var(--w-head) var(--fs-body)/1 var(--prose);
   letter-spacing: -0.015em;
   color: var(--ink);
@@ -459,20 +466,26 @@ a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; 
   text-underline-offset: 5px;
 }
 
+/* A run like any other, plus a row gap: wrapped, its 24px targets would
+   otherwise overlap the row above. */
 .site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-5);
   margin-top: var(--s-10);
   padding: var(--s-6) 0;
   border-top: var(--hair) solid var(--rule);
   font: 400 var(--fs-rail)/var(--lh-rail) var(--figure);
   letter-spacing: var(--ls-rail);
   color: var(--ink-2);
-  align-items: baseline;
 }
-/* Standalone links, so no inline-text exception: 24px tall (WCAG 2.5.8). */
+/* Standalone links, so no inline-text exception: 24px tall (WCAG 2.5.8). The
+   negative margin keeps the line where it was; only the target grows. */
 .site-footer a {
   display: inline-flex;
   align-items: center;
   min-height: 24px;
+  margin-block: calc((1lh - 24px) / 2);
   color: var(--ink-2);
   text-decoration: none;
 }
@@ -525,7 +538,7 @@ hr.bleed {
    gap. And put a {" "} between them — flex ignores a whitespace-only node, but
    without one, extracted text (search excerpts, reader mode) runs the facts
    together: "28 July 2026982 words". */
-.run, .page-figures, .home-status, .site-footer, .post-row .post-meta {
+.run, .page-figures, .home-status, .post-row .post-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 0 var(--s-5);
