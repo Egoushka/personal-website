@@ -42,7 +42,7 @@ the secret SOPS-encrypted like every other one, never in the compose file:
 ```yaml
 services:
   remark42:
-    image: umputun/remark42:latest
+    image: umputun/remark42:<version>   # pinned by version or digest, never latest
     restart: unless-stopped
     environment:
       - REMARK_URL=https://hrabovskyi.online/c
@@ -60,7 +60,12 @@ services:
 
 `./var` is not optional — the container exits on boot without it, with
 `ERROR: /srv/var doesn't exist`. That is how it fails; it does not start and
-then lose data quietly.
+then lose data quietly. It is also everything — comments, votes, users — so back it
+up with the rest of the box's state.
+
+Comments are a deliberate, bounded exception to "the site has no server";
+[ADR 0005](adr/0005-comments-are-a-bounded-exception.md) records the bounds. The site
+loads the widget lazily, when the comments section nears the viewport.
 
 `REMARK_URL` must be the public `/c` URL. It is what the widget checks against
 and what the OAuth callback is built from.

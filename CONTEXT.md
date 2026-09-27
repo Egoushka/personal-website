@@ -57,12 +57,12 @@ vocabularies and the split was the bug
 ### Figures
 
 **Reading**:
-A number the build counts rather than a person types — post count, word count, days
-since publishing, lines of source. A figure that cannot be counted is not a Reading
-and must name its source.
+A number the build counts rather than a person types — post count, word count,
+reading time, lines of source. A figure that cannot be counted is not a Reading and
+must name its source.
 _Avoid_: stat, metric, number
 
 **Claim** *(retired)*:
 An assertion about the owner set against a Reading, printed as a row of a double-entry
-trial balance. The structure the Site was built around until 2026-08 and is being
+trial balance. The structure the Site was built around until 2026-08; it has been
 removed. The word stays here so the term is recognised in git history, not reused.
