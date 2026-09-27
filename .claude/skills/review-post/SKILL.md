@@ -36,15 +36,19 @@ bullet lists standing in for prose, a lesson stated before it was earned.
 - `##` headings that would make a useful table of contents — they become one.
 - At least one internal link with a trailing slash.
 - Topics from `lib/topics.ts` only.
+- `updated` / `correction` only for a factual change to a published post, never for
+  rewording; `correction` requires `updated`, and neither belongs on a draft.
 
 ## 4. Accessibility
 
 - Every image has meaningful `alt` (or `alt=""` if genuinely decorative).
-- Code blocks carry a language so Shiki highlights them — and the language is in
-  `lib/highlight.ts`, or it silently renders as plain text.
+- Code blocks carry a language so Shiki highlights them and the block gets a header —
+  and the language is one `lib/highlight.ts` loads (bash, yaml, json, csharp,
+  typescript, sql), or it silently renders as plain text.
 - No "click here" link text.
 
 ## Finish by
 
-Running `npm run validate` and reporting the actual output. Then state clearly
+Running `npm run validate` and reporting the actual output. It reads `content/posts/`
+only; for a draft, say that it was not validated. Then state clearly
 whether you would publish it as-is.
