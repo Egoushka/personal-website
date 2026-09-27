@@ -59,8 +59,8 @@
 		# the page unstyled.
 		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 
-		# The commit this file was deployed from. deploy.yml and deploy/deploy.sh
-		# write it over the placeholder before shipping and poll for it afterwards:
+		# The commit this file was deployed from. deploy.yml writes it over the
+		# placeholder before publishing, and caddy-test polls for it afterwards:
 		# it is how a deploy knows Caddy has loaded the new file. On :81 it names
 		# the production deploy, not the prelive build.
 		X-Site-Rev "__DEPLOY_REV__"
@@ -139,6 +139,15 @@
 	header @ogimages {
 		Content-Type "image/png"
 		Cache-Control "public, max-age=3600, s-maxage=86400"
+	}
+
+	# ── live state ────────────────────────────────────────────────────────────
+	# /status.json is written on the box every ten minutes (homelab-gitops
+	# host/cron.d/website-status) into its own mount, /srv-status, so no deploy
+	# can delete it. Both sites serve the same document.
+	handle /status.json {
+		root * /srv-status
+		file_server
 	}
 
 	# ── routes that moved ─────────────────────────────────────────────────────

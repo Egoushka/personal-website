@@ -4,22 +4,16 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      full:
-        description: "Also prune: delete the /_next/ files this build no longer has"
-        type: boolean
-        default: false
 
-# One deploy at a time, and a running one is never cancelled: a cancelled rsync
-# leaves the live site half old, half new. A push during a deploy waits; a newer
-# push replaces a deploy that is still waiting (a pending `full` prune included,
-# so dispatch it again).
+# One deploy at a time, and a running one is never cancelled: a cancelled run
+# can leave a published build unverified. A push during a deploy waits; a newer
+# push replaces a deploy that is still waiting.
 concurrency:
   group: deploy-production
   cancel-in-progress: false
 
 # contents: write publishes the build to the deploy-site release, which the VPS
-# pulls. The rsync still authenticates to the VPS with a deploy key.
+# pulls. Nothing here reaches the VPS: it has no inbound deploy path (M5.7).
 permissions:
   contents: write
 
@@ -29,12 +23,6 @@ defaults:
     shell: bash
 
 env:
-  # <vps-host>, tailnet 100.64.0.2.
-  VPS_HOST: <origin-ip>
-  # Its only command on the box is `rrsync -wo /opt/stacks/website`, forced in
-  # authorized_keys: every remote path below is relative to /opt/stacks/website,
-  # and a write-only rsync is all it can do — no shell, no docker, no reads.
-  VPS_USER: webdeploy
   SITE: https://hrabovskyi.online
   # The Caddy that validates and tests the Caddyfile. Pin it to the box's.
   CADDY_IMAGE: caddy:2-alpine
@@ -57,8 +45,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Everything before "Configure SSH" is a gate: nothing has reached the box
-      # yet. It is CI's chain without the browser smoke test.
+      # Everything before "Publish" is a gate: nothing can reach the box yet. It
+      # is CI's chain without the browser smoke test.
       - name: Validate content
         run: npm run validate
 
@@ -104,12 +92,13 @@ jobs:
           sed "s/__DEPLOY_REV__/$GITHUB_SHA/" deploy/Caddyfile > "$RUNNER_TEMP/Caddyfile"
           grep -qF "X-Site-Rev \"$GITHUB_SHA\"" "$RUNNER_TEMP/Caddyfile"
 
-      # The pull path (homelab-gitops host/website-pull.sh, M5.7): the box fetches
-      # this archive from the `deploy-site` release every 2 minutes and checks its
-      # sha256, so it needs no inbound SSH. It runs alongside the rsync below until
-      # it is verified; then the rsync and the deploy key go. It carries the
-      # stamped Caddyfile: the placeholder one would serve X-Site-Rev
-      # "__DEPLOY_REV__", which the live verify and the probe both reject.
+      # The box (homelab-gitops host/website-pull.sh, M5.7) fetches this archive
+      # from the `deploy-site` release every 2 minutes, checks its sha256 and
+      # installs it in three passes: /_next/ without --delete (HTML still cached
+      # at the edge names the old chunks), the Caddyfile in place, then the rest
+      # with --delete except /_next/ and /status.json. It carries the stamped
+      # Caddyfile: the placeholder one would serve X-Site-Rev "__DEPLOY_REV__",
+      # which the live verify and the probe both reject.
       - name: Package the build
         run: |
           echo "$GITHUB_SHA" > out/build.txt
@@ -129,37 +118,21 @@ jobs:
             --title "deploy-site (moving)" --notes "Pulled by the VPS every 2 minutes. Replaced on every push to main."
           gh release upload deploy-site site.tar.gz site.tar.gz.sha256 --clobber
 
-      - name: Configure SSH
-        env:
-          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+      # The box polls every 2 minutes and installs build.txt in its last pass,
+      # so this commit's build.txt means the whole build has landed. The query
+      # string misses the edge cache, which holds .txt for up to 10 minutes.
+      - name: Wait for the box to pull this build
+        id: landed
         run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-
-      # Three passes, in this order, so no reader gets a page whose assets are
-      # missing:
-      #  1. /_next/ first, deleting nothing: new pages need the new chunks, and
-      #     HTML still cached at the edge (s-maxage=600) needs the old ones.
-      #  2. The Caddyfile, before the pages, so a page that moves has its redirect
-      #     in place first. --inplace is load-bearing: the Caddyfile is a
-      #     single-file bind mount, and rsync's usual write-then-rename gives it a
-      #     new inode the container never sees.
-      #  3. Everything else, deleting what the build no longer has, except
-      #     /_next/ (pass 1 keeps the old chunks) and /status.json (cron writes it
-      #     on the box; no build has it).
-      # Old chunks accumulate until a dispatch with `full` prunes them.
-      - name: Sync to the VPS
-        id: sync
-        run: |
-          ssh="ssh -i $HOME/.ssh/id_ed25519"
-          box="$VPS_USER@$VPS_HOST"
-          rsync -azi -e "$ssh" out/_next/ "$box:site/_next/"
-          rsync -azi --inplace -e "$ssh" "$RUNNER_TEMP/Caddyfile" "$box:Caddyfile"
-          rsync -azi --delete --exclude=/status.json --exclude=/_next/ -e "$ssh" out/ "$box:site/"
+          deadline=$((SECONDS + 360))
+          until [ "$(curl -fsS --max-time 10 "$SITE/build.txt?cb=$GITHUB_SHA-$SECONDS" 2>/dev/null)" = "$GITHUB_SHA" ]; do
+            if [ "$SECONDS" -ge "$deadline" ]; then
+              echo "::error title=The box did not pull this build::$SITE/build.txt does not name $GITHUB_SHA after 6 minutes. Check /var/log/website-pull.log on the VPS."
+              exit 1
+            fi
+            sleep 10
+          done
+          echo "live after ${SECONDS}s"
 
       # Optional, and only with both secrets. Without them, HTML reaches readers
       # when the edge's copy expires (s-maxage=600).
@@ -176,25 +149,12 @@ jobs:
           echo "purged=true" >> "$GITHUB_OUTPUT"
           echo "Cloudflare cache purged"
 
-      # After the purge, not before it: once the edge has dropped the old HTML,
-      # nothing it serves names the chunks this deletes.
-      - name: Prune old chunks
-        if: inputs.full
-        env:
-          PURGED: ${{ steps.purge.outputs.purged }}
-        run: |
-          if [ "$PURGED" != true ]; then
-            echo "::warning::No Cloudflare purge ran, so HTML the edge still holds may name chunks this deletes."
-          fi
-          rsync -azi --delete --exclude=/status.json -e "ssh -i $HOME/.ssh/id_ed25519" \
-            out/ "$VPS_USER@$VPS_HOST:site/"
-
       # Waits up to 60 s for X-Site-Rev to name this commit (Caddy has loaded the
       # new Caddyfile), then repeats the build's tests on the live site: this
       # build's id in /, the pages, the redirects, the cards, the 404s, the CSP
       # and robots.txt. Cache-Control is left to the local run (see the script).
-      # Runs even when the purge or prune failed: once the sync has happened,
-      # whether the live site is healthy is the thing to know.
+      # Runs even when the purge failed: once the build has landed, whether the
+      # live site is healthy is the thing to know.
       - name: Verify the live site
-        if: ${{ !cancelled() && steps.sync.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.landed.outcome == 'success' }}
         run: BASE_URL="$SITE" EXPECT_REV="$GITHUB_SHA" bash scripts/caddy-test.sh

@@ -145,14 +145,14 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
 
 - **A push to `main` is a live deploy** ([deploy.yml](.github/workflows/deploy.yml)): CI
   minus smoke, `X-Site-Rev` stamped, the build (with the stamped Caddyfile) published to
-  the `deploy-site` release the box pulls (homelab-gitops M5.7), a three-pass rsync
-  (`/_next/` additive → Caddyfile `--inplace` → the rest with `--delete`), optional
-  Cloudflare purge, then `caddy-test` live. The rsync goes once the pull is verified.
-  Get explicit approval before pushing to `main`.
-- The key is `webdeploy`, forced to `rrsync -wo /opt/stacks/website`: no shell, no docker.
-  **No `caddy reload` or `docker compose up -d`** — Caddy `--watch` reloads within a second,
-  and a file that fails to load keeps the old config. `--inplace` matters: the Caddyfile
-  is a single-file bind mount.
+  the `deploy-site` release, which the box pulls every 2 min and installs in three passes
+  (homelab-gitops `host/website-pull.sh`: `/_next/` additive → Caddyfile in place → the
+  rest with `--delete`), a wait for the live `build.txt`, optional Cloudflare purge, then
+  `caddy-test` live. Get explicit approval before pushing to `main`.
+- Nothing here reaches the VPS: no SSH key, no deploy user. **No `caddy reload` or
+  `docker compose up -d`** — Caddy `--watch` reloads within a second, and a file that
+  fails to load keeps the old config. The pull writes the Caddyfile in place: it is a
+  single-file bind mount.
 - The Caddyfile is plain HTTP: `:80` production, `:81` prelive, one shared `(site)`
   snippet — never let them drift. No `tls`, hostname or www redirect (the edge is Traefik,
   `/opt/stacks/pangolin/config/traefik/dynamic_config.yml`). Each header in one place;
@@ -165,12 +165,11 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
   are `handle` blocks with `redir * <to> permanent`: bare `redir` sorts after `try_files`,
   and without `*` the target parses as a matcher.
 - **Prelive** ([prelive.yml](.github/workflows/prelive.yml)), every same-repo PR: builds with
-  `SITE_URL=http://100.64.0.2:8091`, publishes `out/` to the `deploy-prelive` release, then
-  rsyncs with `PRELIVE_SSH_KEY` after a dry-run guard (`deploy/prelive-guard.sh`); never
-  ships the Caddyfile. Without the secret the rsync fails; the publish has already run.
-  `probe.yml` checks the live site and `/status.json` every 6 h. `deploy/deploy.sh` is the
-  manual path; it refuses with `SITE_URL` set or a dirty tree. Compose, cron and the
-  Remark42 container belong to homelab-gitops.
+  `SITE_URL=http://100.64.0.2:8091` and publishes `out/` to the `deploy-prelive` release,
+  which the box mirrors into the prelive root; never ships the Caddyfile. `probe.yml`
+  checks the live site and `/status.json` every 6 h. The manual path is re-running
+  `deploy.yml` from the Actions tab. Compose, cron, the pull script and the Remark42
+  container belong to homelab-gitops.
 
 ## Publishing
 
