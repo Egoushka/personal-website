@@ -32,7 +32,9 @@ export default function CV() {
         <a href={site.linkedin} rel="noopener">linkedin.com/in/{site.linkedinHandle}</a>
         <span>{site.location}</span>
       </div>
-      <div className="masthead">
+      {/* Search indexes the record and nothing around it: the masthead and
+          each section below carry data-pagefind-body. */}
+      <div className="masthead" data-pagefind-body>
         <h1>{site.name}</h1>
         <p className="role-title">{site.role}</p>
       </div>
@@ -58,6 +60,7 @@ export default function CV() {
           <section
             className={`row section cv-era${era.jobs.length === 0 ? " print-hide" : ""}`}
             id={era.slug}
+            data-pagefind-body
           >
             <div className="rail">
               {/* Paper gets one "Experience" label above the whole record;
@@ -107,7 +110,7 @@ export default function CV() {
       ))}
 
       <hr className="bleed" />
-      <section className="row section">
+      <section className="row section" data-pagefind-body>
         <h2 className="rail rail--label">Projects</h2>
         <div>
           {projects.map((p) => (
@@ -129,19 +132,16 @@ export default function CV() {
 
       {/*
         Skills, curated and grouped, each saying where it actually stands.
-
-        The previous version was one undifferentiated run of nine words derived
-        from the topic vocabulary, which is why it printed Flutter — one app on
-        my own phone — and could not print Clean Architecture, EF Core or SQL
-        Server at all. The list is chosen now; the honesty moved into the
-        second line, which has to be specific enough to be wrong.
+        The list is chosen rather than derived from the topic vocabulary; the
+        honesty is in the second line, which has to be specific enough to be
+        wrong.
 
         `Measured` prints the share of my editor time from my own Wakapi, and
         renders nothing when the box is not publishing. On paper the second
         lines are hidden and this compresses back to names.
       */}
       <hr className="bleed" />
-      <section className="row section">
+      <section className="row section" data-pagefind-body>
         <h2 className="rail rail--label"><Link href="/skills/">Skills</Link></h2>
         <div className="skill-groups">
           {skills.map((group) => (
@@ -166,7 +166,7 @@ export default function CV() {
       </section>
 
       <hr className="bleed" />
-      <section className="row section">
+      <section className="row section" data-pagefind-body>
         <h2 className="rail rail--label">Education</h2>
         <div>
           {education.map((e) => (

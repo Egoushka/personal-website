@@ -1517,6 +1517,8 @@ kbd {
 }
 .search-trigger:hover { color: var(--ink); border-color: var(--accent); }
 .search-trigger svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+/* The server paints ⌘K and a PC swaps in Ctrl K after mount. Hidden on
+   phones, so that swap only ever nudges a desktop header sideways. */
 .search-trigger-key { color: var(--ink-2); }
 
 /* The theme switch. Same control edge and the same 24px minimum target as the
@@ -1536,6 +1538,13 @@ kbd {
   text-transform: uppercase;
 }
 .theme-toggle:hover { color: var(--ink); border-color: var(--accent); }
+/* Before mount: the same box, unpainted, so the header is laid out once. */
+.theme-toggle--pending { visibility: hidden; }
+
+/* Neither control works without JavaScript, so neither is painted. */
+@media (scripting: none) {
+  .search-trigger, .theme-toggle { display: none; }
+}
 
 .search-dialog {
   margin: 0 auto;
@@ -1559,6 +1568,8 @@ kbd {
   padding: var(--s-4) var(--s-5);
   border-bottom: var(--hair) solid var(--rule);
 }
+/* The input draws no outline of its own, so the field carries the ring. */
+.search-field:focus-within { outline: 2px solid var(--accent); outline-offset: -2px; }
 .search-field svg { width: 15px; height: 15px; flex: none; fill: none; stroke: var(--ink-2); stroke-width: 1.6; }
 .search-field input {
   flex: 1; min-width: 0;
@@ -1569,7 +1580,7 @@ kbd {
 .search-field input::placeholder { color: var(--ink-2); }
 .search-field input::-webkit-search-cancel-button { display: none; }
 
-.search-results { overflow-y: auto; padding: var(--s-3) 0; }
+.search-body { overflow-y: auto; padding: var(--s-3) 0; }
 
 .search-note {
   margin: 0; padding: var(--s-3) var(--s-5);
@@ -1653,6 +1664,9 @@ figure figcaption {
   min-height: 24px;
 }
 .print-hint { margin: var(--s-5) 0 0; width: max-content; }
+/* The server paints the hint and the browser swaps in the button row after
+   mount. One height for both, taller than either, so the swap moves nothing. */
+.print-hint, .print-actions { min-block-size: 2.75rem; box-sizing: border-box; }
 /* The button and its shortcut. `.run` supplies the gap. */
 .print-actions { margin: var(--s-5) 0 0; align-items: center; }
 .print-actions button.control { cursor: pointer; font-family: var(--prose); }
@@ -1888,15 +1902,11 @@ figure figcaption {
   .cv .role-title { font: 400 10pt/1.2 var(--prose); margin: 1mm 0 0; }
   .cv .masthead   { border-bottom: 1.25pt solid #000; padding-bottom: 1.6mm; }
 
-  /* The contact rail is five long URLs and the label column is 26mm wide, so on
-     paper they printed straight over the name. Below the collapse they already
-     run inline; do the same here. `order` moves the masthead ahead of the rail
-     without touching DOM order, so the sheet reads name, rule, contacts.
-
-     The masthead spans BOTH columns. It used to sit in the prose column while
-     the contacts under it spanned the sheet, so the name was indented 32mm
-     past its own rule and its own address — the first thing on the page and
-     the only thing not aligned to anything. */
+  /* The contact rail is long URLs and the label column is 26mm wide, so on
+     paper they would print over the name. Below the collapse they already run
+     inline; do the same here. `order` moves the masthead ahead of the rail
+     without touching DOM order, so the sheet reads name, rule, contacts. The
+     masthead spans BOTH columns, so the name aligns with its rule and address. */
   .cv .masthead { order: -1; }
   .cv .masthead-rail {
     display: flex;
@@ -2078,14 +2088,10 @@ figure figcaption {
 
 .board { grid-column: 1 / -1; margin-top: var(--s-6); }
 
-/* The filter, and nothing else above the list.
+/* The filter, and nothing else above the list. The measured shares from
+   /status.json are in the bars, where they mean something.
 
-   There was a live bar here — containers, uptime, editor hours, health — and
-   it was the home page's instrument panel said a second time, on the page
-   least about the box. The measured shares still arrive from the same
-   /status.json; they are in the bars, where they mean something.
-
-   It is a field rather than a bare input because it now opens the page: the
+   It is a field rather than a bare input because it opens the page: the
    border is the control, the glyph carries the label, and the count sits
    inside it rather than floating beside it. The input keeps no border of its
    own and no focus ring — the ring belongs to the field, via :focus-within,
@@ -2158,10 +2164,9 @@ figure figcaption {
 /* The track exists only where there is something to put in it. */
 .board-meter { height: 5px; border-radius: 3px; }
 .board-list > li.is-measured .board-meter { background: var(--surface-2); }
-.board-fill { display: block; height: 100%; border-radius: 3px; background: var(--accent); }
+.board-fill { display: block; width: var(--w); height: 100%; border-radius: 3px; background: var(--accent); }
 
-/* Only a measured row prints one. The em-dash that used to sit here on fifteen
-   rows was a column of punctuation that had to be explained. */
+/* Only a measured row prints one; an unmeasured row prints nothing. */
 .board-num {
   grid-column: 4;
   text-align: right;
@@ -2210,6 +2215,12 @@ figure figcaption {
 @media (max-width: 560px) {
   .board-list > li { grid-template-columns: 22px minmax(0, 1fr) 2.6rem; }
   .board-meter { display: none; }
+  /* The last column here is 3. Left at 4, a measured row arriving from
+     /status.json opens an implicit column and rewraps the name beside it. */
+  .board-num { grid-column: 3; }
+  /* Restated after the rule above, which otherwise squeezes the notes into
+     the 22px icon column, one word per line. */
+  .board-list--notes > li { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ============================================================================
@@ -2220,30 +2231,38 @@ figure figcaption {
    reason it exists.
    ========================================================================= */
 
-.jr { grid-column: 1 / -1; margin-top: var(--s-8); --jr-label: 14rem; }
+.jr {
+  grid-column: 1 / -1; margin-top: var(--s-8);
+  --jr-label: 14rem;
+  /* Where the track starts: the label column plus the row's gap. The scale
+     and the grid use it too, or the bars sit a gap's width off the years. */
+  --jr-inset: calc(var(--jr-label) + var(--s-4));
+}
 
+/* Geometry arrives as custom properties set per element: --l and --w in
+   percent of the axis, --i the row's index. */
 .jr-scale {
   position: relative; height: 20px;
-  margin-left: var(--jr-label);
+  margin-left: var(--jr-inset);
 }
 .jr-year {
-  position: absolute; transform: translateX(-50%);
+  position: absolute; left: var(--l); transform: translateX(-50%);
   font: 400 var(--fs-rail)/1 var(--figure);
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
 
 .jr-field { position: relative; }
-.jr-grid { position: absolute; inset: 0 0 0 var(--jr-label); pointer-events: none; }
-.jr-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--rule); }
+.jr-grid { position: absolute; inset: 0 0 0 var(--jr-inset); pointer-events: none; }
+.jr-line { position: absolute; top: 0; bottom: 0; left: var(--l); width: 1px; background: var(--rule); }
 /* The months with no employer, computed from the same dates as the bars so
    they cannot be quietly dropped. */
 .jr-gap {
-  position: absolute; top: 0; bottom: 0;
+  position: absolute; top: 0; bottom: 0; left: var(--l); width: var(--w);
   background: repeating-linear-gradient(
     45deg, color-mix(in srgb, var(--warn) 6%, transparent) 0 4px, transparent 4px 11px);
 }
-.jr-now { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--accent); opacity: .5; }
+.jr-now { position: absolute; top: 0; bottom: 0; left: var(--l); width: 1px; background: var(--accent); opacity: .5; }
 
 .jr-rows { list-style: none; margin: 0; padding: 0; position: relative; }
 .jr-row {
@@ -2256,19 +2275,20 @@ figure figcaption {
 .jr-track { position: relative; height: 42px; }
 
 .jr-bar {
-  position: absolute; top: 7px; bottom: 7px;
+  position: absolute; top: 7px; bottom: 7px; left: var(--l); width: var(--w);
   display: block;
   border: var(--hair) solid var(--rule-firm);
   border-radius: 7px;
   background: var(--surface-2);
   text-decoration: none;
-  /* Drawn in once, from the left, when the page is first looked at. */
+  /* Visible as served. Journey.tsx arms the draw-in only when the chart
+     mounts below the fold; it then runs once, from the left. */
   transform-origin: left center;
-  transform: scaleX(0);
   transition: transform .5s cubic-bezier(.2,.8,.2,1), background .16s ease, border-color .16s ease;
+  transition-delay: calc(var(--i, 0) * 45ms), 0s, 0s;
 }
-.jr.is-drawn .jr-bar { transform: scaleX(1); }
-.jr-row--project .jr-bar { border-style: dashed; background: transparent; }
+.jr.is-armed .jr-bar { transform: scaleX(0); }
+.jr.is-armed.is-drawn .jr-bar { transform: none; }
 .jr-row:hover .jr-bar,
 .jr-row.is-on .jr-bar { background: var(--accent-quiet); border-color: var(--accent); }
 a.jr-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
@@ -2307,5 +2327,6 @@ a.jr-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; 
   .jr-track { height: 38px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .jr-bar { transition: background .16s ease, border-color .16s ease; transform: scaleX(1); }
+  .jr-bar,
+  .jr.is-armed .jr-bar { transition: background .16s ease, border-color .16s ease; transform: none; }
 }

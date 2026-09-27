@@ -4,20 +4,24 @@ import { useEffect, useState } from "react";
 
 type Theme = "dark" | "light";
 
+const LIGHT = "(prefers-color-scheme: light)";
+
 /**
  * The manual theme switch.
  *
  * Both themes already existed and the OS already chose between them — see the
  * top of globals.css. This adds the one thing `prefers-color-scheme` cannot: a
- * reader on a bright screen whose machine is set to dark, which is most people
- * reading a work page at a desk in an office.
+ * reader on a bright screen whose machine is set to dark.
  *
- * It renders **nothing** until it has mounted. A control that cannot work
- * without JavaScript should not be painted before JavaScript arrives, and the
- * site is fully themed without it: the pre-paint script in app/layout.tsx
- * applies a stored choice, and the media query covers everyone who has never
- * made one. Deliberately no icon — nothing else in this design is one — and no
- * third state, because "system" is what having made no choice already means.
+ * Until it has mounted it renders an invisible, unfocusable placeholder of the
+ * same size, so the header is laid out once and does not move when the button
+ * arrives. Server and first client render are that same placeholder. With
+ * scripting off, globals.css removes it: a control that cannot work is not
+ * painted. The pre-paint script in app/layout.tsx applies a stored choice, and
+ * the media query covers everyone who has never made one.
+ *
+ * Deliberately no icon and no third state: "system" is what having made no
+ * choice already means. While no choice is stored, the label follows the OS.
  */
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<Theme | null>(null);
@@ -29,16 +33,31 @@ export default function ThemeToggle() {
     } catch {
       // Private mode, blocked storage. The OS preference still applies.
     }
-    setTheme(
-      stored === "light" || stored === "dark"
-        ? stored
-        : window.matchMedia("(prefers-color-scheme: light)").matches
-          ? "light"
-          : "dark",
-    );
+    if (stored === "light" || stored === "dark") {
+      setTheme(stored);
+      return;
+    }
+    const media = window.matchMedia(LIGHT);
+    const follow = () => {
+      // A choice made since mount wins over the OS from then on.
+      if (document.documentElement.dataset.theme) return;
+      const t: Theme = media.matches ? "light" : "dark";
+      setTheme(t);
+      // Comments only watch `data-theme`, which an OS change does not touch.
+      try { window.REMARK42?.changeTheme?.(t); } catch { /* not loaded */ }
+    };
+    follow();
+    media.addEventListener("change", follow);
+    return () => media.removeEventListener("change", follow);
   }, []);
 
-  if (!theme) return null;
+  if (!theme) {
+    return (
+      <span className="theme-toggle theme-toggle--pending" aria-hidden="true">
+        dark
+      </span>
+    );
+  }
 
   const next: Theme = theme === "dark" ? "light" : "dark";
 
