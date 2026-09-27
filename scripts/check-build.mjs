@@ -4,8 +4,8 @@
 // the chunks carry or what the feeds link to, which is where the bugs this guards
 // against lived. No dependencies: regexes over files that one build wrote.
 //
-// Every failure prints as `R-xx <path>: <problem>`, named after the requirement in
-// docs/audit-2026-09/BRIEF.md that it protects.
+// Every failure prints as `R-xx <path>: <problem>`, named after the requirement it
+// protects in the 2026-09 audit brief: `git show 30ead5c:docs/audit-2026-09/BRIEF.md`.
 import fs from "node:fs";
 import path from "node:path";
 

@@ -9,9 +9,10 @@
 // (BASE_URL, default http://localhost:8080). Without Docker it serves out/ itself
 // with the CSP parsed from that Caddyfile — the CSP, but no redirects or 404 rules.
 //
-// Assertions are BRIEF §11.4 with the thresholds of §16. Every failure prints as
-// `R-xx <route>: <problem>`; the measurements print as tables, and are the method
-// behind docs/audit-2026-09/MEASUREMENTS.md.
+// Assertions are §11.4 of the 2026-09 audit brief with the thresholds of its §16
+// (`git show 30ead5c:docs/audit-2026-09/BRIEF.md`). Every failure prints as
+// `R-xx <route>: <problem>`; the measurements print as tables, the same method as the
+// audit's before-and-after figures.
 //
 // Env: BASE_URL; SMOKE_WIDTHS (CLS widths, default "375"); STATUS_FIXTURE (default
 // tests/fixtures/status.json, served as /status.json with `generated` set to now).

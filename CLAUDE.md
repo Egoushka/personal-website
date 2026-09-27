@@ -79,7 +79,9 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
   footer outside the one `<main id="main">`. Nav: **Writing · Projects · About · CV**;
   Skills is linked from About and the CV. Every page's metadata comes from
   `pageMetadata()` ([lib/metadata.ts](lib/metadata.ts)); posts and projects pass
-  `ownCard: true` to keep their own `opengraph-image`.
+  `ownCard: true` to keep their own `opengraph-image`. Every `<Link>` but the primary nav
+  and the home CTA sets `prefetch={false}`: prefetch fetched other routes' payloads on
+  every scroll of a list.
 - **Content is data** in [lib/site.ts](lib/site.ts): projects, jobs, skills, uses,
   `site.timezone`, optional `site.engagement`. Home lists running projects that are not
   side projects, plus side projects with `featured: true`. `Project.writeup` names a
@@ -109,6 +111,8 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
 - **One stylesheet**, [app/globals.css](app/globals.css), plain class names; no Tailwind,
   modules or CSS-in-JS. The only inline style sets a custom property for data-driven
   geometry (`style={{ "--x": `${pct}%` } as React.CSSProperties}`), read by a class.
+- **A `{" "}` between the items of a `.run`** (and any flex line of facts): flex ignores
+  it, but search excerpts and screen readers otherwise read "28 July 2026838 words".
 - **Seven colour tokens**: `--paper`, `--ink`, `--ink-2`, `--rule` (decorative only),
   `--rule-firm` (every control edge), `--accent` (links only), `--warn` (only "this
   broke"). Dark is default, cool near-black `#0A0B0D`; light is `#FFFFFF`. The contrast
@@ -134,9 +138,11 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
 ## Caddy, Cloudflare, deploy
 
 - **A push to `main` is a live deploy** ([deploy.yml](.github/workflows/deploy.yml)): CI
-  minus smoke, `X-Site-Rev` stamped, a three-pass rsync (`/_next/` additive → Caddyfile
-  `--inplace` → the rest with `--delete`), optional Cloudflare purge, then `caddy-test`
-  live. Get explicit approval before pushing to `main`.
+  minus smoke, `X-Site-Rev` stamped, the build (with the stamped Caddyfile) published to
+  the `deploy-site` release the box pulls (homelab-gitops M5.7), a three-pass rsync
+  (`/_next/` additive → Caddyfile `--inplace` → the rest with `--delete`), optional
+  Cloudflare purge, then `caddy-test` live. The rsync goes once the pull is verified.
+  Get explicit approval before pushing to `main`.
 - The key is `webdeploy`, forced to `rrsync -wo /opt/stacks/website`: no shell, no docker.
   **No `caddy reload` or `docker compose up -d`** — Caddy `--watch` reloads within a second,
   and a file that fails to load keeps the old config. `--inplace` matters: the Caddyfile
@@ -153,8 +159,9 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
   are `handle` blocks with `redir * <to> permanent`: bare `redir` sorts after `try_files`,
   and without `*` the target parses as a matcher.
 - **Prelive** ([prelive.yml](.github/workflows/prelive.yml)), every same-repo PR: builds with
-  `SITE_URL=http://100.64.0.2:8091`, rsyncs with `PRELIVE_SSH_KEY` after a dry-run guard
-  (`deploy/prelive-guard.sh`), never ships the Caddyfile; fails early without the secret.
+  `SITE_URL=http://100.64.0.2:8091`, publishes `out/` to the `deploy-prelive` release, then
+  rsyncs with `PRELIVE_SSH_KEY` after a dry-run guard (`deploy/prelive-guard.sh`); never
+  ships the Caddyfile. Without the secret the rsync fails; the publish has already run.
   `probe.yml` checks the live site and `/status.json` every 6 h. `deploy/deploy.sh` is the
   manual path; it refuses with `SITE_URL` set or a dirty tree. Compose, cron and the
   Remark42 container belong to homelab-gitops.

@@ -124,13 +124,19 @@ Only `main` deploys, and a running deploy is never cancelled.
    caddy-test, lychee. Nothing has reached the box yet.
 2. **Stamp** — the commit SHA replaces `__DEPLOY_REV__` in the Caddyfile's
    `X-Site-Rev` header.
-3. **Sync, three passes** — `out/_next/` without `--delete` (pages cached at the edge
+3. **Publish** — `out/` (with `out/build.txt` naming the commit) and the stamped
+   Caddyfile go to the moving `deploy-site` prerelease as `site.tar.gz` and its sha256.
+   The box pulls it every two minutes (homelab-gitops `host/website-pull.sh`, M5.7), so
+   it needs no inbound SSH. The rsync below runs beside it until the pull path is
+   verified; then the rsync and the deploy key go. Publishing needs `contents: write`,
+   which any workflow on any branch also gets — the private-repo exposure below.
+4. **Sync, three passes** — `out/_next/` without `--delete` (pages cached at the edge
    still need the old chunks); the Caddyfile with `--inplace` (it is a single-file bind
    mount, and a renamed file is a new inode the container never sees); then the rest of
    `out/` with `--delete`, except `/_next/` and `/status.json`.
-4. **Purge** — the Cloudflare cache, only if both `CF_ZONE_ID` and `CF_PURGE_TOKEN`
+5. **Purge** — the Cloudflare cache, only if both `CF_ZONE_ID` and `CF_PURGE_TOKEN`
    secrets exist. Without them HTML updates when the edge copy expires (`s-maxage=600`).
-5. **Verify** — `caddy-test` against the live site, after waiting up to 60 s for
+6. **Verify** — `caddy-test` against the live site, after waiting up to 60 s for
    `X-Site-Rev` to name this commit.
 
 Old `/_next/` chunks accumulate. Dispatch the workflow with `full: true` to prune them
@@ -267,12 +273,13 @@ tailnet device.
 
 [.github/workflows/prelive.yml](.github/workflows/prelive.yml) runs on manual dispatch
 and on every pull request from this repository (not forks, not Dependabot): validate →
-typecheck → build → `caddy validate` → a dry-run guard → rsync `out/` to
+typecheck → build → `caddy validate` → publish `out/` to the `deploy-prelive` release
+(pulled by the box, no key needed) → a dry-run guard → rsync `out/` to
 `/opt/stacks/website/prelive/`. The runner cannot reach the tailnet, so there is no
 live check.
 
-- **Its own key.** Prelive deploys with `PRELIVE_SSH_KEY`, never the production key, and
-  fails at its first step until that secret exists. Create it like the deploy key, forced
+- **Its own key.** Prelive's rsync uses `PRELIVE_SSH_KEY`, never the production key, and
+  fails until that secret exists (the release publish before it still runs). Create it like the deploy key, forced
   to the prelive root:
 
   ```

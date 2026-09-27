@@ -1822,7 +1822,7 @@ figure figcaption {
 
   /* --- strip the site chrome --------------------------------------------- */
   .site-header, .site-footer, .skip-link, .print-hint, .print-actions,
-  .toc, .toc-details, .post-aside, .search, .copy-btn, .filter-bar, .sort-bar {
+  .toc, .toc-details, .post-aside, .copy-btn, .filter-bar, .sort-bar {
     display: none !important;
   }
 
@@ -1942,7 +1942,6 @@ figure figcaption {
 
   .cv .section + .section { margin-top: 0; }
   .cv .cv-era + .cv-era     { margin-top: 1.2mm; }
-  .cv .skills-run { font-size: 9pt; line-height: 1.3; }
 
   /* Skills compress to names, one group per line with its label in the margin
      of the prose column. The "where it stands" line is the argument, and an
