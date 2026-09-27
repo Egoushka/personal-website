@@ -16,9 +16,8 @@ type Params = { topic: string };
 /**
  * Everything about one topic, in one place.
  *
- * This is the page the whole single-vocabulary refactor exists for: somebody who
- * cares about Postgres should see the posts, the projects **and the paid work**
- * in one view. `Job.topics` is what makes the last one possible, and it is the
+ * Somebody who cares about Postgres should see the posts, the projects **and
+ * the paid work** in one view. `Job.topics` is what makes the last one possible, and it is the
  * difference between a topic page that proves something and one that just proves
  * I have a side project.
  *
@@ -37,9 +36,13 @@ export async function generateMetadata(
   const { topic } = await params;
   const label = topicName(topic);
   const description = isTopic(topic)
-    ? TOPICS[topic].blurb
+    ? `${label} — ${TOPICS[topic].blurb}`
     : `Everything about ${label} by ${site.name}.`;
-  return pageMetadata({ title: label, description, path: `/topics/${topic}/` });
+  const metadata = pageMetadata({ title: label, description, path: `/topics/${topic}/` });
+  // One post, project or role is not a hub worth a search result, but its links
+  // still lead somewhere. Kept out of app/sitemap.ts by the same test.
+  const usage = getTopicUsage().find((t) => t.slug === topic);
+  return usage && usage.total >= 2 ? metadata : { ...metadata, robots: { index: false, follow: true } };
 }
 
 export default async function TopicPage({ params }: { params: Promise<Params> }) {

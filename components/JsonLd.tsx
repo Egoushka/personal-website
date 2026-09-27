@@ -1,4 +1,4 @@
-import { site, experience, projects, skills } from "@/lib/site";
+import { site, experience, skills } from "@/lib/site";
 import { topicName } from "@/lib/topics";
 import type { PostMeta } from "@/lib/posts";
 
@@ -6,15 +6,15 @@ import type { PostMeta } from "@/lib/posts";
  * Structured data. Rendered as a plain <script type="application/ld+json"> — no
  * client JS, it is inert markup that only crawlers read.
  *
- * dangerouslySetInnerHTML is the documented way to emit JSON-LD in React; the
- * payload is built from typed local data, never from user input, so there is no
- * injection surface. JSON.stringify escapes the content.
+ * dangerouslySetInnerHTML is the documented way to emit JSON-LD in React.
+ * JSON.stringify does not escape `<`, so a `</script>` in any string would end
+ * the element early; `\u003c` is the same character to a JSON parser.
  */
 function Ld({ data }: { data: object }) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, "\\u003c") }}
     />
   );
 }
@@ -22,39 +22,43 @@ function Ld({ data }: { data: object }) {
 const personId = `${site.url}/#person`;
 const siteId = `${site.url}/#website`;
 
-/**
- * `knowsAbout`, from the one curated list.
- *
- * It used to derive itself from the topic vocabulary — a near-verbatim copy of
- * the CV's old helper, kept in sync by hand in two files. Both are gone: this
- * reads `skills` in lib/site.ts, so the structured data says exactly what the
- * CV says and cannot drift from it.
- */
+/** `knowsAbout`, from the curated skills list, so the structured data says exactly what the CV says. */
 function knowsAbout(): string[] {
   return skills.flatMap((group) => group.items.map((skill) => skill.name));
 }
 
-/** Homepage: who this is, and what site it is. Both get stable @ids so the
- *  per-page graphs below can reference them instead of repeating themselves. */
-export function PersonAndSiteLd() {
+/** Enough of the Person to stand alone in any page's graph; the @id joins them up. */
+function personNode() {
+  return {
+    "@type": "Person",
+    "@id": personId,
+    name: site.name,
+    url: site.url,
+    sameAs: [site.github, site.linkedin],
+  };
+}
+
+/** The whole Person: the home page and the CV, the two pages that are about him. */
+function fullPerson() {
   const current = experience.find((j) => j.end === null);
+  return {
+    ...personNode(),
+    email: `mailto:${site.email}`,
+    jobTitle: site.role,
+    description: site.description,
+    knowsAbout: knowsAbout(),
+    ...(current && { worksFor: { "@type": "Organization", name: current.company } }),
+  };
+}
+
+/** Homepage: who this is, and what site it is. */
+export function PersonAndSiteLd() {
   return (
     <Ld
       data={{
         "@context": "https://schema.org",
         "@graph": [
-          {
-            "@type": "Person",
-            "@id": personId,
-            name: site.name,
-            url: site.url,
-            email: `mailto:${site.email}`,
-            jobTitle: site.role,
-            description: site.description,
-            knowsAbout: knowsAbout(),
-            sameAs: [site.github, site.linkedin],
-            ...(current && { worksFor: { "@type": "Organization", name: current.company } }),
-          },
+          fullPerson(),
           {
             "@type": "WebSite",
             "@id": siteId,
@@ -84,7 +88,7 @@ export function BlogPostingLd({ post }: { post: PostMeta }) {
             description: post.description,
             url,
             datePublished: post.date,
-            dateModified: post.date,
+            dateModified: post.updated ?? post.date,
             keywords: post.topics.map(topicName),
             wordCount: post.wordCount,
             timeRequired: `PT${post.readingTime}M`,
@@ -95,6 +99,7 @@ export function BlogPostingLd({ post }: { post: PostMeta }) {
             isPartOf: { "@id": siteId },
             mainEntityOfPage: url,
           },
+          personNode(),
           {
             "@type": "BreadcrumbList",
             itemListElement: [
@@ -114,10 +119,16 @@ export function ProfilePageLd() {
     <Ld
       data={{
         "@context": "https://schema.org",
-        "@type": "ProfilePage",
-        url: `${site.url}/cv/`,
-        name: `CV — ${site.name}`,
-        mainEntity: { "@id": personId },
+        "@graph": [
+          {
+            "@type": "ProfilePage",
+            "@id": `${site.url}/cv/`,
+            url: `${site.url}/cv/`,
+            name: `CV — ${site.name}`,
+            mainEntity: { "@id": personId },
+          },
+          fullPerson(),
+        ],
       }}
     />
   );
