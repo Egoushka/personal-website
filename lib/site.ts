@@ -712,7 +712,7 @@ export const experience: Job[] = [
   {
     start: "2024-12", end: "2025-06",
     company: "IT INNOVATIONS",
-    printBullets: 3,
+    printBullets: 2,
     role: "Software Engineer",
     location: "Kyiv",
     mode: "Hybrid",
