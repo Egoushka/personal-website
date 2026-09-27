@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
-import ProjectFilter from "@/components/ProjectFilter";
+import ProjectFilter, { type ProjectRow } from "@/components/ProjectFilter";
 import { site, projects } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
 import { topicName } from "@/lib/topics";
@@ -12,16 +12,26 @@ const description =
 export const metadata: Metadata = pageMetadata({ title: "Projects", description, path: "/projects/" });
 
 export default function Projects() {
-  // Only topics some project actually carries. A chip that filters to nothing is
-  // a broken control, and the vocabulary is much wider than these two projects.
-  const used = [...new Set(projects.flatMap((p) => p.topics as string[]))];
-  const topics = used.map((slug) => ({ slug, name: topicName(slug) }));
+  // Chips only for topics at least two projects carry: a chip that filters to
+  // one project is a link to it wearing a button's clothes.
+  const counts = new Map<string, number>();
+  for (const p of projects) for (const t of p.topics) counts.set(t, (counts.get(t) ?? 0) + 1);
+  const topics = [...counts.keys()]
+    .filter((slug) => counts.get(slug)! >= 2)
+    .map((slug) => ({ slug, name: topicName(slug) }));
 
-  // Counted rather than written out. "0 with a user other than me" was true of
-  // this page for exactly as long as nothing here was published, and it went on
-  // being printed after that stopped being true.
+  const rows: ProjectRow[] = projects.map((p) => ({
+    slug: p.slug,
+    name: p.name,
+    lang: p.lang,
+    shape: p.shape,
+    status: p.status,
+    summary: p.summary,
+    topics: p.topics.map((t) => ({ slug: t, name: topicName(t) })),
+  }));
+
+  // Counted rather than written out, so the figure cannot outlive the fact.
   const running = projects.filter((p) => p.status === "running").length;
-  const shipped = projects.filter((p) => !p.side).length;
 
   return (
     <Shell current="projects">
@@ -38,7 +48,7 @@ export default function Projects() {
         }
       />
 
-      <ProjectFilter projects={projects} topics={topics} />
+      <ProjectFilter projects={rows} topics={topics} />
 
     </Shell>
   );

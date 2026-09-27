@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import type { Project } from "@/lib/site";
 
 /**
  * The project index, with a topic filter over it.
@@ -10,23 +9,33 @@ import type { Project } from "@/lib/site";
  * Renders every project on the server, so the static HTML is a complete list and
  * the page is whole before any JavaScript runs. The filter only ever *removes*
  * rows — that is the rule that keeps this honest as a client component. With JS
- * off you get the full list and no chips, which is the correct degraded state.
+ * off the chips are hidden by CSS and the full list stands.
  *
- * With three projects a filter is close to decoration, and I know it. It is here
- * because the shape has to exist before there are fifteen, and because the chips
- * double as a way into the topic pages, which are not decoration at all.
+ * It takes rows, not `Project`: whatever a client component receives travels in
+ * the page's payload, and a project's description and readings are not shown
+ * here.
  */
+export type ProjectRow = {
+  slug: string;
+  name: string;
+  lang: string;
+  shape: string;
+  status: string;
+  summary: string;
+  topics: { slug: string; name: string }[];
+};
+
 export default function ProjectFilter({
   projects,
   topics,
 }: {
-  projects: Project[];
+  projects: ProjectRow[];
   topics: { slug: string; name: string }[];
 }) {
   const [active, setActive] = useState<string | null>(null);
 
   const shown = active
-    ? projects.filter((p) => (p.topics as string[]).includes(active))
+    ? projects.filter((p) => p.topics.some((t) => t.slug === active))
     : projects;
 
   return (
@@ -56,7 +65,14 @@ export default function ProjectFilter({
         ))}
       </ul>
 
-      <ol className="project-list" aria-live="polite">
+      {/* Announces the count after a filter; the page figures already show it. */}
+      <span className="sort-count visually-hidden" aria-live="polite">
+        {shown.length === projects.length
+          ? `${projects.length} projects`
+          : `${shown.length} of ${projects.length} projects`}
+      </span>
+
+      <ol className="project-list">
         {shown.map((p) => (
           <li className="project-row" key={p.slug}>
             <h2 className="project-name">
@@ -70,10 +86,8 @@ export default function ProjectFilter({
             <p>{p.summary}</p>
             <ul className="topic-run">
               {p.topics.map((t) => (
-                <li key={t}>
-                  <Link href={`/topics/${t}/`}>
-                    {topics.find((x) => x.slug === t)?.name ?? t}
-                  </Link>
+                <li key={t.slug}>
+                  <Link href={`/topics/${t.slug}/`}>{t.name}</Link>
                 </li>
               ))}
             </ul>
