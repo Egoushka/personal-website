@@ -79,7 +79,7 @@ lib/status.ts         useStatus(): the /status.json fetch and its freshness rule
 lib/og.tsx            the shared OG card
 scripts/              validator, image optimiser, check-build, smoke, caddy-test, serve-prod
 tests/                unit tests (node:test) and tests/fixtures/status.json
-deploy/               Caddyfile, deploy.sh, prelive-guard.sh. The compose file lives in
+deploy/               Caddyfile. The compose file and the pull script live in
                       homelab-gitops on the VPS, not here.
 docs/adr/             the decisions that are hard to reverse, and why
 ```
@@ -129,33 +129,30 @@ Only `main` deploys, and a running deploy is never cancelled.
    `X-Site-Rev` header.
 3. **Publish** — `out/` (with `out/build.txt` naming the commit) and the stamped
    Caddyfile go to the moving `deploy-site` prerelease as `site.tar.gz` and its sha256.
-   The box pulls it every two minutes (homelab-gitops `host/website-pull.sh`, M5.7), so
-   it needs no inbound SSH. The rsync below runs beside it until the pull path is
-   verified; then the rsync and the deploy key go. Publishing needs `contents: write`,
-   which any workflow on any branch also gets — the private-repo exposure below.
-4. **Sync, three passes** — `out/_next/` without `--delete` (pages cached at the edge
-   still need the old chunks); the Caddyfile with `--inplace` (it is a single-file bind
-   mount, and a renamed file is a new inode the container never sees); then the rest of
-   `out/` with `--delete`, except `/_next/` and `/status.json`.
-5. **Purge** — the Cloudflare cache, only if both `CF_ZONE_ID` and `CF_PURGE_TOKEN`
+   Publishing needs `contents: write`, which any workflow on any branch also gets — the
+   private-repo exposure below.
+4. **The box pulls** — homelab-gitops `host/website-pull.sh` (M5.7) checks the release
+   every two minutes, verifies the sha256 and installs the build in three passes:
+   `out/_next/` without `--delete` (pages cached at the edge still need the old chunks);
+   the Caddyfile written in place (it is a single-file bind mount, and a renamed file is
+   a new inode the container never sees); then the rest of `out/` with `--delete`,
+   except `/_next/` and `/status.json`. The VPS has no inbound deploy path: no SSH key,
+   no user for this repo.
+5. **Wait** — up to six minutes for the live `/build.txt` (fetched past the edge cache)
+   to name this commit.
+6. **Purge** — the Cloudflare cache, only if both `CF_ZONE_ID` and `CF_PURGE_TOKEN`
    secrets exist. Without them HTML updates when the edge copy expires (`s-maxage=600`).
-6. **Verify** — `caddy-test` against the live site, after waiting up to 60 s for
+7. **Verify** — `caddy-test` against the live site, after waiting up to 60 s for
    `X-Site-Rev` to name this commit.
 
-Old `/_next/` chunks accumulate. Dispatch the workflow with `full: true` to prune them
-after the purge.
+Old `/_next/` chunks accumulate on the box; homelab-gitops owns pruning them.
 
-The deploy key logs in as `webdeploy`, whose only command is
-`rrsync -wo /opt/stacks/website` (forced in its `authorized_keys`): remote paths are
-relative to that directory, and a write-only rsync is all it can do — no shell, no
-docker. Caddy runs with `--watch` (homelab-gitops `website/compose.yaml`) and reloads
-about a second after the Caddyfile changes; a file that fails to load leaves the old
-config running, which is why the gate validates and tests it. There is no
-`caddy reload` or `docker compose up -d` step, and none is possible with this key.
+Caddy runs with `--watch` (homelab-gitops `website/compose.yaml`) and reloads about a
+second after the Caddyfile changes; a file that fails to load leaves the old config
+running, which is why the gate validates and tests it. There is no `caddy reload` or
+`docker compose up -d` step.
 
-**By hand:** `./deploy/deploy.sh` runs the same gate, sync and live check (no purge).
-It needs GNU rsync 3 (`brew install rsync` on macOS) and refuses to run with `SITE_URL`
-set or with uncommitted changes.
+**By hand:** re-run the workflow with *Run workflow* (`workflow_dispatch`) on `main`.
 
 **Probe:** [.github/workflows/probe.yml](.github/workflows/probe.yml) runs caddy-test
 against the live site every six hours (and on dispatch) and fails if `/status.json` is
@@ -165,35 +162,13 @@ older than 48 hours. GitHub emails the failure.
 
 ### One-time setup
 
-1. **Create a deploy key** (locally — keep the private key out of git):
-
-   ```bash
-   ssh-keygen -t ed25519 -f deploy_key -N "" -C "github-actions-deploy"
-   ```
-
-2. **Authorize it on the VPS**, as root, into `webdeploy`'s keys (never root's own):
-
-   ```bash
-   printf 'restrict,command="/usr/bin/rrsync -wo /opt/stacks/website" %s\n' "$(cat deploy_key.pub)" \
-     > /home/webdeploy/.ssh/authorized_keys
-   ```
-
-3. **Pin the host key:** `ssh-keyscan -t ed25519 <origin-ip>`.
-
-4. **Repo secrets** (Settings → Secrets and variables → Actions):
-
-   | Secret | Value |
-   |--------|-------|
-   | `DEPLOY_SSH_KEY` | the private `deploy_key` |
-   | `DEPLOY_KNOWN_HOSTS` | the `ssh-keyscan` line |
-   | `PRELIVE_SSH_KEY` | the prelive key (see Prelive) |
-   | `CF_ZONE_ID`, `CF_PURGE_TOKEN` | optional: zone id and a Zone → Cache Purge token |
+**Repo secrets** (Settings → Secrets and variables → Actions), both optional:
+`CF_ZONE_ID` and `CF_PURGE_TOKEN` (a Zone → Cache Purge token). Nothing else: the
+build reaches the box through the release, which the box reads with its own token
+(homelab-gitops `website/.env.enc`, `WEBSITE_DEPLOY_TOKEN`, Contents: read).
 
 The repository is private on GitHub Free, so environments and branch protection are
 unavailable and a workflow on any branch can read these secrets.
-
-To rotate a key, replace its line in `authorized_keys` and the matching secret. Keep a
-copy of the private key in Vaultwarden.
 
 ### Hosting and DNS
 
@@ -239,12 +214,12 @@ terminates TLS at Cloudflare. Before debugging anything header- or crawler-relat
 ### Live state (`/status.json`)
 
 The generator lives in homelab-gitops (`scripts/gen-status.sh`, run every ten minutes by
-`host/cron.d/website-status`), not here. It writes `/status.json` next to the site, and
-the deploy never overwrites it:
+`host/cron.d/website-status`), not here. It writes `status.json` into its own mount,
+`/srv-status`, which the Caddyfile routes `/status.json` to, so no deploy can touch it:
 
 ```
 # on the VPS; the Wakapi key is read from its SQLite, so there is nothing to pass
-/opt/stacks/scripts/gen-status.sh /opt/stacks/website/site/status.json
+/opt/stacks/scripts/gen-status.sh /opt/stacks/website/status/status.json
 ```
 
 Aggregates only — container count, unhealthy count, uptime, hours coded in the last 30
@@ -276,23 +251,11 @@ tailnet device.
 
 [.github/workflows/prelive.yml](.github/workflows/prelive.yml) runs on manual dispatch
 and on every pull request from this repository (not forks, not Dependabot): validate →
-typecheck → build → `caddy validate` → publish `out/` to the `deploy-prelive` release
-(pulled by the box, no key needed) → a dry-run guard → rsync `out/` to
-`/opt/stacks/website/prelive/`. The runner cannot reach the tailnet, so there is no
-live check.
+typecheck → build → `caddy validate` → publish `out/` to the `deploy-prelive` release.
+The box pulls it within two minutes and mirrors it into `/opt/stacks/website/prelive/`.
+The runner cannot reach the tailnet, so there is no live check; `build.txt` on prelive
+names the commit.
 
-- **Its own key.** Prelive's rsync uses `PRELIVE_SSH_KEY`, never the production key, and
-  fails until that secret exists (the release publish before it still runs). Create it like the deploy key, forced
-  to the prelive root:
-
-  ```
-  restrict,command="/usr/bin/rrsync -wo /opt/stacks/website/prelive" <pubkey>
-  ```
-
-  in `webdeploy`'s `authorized_keys`. Before the real sync, the same rsync runs with
-  `--dry-run --itemize-changes` and `deploy/prelive-guard.sh` stops the job if it would
-  touch `site/`, a `Caddyfile`, a top-level `status.json` or a dotfile — the signs of a
-  key set up with the wrong root, where `--delete` would destroy production.
 - **`SITE_URL`.** The build sets it to the prelive origin, and `lib/site.ts` reads it once.
   Canonicals, feeds, the sitemap, the OG cards and the URL each comment thread is keyed by
   follow it — a prelive build with the production URL would post test comments into the
