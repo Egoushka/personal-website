@@ -128,6 +128,9 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
 - **Type scale**: `--step-*` are primitives, never used outside `:root` and `@media print`
   (which redeclares them in `pt`). Use `--fs-*` aliases; add one rather than a number.
   Clamps keep a `rem` term (WCAG 1.4.4).
+- **Measure**: prose stops at `--read` (33em, about 66 characters of Inter); code,
+  tables, figures and the panel use the 640px `--measure`. Cap prose with `--read`,
+  never `ch`: Inter's `ch` is its zero, about 1.25 characters, so `66ch` sets ~82.
 - **Accessibility**: visible `:focus-visible`; one `<main id="main">`; targets ≥ 24×24 px;
   `--rule-firm` on a control's only border; `prefers-reduced-motion` escapes; animate SVG
   `<g>` with `translate`, never `transform` (it replaces the position attribute).
