@@ -41,10 +41,7 @@ export default function ThemeToggle() {
     const follow = () => {
       // A choice made since mount wins over the OS from then on.
       if (document.documentElement.dataset.theme) return;
-      const t: Theme = media.matches ? "light" : "dark";
-      setTheme(t);
-      // Comments only watch `data-theme`, which an OS change does not touch.
-      try { window.REMARK42?.changeTheme?.(t); } catch { /* not loaded */ }
+      setTheme(media.matches ? "light" : "dark");
     };
     follow();
     media.addEventListener("change", follow);

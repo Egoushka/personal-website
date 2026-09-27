@@ -284,22 +284,31 @@ export default function Comments({ url }: { url: string }) {
     };
   }, [near, url, paintWidget]);
 
-  /* Follow the site's theme toggle.
+  /* Follow the site's theme: the toggle's `data-theme`, and the OS while no
+     choice is stored.
 
      `remark_config.theme` is read once at start-up — mutating it later does
      nothing, which is what this used to do. `REMARK42.changeTheme` is the
      actual API. The repaint afterwards is not optional: changing theme
      re-renders the widget and discards the injected stylesheet with it. */
   useEffect(() => {
-    const observer = new MutationObserver(() => {
+    const follow = () => {
       const t = currentTheme();
       if (window.remark_config) window.remark_config.theme = t;
       try { window.REMARK42?.changeTheme?.(t); } catch { /* not up yet */ }
       // After its own re-render, not before.
       requestAnimationFrame(() => { paintWidget(); setTimeout(paintWidget, 120); });
-    });
+    };
+    const observer = new MutationObserver(follow);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => observer.disconnect();
+    // A stored choice sets `data-theme`, and then the OS no longer decides.
+    const media = window.matchMedia("(prefers-color-scheme: light)");
+    const onOs = () => { if (!document.documentElement.dataset.theme) follow(); };
+    media.addEventListener("change", onOs);
+    return () => {
+      observer.disconnect();
+      media.removeEventListener("change", onOs);
+    };
   }, [paintWidget]);
 
   return (
