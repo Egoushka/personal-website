@@ -103,7 +103,7 @@ export default function PostFilter({
               aria-pressed={active.includes(t.slug)}
               onClick={() => toggle(t.slug)}
             >
-              {t.name} <span className="rail-count">{t.count}</span>
+              {t.name} <span className="rail-count">{t.count}<span className="visually-hidden"> posts</span></span>
             </button>
           </li>
         ))}
@@ -138,11 +138,11 @@ export default function PostFilter({
           <ol className="post-list">
             {g.rows.map((p) => (
               <li className="post-row" key={p.slug}>
-                <Link href={`/writing/${p.slug}/`}>{p.title}</Link>
+                <Link prefetch={false} href={`/writing/${p.slug}/`}>{p.title}</Link>
                 <p>{p.description}</p>
                 <span className="post-meta run">
-                  <span>{p.dateLabel}</span>
-                  <span>{p.readingTime} min read</span>
+                  <span>{p.dateLabel}</span>{" "}
+                  <span>{p.readingTime} min read</span>{" "}
                   <span>{p.wordCount.toLocaleString("en-GB")} words</span>
                 </span>
               </li>

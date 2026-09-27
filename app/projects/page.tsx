@@ -23,7 +23,6 @@ export default function Projects() {
   const rows: ProjectRow[] = projects.map((p) => ({
     slug: p.slug,
     name: p.name,
-    lang: p.lang,
     shape: p.shape,
     status: p.status,
     summary: p.summary,
@@ -41,8 +40,8 @@ export default function Projects() {
         quiet
         figures={
           <>
-            <span>{projects.length} projects</span>
-            <span>{running} still running</span>
+            <span>{projects.length} projects</span>{" "}
+            <span>{running} still running</span>{" "}
             <span><a href={site.github} rel="noopener">GitHub</a></span>
           </>
         }

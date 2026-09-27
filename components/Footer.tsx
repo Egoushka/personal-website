@@ -13,10 +13,10 @@ import { site } from "@/lib/site";
 export default function Footer() {
   return (
     <footer className="site-footer bleed" data-pagefind-ignore>
-      <span>{site.domain}</span>
-      <span><Link href="/journey/">journey</Link></span>
-      <span><Link href="/about/#contact">contact</Link></span>
-      <span><a href="/feed.xml">rss</a></span>
+      <span>{site.domain}</span>{" "}
+      <span><Link prefetch={false} href="/journey/">journey</Link></span>{" "}
+      <span><Link prefetch={false} href="/about/#contact">contact</Link></span>{" "}
+      <span><a href="/feed.xml">rss</a></span>{" "}
       <span><a href={site.github} rel="noopener">github</a></span>
     </footer>
   );

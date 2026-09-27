@@ -29,9 +29,9 @@ function projectRow(p: Project) {
   return (
     <li className="project-row" key={p.slug}>
       <h3 className="project-name">
-        <Link href={`/projects/${p.slug}/`}>{p.name}</Link>
+        <Link prefetch={false} href={`/projects/${p.slug}/`}>{p.name}</Link>
       </h3>
-      <span className="project-status run"><span>{p.lang}</span><span>{p.shape}</span><span>{p.status}</span></span>
+      <span className="project-status run"><span>{p.lang}</span>{" "}<span>{p.shape}</span>{" "}<span className="project-state">{p.status}</span></span>
       <p>{p.summary}</p>
     </li>
   );
@@ -81,7 +81,7 @@ export default function Home() {
         </p>
         <h1>{site.intro}</h1>
         <p className="home-status">
-          <a className="cta" href={`mailto:${site.email}`}>{site.email}</a>
+          <a className="cta" href={`mailto:${site.email}`}>{site.email}</a>{" "}
           <Link className="cta cta--ghost" href="/writing/">Read the writing</Link>
         </p>
       </header>
@@ -97,15 +97,15 @@ export default function Home() {
           const post = p.post ? spanOf(posts, p.post) : undefined;
           return (
             <li key={p.post ?? p.label}>
-              <span className="proof-label">{post ? `${n(post.spanDays)} days` : p.label}</span>
-              <span className="proof-text">{p.text}</span>
+              <span className="proof-label">{post ? `${n(post.spanDays)} days` : p.label}</span>{" "}
+              <span className="proof-text">{p.text}</span>{" "}
               {p.links.map((l) => (
                 <a className="proof-link" key={l.href} href={l.href} rel="noopener">
                   {l.label}
                 </a>
               ))}
               {post && (
-                <Link className="proof-link" href={`/writing/${post.slug}/`}>
+                <Link className="proof-link" prefetch={false} href={`/writing/${post.slug}/`}>
                   read it
                 </Link>
               )}
@@ -128,7 +128,7 @@ export default function Home() {
         <div>
           <div className="section-head">
             <h2>Things I&apos;ve written down</h2>
-            <Link href="/writing/">all posts</Link>
+            <Link prefetch={false} href="/writing/">all posts</Link>
           </div>
           <PostList posts={posts.slice(0, 5)} />
         </div>
@@ -144,7 +144,7 @@ export default function Home() {
         <div>
           <div className="section-head">
             <h2>Built, and still running</h2>
-            <Link href="/projects/">all {r.projects} projects</Link>
+            <Link prefetch={false} href="/projects/">all {r.projects} projects</Link>
           </div>
           <ol className="project-list">{shipped.map(projectRow)}</ol>
           {side.length > 0 && (
@@ -172,12 +172,12 @@ export default function Home() {
               <ul className="topic-run">
                 {topics.map((t) => (
                   <li key={t.slug}>
-                    <Link href={`/topics/${t.slug}/`}>
+                    <Link prefetch={false} href={`/topics/${t.slug}/`}>
                       {topicName(t.slug)}
                       {/* A count of 1 is not a count, it is a label repeating
                           itself. The row stays: hiding every topic backed by
                           one thing would hide most of what this site is for. */}
-                      {t.total > 1 && <span className="rail-count">{t.total}</span>}
+                      {t.total > 1 && <>{" "}<span className="rail-count">{t.total}<span className="visually-hidden"> items</span></span></>}
                     </Link>
                   </li>
                 ))}

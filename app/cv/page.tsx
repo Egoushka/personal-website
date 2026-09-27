@@ -90,9 +90,9 @@ export default function CV() {
                       <span className="job-dates">{formatSpan(job, "numeric")}</span>
                     </div>
                     <p className="job-meta run">
-                      <span>{job.role}</span>
-                      {job.focus && <span>{job.focus}</span>}
-                      {job.location && <span>{job.location}</span>}
+                      <span>{job.role}</span>{" "}
+                      {job.focus && <span>{job.focus}</span>}{" "}
+                      {job.location && <span>{job.location}</span>}{" "}
                       {job.mode && <span>{job.mode}</span>}
                     </p>
                     <ul>
@@ -121,7 +121,7 @@ export default function CV() {
                 </h3>
                 <span className="job-dates">{p.lang}</span>
               </div>
-              <p className="job-meta run project-stack">{p.tech.slice(0, 6).map((t) => <span key={t}>{t}</span>)}</p>
+              <p className="job-meta run project-stack">{p.tech.slice(0, 6).flatMap((t) => [<span key={t}>{t}</span>, " "])}</p>
               {/* One line on paper. The full account is on the project's own
                   page; a CV bullet that runs four lines does not get read. */}
               <ul><li>{p.resumeLine ?? p.summary}</li></ul>
@@ -142,7 +142,7 @@ export default function CV() {
       */}
       <hr className="bleed" />
       <section className="row section" data-pagefind-body>
-        <h2 className="rail rail--label"><Link href="/skills/">Skills</Link></h2>
+        <h2 className="rail rail--label"><Link prefetch={false} href="/skills/">Skills</Link></h2>
         <div className="skill-groups">
           {skills.map((group) => (
             <div className="skill-group" key={group.group}>
@@ -152,7 +152,7 @@ export default function CV() {
                   <React.Fragment key={skill.name}>
                     <dt>
                       {skill.topic && hasPage.has(skill.topic)
-                        ? <Link href={`/topics/${skill.topic}/`}>{skill.name}</Link>
+                        ? <Link prefetch={false} href={`/topics/${skill.topic}/`}>{skill.name}</Link>
                         : skill.name}
                       {skill.wakatime && <Measured lang={skill.wakatime} />}
                     </dt>
@@ -176,7 +176,7 @@ export default function CV() {
                 <span className="job-dates">{e.when}</span>
               </div>
               <p className="job-meta run">
-                <span>{e.degree}</span>
+                <span>{e.degree}</span>{" "}
                 <span>{e.detail}</span>
               </p>
               <ul className="print-hide"><li>{e.note}</li></ul>

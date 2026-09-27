@@ -18,7 +18,6 @@ import Link from "next/link";
 export type ProjectRow = {
   slug: string;
   name: string;
-  lang: string;
   shape: string;
   status: string;
   summary: string;
@@ -76,18 +75,17 @@ export default function ProjectFilter({
         {shown.map((p) => (
           <li className="project-row" key={p.slug}>
             <h2 className="project-name">
-              <Link href={`/projects/${p.slug}/`}>{p.name}</Link>
+              <Link prefetch={false} href={`/projects/${p.slug}/`}>{p.name}</Link>
             </h2>
             <span className="project-status">
-              <span>{p.lang}</span>
-              <span>{p.shape}</span>
-              <span>{p.status}</span>
+              <span>{p.shape}</span>{" "}
+              <span className="project-state">{p.status}</span>
             </span>
             <p>{p.summary}</p>
             <ul className="topic-run">
               {p.topics.map((t) => (
                 <li key={t.slug}>
-                  <Link href={`/topics/${t.slug}/`}>{t.name}</Link>
+                  <Link prefetch={false} href={`/topics/${t.slug}/`}>{t.name}</Link>
                 </li>
               ))}
             </ul>

@@ -90,8 +90,8 @@ export default function JourneyPage() {
         quiet
         figures={
           <>
-            <span>{from} — now</span>
-            <span>{n(roles.length)} roles</span>
+            <span>{from} — now</span>{" "}
+            <span>{n(roles.length)} roles</span>{" "}
             <span>gaps included</span>
           </>
         }
@@ -113,7 +113,7 @@ export default function JourneyPage() {
       </Journey>
 
       <p className="page-figures">
-        <span>The same record, told as chapters, is on <Link href="/cv/">the CV</Link>.</span>
+        <span>The same record, told as chapters, is on <Link prefetch={false} href="/cv/">the CV</Link>.</span>
       </p>
 
     </Shell>

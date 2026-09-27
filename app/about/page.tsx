@@ -38,7 +38,7 @@ export default function About() {
           <a href={site.github} rel="noopener">github</a>
           <a href={site.linkedin} rel="noopener">linkedin</a>
           <span className="rail--group rail--label">Also</span>
-          <Link href="/cv/">the CV</Link>
+          <Link prefetch={false} href="/cv/">the CV</Link>
         </div>
 
         <div>
@@ -68,7 +68,7 @@ export default function About() {
             <p>
               Outside work I run one VPS like a production environment, because it
               is the cheapest place I know to break things that are only mine. Most
-              of <Link href="/writing/">the writing</Link> comes out of it.
+              of <Link prefetch={false} href="/writing/">the writing</Link> comes out of it.
             </p>
           </div>
         </div>
@@ -111,12 +111,12 @@ export default function About() {
         <div>
           <div className="section-head">
             <h2>What I actually run</h2>
-            <Link href="/skills/">Skills</Link>
+            <Link prefetch={false} href="/skills/">Skills</Link>
           </div>
           <p className="page-lede">
             One box, every service defined in git. The full list — what I use
             and what I would put my name to — is on{" "}
-            <Link href="/skills/">the skills page</Link>.
+            <Link prefetch={false} href="/skills/">the skills page</Link>.
           </p>
         </div>
       </section>
@@ -147,7 +147,7 @@ export default function About() {
               </li>
             ))}
             <li>
-              <Link href="/cv/">CV</Link>
+              <Link prefetch={false} href="/cv/">CV</Link>
               <span className="contact-note">The record, on one printable page.</span>
             </li>
           </ul>

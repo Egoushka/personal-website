@@ -55,9 +55,9 @@ export default function WritingIndex() {
         quiet
         figures={
           <>
-            <span>{r.posts} {r.posts === 1 ? "post" : "posts"}</span>
-            <span>{n(r.words)} words</span>
-            {r.latest && <span>latest {formatDate(r.latest.date)}</span>}
+            <span>{r.posts} {r.posts === 1 ? "post" : "posts"}</span>{" "}
+            <span>{n(r.words)} words</span>{" "}
+            {r.latest && <span>latest {formatDate(r.latest.date)}</span>}{" "}
             <span><a href="/feed.xml">rss</a></span>
           </>
         }

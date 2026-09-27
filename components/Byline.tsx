@@ -16,7 +16,7 @@ export default function Byline({ title }: { title: string }) {
       <span>{site.name}</span>{" "}
       <span>{site.availability}</span>{" "}
       <a href={`mailto:${site.email}?subject=${encodeURIComponent(title)}`}>{site.email}</a>{" "}
-      <Link href="/about/#contact">working with me</Link>
+      <Link prefetch={false} href="/about/#contact">working with me</Link>
     </p>
   );
 }
