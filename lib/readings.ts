@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { getAllPosts } from "./posts";
-import { now, projects, experience } from "./site";
+import { projects, experience } from "./site";
 import { ALL_TOPICS, type TopicSlug } from "./topics";
 
 /**
@@ -17,23 +17,15 @@ import { ALL_TOPICS, type TopicSlug } from "./topics";
  *
  * Pages print absolute dates, never an age measured against the build date: a
  * static page keeps printing it long after the build, so "N days ago" goes
- * stale the day after a deploy. `daysSinceLatest` and `latestPhrase` are the
- * last of those and go once /writing/ stops importing them.
+ * stale the day after a deploy.
  *
  * Build-time only: reads the filesystem and the build clock. **Never import this
  * from a client component.**
  */
 
-const DAY_MS = 86_400_000;
-
 /** Directories whose source counts against the code-to-prose ratio. */
 const SOURCE_DIRS = ["app", "components", "lib"];
 const STYLESHEET = path.join("app", "globals.css");
-
-/** Whole days between two ISO dates. Both parse as UTC midnight, so no DST drift. */
-function daysBetween(fromIso: string, toIso: string): number {
-  return Math.round((Date.parse(toIso) - Date.parse(fromIso)) / DAY_MS);
-}
 
 function walk(dir: string, keep: (file: string) => boolean): string[] {
   const out: string[] = [];
@@ -54,11 +46,9 @@ export type Readings = {
   builtOn: string;
   posts: number;
   words: number;
-  latest?: { title: string; slug: string; date: string; wordCount: number };
-  daysSinceLatest?: number;
+  latest?: { slug: string; date: string };
   codeLines: number;
   cssLines: number;
-  nowUpdated: string;
   projects: number;
   /** Of those, how many are still running. Counted, so a typed total cannot rot. */
   projectsRunning: number;
@@ -80,16 +70,9 @@ export function getReadings(): Readings {
     builtOn,
     posts: posts.length,
     words,
-    latest: latest && {
-      title: latest.title,
-      slug: latest.slug,
-      date: latest.date,
-      wordCount: latest.wordCount,
-    },
-    daysSinceLatest: latest ? daysBetween(latest.date, builtOn) : undefined,
+    latest: latest && { slug: latest.slug, date: latest.date },
     codeLines,
     cssLines,
-    nowUpdated: now.updated,
     projects: projects.length,
     projectsRunning: projects.filter((p) => p.status === "running").length,
   };
@@ -130,19 +113,4 @@ export function getTopicUsage(): TopicUsage[] {
   })
     .filter((t) => t.total > 0)
     .sort((a, b) => b.total - a.total || a.slug.localeCompare(b.slug));
-}
-
-/**
- * "latest today" / "latest 1 day ago" / "latest 6 days ago".
- *
- * Both call sites printed "latest 0 days ago" on the day something shipped,
- * which is the same class of bug as the "1 days ago" that was fixed in three
- * places earlier: a plural rule applied to a number whose edge cases are words,
- * not digits. One function, so the next page to print this cannot disagree.
- */
-export function latestPhrase(days: number | undefined): string {
-  if (days === undefined) return "";
-  if (days <= 0) return "latest today";
-  if (days === 1) return "latest yesterday";
-  return `latest ${days} days ago`;
 }
