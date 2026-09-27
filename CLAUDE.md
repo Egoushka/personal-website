@@ -24,12 +24,11 @@ Before pushing: `npm run validate && npm run typecheck && npm test && npm run bu
 No ESLint. **Test the build the way production serves it**: `serve:prod` (`SITE_PORT`,
 `CADDY_IMAGE`) has the real CSP, headers, redirects and 404s; `python3 -m http.server`
 has none. Re-run it after every build — the container keeps the deleted `out/` mounted.
-`BASE_URL=https://hrabovskyi.online npm run caddy-test` tests the live site. Without a
-server on `BASE_URL`, `smoke` serves `out/` itself, with the CSP but no redirects or 404s.
+`BASE_URL=https://hrabovskyi.online npm run caddy-test` tests the live site.
 
-CI ([ci.yml](.github/workflows/ci.yml)), every branch and PR: validate → typecheck → test
-→ build → check → caddy validate → caddy-test → smoke → lychee. Post-build steps run even
-after one fails, so one red run lists every failing gate.
+CI ([ci.yml](.github/workflows/ci.yml)), every PR and every branch but `main`: validate
+→ typecheck → test → build → check → caddy validate → caddy-test → smoke → lychee.
+Post-build steps run even after one fails, so one red run lists every failing gate.
 
 ## Hard constraint: `output: "export"`
 
@@ -102,7 +101,7 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
 - **JSON-LD** ([JsonLd.tsx](components/JsonLd.tsx)): every graph carries the Person
   (`@id …/#person`); `knowsAbout` comes from `skills` in `lib/site.ts`. Feeds carry full
   HTML bodies with absolute links.
-- `/status.json` is written on the box by cron (homelab-gitops), aggregates only;
+- `/status.json` is written on the box by cron (homelab-gitops);
   `tests/fixtures/status.json` is a complete document for local runs.
 
 ## Styling
@@ -130,8 +129,7 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
   `::details-content { content-visibility: visible }` keeps the `display: contents`
   `<details>` visible in Chrome ≥ 131. `.prose` is a subgrid of `.wrap`: never in a `.row`.
 - **CLS**: smoke holds < 0.01 at 375 px on `/`, `/writing/`, a post and `/about/`, < 0.1
-  elsewhere. Reserved heights (the panel's bands) are measured; re-measure when content
-  or the scale changes.
+  elsewhere. The panel's reserved heights are measured; re-measure when its content changes.
 
 ## Caddy, Cloudflare, deploy
 
