@@ -1,6 +1,6 @@
 # Content stays in git; the CMS edits files
 
-Status: accepted
+Status: superseded by [ADR 0004](./0004-the-cms-is-removed.md). Content stays in git; the CMS is removed.
 
 A CMS is required — hand-editing markdown and typed TypeScript exports is not the
 authoring experience the owner wants. A database-backed CMS (Directus, Payload, Sanity)

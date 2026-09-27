@@ -10,14 +10,14 @@ published output, and moving a file into it is the user's decision, not yours.
 
 ## Before writing
 
-Read both published posts first. They are the voice reference, not this file:
+Read these two published posts first. They are the voice reference, not this file:
 
 - `content/posts/homelab.md`
 - `content/posts/silent-deploys.md`
 
 Then read `lib/topics.ts`. Topics are a closed vocabulary; `npm run validate` fails on
-anything outside it. If the post genuinely needs a new tag, add it there with a
-`label` and `description` and say so — don't quietly invent one.
+anything outside it. If the post genuinely needs a new topic, add it there with a
+`name`, `kind` and `blurb` like its neighbours and say so — don't quietly invent one.
 
 ## The voice, from those two posts
 
@@ -43,6 +43,15 @@ topics: ["from lib/topics.ts only"]
 ---
 ```
 
+Optional, and only when true:
+
+- `spanDays: 51` — how many days the piece is *about* (a positive integer). The post
+  page sets the word count against it.
+- `updated: "YYYY-MM-DD"` and `correction: "…"` — for a published post whose facts
+  changed, never for rewording or typo fixes. `updated` is not before `date`;
+  `correction` requires `updated` and renders as a note above the body. A new draft
+  has neither.
+
 Slug = filename, lowercase kebab-case. It becomes the URL and cannot change later
 without breaking links.
 
@@ -62,7 +71,7 @@ without breaking links.
 
 ## Finish by
 
-1. Running `npm run validate` — it checks drafts too once they move, but run it to
-   catch frontmatter shape early.
+1. Checking the frontmatter against the rules above by hand: `npm run validate` reads
+   `content/posts/` only, so it sees a draft once it is moved there, not before.
 2. Telling the user, plainly: what you invented nothing about, what is a `TODO:`,
    and which claims they need to verify because you inferred them.

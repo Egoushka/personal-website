@@ -1,71 +1,97 @@
 # hrabovskyi.online
 
 Personal portfolio + blog for **Yehor Hrabovskyi**. Next.js (App Router,
-TypeScript), exported to a static site and self-hosted behind Caddy on a Hetzner
-VPS.
+TypeScript), exported to a static site and served by a container Caddy on a Hetzner
+VPS, behind an edge Traefik and Cloudflare.
 
 ## Stack
 
 - **Next.js 16** App Router, `output: 'export'` (static HTML, no Node runtime in prod)
 - **TypeScript**, React 19
 - **Markdown blog** — drop a `.md` in `content/posts/`, it appears automatically
-- One hand-written stylesheet, `app/globals.css`. Warm paper, one amber accent, two
-  faces, both themes. See [docs/DESIGN-BRIEF.md](docs/DESIGN-BRIEF.md).
-- **Caddy** reverse proxy with automatic HTTPS
+- One hand-written stylesheet, `app/globals.css`: cool near-black dark theme by default,
+  white light theme, one amber accent, Inter and Bricolage Grotesque. See
+  [docs/DESIGN-BRIEF.md](docs/DESIGN-BRIEF.md).
+- **Pagefind** for search, indexed from `out/` after the build
+- **Caddy** serving the files over plain HTTP. TLS is terminated upstream, at
+  Cloudflare and the edge Traefik.
 
 ## Develop
 
 ```bash
-npm install
-npm run dev          # http://localhost:3000
+npm ci
+npm run dev          # http://localhost:3000 (search does not work here: see below)
 ```
+
+Checks, in the order CI runs them:
+
+```bash
+npm run validate     # post frontmatter, topics, internal and #fragment links
+npm run typecheck
+npm test             # unit tests, tests/**/*.test.ts
+npm run build        # -> ./out, then Pagefind indexes it
+npm run check        # assertions over ./out
+npm run caddy-test   # serves ./out through deploy/Caddyfile and tests redirects, headers, 404s
+npm run smoke        # Playwright + axe in Chromium against http://localhost:8080
+```
+
+**Production-like local server.** `npm run serve:prod` runs `./out` behind the real
+`deploy/Caddyfile` in the Caddy image (Docker required) at <http://127.0.0.1:8080>:
+the real CSP, headers, redirects and 404s. Set `SITE_PORT` for another port and
+`CADDY_IMAGE` to pin the image (default `caddy:2-alpine`). It replaces its container on
+every call; run it again after every build, because the old container keeps the
+deleted `out/` mounted. Search only works here, not under `npm run dev`: `/pagefind/`
+is written into `out/` by the build.
+
+`npm run smoke` needs `npx playwright install chromium` once. It takes `BASE_URL`,
+`SMOKE_WIDTHS` (default `375`) and `STATUS_FIXTURE` (default
+`tests/fixtures/status.json`, served with `generated` set to now).
 
 ## Project layout
 
 ```
 app/                  routes (App Router)
   page.tsx            home
-  writing/            index + writing/[slug]/ post pages (static-generated)
-  topics/[topic]/     one page per topic — posts, projects AND jobs for it
+  writing/            index + writing/[slug]/ post pages
+  topics/[topic]/     one page per topic — posts, projects and jobs for it
   projects/           index + projects/[slug]/
+  about/              about, what I'm doing now, and "Working with me" (#contact)
+  cv/                 prints to one A4 page; no checked-in cv.pdf, so it cannot go stale
   skills/             what I work with, with the measured share of editor time
   journey/            the roles on a time axis, gaps included
-  lab/                unlinked prototypes. Not in the nav, not in the sitemap.
-  about/              about, what I'm doing now, and the whole stack
-  cv/                 /cv/ — prints to exactly one A4 page. No checked-in cv.pdf
-                      on purpose, so it can never go stale.
-  links/              everywhere else I am
-  sitemap.ts          /sitemap.xml
-  robots.ts           /robots.txt
-components/           Nav, Footer, PageHead, PostList, ProjectFilter, TopicMap,
-                      SkillsBoard, Journey, Panel, Icon, Search, UsesStatus,
-                      JsonLd, Picture
-content/posts/*.md    posts (frontmatter: title, date, description, topics)
+  not-found.tsx       the 404 page
+  feed.xml/ atom.xml/ feed.json/   RSS, Atom, JSON Feed: static route handlers (lib/feed.ts)
+  opengraph-image.tsx cards for home, and under writing/[slug]/ and projects/[slug]/
+  sitemap.ts robots.ts manifest.ts icon.svg apple-icon.png
+components/           Shell, Nav, Footer, PageHead, Byline, PostList, PostFilter,
+                      ProjectFilter, PostEnhancements, Comments, Search, ThemeToggle,
+                      Panel, UsesStatus, Measured, SkillsBoard, Journey, PrintCv,
+                      Icon, Picture, JsonLd
+content/posts/*.md    published posts
 content/drafts/       drafts. Not built. Moving a file out of here is deliberate.
-lib/site.ts           site content (projects, experience, uses, links)
-lib/topics.ts         THE vocabulary — posts, projects and jobs all reference it
+lib/site.ts           site content: projects, jobs, skills, uses, links
+lib/topics.ts         the one topic vocabulary — posts, projects and jobs reference it
 lib/readings.ts       every counted figure, computed at build time
-lib/posts.ts          build-time markdown loader
-app/feed.xml/         RSS 2.0   ┐ static route handlers, built from lib/feed.ts
-app/atom.xml/         Atom 1.0  ├ (GET only — that is all output: "export" supports)
-app/feed.json/        JSON Feed ┘
-app/icon.svg          favicon; app/apple-icon.png is the 180×180 iOS home-screen icon
-app/manifest.ts       /manifest.webmanifest
-public/admin/         Sveltia CMS at /admin/ — see "Editing" below
-lib/og.tsx            shared OG card, rendered by the opengraph-image.tsx routes
-components/JsonLd.tsx Person/WebSite/BlogPosting/BreadcrumbList/ProfilePage structured data
+lib/posts.ts          build-time post loader; lib/markdown.mjs parses for it and the validator
+lib/metadata.ts       pageMetadata(), every page's title, canonical and card
+lib/dates.ts          the only date parser ("YYYY-MM" job dates)
+lib/status.ts         useStatus(): the /status.json fetch and its freshness rule
+lib/og.tsx            the shared OG card
+scripts/              validator, image optimiser, check-build, smoke, caddy-test, serve-prod
+tests/                unit tests (node:test) and tests/fixtures/status.json
+deploy/               Caddyfile, deploy.sh, prelive-guard.sh. The compose file lives in
+                      homelab-gitops on the VPS, not here.
 docs/adr/             the decisions that are hard to reverse, and why
-deploy/               Caddyfile + deploy.sh. The stack definition (compose.yaml)
-                      is owned by the /opt/stacks GitOps repo on the VPS, not here.
 ```
 
-Routes moved on 2026-08 (`/posts/*` → `/writing/*`, `/tags/*` → `/topics/*`,
-`/blog/` → `/writing/`, `/resume/` → `/cv/`, `/now/` and `/uses/` → `/about/`). A
-static export cannot redirect, so the old URLs are handled in `deploy/Caddyfile`.
+Routes that moved are redirected in `deploy/Caddyfile`, because a static export cannot
+redirect: `/posts/*` → `/writing/*`, `/tags/*` → `/topics/*`, `/blog/` → `/writing/`,
+`/resume/` → `/cv/`, `/now/`, `/uses/` and `/links/` → `/about/`.
 
 ## Add a blog post
 
-Create `content/posts/my-post.md`:
+Draft in `content/drafts/` (the `/post` skill does this), then move the file to
+`content/posts/my-post.md` when it is ready:
 
 ```md
 ---
@@ -75,67 +101,101 @@ description: "One-line summary for the list and the meta description. Max 160 ch
 topics: ["infrastructure", "debugging"]
 ---
 
-Body in Markdown. Code blocks get syntax highlighting.
+Body in Markdown. Fenced code blocks are highlighted at build time.
 ```
 
-`topics` is a **closed vocabulary** — `npm run validate` fails on anything not in
-`lib/topics.ts`, which is how you avoid one post saying `ci-cd` and the next saying
-`cicd` until there are two hubs of one post each. Adding a topic means editing that
-file *and* `public/admin/config.yml`.
+Optional frontmatter: `spanDays` (how many days the piece is about), and `updated`
+(quoted date, not before `date`) with an optional `correction` note, which requires
+`updated`. Use `updated`/`correction` for factual changes only, not for rewording.
 
-It shows up on `/writing/` and at `/writing/my-post/` on the next build, and on a
-page for each of its topics.
+`topics` is a **closed vocabulary** — `npm run validate` fails on anything not in
+`lib/topics.ts`. Adding a topic means editing that file. A post appears on `/writing/`,
+at `/writing/my-post/` and on each of its topics' pages on the next build.
+
+From a phone: GitHub's web editor, as a pull request against `content/drafts/`. There
+is no CMS ([ADR 0004](docs/adr/0004-the-cms-is-removed.md)).
 
 ## Deploy
 
-There are **two** deploy paths, and a push to `main` runs both.
+One path: a push to `main` runs [.github/workflows/deploy.yml](.github/workflows/deploy.yml).
+Only `main` deploys, and a running deploy is never cancelled.
 
-| | Path 1 — the VPS (origin) | Path 2 — Cloudflare Pages (mirror) |
-|---|---|---|
-| Workflow | [.github/workflows/deploy.yml](.github/workflows/deploy.yml) | [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) |
-| Serves | container Caddy on the Hetzner box | Cloudflare's own network |
-| Headers, redirects | [deploy/Caddyfile](deploy/Caddyfile) | [deploy/pages/_headers](deploy/pages/_headers), [deploy/pages/_redirects](deploy/pages/_redirects) |
-| What the apex points at | this, today | nothing, until you point it |
-| Survives the box being down | no | yes |
+1. **Gate** — `npm ci`, validate, typecheck, test, build, check, `caddy validate`,
+   caddy-test, lychee. Nothing has reached the box yet.
+2. **Stamp** — the commit SHA replaces `__DEPLOY_REV__` in the Caddyfile's
+   `X-Site-Rev` header.
+3. **Sync, three passes** — `out/_next/` without `--delete` (pages cached at the edge
+   still need the old chunks); the Caddyfile with `--inplace` (it is a single-file bind
+   mount, and a renamed file is a new inode the container never sees); then the rest of
+   `out/` with `--delete`, except `/_next/` and `/status.json`.
+4. **Purge** — the Cloudflare cache, only if both `CF_ZONE_ID` and `CF_PURGE_TOKEN`
+   secrets exist. Without them HTML updates when the edge copy expires (`s-maxage=600`).
+5. **Verify** — `caddy-test` against the live site, after waiting up to 60 s for
+   `X-Site-Rev` to name this commit.
 
-The second path exists because the first one ends at a single machine that also runs
-every other self-hosted thing here. Without it the commercial front of this site goes
-down with the test lab. It is a **failover, not a migration**: the VPS stays the origin,
-and switching is one DNS change.
+Old `/_next/` chunks accumulate. Dispatch the workflow with `full: true` to prune them
+after the purge.
 
-**Turning path 2 on** — it is gated off so a push cannot fail in red for a deploy that
-was never configured:
+The deploy key logs in as `webdeploy`, whose only command is
+`rrsync -wo /opt/stacks/website` (forced in its `authorized_keys`): remote paths are
+relative to that directory, and a write-only rsync is all it can do — no shell, no
+docker. Caddy runs with `--watch` (homelab-gitops `website/compose.yaml`) and reloads
+about a second after the Caddyfile changes; a file that fails to load leaves the old
+config running, which is why the gate validates and tests it. There is no
+`caddy reload` or `docker compose up -d` step, and none is possible with this key.
 
-1. Create the Pages project (any name; the default the workflow expects is
-   `hrabovskyi-online`, override it with the repo variable `CLOUDFLARE_PAGES_PROJECT`).
-2. Add repo secrets `CLOUDFLARE_API_TOKEN` (scope: Cloudflare Pages → Edit) and
-   `CLOUDFLARE_ACCOUNT_ID`.
-3. Set the repo **variable** `DEPLOY_CLOUDFLARE_PAGES` to `true`.
+**By hand:** `./deploy/deploy.sh` runs the same gate, sync and live check (no purge).
+It needs GNU rsync 3 (`brew install rsync` on macOS) and refuses to run with `SITE_URL`
+set or with uncommitted changes.
 
-**Keep the two in step.** Caddy gets its headers and redirects from the Caddyfile; Pages
-gets them from `_headers` and `_redirects`, which are copied into `out/` by the workflow
-rather than living in `public/`. The redirects are not optional on either: `/posts/*` was
-the canonical address of everything published here and is still in feed readers, and
-without the `Content-Type: image/png` line every social scraper rejects the OG cards,
-which `next/og` writes as extensionless files. A rule added to one file and not the other
-is a bug that only appears on whichever path you are not looking at.
+**Probe:** [.github/workflows/probe.yml](.github/workflows/probe.yml) runs caddy-test
+against the live site every six hours (and on dispatch) and fails if `/status.json` is
+older than 48 hours. GitHub emails the failure.
 
-**Analytics does not follow the mirror.** `/s/script.js` and `/api/send` are first-party
-only because the edge Traefik routes them to the Umami container; on Pages there is no
-such route and the tracker is silently dead. That is acceptable for a failover — it is
-the one thing on the page nobody is there for — but it is worth knowing before debugging
-it a second time.
+**Dependabot** opens one grouped PR per week for npm and one for GitHub Actions.
 
-### Path 1 — the VPS
+### One-time setup
 
-The site exports to static files served by a small internal Caddy
-(`/opt/stacks/website`) bound to the tailnet at `100.64.0.2:8090`.
+1. **Create a deploy key** (locally — keep the private key out of git):
 
-**The public edge is Traefik, not Caddy.** `/opt/stacks/headscale/Caddyfile` still exists
-and still contains an `hrabovskyi.online` block, but **no `headscale-caddy` container is
-running** — that file is dead config. Real routing lives in
-`/opt/stacks/pangolin/config/traefik/dynamic_config.yml`, which has `watch: true`, so
-edits apply without a restart:
+   ```bash
+   ssh-keygen -t ed25519 -f deploy_key -N "" -C "github-actions-deploy"
+   ```
+
+2. **Authorize it on the VPS**, as root, into `webdeploy`'s keys (never root's own):
+
+   ```bash
+   printf 'restrict,command="/usr/bin/rrsync -wo /opt/stacks/website" %s\n' "$(cat deploy_key.pub)" \
+     > /home/webdeploy/.ssh/authorized_keys
+   ```
+
+3. **Pin the host key:** `ssh-keyscan -t ed25519 <origin-ip>`.
+
+4. **Repo secrets** (Settings → Secrets and variables → Actions):
+
+   | Secret | Value |
+   |--------|-------|
+   | `DEPLOY_SSH_KEY` | the private `deploy_key` |
+   | `DEPLOY_KNOWN_HOSTS` | the `ssh-keyscan` line |
+   | `PRELIVE_SSH_KEY` | the prelive key (see Prelive) |
+   | `CF_ZONE_ID`, `CF_PURGE_TOKEN` | optional: zone id and a Zone → Cache Purge token |
+
+The repository is private on GitHub Free, so environments and branch protection are
+unavailable and a workflow on any branch can read these secrets.
+
+To rotate a key, replace its line in `authorized_keys` and the matching secret. Keep a
+copy of the private key in Vaultwarden.
+
+### Hosting and DNS
+
+The container Caddy (`/opt/stacks/website`) serves `:80` on the tailnet at
+`100.64.0.2:8090` and prelive's `:81` at `100.64.0.2:8091`. It is plain HTTP; nothing
+here issues a certificate.
+
+**The public edge is Traefik, not Caddy.** `/opt/stacks/headscale/Caddyfile` is dead
+config; no container runs it. Routing lives in
+`/opt/stacks/pangolin/config/traefik/dynamic_config.yml` (`watch: true`, so edits apply
+live):
 
 ```yaml
 website-router:
@@ -143,222 +203,95 @@ website-router:
   service: website-service      # -> http://100.64.0.2:8090
 ```
 
-Analytics is routed from the same file: `/s/script.js` and `/api/send` go to `umami:3000`
-over the shared `edge` network, so the tracker is first-party.
+Umami is routed from the same file (`/s/script.js` and `/api/send` to `umami:3000`), so
+the tracker is first-party. The tracker derives its endpoint from its script's path, so
+it may post to `/s/api/send` instead; check in DevTools that pageviews reach Umami.
 
-**DNS — note that Cloudflare is in front.** Live responses carry `server: cloudflare`
-and a `cf-ray` header, so the browser terminates TLS at Cloudflare, not at the edge
-Traefik. That has consequences worth knowing before you debug anything:
+**Cloudflare is in front** (`server: cloudflare` on every live response), so the browser
+terminates TLS at Cloudflare. Before debugging anything header- or crawler-related:
 
-- **Response headers can be added, stripped or overridden at the Cloudflare edge.** Set
-  each security header in exactly one place — duplicated CSP headers get intersected by
-  browsers.
-- **HTML caching** — `deploy/Caddyfile` now sends `s-maxage` for HTML, feeds and the
-  icons, so Cloudflare can cache pages instead of returning `cf-cache-status: DYNAMIC`
-  on every request. Only `/_next/static/*` is `immutable`.
-- **Cloudflare injects a managed `robots.txt` block** ahead of this app's own rules,
-  disallowing `GPTBot`, `ClaudeBot`, `Google-Extended`, `CCBot` and others, and setting
+- **Headers can be added, stripped or overridden at the edge.** Set each security header
+  in exactly one place — browsers intersect duplicate CSP headers.
+- **Caching** — the Caddyfile sends `s-maxage` for HTML, feeds and icons, and a cache rule
+  ("Respect origin Cache-Control") plus Browser Cache TTL = Respect Existing Headers make
+  the edge honour it. Only `/_next/static/*` is `immutable`.
+- **Cloudflare injects a managed `robots.txt` block** ahead of the site's own rules,
+  disallowing `GPTBot`, `ClaudeBot`, `Google-Extended`, `CCBot` and others, with
   `Content-Signal: ai-train=no`.
-- **AI Crawl Control** (Security → AI Crawl Control) decides which AI crawlers get through.
-  Retrieval/search bots are allowed — OAI-SearchBot, ChatGPT-User, PerplexityBot,
-  Claude-SearchBot (which is actively crawling and transferring bytes) — while training
-  crawlers are blocked: GPTBot, CCBot, ClaudeBot, Bytespider, Amazonbot,
-  Google-CloudVertexBot, FacebookBot.
-  **Beware of testing this with `curl -A`**: Cloudflare verifies bots by source IP, so a
-  spoofed user-agent from any other address is correctly rejected with a 403. That looks
-  identical to the crawler being blocked and is not. Use the AI Crawl Control request
-  counters instead.
-- **Email Obfuscation is now off.** It used to rewrite `mailto:` links into
-  `/cdn-cgi/l/email-protection` plus a decode script, which broke the contact path
-  entirely without JavaScript and hid the address from crawlers.
-- **A cache rule** ("Respect origin Cache-Control") and **Browser Cache TTL = Respect
-  Existing Headers** make the edge honour the origin instead of returning
-  `cf-cache-status: DYNAMIC` on every HTML request and rewriting `max-age`.
-- `www.hrabovskyi.online` answers **302**. The edge Caddy block above says `permanent`
-  (301), so the 302 is **Cloudflare's** redirect, not Caddy's — the request never reaches
-  the origin.
+- **AI Crawl Control** allows retrieval bots (OAI-SearchBot, ChatGPT-User, PerplexityBot,
+  Claude-SearchBot) and blocks training crawlers (GPTBot, CCBot, ClaudeBot, Bytespider,
+  Amazonbot, Google-CloudVertexBot, FacebookBot). **Do not test it with `curl -A`**:
+  Cloudflare verifies bots by source IP, so a spoofed user-agent gets a 403 that looks
+  exactly like a block. Use the AI Crawl Control counters.
+- **Email Obfuscation is off**, so `mailto:` links work without JavaScript.
+- `www.hrabovskyi.online` answers **302** from Cloudflare; the request never reaches the
+  origin.
 
-The original single-layer setup was: A records `@` and `www` → the VPS, with Caddy issuing
-the Let's Encrypt cert once DNS resolved. That still describes the origin; it is no longer
-the whole path.
+### Live state (`/status.json`)
 
-### Live state on /about/
-
-**The generator lives in `homelab-gitops`, not here** — `scripts/gen-status.sh` in that
-repo, run by `host/cron.d/website-status` every ten minutes from `/opt/stacks/scripts/`.
-This repo kept its own copy until 2026-09-23 and the two drifted: the copy here grew the
-coding and package figures, the copy the box actually runs never had them, and the live
-panel sat two thirds empty for weeks. One file, in the repo that deploys it.
-
-It writes `/status.json` next to the site. `components/Panel.tsx` and
-`components/UsesStatus.tsx` fetch it in the browser and render nothing when it is missing
-or older than 48 hours, so no page claims live state it does not have.
-
-Aggregates only — container count, unhealthy count, uptime, hours coded in the last 30
-days with the top language and editor as shares, and the NuGet download count. Never
-service names, versions, ports or project names: the busiest project is an employer's
-codebase and this document is public.
+The generator lives in homelab-gitops (`scripts/gen-status.sh`, run every ten minutes by
+`host/cron.d/website-status`), not here. It writes `/status.json` next to the site, and
+the deploy never overwrites it:
 
 ```
 # on the VPS; the Wakapi key is read from its SQLite, so there is nothing to pass
 /opt/stacks/scripts/gen-status.sh /opt/stacks/website/site/status.json
 ```
 
-**Ship a build:**
+Aggregates only — container count, unhealthy count, uptime, hours coded in the last 30
+days with the top language and editor as shares, and the NuGet download count. Never
+service names, versions, ports or project names: the busiest project is an employer's
+codebase and this document is public.
 
-```bash
-./deploy/deploy.sh   # builds ./out, rsyncs to the VPS; Caddy --watch reloads itself
-```
+The browser reads it through `useStatus()` (`lib/status.ts`), which treats a document
+that is missing, older than 48 hours, or malformed as absent. What each consumer does:
 
-Or manually:
+- **The home panel (`components/Panel.tsx`) always renders.** Before the fetch settles —
+  which is also what the static HTML, crawlers and readers without JavaScript get — it
+  says where the figures come from. On failure it says the box is not reporting. A
+  document missing an optional half gets a line naming what is absent. Its height is
+  reserved by measured bands in `globals.css`; re-measure them when the figures, their
+  source text or the type scale change.
+- **`UsesStatus` (`/about/`) and `Measured` (the CV) render nothing** without a
+  valid document.
 
-```bash
-npm run build                                   # -> ./out
-rsync -avz --delete --exclude=status.json out/ webdeploy@<origin-ip>:site/
-rsync -avz --inplace deploy/Caddyfile webdeploy@<origin-ip>:Caddyfile
-```
-
-The container Caddy is plain HTTP — TLS is terminated at the edge Traefik (and in front of
-that, Cloudflare). Nothing here issues a certificate.
-
-The deploy key logs in as `webdeploy`, whose only command on the box is
-`rrsync -wo /opt/stacks/website` (forced in its `authorized_keys`): remote paths are relative
-to that directory and nothing but a write-only rsync works — no shell, no docker. Caddy runs
-with `--watch` (homelab-gitops `website/compose.yaml`), so a new Caddyfile loads by itself.
-The file is a single-file bind mount, hence `rsync --inplace`: a rename would leave the
-container pinned to the old inode.
-
-## Continuous deployment (GitHub Actions)
-
-`.github/workflows/deploy.yml` runs on every push to `main` (and on manual dispatch):
-`npm ci` → `validate` → `typecheck` → `build` → `caddy validate` → rsync `out/` to the
-VPS as `webdeploy` → wait for Caddy's `--watch` → verify pages and redirects. The
-runner reaches the VPS over SSH on port 22.
-
-`.github/workflows/ci.yml` runs the same checks on branches and PRs, plus an offline
-link check, so failures surface before anything reaches `main`.
-
-> **The host moved once.** Deploys targeted a previous address until 2026-07-28; it still answered
-> ping but had port 22 closed, so nothing had deployed since
-> **2026-06-06** — see [the post](https://hrabovskyi.online/writing/silent-deploys/).
-> The workflow now targets `<origin-ip>`, both secrets have been rotated, and
-> deploys run green. The steps below are the runbook for the next rotation.
-
-### One-time setup
-
-1. **Create a dedicated deploy key** (locally — keep the private key out of git):
-
-   ```bash
-   ssh-keygen -t ed25519 -f deploy_key -N "" -C "github-actions-deploy"
-   ```
-
-2. **Authorize it on the VPS:**
-
-   ```bash
-   # on the VPS, as root — never into root's own authorized_keys:
-   printf 'restrict,command="/usr/bin/rrsync -wo /opt/stacks/website" %s\n' "$(cat deploy_key.pub)" \
-     > /home/webdeploy/.ssh/authorized_keys
-   ```
-
-3. **Pin the VPS host key** (so the runner won't trust-on-first-use):
-
-   ```bash
-   ssh-keyscan -t ed25519 <origin-ip>
-   ```
-
-4. **Add two repo secrets** (GitHub → repo → Settings → Secrets and variables →
-   Actions → New repository secret):
-
-   | Secret | Value |
-   |--------|-------|
-   | `DEPLOY_SSH_KEY` | full contents of the private `deploy_key` file |
-   | `DEPLOY_KNOWN_HOSTS` | the line printed by `ssh-keyscan` in step 3 |
-
-5. **DNS** (once): A records `@` and `www` → `<origin-ip>`.
-
-Then push to `main` and watch the run under the repo's **Actions** tab. After
-the first successful deploy, Caddy issues the certificate and the site is live
-at <https://hrabovskyi.online>.
-
-> Tip: store the deploy private key in Vaultwarden as a backup. To rotate, drop
-> the old line from the VPS `~/.ssh/authorized_keys` and repeat with a new key.
-
-
+Local builds have no `/status.json`; `tests/fixtures/status.json` is a complete one for
+tests and the smoke run.
 
 ## Prelive
 
-A full build of the site, on the same box and the same Caddy container as
-production, served from a second root and published to the **tailnet only**. No
-public DNS, no edge route, nothing to crawl. It exists so a change can be walked
-through on a phone and a laptop before it is merged.
+A full build on the same box and the same Caddy container as production, served from a
+second root (`/srv-prelive`, the `:81` block) and published to the **tailnet only**: no
+public DNS, no edge route, nothing to crawl. Open <http://100.64.0.2:8091/> from a
+tailnet device.
 
-`.github/workflows/prelive.yml` runs on **manual dispatch and on every pull
-request**: `npm ci` → `validate` → `typecheck` → `build` → `caddy validate` →
-rsync `out/` to `/opt/stacks/website/prelive/` → check the container answers.
-Then open <http://100.64.0.2:8091/>.
+[.github/workflows/prelive.yml](.github/workflows/prelive.yml) runs on manual dispatch
+and on every pull request from this repository (not forks, not Dependabot): validate →
+typecheck → build → `caddy validate` → a dry-run guard → rsync `out/` to
+`/opt/stacks/website/prelive/`. The runner cannot reach the tailnet, so there is no
+live check.
 
-Three things make it a separate site rather than a second copy of production:
+- **Its own key.** Prelive deploys with `PRELIVE_SSH_KEY`, never the production key, and
+  fails at its first step until that secret exists. Create it like the deploy key, forced
+  to the prelive root:
 
-- **`SITE_URL`.** The workflow builds with it set to the prelive origin, and
-  [lib/site.ts](lib/site.ts) reads it once. Canonicals, both feeds, the sitemap
-  and the OG cards follow it — and so does the URL each comment thread is keyed
-  by, which is the one that matters: a prelive build carrying the production URL
-  would post test comments into the live thread.
-- **`noindex`.** `isPrelive` puts `Disallow: /` in `robots.txt`, a
-  `noindex, nofollow` meta on every page, and `X-Robots-Tag` on the `:81` block.
-- **It never ships `deploy/Caddyfile`.** That file carries the production `:80`
-  block too, so rsyncing it from a branch would change the live site's config
-  before the change was merged. Prelive only *validates* it.
+  ```
+  restrict,command="/usr/bin/rrsync -wo /opt/stacks/website/prelive" <pubkey>
+  ```
 
-### One-time setup
+  in `webdeploy`'s `authorized_keys`. Before the real sync, the same rsync runs with
+  `--dry-run --itemize-changes` and `deploy/prelive-guard.sh` stops the job if it would
+  touch `site/`, a `Caddyfile`, a top-level `status.json` or a dotfile — the signs of a
+  key set up with the wrong root, where `--delete` would destroy production.
+- **`SITE_URL`.** The build sets it to the prelive origin, and `lib/site.ts` reads it once.
+  Canonicals, feeds, the sitemap, the OG cards and the URL each comment thread is keyed by
+  follow it — a prelive build with the production URL would post test comments into the
+  live thread.
+- **`noindex`.** A prelive build puts `Disallow: /` in `robots.txt` and a
+  `noindex, nofollow` meta on every page; the `:81` block adds `X-Robots-Tag`.
+- **It never ships `deploy/Caddyfile`.** That file carries the production `:80` block, so
+  syncing it from a branch would change the live config before a merge. Prelive only
+  validates it; it reaches the box with the next production deploy.
 
-`deploy/Caddyfile` already serves `:81` from `/srv-prelive`. The mount and the
-published port live in the compose spec under `/opt/stacks`, which this repo
-does not own — add both there by hand, once:
-
-```yaml
-    volumes:
-      - ./prelive:/srv-prelive:ro     # alongside the existing ./site:/srv:ro
-    ports:
-      - "100.64.0.2:8091:81"          # alongside the existing 8090:80
-```
-
-Then `docker compose up -d` in `/opt/stacks/website` — this one genuinely needs
-it, because the compose spec changed and the container has to be recreated.
-
-Two ordering notes, both of which will fail the workflow's verify step with a
-message rather than silently:
-
-1. The `:81` block reaches the box with the **next production deploy**, so the
-   branch adding it has to be merged to `main` before prelive can answer.
-2. The address is `100.64.0.2`, settled by the file that binds the port:
-   `website/compose.yaml` in homelab-gitops publishes `100.64.0.2:8090:80`.
-   This repo had it written down twice and disagreeing; the Caddyfile's comment
-   said `.4` and was simply wrong. `PRELIVE_ORIGIN` in `prelive.yml` is still
-   the only place the address reaches a build.
-
-Prelive reuses `DEPLOY_SSH_KEY` and `DEPLOY_KNOWN_HOSTS`. A pull request from a
-fork gets neither, so the job skips itself rather than failing halfway.
-
-
-## Editing (`/admin/`)
-
-[Sveltia CMS](https://sveltiacms.app). A static SPA that talks to the GitHub API
-directly — it never touches the build, and `output: "export"` is unaffected.
-Saving commits to `main`, which triggers the normal deploy.
-
-**Signing in needs no OAuth app and no worker.** Click **Sign In Using Access
-Token**; it links to GitHub's token page with the right scopes pre-selected.
-Generate a fine-grained PAT scoped to `Egoushka/personal-website` with
-**Contents: Read and write**, and paste it in. The token is stored in your
-browser's localStorage and never reaches this repo, the server, or CI.
-
-That is deliberately the whole setup. The alternative — a GitHub OAuth app plus a
-Cloudflare Worker — means one more deployed service and a client secret to store,
-to replace a button that already works.
-
-Rotate by deleting the token on GitHub; the CMS then just asks for a new one.
-
-The editor mirrors `scripts/validate-content.mjs`, including the closed tag
-vocabulary and the 160-character description limit, so mistakes surface before
-they become a commit. CI is still the real gate.
+The mount and the published port are in homelab-gitops `website/compose.yaml`
+(`./prelive:/srv-prelive:ro`, `100.64.0.2:8091:81`), which this repo does not own.
