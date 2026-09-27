@@ -45,15 +45,6 @@ jobs:
       (github.event_name == 'workflow_dispatch' ||
       github.event.pull_request.head.repo.full_name == github.repository)
     steps:
-      - name: Require the prelive key
-        env:
-          PRELIVE_SSH_KEY: ${{ secrets.PRELIVE_SSH_KEY }}
-        run: |
-          if [ -z "$PRELIVE_SSH_KEY" ]; then
-            echo "::error title=PRELIVE_SSH_KEY is not set::Prelive deploys with its own key, forced to 'rrsync -wo /opt/stacks/website/prelive' in webdeploy's authorized_keys (README, Prelive). It never falls back to the production key."
-            exit 1
-          fi
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -112,6 +103,17 @@ jobs:
             --prerelease --latest=false --target "$GITHUB_SHA" \
             --title "deploy-prelive (moving)" --notes "Pulled by the VPS every 2 minutes. Replaced on every prelive run; out/ only, never the Caddyfile."
           gh release upload deploy-prelive site.tar.gz site.tar.gz.sha256 --clobber
+
+      # The pull path above needs no key; the rsync below does. The check sits here,
+      # after publishing, so a missing key stops only the rsync.
+      - name: Require the prelive key
+        env:
+          PRELIVE_SSH_KEY: ${{ secrets.PRELIVE_SSH_KEY }}
+        run: |
+          if [ -z "$PRELIVE_SSH_KEY" ]; then
+            echo "::error title=PRELIVE_SSH_KEY is not set::Prelive deploys with its own key, forced to 'rrsync -wo /opt/stacks/website/prelive' in webdeploy's authorized_keys (README, Prelive). It never falls back to the production key."
+            exit 1
+          fi
 
       - name: Configure SSH
         env:

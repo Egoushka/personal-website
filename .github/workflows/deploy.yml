@@ -107,11 +107,13 @@ jobs:
       # The pull path (homelab-gitops host/website-pull.sh, M5.7): the box fetches
       # this archive from the `deploy-site` release every 2 minutes and checks its
       # sha256, so it needs no inbound SSH. It runs alongside the rsync below until
-      # it is verified; then the rsync and the deploy key go.
+      # it is verified; then the rsync and the deploy key go. It carries the
+      # stamped Caddyfile: the placeholder one would serve X-Site-Rev
+      # "__DEPLOY_REV__", which the live verify and the probe both reject.
       - name: Package the build
         run: |
           echo "$GITHUB_SHA" > out/build.txt
-          mkdir pkg && cp -r out pkg/out && cp deploy/Caddyfile pkg/Caddyfile
+          mkdir pkg && cp -r out pkg/out && cp "$RUNNER_TEMP/Caddyfile" pkg/Caddyfile
           tar -czf site.tar.gz -C pkg .
           sha256sum site.tar.gz | awk '{print $1"  site.tar.gz"}' > site.tar.gz.sha256
 
