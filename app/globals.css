@@ -55,10 +55,14 @@
   /* --- grid ---------------------------------------------------------------- */
   --rail:    168px;
   --gutter:   40px;
-  /* 640px is 64-69ch across the body step's range — the 60-70ch comfort band.
-     Nothing on this site sets a prose max-width above 66ch; see the audit note
-     on `.jr-note`, which was 74. */
+  /* The column. Code, tables, figures and the panel use all of it; prose stops
+     at --read. 640px of Inter sets about 80 characters per line. */
   --measure: 640px;
+  /* The reading measure: about 66 characters per line of Inter at any size
+     (measured 2026-09 on a project page: 640px set ~80). Every block of prose
+     stops here. In em, never ch: `ch` is Inter's zero, 0.625em, about 1.25
+     characters, so "66ch" sets ~82. */
+  --read:    33em;
   --bleed:   calc(var(--rail) + var(--gutter) + var(--measure));
 
   /* --- type: ONE modular scale ----------------------------------------------
@@ -107,8 +111,8 @@
   --fs-display: var(--step-5);    /* hero, CV masthead, 404             */
 
   /* --- leading: a function of size AND measure -------------------------------
-     Leading tracks line length, not taste. `--lh-body` is set for the 60-70ch
-     column that `--measure` produces; every step above it gets tighter as it
+     Leading tracks line length, not taste. `--lh-body` is set for the
+     ~66-character line that `--read` produces; every step above it gets tighter as it
      gets bigger, because a 50px line nineteen characters long needs none of
      the 1.6 a 66-character line does. Do not put `--lh-body` on anything
      narrower than ~45ch: it reads as a list, not a paragraph. */
@@ -199,8 +203,6 @@
 .wrap > *           { grid-column: 2; }        /* prose column — the default  */
 .wrap > .rail       { grid-column: 1; }        /* metadata                    */
 .wrap > .bleed      { grid-column: 1 / -1; }   /* section rules, wide figures */
-.wrap > .bleed-code { grid-column: 2 / -1;     /* code: prose + gutter        */
-                      margin-inline-start: calc(-1 * var(--gutter)); }
 
 /* A rail child and its prose sibling must share a row. Wrap the pair in `.row`
    when they must align to the same baseline. */
@@ -212,7 +214,15 @@
 }
 .row > .rail       { grid-column: 1; }
 .row > *           { grid-column: 2; }
-.row > .bleed-code { grid-column: 2 / -1; margin-inline-start: calc(-1 * var(--gutter)); }
+
+/* Reading text stops at --read inside the wider column, at every width. Not
+   .wrap or .row themselves: code, tables, figures and the panel use the width.
+   A classed <p> in a row is an item — a byline, a figure line, an /about/ row —
+   not running prose; wrapping one sentence onto a second line reads worse, so
+   items keep the column. */
+.prose > p, .prose > ul, .prose > ol, .prose > blockquote,
+.row > p:not([class]) { max-inline-size: var(--read); }
+.row > p[class]       { max-inline-size: var(--measure); }
 
 /* ============================================================================
    BASE
@@ -406,18 +416,28 @@ a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; 
 /* Paper and screen want different words in the same slot. */
 .print-only { display: none; }
 
+/* A count beside a name must not read as part of it ("C# / .NET 9"). The
+   markup carries a hidden unit; where name and count share a colour — the
+   topic run — a hairline sets the count apart. A chip's border already does. */
 .rail-count {
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
   margin-inline-start: var(--s-2);
+}
+.topic-run .rail-count {
+  padding-inline-start: var(--s-2);
+  border-inline-start: var(--hair) solid currentColor;
 }
 
 /* ============================================================================
    SITE HEADER / FOOTER
    ========================================================================= */
 
+/* The header sits in its own .wrap, above <main>, where the grid's row gap
+   cannot reach it; this margin is that gap. */
 .site-header {
   padding: var(--s-6) 0 var(--s-4);
+  margin-bottom: var(--s-5);
   border-bottom: var(--hair) solid var(--rule);
   display: flex;
   align-items: baseline;
@@ -426,6 +446,10 @@ a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; 
   flex-wrap: wrap;
 }
 .site-header .brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;      /* WCAG 2.5.8: line-height 1 left it 17px tall */
+  margin-block: calc((1lh - 24px) / 2);   /* the target grows, the line does not */
   font: var(--w-head) var(--fs-body)/1 var(--prose);
   letter-spacing: -0.015em;
   color: var(--ink);
@@ -453,7 +477,12 @@ a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; 
   text-underline-offset: 5px;
 }
 
+/* A run like any other, plus a row gap: wrapped, its 24px targets would
+   otherwise overlap the row above. */
 .site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-5);
   margin-top: var(--s-10);
   padding: var(--s-6) 0;
   border-top: var(--hair) solid var(--rule);
@@ -461,8 +490,29 @@ a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; 
   letter-spacing: var(--ls-rail);
   color: var(--ink-2);
 }
-.site-footer a { color: var(--ink-2); text-decoration: none; }
+/* Standalone links, so no inline-text exception: 24px tall (WCAG 2.5.8). The
+   negative margin keeps the line where it was; only the target grows. */
+.site-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  margin-block: calc((1lh - 24px) / 2);
+  color: var(--ink-2);
+  text-decoration: none;
+}
 .site-footer a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
+
+/* ============================================================================
+   BYLINE — who wrote this and how to reach me, where a reader finishes
+   ========================================================================= */
+
+.byline {
+  font: 400 var(--fs-small)/1.5 var(--figure);
+  color: var(--ink-2);
+  margin: 0;
+}
+/* A line of targets, not a sentence, so each gets the 24px floor (WCAG 2.5.8). */
+.byline a { display: inline-flex; align-items: center; min-height: 24px; }
 
 /* ============================================================================
    RULES
@@ -491,17 +541,15 @@ hr.bleed {
    filter; the space above it belongs to the header rule, not to a ghost. */
 .page-head--quiet:not(:has(.page-figures)):not(:has(.page-lede)) { padding-top: 0; }
 
-/* A RUN — several facts on one line, separated by space.
+/* A RUN — several facts on one line, separated by space. A flex line with a
+   gap: the separator is the absence of a glyph, so it cannot drift between
+   call sites.
 
-   This replaced the interpunct. There were three mechanisms for that dot: a
-   <span className="sep"> in twenty-odd JSX sites, a " · " baked into data
-   strings and joins, and five CSS `content:` rules — so "change the separator"
-   meant editing three unrelated things and missing one. A run is a flex line
-   with a gap: the separator is now the absence of a glyph, which cannot drift.
-
-   Children must be elements, not bare text nodes: an anonymous flex item gets
-   no gap. Every call site wraps its facts in <span>. */
-.run, .page-figures, .home-status, .site-footer, .post-row .post-meta {
+   Children must be elements, not bare text: an anonymous flex item gets no
+   gap. And put a {" "} between them — flex ignores a whitespace-only node, but
+   without one, extracted text (search excerpts, reader mode) runs the facts
+   together: "28 July 2026982 words". */
+.run, .page-figures, .home-status, .post-row .post-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 0 var(--s-5);
@@ -517,7 +565,7 @@ hr.bleed {
 /* Ink, and a step above body. It is the first sentence anyone reads on the
    page; setting it in the same grey as a timestamp said it was optional. */
 .page-lede {
-  max-width: 56ch;
+  max-width: var(--read);
   margin: var(--s-5) 0 0;
   font-size: var(--fs-h3);
   line-height: 1.5;
@@ -539,13 +587,7 @@ hr.bleed {
   align-content: start;
 }
 .prose > *           { grid-column: 2; }
-.prose > .rail       { grid-column: 1; }
 .prose > .bleed      { grid-column: 1 / -1; }
-.prose > .bleed-code { grid-column: 2 / -1; margin-inline-start: calc(-1 * var(--gutter)); }
-/* A .row inside the article must span both columns and inherit the parent's
-   tracks — otherwise `.prose > *` pins it to column 2 and its own grid
-   overflows the measure. */
-.prose > .row        { grid-column: 1 / -1; grid-template-columns: subgrid; }
 
 /* THE POST BODY — a block in the prose column, not a subgrid.
    The article used to span both columns so a header rail could sit beside the
@@ -576,28 +618,33 @@ hr.bleed {
 .prose img { max-width: 100%; height: auto; }
 
 /* Section numbers are a CSS counter, so the markdown pipeline never has to know
-   about them. They sit on their own line above the heading — in the margin they
-   would collide with the sticky contents list, which owns that column now. */
+   about them, and each is its section's permalink. They sit on their own line
+   above the heading: in the margin they would collide with the sticky contents
+   list, which owns that column. */
 main { counter-reset: sect; }
 .sect-mark {
-  display: block;
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 24px;                     /* WCAG 2.5.8 */
   font: var(--w-head) var(--fs-rail)/1 var(--figure);
   letter-spacing: var(--ls-label);
   color: var(--accent);
-  margin-bottom: var(--s-2);
+  text-decoration: none;
   counter-increment: sect;
 }
 .sect-mark::before { content: "§ " counter(sect, decimal-leading-zero); }
+.sect-mark:hover { text-decoration: underline; text-underline-offset: 2px; }
 
-/* Heading anchors — rehype-slug puts the id on, this makes it visible on hover. */
-.prose h2 { position: relative; }
-.prose h2:hover::after {
-  content: "#";
+/* A note that the post was corrected, above the body it corrects. */
+.post-correction {
+  font-size: var(--fs-small);
   color: var(--ink-2);
-  font-weight: 400;
-  position: absolute;
-  margin-left: 10px;
+  border-left: 2px solid var(--rule-firm);
+  padding-left: 18px;
 }
+.post-correction .rail--label { margin-inline-end: var(--s-2); }
+
 /* Confirmation of where you landed, for free — the zero-JS current-item mark. */
 .prose h2:target { color: var(--accent); }
 
@@ -627,10 +674,8 @@ pre code { background: none; border: none; padding: 0; font: inherit; }
 }
 
 /* A code block is one object: a header carrying the language and the copy
-   button, and the code under it, sharing the left edge of the prose. The old
-   version put the label and the button out in the rail and bled the code into
-   the gutter, so the code and the sentence explaining it started at different
-   places and the control that acted on the block sat somewhere else. */
+   button, and the code under it, sharing the left edge of the prose, so the
+   control sits on the block it acts on. */
 figure.code {
   margin: 0;
   border: var(--hair) solid var(--rule);
@@ -638,13 +683,20 @@ figure.code {
   background: var(--surface);
   overflow: hidden;
 }
-.code-head {
+/* Its own font and box: when a language is declared the header is a
+   <figcaption>, and the FIGURES rule would otherwise give it a caption's
+   margin and measure. */
+.code-head,
+figure.code > figcaption.code-head {
   display: flex; align-items: center; justify-content: flex-end;
   gap: var(--s-4);
+  margin: 0;
+  max-width: none;
+  font: 400 var(--fs-rail)/var(--lh-rail) var(--figure);
+  color: var(--ink-2);
   padding: var(--s-2) var(--s-3) var(--s-2) var(--s-4);
   border-bottom: var(--hair) solid var(--rule);
 }
-.code-lang:empty { display: none; }
 .code-lang {
   margin-inline-end: auto;
   font: 400 var(--fs-rail)/1 var(--figure);
@@ -677,6 +729,11 @@ figure.code pre {
   background: var(--surface-2);
 }
 .copy-btn.is-copied { color: var(--accent); border-color: var(--accent); }
+/* No JavaScript, no Copy: a button that does nothing is worse than none, and a
+   header that held only the button goes with it. */
+@media (scripting: none) {
+  .copy-btn, .code-head--bare { display: none; }
+}
 
 /* ============================================================================
    THE POST — title block, then a sticky contents rail beside the article
@@ -684,6 +741,9 @@ figure.code pre {
 
 .post-head { padding-top: var(--s-8); }
 .post-head h1 { margin: 0; }
+
+/* The byline has no outer margin of its own; the post gives it room. */
+.post-byline { margin-top: var(--s-8); }
 
 /* One grid row holding both columns for the whole post. Row-spanning is what
    broke the old header: a tall item in a spanned auto row grows that row, so an
@@ -754,6 +814,9 @@ figure.code pre {
   background: var(--accent);
   transition: top 180ms ease, height 180ms ease;
 }
+@media (forced-colors: active) {
+  .toc::before { background: Highlight; }
+}
 
 /* Below the collapse the TOC is the one place the rail becomes interactive —
    a <details>, which needs no JS. Above it, the disclosure is not wanted at all:
@@ -814,10 +877,8 @@ figure.code pre {
 }
 
 /* /writing/ groups by month while the order is chronological, with the head in
-   the rail. The year used to sit here at h2 size: every post on this site is
-   from the same year, so it drew a heading the width of the page around all of
-   them and told the reader nothing. A month varies, and when the reader sorts
-   by length instead, the head says so rather than lying about dates. */
+   the rail. When the reader sorts by length, the head says so rather than
+   printing a month that no longer describes the group. */
 .post-group {
   border-top: var(--hair) solid var(--rule);
   padding-top: var(--s-5);
@@ -887,11 +948,9 @@ figure.code pre {
   letter-spacing: var(--ls-rail);
   text-transform: uppercase;
 }
-/* Every item here is a link, so nothing is being told apart from anything —
-   the underline is pure decoration until the pointer is on one. */
+/* Links, so they carry the resting underline every other link does. */
 .topic-run a {
   color: var(--ink-2);
-  text-decoration-line: none;
   display: inline-flex;
   align-items: center;
   min-height: 24px;      /* WCAG 2.5.8 */
@@ -949,6 +1008,7 @@ figure.code pre {
   height: 38px; padding: 0 16px;
   border-radius: var(--radius);
   background: var(--ink); color: var(--paper);
+  border: var(--hair) solid transparent;   /* the only boundary left in forced colours */
   font: 500 var(--fs-small)/1 var(--prose);
   letter-spacing: -0.01em;
   text-decoration: none; white-space: nowrap;
@@ -988,7 +1048,9 @@ figure.code pre {
   color: var(--ink-2);
   transition: background .15s ease, border-color .15s ease;
 }
-.proof li:hover { background: var(--surface-2); border-color: var(--rule-firm); }
+/* Only a card that holds a link answers the pointer; a card that lifts and
+   leads nowhere promises a click it cannot keep. */
+.proof li:has(a):hover { background: var(--surface-2); border-color: var(--rule-firm); }
 .proof-label {
   display: block;
   font: 400 var(--fs-rail)/1.4 var(--figure);
@@ -999,14 +1061,17 @@ figure.code pre {
   margin-bottom: var(--s-3);
 }
 .proof-text { display: block; margin-bottom: var(--s-4); }
+/* A link like every other link — ink, resting underline — not an accent-coloured
+   word that only underlines on hover. The flex box gives it a 24px target. */
 .proof-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;      /* WCAG 2.5.8 */
   font: 400 var(--fs-small)/1 var(--prose);
   white-space: nowrap;
   margin-inline-end: var(--s-4);
-  color: var(--accent);
-  text-decoration: none;
+  color: var(--ink);
 }
-.proof-link:hover { text-decoration: underline; }
 
 /* ============================================================================
    THE INSTRUMENT PANEL
@@ -1014,10 +1079,11 @@ figure.code pre {
    system is doing, but what it is doing, tonight, read from the machine.
    ========================================================================= */
 
+/* Below the proof row, in its gap, so the two read as one group of cards. */
 .panel {
   grid-column: 1 / -1;
-  margin-top: var(--s-9);
-  padding: var(--s-5) var(--s-6) var(--s-6);
+  margin-top: var(--s-3);
+  padding: var(--s-5);
   border: var(--hair) solid var(--rule);
   border-radius: 14px;
   background: linear-gradient(180deg, var(--surface), var(--paper));
@@ -1031,10 +1097,20 @@ figure.code pre {
   color: var(--ink-2);
   opacity: .8;
 }
-/* The height is reserved so the numbers can arrive without moving the page.
-   CLS on this site has been 0 since it was built, and a panel that pushes
-   three screens down when it loads would be the first thing to break it. */
-.panel-body { min-height: 138px; }
+/* The body reserves the height the figures fill with a complete document, so
+   they arrive without moving anything below. Measured, not derived: the
+   populated body with tests/fixtures/status.json routed in, swept 300–1700 px
+   two pixels at a time, taking the tallest height in each band plus 2 px. Phones
+   need the most steps because each figure's source line wraps differently as a
+   column narrows. The loading line and the apology sit in the same box; a thin
+   document is shorter. Re-measure when a figure, its source text or the type
+   scale changes. */
+.panel-body { min-height: 230px; }
+@media (max-width: 900px) { .panel-body { min-height: 238px; } }
+@media (max-width: 610px) { .panel-body { min-height: 339px; } }
+@media (max-width: 402px) { .panel-body { min-height: 354px; } }
+@media (max-width: 336px) { .panel-body { min-height: 368px; } }
+@media (max-width: 314px) { .panel-body { min-height: 405px; } }
 .panel-empty {
   margin: 0;
   max-width: 54ch;
@@ -1053,6 +1129,10 @@ figure.code pre {
 .panel-figs {
   display: grid; gap: var(--s-1) var(--s-6);
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+/* Two figures a row on a phone: one a row is five screens of thumb. */
+@media (max-width: 560px) {
+  .panel-figs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-1) var(--s-4); }
 }
 
 .fig { display: block; padding: var(--s-2) 0; }
@@ -1075,13 +1155,15 @@ figure.code pre {
 .fig-source {
   display: block;
   font: 400 var(--fs-rail)/1.4 var(--figure);
-  color: var(--accent);
+  color: var(--ink-2);
   margin-top: 5px;
   opacity: 0;
   transition: opacity .16s ease;
 }
 .fig:hover .fig-source,
 .fig:focus-visible .fig-source { opacity: 1; }
+/* Nothing hovers on a touch screen, and the space is reserved anyway. */
+@media (hover: none) { .fig-source { opacity: 1; } }
 .fig:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 6px; }
 
 .section-head {
@@ -1093,13 +1175,15 @@ figure.code pre {
 }
 .section-head h2 { margin: 0; font-size: var(--fs-h2); }
 .section-head a {
+  display: inline-flex; align-items: center;
+  min-block-size: 24px;                     /* WCAG 2.5.8: a standalone link */
   font: 400 var(--fs-small)/1 var(--prose);
   white-space: nowrap;
 }
 
 /* The self-deprecating one, kept because it is counted rather than felt. */
 .home-note {
-  max-width: 62ch;
+  max-width: var(--read);
   margin: var(--s-8) 0 var(--s-10);
   font: 400 var(--fs-small)/1.6 var(--figure);
   color: var(--ink-2);
@@ -1146,6 +1230,11 @@ figure.code pre {
   text-transform: uppercase;
   color: var(--ink-2);
 }
+/* Status set apart by weight, not colour: no state here needs an alarm. */
+.project-state { font-weight: var(--w-head); color: var(--ink); }
+
+/* The byline closes the page under the links; it has no outer margin of its own. */
+.project-elsewhere .byline { margin-top: var(--s-4); }
 
 /* Readings on a project page: label, value, and where the figure came from.
    The source line is not optional — a number with no provenance is the failure
@@ -1177,8 +1266,9 @@ figure.code pre {
   margin-top: 2px;
 }
 
-/* Filter over the project index. Renders every project server-side; the filter
-   only ever removes rows, so with JS off the page is a complete list. */
+/* Filters over /writing/ and /projects/. Both lists are server-rendered in
+   full and the controls only remove or reorder rows, so without JavaScript
+   they would be buttons that do nothing: hide them, and the list stands. */
 .filter-bar {
   display: flex;
   flex-wrap: wrap;
@@ -1239,98 +1329,76 @@ figure.code pre {
   background: var(--accent);
   border-color: var(--accent);
 }
-.sort-count {
-  margin-inline-start: auto;
-  font: 400 var(--fs-rail)/1 var(--figure);
-  letter-spacing: var(--ls-rail);
-  font-variant-numeric: tabular-nums;
-  color: var(--ink-2);
+/* `.sort-count` is the filters' polite live region and is visually hidden: the
+   page figures already print the count. */
+
+/* After the rules above, which it overrides. */
+@media (scripting: none) {
+  .filter-bar, .sort-bar { display: none; }
 }
 
-/* ============================================================================
-   LINKS
-   ========================================================================= */
-
-.link-list { list-style: none; margin: 0; padding: 0; }
-.link-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s-4);
-  padding: var(--s-4) 0;
-  border-bottom: var(--hair) solid var(--rule);
+/* Forced colours drop the amber fill, and with it the only sign of which chip
+   or order is on. */
+@media (forced-colors: active) {
+  .filter-chip[aria-pressed="true"],
+  .sort-btn[aria-pressed="true"] {
+    forced-color-adjust: none;
+    color: SelectedItemText;
+    background: SelectedItem;
+    border-color: SelectedItem;
+  }
 }
-.link-row:first-child { border-top: var(--hair) solid var(--rule); }
-.link-row > a {
-  font: 600 var(--fs-h3)/1.3 var(--prose);
-  text-decoration: none;
-  color: var(--ink);
-}
-.link-row > a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
-.link-handle {
-  font: 400 var(--fs-rail)/1.5 var(--figure);
-  color: var(--ink-2);
-  flex: none;
-}
-.link-note { margin: var(--s-1) 0 0; font-size: var(--fs-small); color: var(--ink-2); }
 
 /* ============================================================================
    ABOUT — the stack and the "now" list live here since /uses/ and /now/ went
    ========================================================================= */
 
+/* The intro is the largest body text on the page; the lists under it are not.
+   A plain block, not `.prose`: that is a subgrid for the page's own columns,
+   and inside a `.row` it would pin the copy to a second, nested column. */
+.about-copy p {
+  margin: 0;
+  max-width: var(--read);
+  font-size: var(--fs-h3);
+  line-height: var(--lh-lede);
+}
+.about-copy p + p { margin-top: var(--s-5); }
+.about-intro > .rail { padding-top: 0.5em; }  /* first baseline, against --fs-h3 */
+
+/* The rail's links are the page's only quick contact. On screen each gets a
+   24px-tall target (WCAG 2.5.8); paper keeps the rail's own leading. */
+@media screen {
+  .about-rail a { display: inline-flex; align-items: center; min-block-size: 24px; }
+}
+
 .now-list { row-gap: var(--s-7); }          /* .row already sets the grid */
 .now-item {
   margin: 0;
-  font-size: var(--fs-h3);                  /* one step above body        */
+  font-size: var(--fs-body);
   line-height: var(--lh-body);
 }
-.now-list > .rail { padding-top: 0.62em; }  /* label baseline at 21px     */
+.now-list > .rail { padding-top: 0.30em; }  /* label baseline against body */
 
-/* Name + description as a run-in definition list, not a card grid. A two-column
-   dl inside the measure would plant a second vertical rule a few tens of pixels
-   from the real rail's gutter: two margins at two scales. One rail per page. */
-.uses-group + .uses-group { margin-top: var(--s-8); }
-.uses-list { margin: 0; }
-.uses-item {
-  font: 400 var(--fs-small)/var(--lh-body) var(--prose);
+/* Working with me. Plain lines, not cards: the address is the thing to copy. */
+.contact-lede { margin: 0 0 var(--s-4); max-width: var(--read); }
+.contact-email { margin: 0 0 var(--s-5); }
+.contact-email > a { font-size: var(--fs-h3); }
+.contact-links { list-style: none; margin: 0; padding: 0; }
+.contact-links li + li { margin-top: var(--s-3); }
+.contact-email > a,
+.contact-links a { display: inline-flex; align-items: center; min-block-size: 24px; }
+.contact-links a { font-weight: 600; }
+.contact-note {
+  display: block;
+  font-size: var(--fs-small);
   color: var(--ink-2);
 }
-.uses-item + .uses-item { margin-top: var(--s-4); }
-.uses-item dt,
-.uses-item dd { display: inline; margin: 0; }
-.uses-item dt {
-  font-size: var(--fs-body);
-  font-weight: 600;
-  color: var(--ink);
-}
-.uses-item dd::before {
-  /* NBSPs, not plain spaces: the trailing space of generated content collapses
-     and the dash ends up glued to the description. */
-  content: "\00a0\2014\00a0";
-  color: var(--rule-firm);
-}
-
-/* Optional outbound link. It used to be a ↗ glyph in a 24px box, which is a
-   mark you have to learn; it is the word "site" now, which is one you do not.
-   The box stays for the 24×24 target (WCAG 2.5.8). */
-.uses-link {
-  display: inline-block;
-  min-height: 24px;
-  padding-inline: 2px;
-  font: 400 var(--fs-rail)/24px var(--figure);
-  color: inherit;
-  text-decoration-color: var(--accent);
-  vertical-align: -7px;
-}
-.uses-link:hover { text-decoration-thickness: 2px; }
 
 /* Live box state, appended when /status.json is fresh. Renders nothing when it
    is missing or older than 48 hours. */
 .uses-status { display: flex; flex-direction: column; gap: 5px; }
 .uses-status-ok  { color: var(--accent); }
 .uses-status-bad { color: var(--ink); }
-
-.skills-run { font-size: var(--fs-small); margin: 0; }
 
 /* SKILLS — a definition list per group. Name on one line, where it stands on
    the next. Not a bar chart, not a five-dot rating: a proficiency bar is a
@@ -1353,7 +1421,7 @@ figure.code pre {
   margin: 2px 0 0;
   font-size: var(--fs-small);
   color: var(--ink-2);
-  max-width: 62ch;
+  max-width: var(--read);
 }
 
 /* The measured share, beside the claim it corroborates. Set in the figure face
@@ -1369,7 +1437,7 @@ figure.code pre {
 
 .topic-now {
   margin: var(--s-5) 0 0;
-  max-width: 60ch;
+  max-width: var(--read);
   color: var(--ink-2);
 }
 
@@ -1386,7 +1454,7 @@ figure.code pre {
   margin: var(--s-4) 0 0;
   font-size: var(--fs-small);
   color: var(--ink-2);
-  max-width: 60ch;
+  max-width: var(--read);
 }
 
 /* Portrait on /about/, if one is ever added. */
@@ -1440,6 +1508,8 @@ kbd {
 }
 .search-trigger:hover { color: var(--ink); border-color: var(--accent); }
 .search-trigger svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+/* The server paints ⌘K and a PC swaps in Ctrl K after mount. Hidden on
+   phones, so that swap only ever nudges a desktop header sideways. */
 .search-trigger-key { color: var(--ink-2); }
 
 /* The theme switch. Same control edge and the same 24px minimum target as the
@@ -1459,6 +1529,13 @@ kbd {
   text-transform: uppercase;
 }
 .theme-toggle:hover { color: var(--ink); border-color: var(--accent); }
+/* Before mount: the same box, unpainted, so the header is laid out once. */
+.theme-toggle--pending { visibility: hidden; }
+
+/* Neither control works without JavaScript, so neither is painted. */
+@media (scripting: none) {
+  .search-trigger, .theme-toggle { display: none; }
+}
 
 .search-dialog {
   margin: 0 auto;
@@ -1482,6 +1559,8 @@ kbd {
   padding: var(--s-4) var(--s-5);
   border-bottom: var(--hair) solid var(--rule);
 }
+/* The input draws no outline of its own, so the field carries the ring. */
+.search-field:focus-within { outline: 2px solid var(--accent); outline-offset: -2px; }
 .search-field svg { width: 15px; height: 15px; flex: none; fill: none; stroke: var(--ink-2); stroke-width: 1.6; }
 .search-field input {
   flex: 1; min-width: 0;
@@ -1492,7 +1571,7 @@ kbd {
 .search-field input::placeholder { color: var(--ink-2); }
 .search-field input::-webkit-search-cancel-button { display: none; }
 
-.search-results { overflow-y: auto; padding: var(--s-3) 0; }
+.search-body { overflow-y: auto; padding: var(--s-3) 0; }
 
 .search-note {
   margin: 0; padding: var(--s-3) var(--s-5);
@@ -1538,140 +1617,10 @@ kbd {
   .search-dialog { margin-top: var(--s-5); }
 }
 
-/* /search/ — the no-JS fallback route, still using Pagefind's own UI */
-:root {
-  --pagefind-ui-primary: var(--ink);
-  --pagefind-ui-text: var(--ink);
-  --pagefind-ui-background: var(--paper);
-  --pagefind-ui-border: var(--rule-firm);
-  --pagefind-ui-tag: var(--surface);
-  --pagefind-ui-border-width: 1px;
-  --pagefind-ui-border-radius: var(--radius);
-  --pagefind-ui-font: var(--prose);
-}
-.pagefind-ui__result-title { font: 600 var(--fs-h3)/1.35 var(--prose); }
-.pagefind-ui__result-excerpt { font-size: var(--fs-small); }
-.pagefind-ui__result-tags,
-.pagefind-ui__result-link + p { font: 400 var(--fs-rail)/var(--lh-rail) var(--figure); }
-
 /* ============================================================================
-   THE STACK GRAPH — topics with coordinates, on /about/
-   Lines, not fills. The accent is used only for what the reader has selected.
+   FIGURES — every <figure>. The caption rule also dresses the code-block
+   header (.code-head): its font, colour, measure and top margin come from here.
    ========================================================================= */
-
-.graph-controls { margin-bottom: var(--s-5); }
-.graph-filter { width: min(320px, 100%); }
-.graph-filter::-webkit-search-cancel-button { display: none; }
-.graph-count {
-  margin-left: var(--s-3);
-  font: 400 var(--fs-rail)/1 var(--figure);
-  letter-spacing: var(--ls-rail);
-  color: var(--ink-2);
-}
-
-.graph-figure { margin: 0; }
-.graph-svg { width: 100%; height: auto; display: block; overflow: visible; }
-
-/* --rule-firm, not --rule: here the line IS the information, so it has to be
-   legible rather than a decorative hairline. */
-.graph-edge {
-  stroke: var(--rule-firm);
-  stroke-width: 1;
-  opacity: .6;
-  transition: stroke .18s, opacity .18s, stroke-width .18s;
-}
-.graph-edge.is-lit { stroke: var(--accent); stroke-width: 1.8; opacity: 1; }
-.graph-edge.is-dim { opacity: .15; }
-
-.graph-node { cursor: pointer; transition: opacity .18s; }
-.graph-node.is-dim { opacity: .3; }
-
-/* The float is decoration on a fixed layout, not an emergent arrangement.
-
-   `translate`, NOT `transform`. Each node's position is an SVG transform
-   ATTRIBUTE, which maps to the `transform` property — animating that property
-   would replace the position and collapse every node onto the origin. The
-   standalone `translate` property composes on top of it instead. */
-.graph-node { animation: node-drift 13s ease-in-out infinite; }
-@keyframes node-drift {
-  0%   { translate: 0 0; }
-  25%  { translate: 2px -3px; }
-  50%  { translate: -1px 2px; }
-  75%  { translate: -3px -1px; }
-  100% { translate: 0 0; }
-}
-.graph-dot {
-  fill: var(--surface);
-  stroke: var(--rule-firm);
-  stroke-width: 1.4;
-  transition: fill .18s, stroke .18s;
-}
-.graph-node.is-active .graph-dot,
-.graph-node:hover .graph-dot { fill: var(--accent); stroke: var(--accent); }
-
-.graph-label {
-  fill: var(--ink);
-  font-family: var(--figure);
-  font-size: 16px;
-  letter-spacing: .01em;
-  dominant-baseline: middle;
-  pointer-events: none;
-}
-.graph-node.is-active .graph-label { fill: var(--ink); font-weight: 600; }
-
-/* Focus must be visible on an SVG group, where `outline` does nothing useful. */
-.graph-node:focus { outline: none; }
-.graph-node:focus-visible .graph-dot {
-  stroke: var(--accent);
-  stroke-width: 2.5;
-  r: 9;                    /* the ring the outline would have drawn */
-}
-
-.graph-note { display: block; margin-top: var(--s-3); color: var(--ink-2); }
-.graph-note-name { display: block; color: var(--accent); margin-bottom: 2px; }
-.graph-empty { color: var(--ink-2); font-size: var(--fs-small); }
-
-@media (prefers-reduced-motion: reduce) {
-  .graph-node { animation: none; }
-}
-
-@media (max-width: 900px) {
-  /* Twelve labelled nodes in 375px is a smear. The list below carries the same
-     information and the text equivalent carries the connections. */
-  .graph-figure { display: none; }
-}
-
-@media print {
-  .graph-controls, .graph-figure { display: none; }
-}
-
-/* ============================================================================
-   ARCHITECTURE DIAGRAM — inline SVG, themes with the rest of the site
-   ========================================================================= */
-
-.dg { width: 100%; height: auto; display: block; }
-.dg-box { fill: var(--surface); stroke: var(--rule-firm); stroke-width: 1; rx: 3; }
-.dg-label {
-  fill: var(--ink); font-family: var(--figure); font-size: 12px;
-  letter-spacing: var(--ls-rail);
-  text-anchor: middle; dominant-baseline: middle;
-}
-.dg-sub {
-  fill: var(--ink-2); font-family: var(--figure); font-size: 11px;
-  text-anchor: middle; dominant-baseline: middle;
-}
-.dg-edge { fill: var(--ink-2); font-family: var(--figure); font-size: 11px; }
-.dg-line path { stroke: var(--rule-firm); stroke-width: 1.5; fill: none; }
-.dg-line.dg-traffic path { stroke: var(--accent); }
-.dg-arrowhead { fill: var(--rule-firm); }
-.dg-arrowhead--accent { fill: var(--accent); }
-.dg-zone line { stroke: var(--rule); stroke-width: 1; stroke-dasharray: 3 4; }
-.dg-zone-label {
-  /* px on purpose: this is inside an SVG viewBox and scales with the drawing,
-     not with the viewport. The type scale does not apply. */
-  fill: var(--ink-2); font-family: var(--figure); font-size: 10.5px;
-  letter-spacing: .14em; text-transform: uppercase;
-}
 
 figure { margin: 0; }
 figure figcaption {
@@ -1706,6 +1655,9 @@ figure figcaption {
   min-height: 24px;
 }
 .print-hint { margin: var(--s-5) 0 0; width: max-content; }
+/* The server paints the hint and the browser swaps in the button row after
+   mount. One height for both, taller than either, so the swap moves nothing. */
+.print-hint, .print-actions { min-block-size: 2.75rem; box-sizing: border-box; }
 /* The button and its shortcut. `.run` supplies the gap. */
 .print-actions { margin: var(--s-5) 0 0; align-items: center; }
 .print-actions button.control { cursor: pointer; font-family: var(--prose); }
@@ -1737,12 +1689,12 @@ figure figcaption {
    because it is meant to be read; the roles beneath stay dense because they
    are meant to be scanned. None of it survives to paper. */
 .era-title { font-size: var(--fs-h2); margin: 0 0 var(--s-5); }
-.era-prose { margin: 0 0 var(--s-5); max-width: 62ch; }
+.era-prose { margin: 0 0 var(--s-5); max-width: var(--read); }
 .era-obstacle {
   margin: var(--s-6) 0 var(--s-7);
   padding-left: var(--s-5);
   border-left: 2px solid var(--accent);
-  max-width: 62ch;
+  max-width: var(--read);
   color: var(--ink-2);
 }
 .era-obstacle-label {
@@ -1764,9 +1716,8 @@ figure figcaption {
 
 @media (max-width: 900px) {
   .wrap, .row { grid-template-columns: minmax(0, 1fr); }
-  .wrap > *, .wrap > .rail, .wrap > .bleed, .wrap > .bleed-code,
-  .row > *, .row > .rail, .row > .bleed-code { grid-column: 1; }
-  .wrap > .bleed-code, .row > .bleed-code { margin-inline-start: 0; }
+  .wrap > *, .wrap > .rail, .wrap > .bleed,
+  .row > *, .row > .rail { grid-column: 1; }
 
   .rail {
     flex-direction: row;
@@ -1776,17 +1727,13 @@ figure figcaption {
     padding-top: 0 !important;
   }
   .rail { gap: 0 var(--s-5); }
-  /* The TOC takes its own line and drops the separator — it is a disclosure,
-     not another fact in the run. */
-  .rail > .toc-details { flex-basis: 100%; margin-top: var(--s-2); }
-  .rail > .toc-details::before { content: none !important; }
+  /* The summary names the list here, so its label would say it twice. */
   .toc-details > .rail--label { display: none; }
   /* A group label starts a new strip rather than continuing the run. */
   .rail--group { border-top: 0; padding-top: 0; margin-top: 0; }
 
   .page-head, .home-greeting { padding-top: var(--s-7); }
   .home-greeting h1 { font-size: var(--fs-h1); }
-  .home-intro { font-size: var(--fs-body); }
 
   /* The TOC becomes a closed <details> — the only interactive rail element, and
      it needs no JavaScript. */
@@ -1817,10 +1764,11 @@ figure figcaption {
   .post-aside { position: static; max-height: none; overflow: visible; }
   .post-head { padding-top: var(--s-7); }
 
-  .uses-item { font-size: var(--fs-small); }
-  .now-item  { font-size: var(--fs-body); }
-  .now-list  { row-gap: var(--s-6); }
-  .now-list > .rail { padding-top: 0; }
+  /* One column: each label must sit nearer its own item than the one above. */
+  .now-list  { row-gap: 0; }
+  .now-list > .rail { padding-top: 0; margin-bottom: var(--s-1); }
+  .now-list > .now-item:not(:last-child) { margin-bottom: var(--s-6); }
+  .about-intro > .rail { padding-top: 0; }
 
   .uses-status { flex-direction: row; flex-wrap: wrap; gap: 0 var(--s-5); }
 }
@@ -1828,7 +1776,6 @@ figure figcaption {
 @media (max-width: 560px) {
   .site-header { gap: var(--s-3); }
   .site-header nav { gap: var(--s-4); }
-  .link-row { flex-direction: column; gap: var(--s-1); }
 }
 
 /* ============================================================================
@@ -1882,7 +1829,7 @@ figure figcaption {
 
   /* --- strip the site chrome --------------------------------------------- */
   .site-header, .site-footer, .skip-link, .print-hint, .print-actions,
-  .toc, .toc-details, .post-aside, .search, .copy-btn, .filter-bar, .sort-bar {
+  .toc, .toc-details, .post-aside, .copy-btn, .filter-bar, .sort-bar {
     display: none !important;
   }
 
@@ -1923,7 +1870,7 @@ figure figcaption {
   }
   /* A band needs air above it or it reads as a rule under the previous entry. */
   .cv .section > .rail--label,
-  .cv .cv-era > .rail { margin-top: 1.8mm; }
+  .cv .cv-era > .rail { margin-top: 1.4mm; }
   .cv .cv-era:first-of-type > .rail { margin-top: 2mm; }
 
   /* --- CV specifics ------------------------------------------------------- */
@@ -1936,21 +1883,17 @@ figure figcaption {
   .cv .role-title { font: 400 10pt/1.2 var(--prose); margin: 1mm 0 0; }
   .cv .masthead   { border-bottom: 1.25pt solid #000; padding-bottom: 1.6mm; }
 
-  /* The contact rail is five long URLs and the label column is 26mm wide, so on
-     paper they printed straight over the name. Below the collapse they already
-     run inline; do the same here. `order` moves the masthead ahead of the rail
-     without touching DOM order, so the sheet reads name, rule, contacts.
-
-     The masthead spans BOTH columns. It used to sit in the prose column while
-     the contacts under it spanned the sheet, so the name was indented 32mm
-     past its own rule and its own address — the first thing on the page and
-     the only thing not aligned to anything. */
+  /* The contact rail is long URLs and the label column is 26mm wide, so on
+     paper they would print over the name. Below the collapse they already run
+     inline; do the same here. `order` moves the masthead ahead of the rail
+     without touching DOM order, so the sheet reads name, rule, contacts. The
+     masthead spans BOTH columns, so the name aligns with its rule and address. */
   .cv .masthead { order: -1; }
   .cv .masthead-rail {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 0 2.2mm;
+    gap: 0 1.6mm;   /* 2.2mm ran the last contact past the edge on macOS */
     margin-top: 1mm;
     /* 7.5pt is what fits all five on ONE line at 184mm. Two lines here
        costs 4mm, and this block was already 18% of the sheet. */
@@ -1991,11 +1934,11 @@ figure figcaption {
      AND a border-top from `.section + .section`. On screen the hr is the rule;
      on paper the section border is, so the hr goes. */
   .cv hr.bleed { display: none; }
-  .cv .job + .job { margin-top: 1.2mm; }
+  .cv .job + .job { margin-top: 0.8mm; }
   .cv .job-name   { font: 600 11.5pt/1.25 var(--prose); color: #000; }
   .cv .job-meta   { font: 400 8.5pt/1.3 var(--figure); color: var(--ink-2); margin-top: 0.4mm; }
-  .cv .job ul     { margin: 1.2mm 0 0; padding-left: 4.2mm; font-size: 10pt; line-height: 1.4; }
-  .cv .job li + li{ margin-top: 0.5mm; }
+  .cv .job ul     { margin: 0.8mm 0 0; padding-left: 4.2mm; font-size: 10pt; line-height: 1.4; }
+  .cv .job li + li{ margin-top: 0.3mm; }
 
   .cv .job-dates {
     font: 400 9pt/1 var(--figure);
@@ -2006,7 +1949,6 @@ figure figcaption {
 
   .cv .section + .section { margin-top: 0; }
   .cv .cv-era + .cv-era     { margin-top: 1.2mm; }
-  .cv .skills-run { font-size: 9pt; line-height: 1.3; }
 
   /* Skills compress to names, one group per line with its label in the margin
      of the prose column. The "where it stands" line is the argument, and an
@@ -2078,10 +2020,14 @@ figure figcaption {
      3. Skills becomes one line, no wrap.          ← SPENT (9pt)
      4. Body from 10.5pt to 10pt. NOT below 10pt.  ← SPENT
      5. @page margin from 16mm/15mm to 14mm/13mm.  ← SPENT (11mm/13mm)
+     6. IT INNOVATIONS from three bullets to two.   ← SPENT (printBullets)
+     7. Spacing between blocks: bands 1.4mm, roles 0.8mm, bullet lists 0.8mm,
+        bullets 0.3mm.                              ← SPENT
 
-     All five are now spent. The next cut is CONTENT, not CSS: drop a bullet
-     from IT INNOVATIONS via `printBullets` in lib/site.ts. Do not reach for
-     the type size again.
+     All seven are spent. Linux Chromium (CI) lays the sheet out taller than
+     macOS; measured there, it has about 20px to spare. The next cut is
+     CONTENT again — a bullet, a project or a skill group — and the owner
+     chooses it. Do not reach for the type size or the gaps again.
    Do not shrink line-height below 1.4 and do not drop the masthead rule.
    ========================================================================= */
 
@@ -2103,7 +2049,7 @@ figure figcaption {
 .comments #remark42 { min-height: 300px; }
 .comments-note {
   margin: 0 0 var(--s-4);
-  max-width: 62ch;
+  max-width: var(--read);
   font-size: var(--fs-small);
   color: var(--ink-2);
 }
@@ -2126,14 +2072,10 @@ figure figcaption {
 
 .board { grid-column: 1 / -1; margin-top: var(--s-6); }
 
-/* The filter, and nothing else above the list.
+/* The filter, and nothing else above the list. The measured shares from
+   /status.json are in the bars, where they mean something.
 
-   There was a live bar here — containers, uptime, editor hours, health — and
-   it was the home page's instrument panel said a second time, on the page
-   least about the box. The measured shares still arrive from the same
-   /status.json; they are in the bars, where they mean something.
-
-   It is a field rather than a bare input because it now opens the page: the
+   It is a field rather than a bare input because it opens the page: the
    border is the control, the glyph carries the label, and the count sits
    inside it rather than floating beside it. The input keeps no border of its
    own and no focus ring — the ring belongs to the field, via :focus-within,
@@ -2206,10 +2148,14 @@ figure figcaption {
 /* The track exists only where there is something to put in it. */
 .board-meter { height: 5px; border-radius: 3px; }
 .board-list > li.is-measured .board-meter { background: var(--surface-2); }
-.board-fill { display: block; height: 100%; border-radius: 3px; background: var(--accent); }
+.board-fill { display: block; width: var(--w); height: 100%; border-radius: 3px; background: var(--accent); }
+@media (forced-colors: active) {
+  .board-meter, .board-fill { forced-color-adjust: none; }
+  .board-list > li.is-measured .board-meter { background: Canvas; outline: 1px solid GrayText; }
+  .board-fill { background: Highlight; }
+}
 
-/* Only a measured row prints one. The em-dash that used to sit here on fifteen
-   rows was a column of punctuation that had to be explained. */
+/* Only a measured row prints one; an unmeasured row prints nothing. */
 .board-num {
   grid-column: 4;
   text-align: right;
@@ -2222,7 +2168,7 @@ figure figcaption {
    is read at — it was the smallest thing on the page and it is the point. */
 .board-now {
   grid-column: 2 / -1;
-  max-width: 62ch;
+  max-width: var(--read);
   font-size: var(--fs-small);
   color: var(--ink-2);
 }
@@ -2258,6 +2204,12 @@ figure figcaption {
 @media (max-width: 560px) {
   .board-list > li { grid-template-columns: 22px minmax(0, 1fr) 2.6rem; }
   .board-meter { display: none; }
+  /* The last column here is 3. Left at 4, a measured row arriving from
+     /status.json opens an implicit column and rewraps the name beside it. */
+  .board-num { grid-column: 3; }
+  /* Restated after the rule above, which otherwise squeezes the notes into
+     the 22px icon column, one word per line. */
+  .board-list--notes > li { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ============================================================================
@@ -2268,30 +2220,46 @@ figure figcaption {
    reason it exists.
    ========================================================================= */
 
-.jr { grid-column: 1 / -1; margin-top: var(--s-8); --jr-label: 14rem; }
+.jr {
+  grid-column: 1 / -1; margin-top: var(--s-8);
+  --jr-label: 14rem;
+  /* Where the track starts: the label column plus the row's gap. The scale
+     and the grid use it too, or the bars sit a gap's width off the years. */
+  --jr-inset: calc(var(--jr-label) + var(--s-4));
+}
 
+/* Geometry arrives as custom properties set per element: --l and --w in
+   percent of the axis, --i the row's index. */
 .jr-scale {
   position: relative; height: 20px;
-  margin-left: var(--jr-label);
+  margin-left: var(--jr-inset);
 }
 .jr-year {
-  position: absolute; transform: translateX(-50%);
+  position: absolute; left: var(--l); transform: translateX(-50%);
   font: 400 var(--fs-rail)/1 var(--figure);
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
 
 .jr-field { position: relative; }
-.jr-grid { position: absolute; inset: 0 0 0 var(--jr-label); pointer-events: none; }
-.jr-line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--rule); }
+.jr-grid { position: absolute; inset: 0 0 0 var(--jr-inset); pointer-events: none; }
+.jr-line { position: absolute; top: 0; bottom: 0; left: var(--l); width: 1px; background: var(--rule); }
 /* The months with no employer, computed from the same dates as the bars so
    they cannot be quietly dropped. */
 .jr-gap {
-  position: absolute; top: 0; bottom: 0;
+  position: absolute; top: 0; bottom: 0; left: var(--l); width: var(--w);
   background: repeating-linear-gradient(
     45deg, color-mix(in srgb, var(--warn) 6%, transparent) 0 4px, transparent 4px 11px);
 }
-.jr-now { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--accent); opacity: .5; }
+.jr-now { position: absolute; top: 0; bottom: 0; left: var(--l); width: 1px; background: var(--accent); opacity: .5; }
+/* Forced colours drop backgrounds, and with them the gridlines, "now" and the
+   gaps the lede promises. Hand them back in system colours. */
+@media (forced-colors: active) {
+  .jr-line, .jr-now, .jr-gap { forced-color-adjust: none; }
+  .jr-line { background: GrayText; }
+  .jr-now { background: Highlight; opacity: 1; }
+  .jr-gap { background: repeating-linear-gradient(45deg, GrayText 0 1px, transparent 1px 8px); }
+}
 
 .jr-rows { list-style: none; margin: 0; padding: 0; position: relative; }
 .jr-row {
@@ -2304,19 +2272,20 @@ figure figcaption {
 .jr-track { position: relative; height: 42px; }
 
 .jr-bar {
-  position: absolute; top: 7px; bottom: 7px;
+  position: absolute; top: 7px; bottom: 7px; left: var(--l); width: var(--w);
   display: block;
   border: var(--hair) solid var(--rule-firm);
   border-radius: 7px;
   background: var(--surface-2);
   text-decoration: none;
-  /* Drawn in once, from the left, when the page is first looked at. */
+  /* Visible as served. Journey.tsx arms the draw-in only when the chart
+     mounts below the fold; it then runs once, from the left. */
   transform-origin: left center;
-  transform: scaleX(0);
   transition: transform .5s cubic-bezier(.2,.8,.2,1), background .16s ease, border-color .16s ease;
+  transition-delay: calc(var(--i, 0) * 45ms), 0s, 0s;
 }
-.jr.is-drawn .jr-bar { transform: scaleX(1); }
-.jr-row--project .jr-bar { border-style: dashed; background: transparent; }
+.jr.is-armed .jr-bar { transform: scaleX(0); }
+.jr.is-armed.is-drawn .jr-bar { transform: none; }
 .jr-row:hover .jr-bar,
 .jr-row.is-on .jr-bar { background: var(--accent-quiet); border-color: var(--accent); }
 a.jr-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
@@ -2345,7 +2314,7 @@ a.jr-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; 
 
 .jr-note {
   display: flex; gap: var(--s-3); align-items: flex-start;
-  margin: var(--s-6) 0 0; max-width: 66ch;
+  margin: var(--s-6) 0 0; max-width: var(--read);
   font-size: var(--fs-small); color: var(--ink-2);
 }
 .jr-note .icon { flex: 0 0 auto; margin-top: 3px; }
@@ -2355,270 +2324,6 @@ a.jr-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; 
   .jr-track { height: 38px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .jr-bar { transition: background .16s ease, border-color .16s ease; transform: scaleX(1); }
-}
-
-/* ============================================================================
-   THE LAB — three directions for /skills/, at /lab/*.
-
-   Full-bleed on purpose: the last version of this page was a figure being
-   polite inside a 1080px column, and half of what was wrong with it was that.
-   These are not in the nav or the sitemap and they are noindex; when one is
-   chosen the other two and this whole block go.
-   ========================================================================= */
-
-.lab {
-  position: relative;
-  z-index: 2;
-  min-height: 100vh;
-  padding: var(--s-6) var(--s-6) var(--s-10);
-}
-.lab-head {
-  display: flex; align-items: baseline; gap: var(--s-4);
-  margin-bottom: var(--s-6);
-}
-.lab-head h1 {
-  font: 400 var(--fs-rail)/1 var(--figure);
-  letter-spacing: var(--ls-rail);
-  text-transform: uppercase;
-  color: var(--ink-2);
-  margin: 0;
-}
-.lab-back { font: 400 var(--fs-rail)/1 var(--figure); letter-spacing: var(--ls-rail); text-transform: uppercase; }
-.lab-blurb {
-  margin: var(--s-8) 0 0;
-  max-width: 62ch;
-  font-size: var(--fs-small);
-  color: var(--ink-2);
-}
-.lab-index { padding-top: var(--s-9); }
-.lab-index ul { list-style: none; margin: var(--s-8) 0 0; padding: 0; }
-.lab-index li { padding: var(--s-5) 0; border-top: var(--hair) solid var(--rule); }
-.lab-index li a { font-size: var(--fs-h3); font-weight: 500; }
-.lab-index li p { margin: var(--s-2) 0 0; color: var(--ink-2); font-size: var(--fs-small); max-width: 66ch; }
-
-/* ── ONE: a sky ─────────────────────────────────────────────────────────── */
-.sky {
-  position: relative;
-  overflow: hidden;
-  padding-bottom: 76px;   /* room for the readout, which is absolute */
-  border-radius: 16px;
-  background:
-    radial-gradient(120% 90% at 50% 40%, color-mix(in srgb, var(--accent) 5%, transparent), transparent 60%),
-    radial-gradient(90% 70% at 20% 80%, color-mix(in srgb, var(--ink) 5%, transparent), transparent 62%),
-    var(--paper);
-  border: var(--hair) solid var(--rule);
-}
-.sky-haze {
-  position: absolute; inset: -6%;
-  background: radial-gradient(60% 50% at 50% 50%, color-mix(in srgb, var(--ink) 4%, transparent), transparent 70%);
-  transition: transform .5s cubic-bezier(.2,.8,.2,1);
-  pointer-events: none;
-}
-.sky-svg { width: 100%; height: auto; display: block; transition: transform .5s cubic-bezier(.2,.8,.2,1); }
-
-.sky-line { fill: none; stroke: var(--rule-firm); stroke-width: .8; opacity: .35; transition: opacity .2s ease, stroke .2s ease; }
-.sky-line.is-lit { stroke: var(--accent); opacity: .9; }
-
-.star { cursor: default; }
-.star-glow { fill: color-mix(in srgb, var(--accent) 22%, transparent); opacity: .5; }
-.star-core { fill: var(--ink); }
-.star text {
-  fill: var(--ink-2); font: 400 12.5px/1 var(--prose);
-  letter-spacing: -0.01em; transition: fill .16s ease;
-}
-.star.is-on .star-core { fill: var(--accent); }
-.star.is-on .star-glow { fill: color-mix(in srgb, var(--accent) 45%, transparent); opacity: 1; }
-.star.is-on text { fill: var(--ink); }
-.star.is-dim { opacity: .28; }
-.star:focus { outline: none; }
-.star:focus-visible .star-core { fill: var(--accent); }
-.star:focus-visible text { fill: var(--ink); text-decoration: underline; }
-
-.sky-group {
-  fill: var(--ink-2); font: var(--w-body) var(--fs-rail)/1 var(--figure);
-  letter-spacing: .16em; text-transform: uppercase; opacity: .65;
-}
-.sky-read {
-  position: absolute; left: var(--s-6); bottom: var(--s-5); right: var(--s-6);
-  display: flex; flex-direction: column; gap: 4px;
-  min-height: 3.4em; pointer-events: none;
-}
-.sky-read-name { font-size: var(--fs-h3); font-weight: 500; letter-spacing: -0.015em; }
-.sky-read-now { color: var(--ink-2); font-size: var(--fs-small); max-width: 62ch; }
-.sky-read-idle { color: var(--ink-2); font: 400 var(--fs-rail)/1 var(--figure); letter-spacing: var(--ls-rail); text-transform: uppercase; }
-
-@media (prefers-reduced-motion: reduce) {
-  .sky-haze, .sky-svg { transition: none; transform: none !important; }
-}
-
-/* ── FOUR: a shell ──────────────────────────────────────────────────────── */
-.sh {
-  font: 400 var(--fs-code)/1.7 var(--code);
-  border: var(--hair) solid var(--rule);
-  border-radius: var(--radius);
-  background: var(--surface);
-  padding: var(--s-4);
-  min-height: 60vh;
-  display: flex; flex-direction: column;
-  cursor: text;
-}
-.sh-out { flex: 1; overflow-y: auto; max-height: 62vh; }
-.sh-line { margin: 0; white-space: pre-wrap; }
-.sh-line--out { color: var(--ink-2); }
-.sh-line--err { color: var(--warn); }
-.sh-line--in  { color: var(--ink); }
-.sh-ps { color: var(--accent); margin-right: var(--s-2); }
-.sh-form { display: flex; align-items: baseline; gap: 0; margin-top: var(--s-2); }
-.sh-form input {
-  flex: 1;
-  background: none; border: 0; outline: none;
-  color: var(--ink);
-  font: inherit;
-  padding: 0;
-  min-height: 24px;
-}
-.sh-form input::placeholder { color: var(--ink-2); opacity: .5; }
-.sh-form input:focus-visible { outline: none; }
-.sh-go {
-  background: none;
-  border: var(--hair) solid var(--rule);
-  border-radius: 6px;
-  color: var(--ink-2);
-  font: inherit;
-  padding: 0 var(--s-2);
-  min-height: 24px;
-  cursor: pointer;
-}
-.sh-go:hover { color: var(--ink); border-color: var(--rule-firm); }
-.sh:focus-within { border-color: var(--rule-firm); }
-
-/* ── TWO: an instrument ─────────────────────────────────────────────────── */
-.mon { font-family: var(--figure); }
-.mon-bar {
-  display: flex; flex-wrap: wrap; gap: 0 var(--s-5);
-  padding: var(--s-3) var(--s-4);
-  border: var(--hair) solid var(--rule);
-  border-radius: var(--radius);
-  background: var(--surface);
-  font-size: var(--fs-rail);
-  color: var(--ink-2);
-  margin-bottom: var(--s-5);
-}
-.mon-prompt { color: var(--accent); }
-.mon-ok { color: var(--ink-2); }
-.mon-bad { color: var(--warn); }
-.mon-dim { opacity: .7; }
-
-.mon-grid { display: grid; gap: var(--s-4); grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); }
-.mon-panel {
-  border: var(--hair) solid var(--rule);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-.mon-panel h2 {
-  display: flex; justify-content: space-between;
-  margin: 0; padding: var(--s-2) var(--s-4);
-  border-bottom: var(--hair) solid var(--rule);
-  background: var(--surface);
-  font: 400 var(--fs-rail)/1.6 var(--figure);
-  letter-spacing: var(--ls-rail);
-  text-transform: uppercase;
-  color: var(--ink-2);
-}
-.mon-panel ul { list-style: none; margin: 0; padding: 0; }
-.mon-panel li {
-  display: grid;
-  grid-template-columns: 13rem 1fr 3.2rem;
-  align-items: center;
-  gap: 0 var(--s-3);
-  padding: var(--s-2) var(--s-4);
-  border-top: var(--hair) solid var(--rule);
-  font-size: var(--fs-code);
-}
-.mon-panel li:first-child { border-top: 0; }
-.mon-name { color: var(--ink); }
-.mon-meter { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
-.mon-fill { display: block; height: 100%; background: var(--accent); }
-.mon-none { display: block; height: 100%; width: 100%; background: repeating-linear-gradient(90deg, var(--rule) 0 3px, transparent 3px 7px); }
-.mon-num { text-align: right; color: var(--ink-2); font-variant-numeric: tabular-nums; }
-.mon-now { grid-column: 1 / -1; color: var(--ink-2); opacity: .75; font-size: var(--fs-rail); margin-top: 2px; }
-.mon-foot { margin-top: var(--s-5); font-size: var(--fs-rail); color: var(--ink-2); max-width: 66ch; }
-
-/* ── THREE: time ────────────────────────────────────────────────────────── */
-.strata { --lab-label: 15rem; }
-.strata-axis {
-  position: relative; height: 22px;
-  margin-left: var(--lab-label);
-  border-bottom: var(--hair) solid var(--rule);
-}
-.strata-year {
-  position: absolute; transform: translateX(-50%);
-  font: 400 var(--fs-rail)/1 var(--figure); color: var(--ink-2);
-}
-.strata-rows { list-style: none; margin: 0; padding: 0; }
-.strata-row {
-  display: grid; grid-template-columns: var(--lab-label) 1fr;
-  align-items: center; gap: var(--s-4);
-  padding: var(--s-2) 0;
-}
-.strata-label { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.strata-name { font-weight: 500; }
-.strata-detail { font-size: var(--fs-rail); color: var(--ink-2); font-family: var(--figure); }
-.strata-track { position: relative; height: 46px; }
-.strata-tick {
-  position: absolute; top: 0; bottom: 0; width: 1px;
-  background: var(--rule);
-}
-.strata-bar {
-  position: absolute; top: 4px; bottom: 4px;
-  display: flex; align-items: center;
-  padding: 0 var(--s-3);
-  border: var(--hair) solid var(--rule-firm);
-  border-radius: 8px;
-  background: var(--surface);
-  color: inherit;
-  cursor: default;
-  overflow: hidden;
-  transition: background .16s ease, border-color .16s ease;
-}
-.strata-row--project .strata-bar { border-style: dashed; background: transparent; }
-.strata-row.is-on .strata-bar { background: var(--surface-2); border-color: var(--accent); }
-.strata-row--role .strata-bar { background: var(--surface-2); }
-.strata-read {
-  display: flex; flex-direction: column; gap: var(--s-2);
-  min-height: 4.4em;
-  margin-top: var(--s-6);
-  padding-top: var(--s-4);
-  border-top: var(--hair) solid var(--rule);
-}
-.strata-read-head { display: flex; gap: var(--s-3); align-items: baseline; }
-.strata-read-head strong { font-size: var(--fs-h3); font-weight: 500; letter-spacing: -0.015em; }
-.strata-read-head span { font: 400 var(--fs-rail)/1 var(--figure); color: var(--ink-2); }
-.strata-read-tags { display: flex; flex-wrap: wrap; gap: var(--s-2); }
-.strata-read-tags span {
-  font: 400 var(--fs-rail)/1 var(--figure);
-  color: var(--ink-2);
-  border: var(--hair) solid var(--rule);
-  border-radius: 999px;
-  padding: 5px 9px;
-}
-.strata-read-idle {
-  font: 400 var(--fs-rail)/1 var(--figure);
-  letter-spacing: var(--ls-rail); text-transform: uppercase; color: var(--ink-2);
-}
-.strata-note { margin: var(--s-7) 0 0; max-width: 66ch; font-size: var(--fs-small); color: var(--ink-2); }
-.strata-legend { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: var(--s-5); }
-.strata-chip {
-  font: 400 var(--fs-rail)/1 var(--figure);
-  letter-spacing: var(--ls-rail); text-transform: uppercase;
-  color: var(--ink-2);
-  border: var(--hair) solid var(--rule);
-  border-radius: 999px;
-  padding: 6px 10px;
-}
-
-@media (max-width: 760px) {
-  .strata { --lab-label: 8rem; }
-  .mon-panel li { grid-template-columns: 8rem 1fr 3rem; }
+  .jr-bar,
+  .jr.is-armed .jr-bar { transition: background .16s ease, border-color .16s ease; transform: none; }
 }

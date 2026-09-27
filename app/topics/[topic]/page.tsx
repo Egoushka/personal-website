@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
+import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import PostList from "@/components/PostList";
-import { site, feedTypes, projects, experience, skills } from "@/lib/site";
+import { site, projects, experience, skills } from "@/lib/site";
+import { pageMetadata } from "@/lib/metadata";
+import { formatSpan } from "@/lib/dates";
 import { getPostsByTopic } from "@/lib/posts";
 import { TOPICS, isTopic, topicName } from "@/lib/topics";
 import { getTopicUsage } from "@/lib/readings";
@@ -15,9 +16,8 @@ type Params = { topic: string };
 /**
  * Everything about one topic, in one place.
  *
- * This is the page the whole single-vocabulary refactor exists for: somebody who
- * cares about Postgres should see the posts, the projects **and the paid work**
- * in one view. `Job.topics` is what makes the last one possible, and it is the
+ * Somebody who cares about Postgres should see the posts, the projects **and
+ * the paid work** in one view. `Job.topics` is what makes the last one possible, and it is the
  * difference between a topic page that proves something and one that just proves
  * I have a side project.
  *
@@ -36,23 +36,13 @@ export async function generateMetadata(
   const { topic } = await params;
   const label = topicName(topic);
   const description = isTopic(topic)
-    ? TOPICS[topic].blurb
+    ? `${label} — ${TOPICS[topic].blurb}`
     : `Everything about ${label} by ${site.name}.`;
-  const url = `${site.url}/topics/${topic}/`;
-  return {
-    title: label,
-    description,
-    alternates: { canonical: url, types: feedTypes },
-    openGraph: {
-      type: "website",
-      title: `${label} — ${site.name}`,
-      description,
-      url,
-      siteName: site.name,
-      locale: site.locale,
-    },
-    twitter: { card: "summary_large_image", title: `${label} — ${site.name}`, description },
-  };
+  const metadata = pageMetadata({ title: label, description, path: `/topics/${topic}/` });
+  // One post, project or role is not a hub worth a search result, but its links
+  // still lead somewhere. Kept out of app/sitemap.ts by the same test.
+  const usage = getTopicUsage().find((t) => t.slug === topic);
+  return usage && usage.total >= 2 ? metadata : { ...metadata, robots: { index: false, follow: true } };
 }
 
 export default async function TopicPage({ params }: { params: Promise<Params> }) {
@@ -70,16 +60,15 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
     .filter((t) => t !== topic);
 
   return (
-    <main id="main" className="wrap">
-      <Nav />
+    <Shell>
 
       <PageHead
         title={topicName(topic)}
         figures={
           <>
-            <span>{posts.length} {posts.length === 1 ? "post" : "posts"}</span>
-            <span>{built.length} {built.length === 1 ? "project" : "projects"}</span>
-            <span>{jobs.length} {jobs.length === 1 ? "role" : "roles"}</span>
+            <span>{posts.length} {posts.length === 1 ? "post" : "posts"}</span>{" "}
+            <span>{built.length} {built.length === 1 ? "project" : "projects"}</span>{" "}
+            <span>{jobs.length} {jobs.length === 1 ? "role" : "roles"}</span>{" "}
             <span>{TOPICS[topic].kind}</span>
           </>
         }
@@ -114,9 +103,9 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
               {built.map((p) => (
                 <li className="project-row" key={p.slug}>
                   <h2 className="project-name">
-                    <Link href={`/projects/${p.slug}/`}>{p.name}</Link>
+                    <Link prefetch={false} href={`/projects/${p.slug}/`}>{p.name}</Link>
                   </h2>
-                  <span className="project-status run"><span>{p.lang}</span><span>{p.shape}</span><span>{p.status}</span></span>
+                  <span className="project-status run"><span>{p.lang}</span>{" "}<span>{p.shape}</span>{" "}<span className="project-state">{p.status}</span></span>
                   <p>{p.summary}</p>
                 </li>
               ))}
@@ -136,16 +125,16 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
             <span className="rail rail--label">Used at work</span>
             <div>
               {jobs.map((job) => (
-                <div className="job" key={job.company + job.when}>
+                <div className="job" key={job.company + job.start}>
                   <div className="job-head">
                     <h2 className="job-name">{job.company}</h2>
-                    <span className="job-dates">{job.when}</span>
+                    <span className="job-dates">{formatSpan(job)}</span>
                   </div>
                   <p className="job-meta">{job.role}</p>
                 </div>
               ))}
               <p className="page-figures">
-                The whole record is on the <Link href="/cv/">CV</Link>.
+                The whole record is on the <Link prefetch={false} href="/cv/">CV</Link>.
               </p>
             </div>
           </section>
@@ -160,7 +149,7 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
             <ul className="topic-run">
               {others.map((t) => (
                 <li key={t}>
-                  <Link href={`/topics/${t}/`}>{topicName(t)}</Link>
+                  <Link prefetch={false} href={`/topics/${t}/`}>{topicName(t)}</Link>
                 </li>
               ))}
             </ul>
@@ -168,7 +157,6 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
         </>
       )}
 
-      <Footer />
-    </main>
+    </Shell>
   );
 }

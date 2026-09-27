@@ -43,8 +43,9 @@ instant, occasionally a few minutes.
 
 ### Then, in order
 
-1. **Sitemaps** → submit `sitemap.xml`. It already lists every page, with real content
-   dates rather than build time.
+1. **Sitemaps** → submit `sitemap.xml`. It lists every indexable page — topic pages
+   with fewer than two items are `noindex` and left out — with real content dates
+   rather than build time.
 2. **URL Inspection** → paste `https://hrabovskyi.online/` → **Request indexing**.
    Repeat for each post. This is the fastest way onto the index from a standing start.
 3. Come back in **3–7 days**. There is no data before then, and that is normal.

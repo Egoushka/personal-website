@@ -1,30 +1,16 @@
 import type { Metadata } from "next";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
+import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import PostFilter, { type PostRow } from "@/components/PostFilter";
-import { site, feedTypes } from "@/lib/site";
+import { pageMetadata } from "@/lib/metadata";
 import { getAllPosts, getTopicCounts, formatDate } from "@/lib/posts";
-import { getReadings, n, latestPhrase } from "@/lib/readings";
+import { getReadings, n } from "@/lib/readings";
 import { topicName } from "@/lib/topics";
 
 const description =
   "Notes on backend engineering, debugging, and running a homelab on one box — by Yehor Hrabovskyi.";
 
-export const metadata: Metadata = {
-  title: "Writing",
-  description,
-  alternates: { canonical: "/writing/", types: feedTypes },
-  openGraph: {
-    type: "website",
-    title: `Writing — ${site.name}`,
-    description,
-    url: `${site.url}/writing/`,
-    siteName: site.name,
-    locale: site.locale,
-  },
-  twitter: { card: "summary_large_image", title: `Writing — ${site.name}`, description },
-};
+export const metadata: Metadata = pageMetadata({ title: "Writing", description, path: "/writing/" });
 
 /** `2026-07-28` → `July 2026`. The running head, one step coarser than the date. */
 function formatMonth(iso: string): string {
@@ -37,20 +23,17 @@ export default function WritingIndex() {
   const r = getReadings();
 
   /*
-    The index used to group by year, with the year set large in the rail. Every
-    post on this site was published in one year, so the grouping drew a heading
-    the width of the page around *all* of them and told the reader nothing. The
-    month is the finest grouping that still varies, and the order is now the
-    reader's to choose — so the running head follows the sort rather than being
-    a fact the page insists on.
-
-    Formatting happens here because PostFilter is a client component and
+    Grouped by month: the finest grouping that still varies on a blog this
+    size. The order is the reader's to choose, so the running head follows the
+    sort. Formatting happens here because PostFilter is a client component and
     lib/posts.ts reads the filesystem.
   */
   const rows: PostRow[] = getAllPosts().map((p) => ({
     slug: p.slug,
     title: p.title,
+    cyrillic: p.cyrillic,
     description: p.description,
+    date: p.date,
     dateLabel: formatDate(p.date),
     month: formatMonth(p.date),
     readingTime: p.readingTime,
@@ -58,24 +41,24 @@ export default function WritingIndex() {
     topics: p.topics,
   }));
 
-  const topics = getTopicCounts().map(({ topic, count }) => ({
+  // Chips only for topics with at least two posts: one post is a link, not a filter.
+  const topics = getTopicCounts().filter(({ count }) => count >= 2).map(({ topic, count }) => ({
     slug: topic,
     name: topicName(topic),
     count,
   }));
 
   return (
-    <main id="main" className="wrap">
-      <Nav current="writing" />
+    <Shell current="writing">
 
       <PageHead
         title="Writing"
         quiet
         figures={
           <>
-            <span>{r.posts} {r.posts === 1 ? "post" : "posts"}</span>
-            <span>{n(r.words)} words</span>
-            {r.latest && <span>{latestPhrase(r.daysSinceLatest)}</span>}
+            <span>{r.posts} {r.posts === 1 ? "post" : "posts"}</span>{" "}
+            <span>{n(r.words)} words</span>{" "}
+            {r.latest && <span>latest {formatDate(r.latest.date)}</span>}{" "}
             <span><a href="/feed.xml">rss</a></span>
           </>
         }
@@ -83,7 +66,6 @@ export default function WritingIndex() {
 
       <PostFilter posts={rows} topics={topics} />
 
-      <Footer />
-    </main>
+    </Shell>
   );
 }

@@ -8,13 +8,16 @@ export const dynamic = "force-static";
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = site.url;
   const posts = getAllPosts();
-  // Newest post date, not `new Date()` — a rebuild that changed nothing should
+  // Newest post change, not `new Date()` — a rebuild that changed nothing should
   // not tell crawlers the content is fresh.
-  const newest = posts[0]?.date;
+  const newest = posts.map((p) => p.updated ?? p.date).sort().at(-1);
 
   // Same source as the topic route's generateStaticParams, so the sitemap can
-  // never list a page the build did not render.
-  const topics = getTopicUsage().map((t) => t.slug);
+  // never list a page the build did not render. A hub with one item is rendered
+  // but `noindex` (app/topics/[topic]/page.tsx), so it is left out here.
+  const topics = getTopicUsage()
+    .filter((t) => t.total >= 2)
+    .map((t) => t.slug);
 
   return [
     { url: `${base}/`, lastModified: newest, changeFrequency: "monthly", priority: 1 },
@@ -24,7 +27,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/journey/`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${base}/about/`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/cv/`, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${base}/links/`, changeFrequency: "yearly", priority: 0.4 },
     ...projects.map((p) => ({
       url: `${base}/projects/${p.slug}/`,
       changeFrequency: "monthly" as const,
@@ -37,7 +39,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })),
     ...posts.map((p) => ({
       url: `${base}/writing/${p.slug}/`,
-      lastModified: p.date,
+      lastModified: p.updated ?? p.date,
       changeFrequency: "yearly" as const,
       priority: 0.7,
     })),

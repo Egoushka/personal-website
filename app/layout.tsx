@@ -10,8 +10,10 @@ import "./globals.css";
 // three jobs is why the site read as one long undifferentiated column: the
 // only thing separating a title from a paragraph was eight points of size.
 const prose = Inter({
-  // cyrillic carries "Hrabovskyi" and any Ukrainian strings.
-  subsets: ["latin", "cyrillic"],
+  // Preload Latin only: every name on the site, "Hrabovskyi" included, is
+  // Latin script. The Cyrillic face is still declared and loads through its
+  // unicode-range only on a page that prints a Cyrillic character.
+  subsets: ["latin"],
   weight: ["400", "500", "600"],
   display: "swap",
   variable: "--font-prose",
@@ -19,11 +21,10 @@ const prose = Inter({
 
 // Titles only.
 //
-// A second grotesk rather than a serif, because the serif this replaced was
-// elegant and belonged to a different kind of site. Bricolage is a display
-// grotesk with actual opinions — flat-sided bowls, a tight double-storey g,
-// terminals cut at angles Inter would never allow — so at 28px and up it does
-// not read as Inter-but-bigger, which is the entire job.
+// A second grotesk rather than a serif. Bricolage is a display grotesk with
+// actual opinions — flat-sided bowls, a tight double-storey g, terminals cut
+// at angles Inter would never allow — so at 28px and up it does not read as
+// Inter-but-bigger, which is the entire job.
 //
 // Variable, so `weight` is omitted and globals.css asks for 600 directly. No
 // Cyrillic subset: anything outside latin falls through to the stack below it.
@@ -42,20 +43,10 @@ export const metadata: Metadata = {
   description: site.description,
   authors: [{ name: site.name, url: site.url }],
   creator: site.name,
-  alternates: { canonical: "/", types: feedTypes },
-  openGraph: {
-    title: `${site.name} — ${site.role}`,
-    description: site.description,
-    url: site.url,
-    siteName: site.name,
-    locale: site.locale,
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: `${site.name} — ${site.role}`,
-    description: site.description,
-  },
+  // Feeds only. Anything here is inherited by every page that sets none, so a
+  // canonical here would make each 404 a copy of the home page. Canonicals
+  // and cards are per page, from pageMetadata() in lib/metadata.ts.
+  alternates: { types: feedTypes },
   // robots.txt is a request a crawler may ignore for a page it reached by link;
   // this is the one that binds. Absent entirely on a production build.
   ...(isPrelive ? { robots: { index: false, follow: false } } : {}),
@@ -76,8 +67,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
+    // The pre-paint script below sets `data-theme` before React hydrates, so
+    // the attribute legitimately differs from the server's HTML.
     <html
       lang="en"
+      suppressHydrationWarning
       data-scroll-behavior="smooth"
       className={`${prose.variable} ${display.variable}`}
     >
@@ -98,7 +92,7 @@ export default function RootLayout({
               "try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}",
           }}
         />
-        <a className="skip-link" href="#main">Skip to content</a>
+        <a className="skip-link" href="#main" data-pagefind-ignore>Skip to content</a>
         {children}
         {/*
           Umami, self-hosted. Served first-party via the edge Traefik router, NOT from

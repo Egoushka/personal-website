@@ -1,6 +1,6 @@
 import { createHighlighterCoreSync } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
-import githubLight from "shiki/themes/github-light.mjs";
+import githubLight from "shiki/themes/github-light-default.mjs";
 import githubDark from "shiki/themes/github-dark-default.mjs";
 import bash from "shiki/langs/bash.mjs";
 import yaml from "shiki/langs/yaml.mjs";
@@ -28,9 +28,17 @@ export const highlighter = createHighlighterCoreSync({
   engine: createJavaScriptRegexEngine(),
 });
 
-/** Dual-theme output: Shiki emits both, CSS variables choose. No flash, no client JS. */
+/**
+ * Dual-theme output: Shiki emits both, CSS variables choose. No flash, no client JS.
+ *
+ * `defaultLanguage` sends an untagged fence through Shiki too, so every block
+ * gets the same theme and markup; `addLanguageClass` keeps `language-*` on the
+ * <code> for the header's label.
+ */
 export const shikiOptions = {
-  themes: { light: "github-light", dark: "github-dark-default" },
+  themes: { light: "github-light-default", dark: "github-dark-default" },
+  defaultLanguage: "text",
+  addLanguageClass: true,
   defaultColor: false,
   cssVariablePrefix: "--s-",
 } as const;

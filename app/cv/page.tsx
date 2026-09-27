@@ -1,50 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Nav from "@/components/Nav";
+import Shell from "@/components/Shell";
 import { ProfilePageLd } from "@/components/JsonLd";
-import Footer from "@/components/Footer";
 import PrintCv from "@/components/PrintCv";
 import React from "react";
-import { site, feedTypes, experience, education, projects, skills, eras } from "@/lib/site";
+import { site, experience, education, projects, skills, eras } from "@/lib/site";
+import { pageMetadata } from "@/lib/metadata";
+import { formatSpan } from "@/lib/dates";
 import { getTopicUsage } from "@/lib/readings";
 import Measured from "@/components/Measured";
 
 const description =
   "CV of Yehor Hrabovskyi — .NET backend engineer. Clean Architecture, CQRS, ASP.NET Core, Angular, self-hosted infrastructure.";
 
-export const metadata: Metadata = {
-  title: "CV",
-  description,
-  alternates: { canonical: "/cv/", types: feedTypes },
-  openGraph: {
-    type: "profile",
-    title: `CV — ${site.name}`,
-    description,
-    url: `${site.url}/cv/`,
-    siteName: site.name,
-    locale: site.locale,
-  },
-  twitter: { card: "summary_large_image", title: `CV — ${site.name}`, description },
-};
-
-const MONTHS: Record<string, string> = {
-  Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06",
-  Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12",
-};
-
-/**
- * "Aug 2025 — present" -> "2025-08 — present".
- *
- * Numeric dates set in tabular figures, so the right-hand column of a printed CV
- * is a straight line instead of a ragged one. Derived rather than stored:
- * lib/site.ts stays the single human-readable source, and this is the only page
- * that wants this form.
- */
-function isoDates(when: string): string {
-  return when.replace(/([A-Z][a-z]{2}) (\d{4})/g, (_, mon: string, year: string) =>
-    MONTHS[mon] ? `${year}-${MONTHS[mon]}` : `${mon} ${year}`,
-  );
-}
+export const metadata: Metadata = pageMetadata({ title: "CV", description, path: "/cv/", type: "profile" });
 
 export default function CV() {
   // Only link a skill whose hub actually exists — the vocabulary is wider than
@@ -53,10 +22,7 @@ export default function CV() {
   const hasPage = new Set(getTopicUsage().map((t) => t.slug));
 
   return (
-    <main id="main" className="wrap cv">
-      {/* No `current`: the CV is no longer a navigation section. It lives in the
-          footer now, so there is nothing in the header for it to mark. */}
-      <Nav />
+    <Shell current="cv" className="cv">
       <ProfilePageLd />
 
       <div className="rail masthead-rail">
@@ -66,7 +32,9 @@ export default function CV() {
         <a href={site.linkedin} rel="noopener">linkedin.com/in/{site.linkedinHandle}</a>
         <span>{site.location}</span>
       </div>
-      <div className="masthead">
+      {/* Search indexes the record and nothing around it: the masthead and
+          each section below carry data-pagefind-body. */}
+      <div className="masthead" data-pagefind-body>
         <h1>{site.name}</h1>
         <p className="role-title">{site.role}</p>
       </div>
@@ -92,6 +60,7 @@ export default function CV() {
           <section
             className={`row section cv-era${era.jobs.length === 0 ? " print-hide" : ""}`}
             id={era.slug}
+            data-pagefind-body
           >
             <div className="rail">
               {/* Paper gets one "Experience" label above the whole record;
@@ -115,15 +84,15 @@ export default function CV() {
               {experience
                 .filter((job) => era.jobs.includes(job.company))
                 .map((job) => (
-                  <div className={`job${job.resumeCompact ? " job--compact" : ""}`} key={job.company + job.when}>
+                  <div className={`job${job.resumeCompact ? " job--compact" : ""}`} key={job.company + job.start}>
                     <div className="job-head">
                       <h3 className="job-name">{job.company}</h3>
-                      <span className="job-dates">{isoDates(job.when)}</span>
+                      <span className="job-dates">{formatSpan(job, "numeric")}</span>
                     </div>
                     <p className="job-meta run">
-                      <span>{job.role}</span>
-                      {job.focus && <span>{job.focus}</span>}
-                      {job.location && <span>{job.location}</span>}
+                      <span>{job.role}</span>{" "}
+                      {job.focus && <span>{job.focus}</span>}{" "}
+                      {job.location && <span>{job.location}</span>}{" "}
                       {job.mode && <span>{job.mode}</span>}
                     </p>
                     <ul>
@@ -141,7 +110,7 @@ export default function CV() {
       ))}
 
       <hr className="bleed" />
-      <section className="row section">
+      <section className="row section" data-pagefind-body>
         <h2 className="rail rail--label">Projects</h2>
         <div>
           {projects.map((p) => (
@@ -152,7 +121,7 @@ export default function CV() {
                 </h3>
                 <span className="job-dates">{p.lang}</span>
               </div>
-              <p className="job-meta run project-stack">{p.tech.slice(0, 6).map((t) => <span key={t}>{t}</span>)}</p>
+              <p className="job-meta run project-stack">{p.tech.slice(0, 6).flatMap((t) => [<span key={t}>{t}</span>, " "])}</p>
               {/* One line on paper. The full account is on the project's own
                   page; a CV bullet that runs four lines does not get read. */}
               <ul><li>{p.resumeLine ?? p.summary}</li></ul>
@@ -163,20 +132,17 @@ export default function CV() {
 
       {/*
         Skills, curated and grouped, each saying where it actually stands.
-
-        The previous version was one undifferentiated run of nine words derived
-        from the topic vocabulary, which is why it printed Flutter — one app on
-        my own phone — and could not print Clean Architecture, EF Core or SQL
-        Server at all. The list is chosen now; the honesty moved into the
-        second line, which has to be specific enough to be wrong.
+        The list is chosen rather than derived from the topic vocabulary; the
+        honesty is in the second line, which has to be specific enough to be
+        wrong.
 
         `Measured` prints the share of my editor time from my own Wakapi, and
         renders nothing when the box is not publishing. On paper the second
         lines are hidden and this compresses back to names.
       */}
       <hr className="bleed" />
-      <section className="row section">
-        <h2 className="rail rail--label">Skills</h2>
+      <section className="row section" data-pagefind-body>
+        <h2 className="rail rail--label"><Link prefetch={false} href="/skills/">Skills</Link></h2>
         <div className="skill-groups">
           {skills.map((group) => (
             <div className="skill-group" key={group.group}>
@@ -186,7 +152,7 @@ export default function CV() {
                   <React.Fragment key={skill.name}>
                     <dt>
                       {skill.topic && hasPage.has(skill.topic)
-                        ? <Link href={`/topics/${skill.topic}/`}>{skill.name}</Link>
+                        ? <Link prefetch={false} href={`/topics/${skill.topic}/`}>{skill.name}</Link>
                         : skill.name}
                       {skill.wakatime && <Measured lang={skill.wakatime} />}
                     </dt>
@@ -200,7 +166,7 @@ export default function CV() {
       </section>
 
       <hr className="bleed" />
-      <section className="row section">
+      <section className="row section" data-pagefind-body>
         <h2 className="rail rail--label">Education</h2>
         <div>
           {education.map((e) => (
@@ -210,7 +176,7 @@ export default function CV() {
                 <span className="job-dates">{e.when}</span>
               </div>
               <p className="job-meta run">
-                <span>{e.degree}</span>
+                <span>{e.degree}</span>{" "}
                 <span>{e.detail}</span>
               </p>
               <ul className="print-hide"><li>{e.note}</li></ul>
@@ -218,8 +184,6 @@ export default function CV() {
           ))}
         </div>
       </section>
-
-      <Footer />
-    </main>
+    </Shell>
   );
 }

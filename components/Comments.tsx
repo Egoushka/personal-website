@@ -25,6 +25,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
  * The script is injected rather than imported because it is not part of this
  * bundle: it is served by another process on the same origin, exists only in
  * production, and must not be something the build tries to resolve.
+ *
+ * **It loads when the reader gets near it**, not with the post: most readers
+ * never reach the thread, and the widget is the heaviest thing on the page.
+ * An IntersectionObserver starts it once the section is within NEAR of the
+ * viewport. A `#comments` link scrolls the section into view, which is the
+ * same trigger. The reserved height means the load itself moves nothing.
  */
 
 declare global {
@@ -57,6 +63,7 @@ declare global {
  */
 const PATH = "/c";
 const SITE_ID = "hrabovskyi";
+const NEAR = "800px";
 
 function currentTheme(): "light" | "dark" {
   if (typeof document === "undefined") return "dark";
@@ -193,8 +200,23 @@ function paint(doc: Document | null | undefined) {
 }
 
 export default function Comments({ url }: { url: string }) {
+  const section = useRef<HTMLElement>(null);
   const mount = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<"idle" | "loading" | "ready" | "failed">("idle");
+  const near = state !== "idle";
+
+  useEffect(() => {
+    const el = section.current;
+    if (!el || near) return;
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        io.disconnect();
+        setState("loading");
+      }
+    }, { rootMargin: `${NEAR} 0px` });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [near]);
 
   /** The widget's iframe is same-origin, so its document is reachable. */
   const paintWidget = useCallback(() => {
@@ -209,8 +231,8 @@ export default function Comments({ url }: { url: string }) {
   }, []);
 
   useEffect(() => {
+    if (!near) return;
     let cancelled = false;
-    setState("loading");
 
     const host = `${window.location.origin}${PATH}`;
 
@@ -260,28 +282,37 @@ export default function Comments({ url }: { url: string }) {
       const node = mount.current;
       if (node) node.innerHTML = "";
     };
-  }, [url, paintWidget]);
+  }, [near, url, paintWidget]);
 
-  /* Follow the site's theme toggle.
+  /* Follow the site's theme: the toggle's `data-theme`, and the OS while no
+     choice is stored.
 
      `remark_config.theme` is read once at start-up — mutating it later does
      nothing, which is what this used to do. `REMARK42.changeTheme` is the
      actual API. The repaint afterwards is not optional: changing theme
      re-renders the widget and discards the injected stylesheet with it. */
   useEffect(() => {
-    const observer = new MutationObserver(() => {
+    const follow = () => {
       const t = currentTheme();
       if (window.remark_config) window.remark_config.theme = t;
       try { window.REMARK42?.changeTheme?.(t); } catch { /* not up yet */ }
       // After its own re-render, not before.
       requestAnimationFrame(() => { paintWidget(); setTimeout(paintWidget, 120); });
-    });
+    };
+    const observer = new MutationObserver(follow);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => observer.disconnect();
+    // A stored choice sets `data-theme`, and then the OS no longer decides.
+    const media = window.matchMedia("(prefers-color-scheme: light)");
+    const onOs = () => { if (!document.documentElement.dataset.theme) follow(); };
+    media.addEventListener("change", onOs);
+    return () => {
+      observer.disconnect();
+      media.removeEventListener("change", onOs);
+    };
   }, [paintWidget]);
 
   return (
-    <section className="row comments" id="comments">
+    <section className="row comments" id="comments" ref={section} data-pagefind-ignore>
       <h2 className="rail rail--label">Comments</h2>
       <div>
         {state === "failed" && (

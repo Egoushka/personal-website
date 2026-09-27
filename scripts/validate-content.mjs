@@ -1,23 +1,25 @@
 #!/usr/bin/env node
-// Frontmatter gate for content/posts/*.md.
+// Frontmatter and link gate for content/posts/*.md.
 // Runs locally (`npm run validate`) and in CI before the site is built, so a bad
 // post fails fast with a readable message instead of a stack trace from the renderer.
+// Reads everything relative to the working directory, which is what lets the tests
+// run it over fixture trees.
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
+import { parseMarkdown, countWords, headings, proseText } from "../lib/markdown.mjs";
 
-const POSTS_DIR = path.join(process.cwd(), "content", "posts");
+const ROOT = process.cwd();
+const POSTS_DIR = path.join(ROOT, "content", "posts");
 const MAX_DESCRIPTION = 160; // Google truncates around here.
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
  * The closed vocabulary, read out of lib/topics.ts.
  *
- * Sliced to the TOPICS literal first rather than regexed over the whole file:
- * that module also declares `graphGroups`, nested `graph: { … }` objects and a
- * list of edges, and a loose pattern picked up entries from all of them.
+ * Sliced to the TOPICS literal first rather than regexed over the whole file,
+ * so a nested `{` elsewhere in the module cannot pass for a topic entry.
  */
-const TOPICS_TS = fs.readFileSync(path.join(process.cwd(), "lib", "topics.ts"), "utf8");
+const TOPICS_TS = fs.readFileSync(path.join(ROOT, "lib", "topics.ts"), "utf8");
 const BLOCK = TOPICS_TS.slice(
   TOPICS_TS.indexOf("export const TOPICS = {"),
   TOPICS_TS.indexOf("} as const satisfies"),
@@ -29,16 +31,84 @@ if (VOCAB.length === 0) {
   process.exit(1);
 }
 
+// The latest date that is already today somewhere (UTC+14). A post dated after
+// it is dated in the future everywhere.
+const LATEST_TODAY = new Date(Date.now() + 14 * 3_600_000).toISOString().slice(0, 10);
+
+/**
+ * A frontmatter date: a quoted "YYYY-MM-DD" that names a real day, not in the
+ * future. Returns the problem, or null.
+ */
+function dateProblem(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    // gray-matter parses unquoted YAML dates into Date objects, which then
+    // stringify differently than the string the rest of the app expects.
+    return `must be a quoted "YYYY-MM-DD" string, got ${JSON.stringify(value)}`;
+  }
+  // Round-trip: Date.parse accepts 2026-02-31 and rolls it into March.
+  const d = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== value) {
+    return `"${value}" is not a real date`;
+  }
+  if (value > LATEST_TODAY) return `"${value}" is in the future`;
+  return null;
+}
+
 const errors = [];
 const warnings = [];
 const seenSlugs = new Map();
 
-const files = fs.readdirSync(POSTS_DIR).filter((f) => f.endsWith(".md"));
-
+const files = fs.readdirSync(POSTS_DIR).filter((f) => f.endsWith(".md")).sort();
 if (files.length === 0) errors.push("content/posts/ contains no .md files");
 
-for (const file of files) {
-  const slug = file.replace(/\.md$/, "");
+// Parse every post first: a deep link from one post into another needs the
+// target's heading ids.
+const posts = files.map((file) => {
+  const { data, content } = matter(fs.readFileSync(path.join(POSTS_DIR, file), "utf8"));
+  const tree = parseMarkdown(content);
+  return { file, slug: file.replace(/\.md$/, ""), data, content, tree };
+});
+const ids = new Map(posts.map((p) => [p.slug, new Set(headings(p.tree).map((h) => h.id))]));
+
+/**
+ * One internal href, wherever it was written. `self` is the post it appears in,
+ * so a bare `#fragment` can be checked against that post's headings.
+ */
+function hrefProblems(href, self) {
+  const problems = [];
+  const [beforeHash, fragment] = href.split("#", 2);
+  const route = beforeHash.split("?")[0];
+
+  if (route === "") {
+    if (self && fragment && !ids.get(self)?.has(fragment)) {
+      problems.push(`links to "#${fragment}" but this post has no heading with that id`);
+    }
+    return problems;
+  }
+  if (route.startsWith("/posts/")) {
+    problems.push(`links to "${href}" — posts live under /writing/ now`);
+  }
+  if (!route.endsWith("/") && !path.extname(route)) {
+    problems.push(`internal link "${href}" needs a trailing slash (trailingSlash: true)`);
+  }
+  const post = route.match(/^\/writing\/([^/]+)\/?$/)?.[1];
+  if (post) {
+    if (!ids.has(post)) problems.push(`links to /writing/${post}/ which does not exist`);
+    else if (fragment && !ids.get(post).has(fragment)) {
+      problems.push(`links to /writing/${post}/#${fragment} but that post has no heading with that id`);
+    }
+  }
+  return problems;
+}
+
+/** Every link and definition url in the tree. Code is not walked, so a URL in a fence is not a link. */
+function urls(node, out = []) {
+  if ((node.type === "link" || node.type === "definition") && node.url) out.push(node.url);
+  if (node.children) for (const child of node.children) urls(child, out);
+  return out;
+}
+
+for (const { file, slug, data, content, tree } of posts) {
   const where = `content/posts/${file}`;
   const fail = (msg) => errors.push(`${where}: ${msg}`);
   const warn = (msg) => warnings.push(`${where}: ${msg}`);
@@ -51,16 +121,36 @@ for (const file of files) {
   }
   seenSlugs.set(slug.toLowerCase(), where);
 
-  const { data, content } = matter(fs.readFileSync(path.join(POSTS_DIR, file), "utf8"));
-
   if (!data.title || typeof data.title !== "string") fail("frontmatter: title is required");
-  if (!data.date) fail("frontmatter: date is required");
-  else if (!DATE_RE.test(String(data.date))) {
-    // gray-matter parses unquoted YAML dates into Date objects, which then
-    // stringify differently than the `date` the rest of the app expects.
-    fail(`frontmatter: date must be a quoted "YYYY-MM-DD" string, got ${JSON.stringify(data.date)}`);
-  } else if (Number.isNaN(Date.parse(String(data.date)))) {
-    fail(`frontmatter: date "${data.date}" is not a real date`);
+
+  const dateBad = data.date === undefined ? "is required" : dateProblem(data.date);
+  if (dateBad) fail(`frontmatter: date ${dateBad}`);
+
+  if (data.updated !== undefined) {
+    const bad = dateProblem(data.updated);
+    if (bad) fail(`frontmatter: updated ${bad}`);
+    else if (!dateBad && data.updated < data.date) {
+      fail(`frontmatter: updated "${data.updated}" is before date "${data.date}"`);
+    }
+  }
+  if (data.correction !== undefined) {
+    if (typeof data.correction !== "string" || !data.correction.trim()) {
+      fail("frontmatter: correction must be a non-empty string — one sentence saying what was corrected");
+    } else if (data.updated === undefined) {
+      fail("frontmatter: correction needs `updated` — the date the correction was made");
+    }
+  }
+
+  // Cyrillic in the title or the prose carries its language (lib/lang.ts marks
+  // it with `lang`). Declared, never guessed: "ок" is Ukrainian and Russian alike.
+  if (data.cyrillic !== undefined && data.cyrillic !== "uk" && data.cyrillic !== "ru") {
+    fail(`frontmatter: cyrillic must be "uk" or "ru", got ${JSON.stringify(data.cyrillic)}`);
+  } else if (data.cyrillic === undefined && /[\u0400-\u04FF]/.test(`${data.title ?? ""} ${proseText(tree)}`)) {
+    fail('frontmatter: the post has Cyrillic text, so it needs `cyrillic: "uk"` or `"ru"` — the language its words are marked with');
+  }
+
+  if (data.spanDays !== undefined && !(Number.isInteger(data.spanDays) && data.spanDays > 0)) {
+    fail(`frontmatter: spanDays must be a positive whole number of days, got ${JSON.stringify(data.spanDays)}`);
   }
 
   if (!data.description || typeof data.description !== "string") {
@@ -86,46 +176,32 @@ for (const file of files) {
     }
   }
 
-  const body = content.trim();
-  if (body.length === 0) fail("body is empty");
-  if (/^#\s/m.test(body)) {
-    fail("body starts a top-level '# heading' — the page already renders an <h1> from the title");
+  if (content.trim().length === 0) fail("body is empty");
+  if (headings(tree).some((h) => h.depth === 1)) {
+    fail("body has a top-level '# heading' — the page already renders an <h1> from the title");
   }
 
-  // Relative links must resolve to a real route. Static export has no redirects,
+  // Internal links must resolve to a real route. Static export has no redirects,
   // and trailingSlash: true means a missing slash costs a 404 behind the file server.
-  for (const [, href] of body.matchAll(/]\((\/[^)\s]*)\)/g)) {
-    if (href.startsWith("/writing/")) {
-      const target = href.replace(/^\/writing\//, "").replace(/\/$/, "");
-      if (target && !files.includes(`${target}.md`)) {
-        fail(`links to /writing/${target}/ which does not exist`);
-      }
-    }
-    if (href.startsWith("/posts/")) {
-      fail(`links to "${href}" — posts live under /writing/ now`);
-    }
-    if (!href.endsWith("/") && !path.extname(href)) {
-      fail(`internal link "${href}" needs a trailing slash (trailingSlash: true)`);
-    }
-  }
+  const internal = urls(tree).filter((u) => u.startsWith("/") || u.startsWith("#"));
+  for (const href of internal) for (const p of hrefProblems(href, slug)) fail(p);
 
-  const words = body.split(/\s+/).length;
+  const words = countWords(tree);
   if (words < 300) warn(`only ${words} words — thin for search`);
-  if (!/]\(\//.test(body)) warn("no internal links — costs SEO and session depth");
+  if (!internal.some((u) => u.startsWith("/"))) warn("no internal links — costs SEO and session depth");
 }
 
-// lib/site.ts carries hand-written internal hrefs too. Deleting a post used to
-// leave those dangling silently, because this script only ever looked inside markdown.
-const siteTs = fs.readFileSync(path.join(process.cwd(), "lib", "site.ts"), "utf8");
+// lib/site.ts carries hand-written internal hrefs and write-up slugs too.
+// Deleting or un-publishing a post would otherwise leave them dangling silently.
+const siteTs = fs.readFileSync(path.join(ROOT, "lib", "site.ts"), "utf8");
 for (const [, href] of siteTs.matchAll(/href:\s*"(\/[^"]*)"/g)) {
-  if (href.startsWith("/writing/")) {
-    const target = href.replace(/^\/writing\//, "").replace(/\/$/, "");
-    if (target && !files.includes(`${target}.md`)) {
-      errors.push(`lib/site.ts: links to /writing/${target}/ which does not exist`);
-    }
-  }
-  if (!href.endsWith("/") && !path.extname(href) && !href.includes("#")) {
-    errors.push(`lib/site.ts: internal link "${href}" needs a trailing slash`);
+  for (const p of hrefProblems(href, null)) errors.push(`lib/site.ts: ${p}`);
+}
+for (const [, slug] of siteTs.matchAll(/writeup:\s*"([^"]+)"/g)) {
+  if (!ids.has(slug)) {
+    errors.push(
+      `lib/site.ts: writeup "${slug}" has no content/posts/${slug}.md — a draft cannot be a write-up`,
+    );
   }
 }
 

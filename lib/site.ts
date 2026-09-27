@@ -1,4 +1,12 @@
+import { getSpanDays, inWords } from "./posts";
 import type { TopicSlug } from "./topics";
+import type { CyrillicLang } from "./lang";
+
+/**
+ * How long the deploy shipped nothing, read from that post's `spanDays`. The prose
+ * below names the stretch in several places; none of them types the number.
+ */
+const silentDays = getSpanDays("silent-deploys");
 
 /**
  * The live origin. Everything absolute on this site is built from it —
@@ -29,21 +37,26 @@ export const site = {
   url: siteUrl,
   role: "Backend-first .NET developer",
   /**
-   * One line under the greeting. It has been three sentences and a list of
-   * symptoms; both were longer than the thing they said. The three lines under
-   * it are the specifics, and they are checkable, which a paragraph is not.
+   * One line under the greeting, and the home page's h1. The proof row under it
+   * carries the specifics, and they are checkable, which a paragraph is not.
    */
   intro: "I write .NET backends and fix the ones that fail quietly.",
   description:
     "Backend services in .NET and ASP.NET Core, a homelab on one box in Nuremberg, and writing about the parts that went wrong.",
   locale: "en_US",
   location: "Kyiv, Ukraine",
+  /** Kyiv's offset, winter and summer. Printed beside the location on /about/. */
+  timezone: "UTC+2/+3",
   /**
-   * Prints next to the location. This replaced `openToWork`, which advertised
-   * for a job this site is not looking for: the reader it is written for is
-   * buying a week of work, not filling a role.
+   * Prints next to the location. The reader this site is written for is buying
+   * a week of work, not filling a role.
    */
   availability: "available for contract work",
+  /**
+   * What I can be hired for, in one line: scope, never rates or capacity.
+   * Empty renders nothing. Only I write this; it is never inferred.
+   */
+  engagement: "",
   email: "egorgrabovskij@gmail.com",
   github: "https://github.com/Egoushka",
   githubHandle: "Egoushka",
@@ -53,8 +66,9 @@ export const site = {
 
 /**
  * Feed autodiscovery links. Next.js replaces the whole `alternates` object when a
- * page defines one, so any page that sets its own canonical must spread this back
- * in or it silently loses the <link rel="alternate"> tags.
+ * page defines one, so `pageMetadata()` (lib/metadata.ts) puts these back beside
+ * every page's canonical. Build page metadata through it and they cannot go
+ * missing.
  */
 export const feedTypes = {
   "application/rss+xml": [{ url: "/feed.xml", title: `${site.name} — RSS` }],
@@ -63,7 +77,7 @@ export const feedTypes = {
 };
 
 /**
- * /links — everywhere else I am.
+ * Everywhere else I am, listed under "Working with me" on /about/.
  *
  * Only accounts that exist and that I actually post to. A row for a dormant
  * Twitter account is worse than no row: it sends someone to a dead profile with
@@ -111,23 +125,28 @@ export const links: { label: string; href: string; handle: string; note: string 
 /**
  * The proof row: what sits directly under the hero.
  *
- * Three lines, and the only test each one has to pass is that a stranger can
- * check it in under a minute. That is why two of them carry links to somewhere
- * that is not this site — a claim I host myself is not evidence — and why the
- * day job carries none: it is the one thing here nobody can verify from
- * outside, so it is stated plainly and not dressed up.
+ * The only test each entry has to pass is that a stranger can check it in
+ * under a minute. That is why Attest links to somewhere that is not this site —
+ * a claim I host myself is not evidence — and why the day job carries no link:
+ * it is the one thing here nobody can verify from outside, so it is stated
+ * plainly and not dressed up.
  *
  * Where the figures come from, since the page cannot compute them: **87
  * countries** is one validator per country in github.com/Egoushka/attest, and
  * **197 defects** is the count in the package description on NuGet. Both are on
- * the other end of the links in this row. The third line's figure is not here at
- * all — it is counted at build time from the post's frontmatter, so the home
- * page assembles that row itself.
+ * the other end of the links in this row.
+ *
+ * An entry with `post` has no label of its own: the home page prints that
+ * post's `spanDays`, read from its frontmatter at build, and links to it. The
+ * figure and the sentence beside it are about the same post by construction,
+ * and the build fails if that post or its span is missing.
  */
 export const proof: {
-  label: string;
+  label?: string;
   text: string;
   links: { label: string; href: string }[];
+  /** Slug of a published post whose `spanDays` is this entry's figure. */
+  post?: string;
 }[] = [
   {
     label: "Attest",
@@ -142,6 +161,11 @@ export const proof: {
     label: "Day job",
     text:
       ".NET on a European crypto brokerage platform: trade and payment flows, reconciliation, third-party integrations.",
+    links: [],
+  },
+  {
+    post: "silent-deploys",
+    text: "A deployment that reported success while shipping nothing. Found, explained, fixed.",
     links: [],
   },
 ];
@@ -169,10 +193,9 @@ export type Project = {
    */
   href: string;
   /**
-   * Public or private. This used to be inferred from an empty `href`, which
-   * meant "no link" and "private" were the same state and the page said
-   * neither — a reader just found a project with nothing to click and drew
-   * their own conclusion. Now it says so, and offers the profile instead.
+   * Public or private. Its own field rather than inferred from an empty `href`:
+   * "no link" and "private" are different states, and a reader who finds a
+   * project with nothing to click should be told which one it is.
    */
   visibility: "public" | "private";
   /**
@@ -192,13 +215,20 @@ export type Project = {
   summary: string;
   /** The full account, on the project's own page. */
   description: string;
+  /**
+   * The language of each Cyrillic term in `description`, which the project page
+   * marks with `lang` (components/Lang.tsx). Per term, because one sentence can
+   * name a Ukrainian identifier beside two Russian ones. `npm run check` fails on
+   * a Cyrillic word that renders unmarked.
+   */
+  cyrillic?: Readonly<Record<string, CyrillicLang>>;
   /** One line, for the CV. A four-line bullet on paper does not get read. */
   resumeLine?: string;
   /**
-   * Prints on the CV. Two of six: the one anyone can install, and the one with
-   * the best measurement behind it. The rest are one click away and were
-   * costing a second sheet of A4 — this is the last lever in the one-page cut
-   * order, and it is now spent.
+   * Prints on the CV: the one anyone can install, and the one with the best
+   * measurement behind it. The rest are one click away and would cost a second
+   * sheet of A4 — this is the last lever in the one-page cut order, and it is
+   * spent.
    */
   print?: boolean;
   /**
@@ -208,19 +238,22 @@ export type Project = {
    * them in one list quietly averages the first down to the second.
    */
   side?: boolean;
+  /** Slug of the published post in content/posts/ that is this project's write-up. */
+  writeup?: string;
+  /**
+   * Listed on the home page, beside the installable projects, while `status` is
+   * "running". The home list is headed "still running", so a featured project
+   * that pauses drops off it rather than making the heading false.
+   */
+  featured?: boolean;
   topics: TopicSlug[];
   readings: Reading[];
 };
 
 /**
- * Three projects, all load-bearing, and one of them installable by a stranger.
- * The set before this was an interview take-home, a utility with a handful of
- * commits, and a link to a GitHub profile — which is how a projects section
- * ends up saying nothing.
- *
- * Attest is first because it is the only one that anybody else runs. The other
- * two carry `side: true` and are grouped under their own label rather than
- * listed as its equals.
+ * Attest is first because it is the only one that anybody else runs. The rest
+ * carry `side: true` and are grouped under their own label rather than listed as
+ * its equals.
  *
  * Every number below was read out of the repo it describes, not estimated, and
  * every reading names where it came from. If a claim here can't be checked
@@ -230,6 +263,7 @@ export type Project = {
 export const projects: Project[] = [
   {
     slug: "attest",
+    writeup: "attest",
     print: true,
     name: "Attest",
     status: "running",
@@ -252,6 +286,8 @@ export const projects: Project[] = [
   },
   {
     slug: "chronicle",
+    writeup: "chronicle",
+    featured: true,
     print: true,
     side: true,
     visibility: "private",
@@ -264,6 +300,7 @@ export const projects: Project[] = [
       "Makes seven years of chat history searchable by an assistant, by refusing to index the 65% of it that says “ok”.",
     description:
       "A personal event store that makes seven years of chat history searchable by an assistant. I measured the archive before touching it rather than guessing at it, and the measurement is the whole story: 681,331 messages across 487 chats, of which 65% are under twenty characters. My previous setup embedded every one of them, so roughly 442,000 vectors stood for “ок”, “+1” and “да” — crowding out the 1.5% that carry an actual proposition. Chronicle groups events into segments using a time gap fitted per conversation, which cuts the index about elevenfold and improves retrieval at the same time. It serves the result over MCP, so the assistant queries it directly — and the first version of that query path was 45× slower than it had to be, because a CTE hid the full-text index from the planner.",
+    cyrillic: { "ок": "ru", "да": "ru" },
     resumeLine:
       "Event store over a 681k-message archive. Aggregates events into segments before indexing — ~11× smaller vector index, better retrieval — served over MCP.",
     topics: ["python", "retrieval"],
@@ -277,11 +314,13 @@ export const projects: Project[] = [
   },
   {
     slug: "synapse",
+    writeup: "synapse",
+    featured: true,
     side: true,
     visibility: "private",
     tech: ["Python", "FastAPI", "Postgres", "Hindsight", "LiteLLM", "Docker"],
     phase:
-      "Reading, classification, grounding and the nightly sweep run on the box. `apply` is deliberately not scheduled and every scope ships closed, so nothing is retired without me saying so.",
+      "Reading, classification, grounding and the nightly sweep run on the box. apply is deliberately not scheduled and every scope ships closed, so nothing is retired without me saying so.",
     status: "running",
     name: "Synapse",
     lang: "Python", shape: "control plane",
@@ -321,12 +360,13 @@ export const projects: Project[] = [
     readings: [
       { label: "Break", value: "7-day gap", source: "the threshold in the app's source" },
       { label: "Scale", value: "none, deliberately", source: "there is no global score to read" },
-      { label: "Tests", value: "194 passing", source: "the suite in the repo; `dart analyze` clean" },
+      { label: "Tests", value: "194 passing", source: "the suite in the repo; dart analyze clean" },
       { label: "Users", value: "1 — me", source: "counted" },
     ],
   },
   {
     slug: "oura-platform",
+    writeup: "oura-platform",
     side: true,
     visibility: "private",
     tech: ["C#", ".NET", "Postgres", "TimescaleDB", "Dapper", "DbUp", "Serilog", "Grafana", "OAuth", "xUnit", "Testcontainers"],
@@ -364,7 +404,7 @@ export const projects: Project[] = [
     summary:
       "Answers a question about my sleep with a chart rather than a paragraph, rendered inside whichever assistant asked.",
     description:
-      "An MCP App over the Oura Platform warehouse. One tool, `oura_trend`, reads eight columns of the daily table — sleep, readiness and activity scores, HRV, resting heart rate, temperature deviation, SpO₂ and steps — and returns the series and an interactive chart together. Hosts that implement MCP Apps render the chart inline and let you change metric and range without another model turn, because the app calls the tool itself over the host bridge rather than asking the model to; hosts that do not still get a useful text summary out of the same call. The database user is read-only and the column names come from a fixed map rather than from tool input, because a tool the model can aim is a tool an injected instruction can aim.",
+      "An MCP App over the Oura Platform warehouse. One tool, oura_trend, reads eight columns of the daily table — sleep, readiness and activity scores, HRV, resting heart rate, temperature deviation, SpO₂ and steps — and returns the series and an interactive chart together. Hosts that implement MCP Apps render the chart inline and let you change metric and range without another model turn, because the app calls the tool itself over the host bridge rather than asking the model to; hosts that do not still get a useful text summary out of the same call. The database user is read-only and the column names come from a fixed map rather than from tool input, because a tool the model can aim is a tool an injected instruction can aim.",
     topics: ["typescript", "postgres"],
     readings: [
       { label: "Surface", value: "1 tool, 8 metrics", source: "the server’s registration; three ranges, one chart resource" },
@@ -375,6 +415,8 @@ export const projects: Project[] = [
   },
   {
     slug: "homelab-gitops",
+    writeup: "homelab",
+    featured: true,
     side: true,
     visibility: "private",
     tech: ["Docker Compose", "Traefik", "SOPS", "age", "Tailscale", "Headscale", "Caddy", "Grafana", "Python", "Shell"],
@@ -385,7 +427,7 @@ export const projects: Project[] = [
     summary:
       "Every stack on the box, one directory each, with the secrets encrypted in the repository rather than living on the machine.",
     description:
-      "The whole homelab as a git repository: one directory per Docker Compose stack, secrets committed as SOPS+age encrypted files with the plaintext gitignored, and Traefik at the edge deciding what the internet is allowed to reach. The point of doing it this way is falsifiable — if the box disappeared, this repository is what would rebuild it, and the only way to know that is that it has had to. It is also the reason the writing on this site exists: the deploy that shipped nothing for fifty-one days was found because the state of the machine is supposed to be reconstructable from here, and for fifty-one days it was not.",
+      `The whole homelab as a git repository: one directory per Docker Compose stack, secrets committed as SOPS+age encrypted files with the plaintext gitignored, and Traefik at the edge deciding what the internet is allowed to reach. The point of doing it this way is falsifiable — if the box disappeared, this repository is what would rebuild it, and the only way to know that is that it has had to. It is also the reason the writing on this site exists: the deploy that shipped nothing for ${inWords(silentDays)} days was found because the state of the machine is supposed to be reconstructable from here, and for ${inWords(silentDays)} days it was not.`,
     resumeLine:
       "Single-VPS homelab defined entirely in git: Compose stacks per service, SOPS+age encrypted secrets, Traefik edge, rebuildable from the repository.",
     topics: ["self-hosting", "infrastructure", "docker", "sops"],
@@ -401,7 +443,7 @@ export const projects: Project[] = [
     visibility: "private",
     tech: ["Python", "nautilus_trader", "ccxt", "polars", "DuckDB", "Parquet"],
     phase:
-      "Phase 4 of 7, closed on 2026-09-22. Six hypotheses registered, five falsified or suspended, and the survivor beat buy-and-hold by −0.021 Sharpe. Forward paper trading ran one session before it was stopped; no live order has ever been placed.",
+      "Phase 4 of 7, closed on 2026-09-22. Six hypotheses registered and none survived: the cross-asset book passed its in-sample gate, failed its pre-registered criterion, and added −0.021 Sharpe over holding its components. Forward paper trading ran one session before it was stopped; no live order has ever been placed.",
     status: "paused",
     name: "Trader",
     lang: "Python", shape: "backtesting",
@@ -409,7 +451,7 @@ export const projects: Project[] = [
     summary:
       "A systematic crypto trading system whose result is six pre-registered hypotheses, none of which survived, and no order ever placed.",
     description:
-      "Trend following and funding-carry capture on crypto perpetuals, built in the order that makes the answer trustworthy rather than the order that gets to a chart fastest: hypotheses pre-registered before the data was touched, a conservative cost model every strategy has to route through, a second-source reconciliation against another exchange, and Deflated Sharpe and PBO reporting on top of walk-forward selection. The gate is that at least one candidate survives all of it. Across six hypotheses none has — the known-bad control is correctly rejected at Sharpe −0.43 and PBO 0.82, trend on an 87-symbol point-in-time basket returned +0.045, and the cross-asset book that did clear the paper gate turned out to add −0.021 Sharpe over simply holding it. What ended the search is a measurement rather than a mood: 87 crypto perpetuals carry 1.90 independent bets between them, eighteen cross-asset ETFs carry 5.02, so a crypto-only book cannot diversify its way to an edge no matter how many symbols it holds. The search is closed, the collectors keep running, and the reopening conditions are written down. A backtest that finds an edge on the first try has usually found a bug, and the expensive version of that lesson is paid for with real money.",
+      "Trend following and funding-carry capture on crypto perpetuals, built in the order that makes the answer trustworthy rather than the order that gets to a chart fastest: hypotheses pre-registered before the data was touched, a conservative cost model every strategy has to route through, a second-source reconciliation against another exchange, and Deflated Sharpe and PBO reporting on top of walk-forward selection. The gate is that at least one candidate survives all of it. Across six hypotheses none has — the known-bad control is correctly rejected at Sharpe −0.43 and PBO 0.82, trend on an 87-symbol point-in-time basket returned +0.045, and the cross-asset book passed its in-sample gate, failed its pre-registered criterion, and added −0.021 Sharpe over holding its components. What ended the search is a measurement rather than a mood: 87 crypto perpetuals carry 1.90 independent bets between them, eighteen cross-asset ETFs carry 5.02, so a crypto-only book cannot diversify its way to an edge no matter how many symbols it holds. The search is closed, the collectors keep running, and the reopening conditions are written down. A backtest that finds an edge on the first try has usually found a bug, and the expensive version of that lesson is paid for with real money.",
     resumeLine:
       "Systematic trading research in Python: pre-registered hypotheses, conservative cost model, cross-exchange reconciliation, walk-forward with Deflated Sharpe/PBO. Six hypotheses tested, none survived, no capital ever at risk.",
     topics: ["python", "architecture"],
@@ -435,6 +477,7 @@ export const projects: Project[] = [
       "Catches the Ukrainian and Russian ID numbers a PII filter has no notion of, before the paste reaches a model.",
     description:
       "A PII detector that sits between PasteGuard’s proxy and its own detector, speaks the same /analyze contract, and adds what the upstream has no concept of: РНОКПП, ИНН, СНИЛС and both passport formats, each recognised by the checksum its issuer publishes rather than by shape, plus the postal addresses the upstream returns as fragments. It started from a measurement rather than an impression: on a 159-case Ukrainian and Russian set the shipped detector emits none of those five types — 0 of 36 spans — and scores F1 0.773 overall. Adding them takes it to 0.890, with 63 of 63 unchanged on PasteGuard’s own multilingual set. The rule that decides its shape is that it fails closed: if the upstream detector is unhealthy, /analyze answers 503 rather than an empty result, because an empty result from a masking proxy is an unmasked paste.",
+    cyrillic: { "РНОКПП": "uk", "ИНН": "ru", "СНИЛС": "ru" },
     resumeLine:
       "Cyrillic-aware PII detector in Python over PasteGuard: checksum-validated UA/RU identifiers and address assembly, F1 0.773 → 0.890 on a 159-case set.",
     topics: ["python"],
@@ -451,14 +494,10 @@ export const projects: Project[] = [
 /**
  * What I would put my name to.
  *
- * This replaced a list derived from the topic vocabulary — every technology
- * topic that any job or project referenced. That rule had the virtue of being
- * uncheatable and the vice of being stupid: it put Flutter on a backend CV
- * because one app on my own phone is written in it, and it could not print
- * Clean Architecture, EF Core, SQL Server or NgRx at all, because those are
- * not topics and never will be.
- *
- * So it is curated now, and the discipline moves into `now`: every entry says
+ * Curated, not derived from the topic vocabulary: a derived list would put
+ * Flutter on a backend CV because one app on my own phone is written in it, and
+ * could never print Clean Architecture, EF Core, SQL Server or NgRx, because
+ * those are not topics. The discipline is in `now` instead: every entry says
  * where it actually stands, including when that is "this is my gap". A skill
  * whose `now` line would have to be vague is not a skill I present.
  *
@@ -516,9 +555,9 @@ export const skills: { group: string; items: Skill[] }[] = [
       { name: "Docker Compose", icon: "docker", short: "Compose", topic: "docker", now: "One stack per service, every one of them in git." },
       { name: "Linux", icon: "linux", topic: "linux", now: "One Ubuntu box I run like production, because it is the only one I get paged for." },
       { name: "Traefik and Caddy", icon: "traefikproxy", short: "Traefik", topic: "caddy", now: "The edge and the origin of everything I self-host, including this page." },
-      { name: "Tailscale and Headscale", icon: "tailscale", short: "Tailscale", topic: "tailscale", now: "The only way in. SSH is not on the internet." },
+      { name: "Tailscale and Headscale", icon: "tailscale", short: "Tailscale", topic: "tailscale", now: "The only way in for administration. The public SSH port takes only deploy keys that can do nothing but rsync into this site." },
       { name: "SOPS and age", icon: "key", short: "SOPS", topic: "sops", now: "Secrets encrypted in the repository, so the box is never the source of truth." },
-      { name: "GitHub Actions", icon: "githubactions", topic: "ci-cd", now: "Every deploy here, and the 51 days I once spent not noticing one had stopped." },
+      { name: "GitHub Actions", icon: "githubactions", topic: "ci-cd", now: `Every deploy here, and the ${silentDays} days I once spent not noticing one had stopped.` },
     ],
   },
   {
@@ -533,10 +572,9 @@ export const skills: { group: string; items: Skill[] }[] = [
 /**
  * How the stack gets used, which is not part of the stack.
  *
- * These were a fifth group in `skills` — Observability, Debugging, Testing,
- * Self-hosting — sitting beside Redis and Angular as though they were the same
- * kind of noun. They are not: nobody installs a habit. They read as a sentence
- * under the diagram instead of a fifth column of logos.
+ * Not a group in `skills`: these are not the same kind of noun as Redis and
+ * Angular — nobody installs a habit — so they read as a sentence under the
+ * diagram rather than another column of logos.
  */
 export const practice: { name: string; topic?: TopicSlug; now: string }[] = [
   { name: "Observability", topic: "observability", now: "Structured logs, Grafana, and the habit of asking what this will look like at 3am before it is 3am." },
@@ -546,7 +584,10 @@ export const practice: { name: string; topic?: TopicSlug; now: string }[] = [
 ];
 
 export type Job = {
-  when: string;
+  /** First month in the role, `"YYYY-MM"`. Read and printed only through lib/dates.ts. */
+  start: string;
+  /** Last month in the role, inclusive, `"YYYY-MM"`; `null` while it is current. */
+  end: string | null;
   company: string;
   role: string;
   /** What the role was pointed at, when the title does not say. */
@@ -569,10 +610,9 @@ export type Job = {
    */
   resumeCompact?: boolean;
   /**
-   * How many bullets survive to paper. Explicit, because the CSS used to do
-   * this with `:nth-child(n+4)` and `:nth-of-type(n+3)` — which counts
-   * position in the DOM, and the DOM is now nested inside eras. A positional
-   * rule fails silently the moment the markup changes; a number does not.
+   * How many bullets survive to paper. A number, not a positional CSS rule:
+   * `:nth-child` counts DOM position, the roles are nested inside eras, and a
+   * positional rule fails silently the moment the markup changes.
    */
   printBullets?: number;
 };
@@ -617,7 +657,7 @@ export const eras: Era[] = [
       "Alongside it, the homelab moved into git and became the busiest repository I own. That is also where Attest came from: work needed a validation library, the one that existed had been abandoned, so I forked it, fixed 197 of its defects in six days and published it. It is the only thing I have built that fails in public when I get it wrong.",
     ],
     obstacle:
-      "My own migration moved the box, and the deploy kept reporting success for fifty-one days while shipping nothing. I found it by accident, while adding a header.",
+      `My own migration moved the box, and the deploy kept reporting success for ${inWords(silentDays)} days while shipping nothing. I found it by accident, while adding a header.`,
   },
   {
     slug: "greenfield",
@@ -639,7 +679,7 @@ export const eras: Era[] = [
     body: [
       "Umbraco, Optimizely and Azure: features across several .NET systems, legacy applications modernised, a VPN-to-Azure Identity migration tool. I got in on a take-home I put 348 commits into over eight days, with three rounds of feedback from someone who had no obligation to give any.",
       "When it ended I worked for myself for most of a year. A WordPress estate rescued while it was half down, Telegram bots, Python scrapers and parsers, sites in .NET, PHP and JS frameworks. None of it is on GitHub and none of it has a public URL I can show you — it was other people's businesses — but it is where the scraping and automation work in my side projects actually comes from.",
-      "Then two months selling logistics over the phone to US clients, which I took deliberately rather than sit still. It is on this page for the same reason the fifty-one days are: a record with the awkward parts removed is worth less than one without.",
+      `Then two months selling logistics over the phone to US clients, which I took deliberately rather than sit still. It is on this page for the same reason the ${inWords(silentDays)} days are: a record with the awkward parts removed is worth less than one without.`,
     ],
     obstacle:
       "One rejection that year was for being too young — the manager wanted candidates aged 27 and over. It was in writing, which at least made it quick.",
@@ -669,10 +709,10 @@ export const eras: Era[] = [
   },
 ];
 
-/** Source of truth for /about/, /cv/ and every topic page. Mirrors LinkedIn. */
+/** Source of truth for /about/, /cv/, /journey/, the JSON-LD and every topic page. Mirrors LinkedIn. */
 export const experience: Job[] = [
   {
-    when: "Aug 2025 — present",
+    start: "2025-08", end: null,
     company: "Boerse Stuttgart Digital",
     printBullets: 3,
     role: "Software Engineer",
@@ -687,9 +727,9 @@ export const experience: Job[] = [
     ],
   },
   {
-    when: "Dec 2024 — Jun 2025",
+    start: "2024-12", end: "2025-06",
     company: "IT INNOVATIONS",
-    printBullets: 3,
+    printBullets: 2,
     role: "Software Engineer",
     location: "Kyiv",
     mode: "Hybrid",
@@ -702,7 +742,7 @@ export const experience: Job[] = [
     ],
   },
   {
-    when: "Sep 2024 — Oct 2024",
+    start: "2024-09", end: "2024-10",
     company: "Atlas Recruiting",
     resumeCompact: true,
     role: "Sales Representative",
@@ -715,7 +755,7 @@ export const experience: Job[] = [
     ],
   },
   {
-    when: "Apr 2023 — Jun 2024",
+    start: "2023-04", end: "2024-06",
     company: "UKAD",
     printBullets: 1,
     role: "Software Engineer",
@@ -731,7 +771,7 @@ export const experience: Job[] = [
     ],
   },
   {
-    when: "Oct 2022 — Feb 2023",
+    start: "2022-10", end: "2023-02",
     company: "LetsData",
     resumeCompact: true,
     role: "Junior Software Engineer",
@@ -743,7 +783,7 @@ export const experience: Job[] = [
     ],
   },
   {
-    when: "Mar 2021 — Mar 2022",
+    start: "2021-03", end: "2022-03",
     company: "GlobalLogic",
     resumeCompact: true,
     role: "Junior Software Engineer",
@@ -794,20 +834,14 @@ export const usesUpdated = "2026-09";
  * day" shows up in my own Wakapi, and the editor split is measured rather than
  * remembered. Nothing aspirational, nothing I used once.
  *
- * What is deliberately NOT here: versions, ports, hostnames, and the other
- * ninety-odd containers on that machine. Naming a dozen mainstream services is
- * an explanation; enumerating the whole stack with versions is a CVE list for a
+ * What is deliberately NOT here: versions, ports, hostnames, and the rest of
+ * the containers on that machine. Naming a dozen mainstream services is an
+ * explanation; enumerating the whole stack with versions is a CVE list for a
  * box whose address is already public. Same rule as gen-status.sh.
  *
- * There was a third group here, "Day to day", and it was the same six languages
- * already listed in `skills` — including Flutter, which `skills` had deliberately
- * dropped. A list cannot be evidence and a restatement of the list above it at the
- * same time, so it is gone.
- *
- * This used to be its own page at /uses/ with a six-month expiry that struck the
- * heading through in public when it lapsed. The expiry is gone with the ledger —
- * see ADR 0002 — so it is a section of /skills/ now: what the measured hours were
- * measured on.
+ * No languages either: those are in `skills`, and a list cannot be evidence and
+ * a restatement of another list at the same time. Nothing here expires in
+ * public (ADR 0002); it is what the measured hours were measured on.
  */
 export const uses: { group: string; items: StackItem[] }[] = [
   {
@@ -816,7 +850,7 @@ export const uses: { group: string; items: StackItem[] }[] = [
       { name: "Hetzner VPS", topic: "hetzner", href: "https://www.hetzner.com/cloud", desc: "One cx53 in Nuremberg, 32 GB. Everything below runs on it." },
       { name: "Traefik", href: "https://traefik.io/traefik/", desc: "The public edge. It decides what the internet is allowed to reach." },
       { name: "Caddy", topic: "caddy", href: "https://caddyserver.com", desc: "Behind Traefik, serving this page as plain files." },
-      { name: "Tailscale + Headscale", topic: "tailscale", href: "https://headscale.net", desc: "Self-hosted control plane for a private mesh. SSH is not on the internet." },
+      { name: "Tailscale + Headscale", topic: "tailscale", href: "https://headscale.net", desc: "Self-hosted control plane for a private mesh, and the only way in for administration. Public SSH takes only deploy keys that can do nothing but rsync into this site." },
       { name: "Docker Compose", topic: "docker", href: "https://docs.docker.com/compose/", desc: "One stack per directory, every one of them in git." },
       { name: "SOPS + age", topic: "sops", href: "https://github.com/getsops/sops", desc: "Secrets encrypted in the repo. The box is not the source of truth." },
       { name: "Grafana", topic: "grafana", href: "https://grafana.com", desc: "Enough dashboards to answer “is it up”, not enough to become a hobby." },
@@ -839,12 +873,10 @@ export const uses: { group: string; items: StackItem[] }[] = [
 ];
 
 /**
- * What has my attention. Edit the date whenever this changes.
+ * What has my attention, on /about/. Edit the date whenever this changes.
  *
- * This was /now/, a page of its own with a rule that dropped the link at six
- * months. The rule is gone with the ledger (ADR 0002) and so is the page — it's
- * a section of /about/ now. A short list on a page someone is already reading
- * beats a route that has to justify its own freshness.
+ * A short list on a page someone is already reading beats a route that has to
+ * justify its own freshness, and nothing here expires in public (ADR 0002).
  */
 export const now = {
   updated: "2026-09-23",

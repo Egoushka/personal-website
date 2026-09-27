@@ -1,0 +1,52 @@
+name: Probe
+
+# The live site, every six hours, from outside: the checks a deploy runs after
+# it ships, plus the one no deploy can make, that cron on the box still writes
+# /status.json. A failed scheduled run is how this reaches the owner: GitHub
+# emails whoever last changed the schedule below.
+on:
+  schedule:
+    # Off the hour: GitHub delays and drops scheduled runs at :00 under load.
+    - cron: "41 */6 * * *"
+  workflow_dispatch:
+
+# No secrets and no writes: it reads the repo for the test script and the
+# Caddyfile the CSP is compared with, and it only ever sends GETs.
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # 200s, redirects, cards, 404s, the CSP, robots.txt and X-Site-Rev.
+      - name: The live site behaves as deploy/Caddyfile says
+        run: BASE_URL=https://hrabovskyi.online bash scripts/caddy-test.sh
+
+      # The site stops showing live status once the document is 48 hours old
+      # (lib/status.ts), so that is the line here too.
+      - name: status.json is fresh
+        if: success() || failure()
+        run: |
+          body=$(curl -fsS --max-time 30 "https://hrabovskyi.online/status.json?cb=$GITHUB_RUN_ID")
+          generated=$(jq -er .generated <<<"$body") ||
+            { echo "::error title=status.json has no generated field::$body" | head -c 500; exit 1; }
+          # Its own assignment, so a date that does not parse fails the step
+          # instead of vanishing inside the arithmetic.
+          at=$(date -d "$generated" +%s) ||
+            { echo "::error title=status.json generated is not a date::$generated"; exit 1; }
+          age=$(( $(date +%s) - at ))
+          echo "status.json generated $generated, $((age / 3600)) h ago"
+          if [ "$age" -ge $((48 * 3600)) ]; then
+            echo "::error title=status.json is stale::generated $generated, $((age / 3600)) h ago. The panels drop it after 48 h. Check the status cron on the box (homelab-gitops)."
+            exit 1
+          fi

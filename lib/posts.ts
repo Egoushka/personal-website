@@ -1,8 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
-import GithubSlugger from "github-slugger";
+import { parseMarkdown, countWords, headings } from "./markdown.mjs";
 import type { TopicSlug } from "./topics";
+import type { CyrillicLang } from "./lang";
 
 const POSTS_DIR = path.join(process.cwd(), "content", "posts");
 
@@ -11,14 +12,11 @@ export type PostMeta = {
   title: string;
   date: string;
   description: string;
-  /**
-   * Slugs from lib/topics.ts. The frontmatter key is `topics`, not `tags` — one
-   * vocabulary now covers posts, projects and jobs, so calling the post's half
-   * of it something different was the thing keeping them apart.
-   */
+  /** Slugs from lib/topics.ts, the one vocabulary posts, projects and jobs share. */
   topics: TopicSlug[];
   /** Whole minutes at 200 wpm, floored to 1. */
   readingTime: number;
+  /** Words of prose — text and inline code; fenced code and markup are not counted. */
   wordCount: number;
   /**
    * Optional. The length of the stretch of time the piece is *about*, in days —
@@ -28,6 +26,12 @@ export type PostMeta = {
    * is not printed; there is no default and nothing is estimated.
    */
   spanDays?: number;
+  /** Optional frontmatter, read as-is. Validated by validate-content, rendered by the post page. */
+  updated?: string;
+  /** Optional frontmatter: a note describing what a later edit corrected. */
+  correction?: string;
+  /** Optional frontmatter: the language of the post's Cyrillic text, for `lang` (lib/lang.ts). */
+  cyrillic?: CyrillicLang;
 };
 
 export type Post = PostMeta & { content: string };
@@ -36,7 +40,7 @@ function readPostFile(slug: string): Post {
   const full = path.join(POSTS_DIR, `${slug}.md`);
   const raw = fs.readFileSync(full, "utf8");
   const { data, content } = matter(raw);
-  const words = content.trim().split(/\s+/).length;
+  const words = countWords(parse(content));
   return {
     slug,
     title: String(data.title ?? slug),
@@ -48,6 +52,9 @@ function readPostFile(slug: string): Post {
     spanDays: Number.isFinite(Number(data.spanDays)) && data.spanDays != null
       ? Number(data.spanDays)
       : undefined,
+    updated: typeof data.updated === "string" ? data.updated : undefined,
+    correction: typeof data.correction === "string" ? data.correction : undefined,
+    cyrillic: data.cyrillic === "uk" || data.cyrillic === "ru" ? data.cyrillic : undefined,
     content,
   };
 }
@@ -66,11 +73,48 @@ export function getAllPosts(): PostMeta[] {
       void content;
       return meta;
     })
-    .sort((a, b) => (a.date < b.date ? 1 : -1));
+    .sort(byNewest);
+}
+
+/** Newest first; the slug breaks ties, so two posts on one day always sort the same way. */
+export function byNewest(a: PostMeta, b: PostMeta): number {
+  return b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug);
+}
+
+// A post body is parsed once per build, however many callers ask about it.
+const trees = new Map<string, ReturnType<typeof parseMarkdown>>();
+function parse(markdown: string) {
+  let tree = trees.get(markdown);
+  if (!tree) trees.set(markdown, (tree = parseMarkdown(markdown)));
+  return tree;
 }
 
 export function getPost(slug: string): Post {
   return readPostFile(slug);
+}
+
+/**
+ * A published post's `spanDays`, for prose elsewhere that names the same stretch,
+ * so the figure is read from the post rather than typed again (ADR 0002). Throws
+ * when the post or its span is missing: the build fails instead of printing it.
+ */
+export function getSpanDays(slug: string): number {
+  const days = getPost(slug).spanDays;
+  if (!days) throw new Error(`post "${slug}" has no spanDays`);
+  return days;
+}
+
+const ONES = [
+  "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+  "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen",
+];
+const TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+
+/** `51` → `fifty-one`: a whole number below a hundred in words, as prose writes it; figures above. */
+export function inWords(x: number): string {
+  if (!Number.isInteger(x) || x < 0 || x >= 100) return x.toLocaleString("en-US");
+  if (x < 20) return ONES[x];
+  return TENS[Math.floor(x / 10)] + (x % 10 ? `-${ONES[x % 10]}` : "");
 }
 
 /** `2026-07-28` → `28 July 2026`. Written out, because the site reads like a person. */
@@ -87,20 +131,15 @@ export function formatDate(iso: string): string {
 }
 
 /**
- * Headings for the in-page table of contents.
- *
- * Uses github-slugger — the exact slugger rehype-slug uses — rather than
- * reimplementing it. A hand-rolled version got "Secrets & config" wrong
- * (`secrets-config` vs `secrets--config`, because github-slugger replaces each
- * space individually instead of collapsing runs), which silently produced anchors
- * that pointed nowhere.
+ * The `##` headings, for the in-page table of contents, with the ids rehype-slug
+ * gives them on the page: both go through github-slugger over the same text, and
+ * every heading is slugged in order so repeats are numbered alike. Read from the
+ * parsed tree, so a `## ` line inside a code fence is not a heading.
  */
 export function tableOfContents(markdown: string): { id: string; text: string }[] {
-  const slugger = new GithubSlugger();
-  return [...markdown.matchAll(/^##\s+(.+)$/gm)].map(([, raw]) => {
-    const text = raw.replace(/[*_`]/g, "").trim();
-    return { text, id: slugger.slug(text) };
-  });
+  return headings(parse(markdown))
+    .filter((h) => h.depth === 2)
+    .map(({ id, text }) => ({ id, text }));
 }
 
 /** Posts carrying a given topic, newest first. */
@@ -133,15 +172,7 @@ export function getRelatedPosts(slug: string, limit = 3): PostMeta[] {
       post: p,
       shared: p.topics.filter((t) => current.topics.includes(t)).length,
     }))
-    .sort((a, b) => b.shared - a.shared || (a.post.date < b.post.date ? 1 : -1))
+    .sort((a, b) => b.shared - a.shared || byNewest(a.post, b.post))
     .slice(0, limit)
     .map((x) => x.post);
-}
-
-/** Previous (older) and next (newer) post in publication order. */
-export function getAdjacentPosts(slug: string): { prev?: PostMeta; next?: PostMeta } {
-  const all = getAllPosts(); // newest first
-  const i = all.findIndex((p) => p.slug === slug);
-  if (i === -1) return {};
-  return { next: all[i - 1], prev: all[i + 1] };
 }

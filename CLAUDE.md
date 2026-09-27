@@ -1,267 +1,181 @@
 # CLAUDE.md
 
-Personal portfolio + blog for hrabovskyi.online. Next.js 16 App Router + React 19 +
-TypeScript, **statically exported** and served by Caddy on a Hetzner VPS.
-
-README.md covers setup, deploy secrets and DNS. This file covers the constraints that
-break things if ignored.
+Portfolio + blog for hrabovskyi.online: Next.js 16 App Router, React 19, TypeScript,
+**statically exported**, served by Caddy on a Hetzner VPS behind Cloudflare. README.md
+covers setup, deploy and DNS; this file covers what breaks if ignored. Code comments
+state the current constraint and why; history belongs in commits and [ADRs](docs/adr/).
 
 ## Commands
 
 ```bash
-npm install
-npm run dev        # http://localhost:3000
-npm run validate   # frontmatter + internal-link gate on content/posts/*.md
-npm run typecheck  # tsc --noEmit
-npm run build      # static export -> ./out  (the real verification step)
+npm ci
+npm run dev          # http://localhost:3000 — no search: /pagefind/ exists only after a build
+npm run validate     # frontmatter, topics, internal and #fragment links in content/posts
+npm run typecheck    # tsc --noEmit
+npm test             # node:test over tests/**/*.test.ts; add tests/<area>.test.ts
+npm run build        # images -> next build -> pagefind; static export to ./out
+npm run check        # assertions over ./out
+npm run serve:prod   # ./out behind deploy/Caddyfile in Docker on http://127.0.0.1:8080
+npm run caddy-test   # redirects, cards, 404s, CSP and cache headers, against serve:prod
+npm run smoke        # Playwright + axe against BASE_URL (default http://localhost:8080)
 ```
 
-CI runs `validate → typecheck → build → caddy validate → lychee` on every PR and branch
-([.github/workflows/ci.yml](.github/workflows/ci.yml)), and the same chain runs before the
-deploy job touches the VPS. Run `npm run validate && npm run typecheck && npm run build`
-locally before pushing.
+Before pushing: `npm run validate && npm run typecheck && npm test && npm run build && npm run check`.
+No ESLint. **Test the build the way production serves it**: `serve:prod` (`SITE_PORT`,
+`CADDY_IMAGE`) has the real CSP, headers, redirects and 404s; `python3 -m http.server`
+has none. Re-run it after every build — the container keeps the deleted `out/` mounted.
+`BASE_URL=https://hrabovskyi.online npm run caddy-test` tests the live site.
 
-No tests and no ESLint config. **`npm run build` is the gate** — it type-checks and renders
-every route, so a broken component or a bad `content/posts/*.md` fails there. Run it after
-any change. To check the built output like production:
+CI ([ci.yml](.github/workflows/ci.yml)), every PR and every branch but `main`: validate
+→ typecheck → test → build → check → caddy validate → caddy-test → smoke → lychee.
+Post-build steps run even after one fails, so one red run lists every failing gate.
 
-```bash
-cd out && python3 -m http.server 4321
-```
+## Hard constraint: `output: "export"`
 
-`node_modules/` is not checked in; `npm install` first in a fresh clone.
+No Node runtime in production. No server actions, middleware, ISR, `revalidate`, or
+rewrites/redirects/`headers` in `next.config` — those go in [deploy/Caddyfile](deploy/Caddyfile).
+Route handlers (the feeds) and `opengraph-image.tsx` need `export const dynamic =
+"force-static"`; `next/og` is flexbox only, 500 KB max. No runtime env vars: `SITE_URL`
+is read once at build in `lib/site.ts`. `images.unoptimized`. `trailingSlash: true`, so
+internal links carry the slash (`/writing/foo/`). Every dynamic segment has
+`generateStaticParams` (see [app/writing/[slug]/page.tsx](app/writing/[slug]/page.tsx)).
 
-## Hard constraint: `output: "export"` (next.config.mjs)
+## Client components — justify each one
 
-Production is plain files behind a file server. There is no Node runtime. So:
+Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app`):
 
-- No server actions, middleware, ISR, `revalidate`, rewrites, redirects, or `headers` in
-  `next.config` (headers must go in [deploy/Caddyfile](deploy/Caddyfile)).
-- **Route handlers DO work** — GET only, rendered to a static file at build. That is how
-  `app/feed.xml/`, `app/atom.xml/` and `app/feed.json/` work. They need
-  `export const dynamic = "force-static"`. Never `force-dynamic` — it hard-errors the build.
-- **Metadata image routes (`opengraph-image.tsx`, `icon.tsx`) also work**, and also need
-  an explicit `export const dynamic = "force-static"`, or the build fails with
-  *"export const dynamic … not configured on route"*. `next/og` only supports flexbox — no
-  CSS grid — and caps the bundle at 500 KB.
-- No runtime env vars — anything dynamic must be resolved at build time.
-- `next/image` optimization is off (`images.unoptimized`). Plain `<img>` or unoptimized `next/image` only.
-- `trailingSlash: true`. Internal links must carry the slash: `/writing/`, `/writing/foo/`.
-  A link to `/writing` costs a redirect and breaks under the static file server.
-- Every dynamic segment needs `generateStaticParams` — see [app/posts/[slug]/page.tsx](app/posts/[slug]/page.tsx).
-
-Node APIs (`fs`, `path` in [lib/posts.ts](lib/posts.ts)) are fine because they run at build time
-in server components only. **Never import `lib/posts.ts` from a client component** — this
-still holds, and matters more now that client components exist.
-
-## Client components are allowed — sparingly
-
-The site shipped **zero `'use client'`** until 2026-07-29. That is no longer true.
-The rule now is *justify each one*, not *never*. Three exist:
-
-| Component | Why it must be a client component |
+| File | Why it needs the browser |
 |---|---|
-| [Search.tsx](components/Search.tsx) | Pagefind's JS API + `<dialog>.showModal()` |
-| [UsesStatus.tsx](components/UsesStatus.tsx) | fetches `/status.json` at view time; the build cannot know what is running |
-| [TopicMap.tsx](components/TopicMap.tsx) | filter state shared by a graph and a list; hover/focus selection |
-| [ProjectFilter.tsx](components/ProjectFilter.tsx) | topic filter over the project index |
-| [PostFilter.tsx](components/PostFilter.tsx) | multi-select topic filter + sort order over the writing index |
+| [Search.tsx](components/Search.tsx) | Pagefind's JS API, `<dialog>.showModal()`, ⌘K/Ctrl+K |
+| [ThemeToggle.tsx](components/ThemeToggle.tsx) | theme choice in `localStorage`; follows the OS while none is stored |
+| [PostEnhancements.tsx](components/PostEnhancements.tsx) | code Copy button, contents current-section mark; renders nothing |
+| [Comments.tsx](components/Comments.tsx) | loads Remark42 from `/c/` as the section nears the viewport |
+| [PostFilter.tsx](components/PostFilter.tsx) | multi-select topic filter and sort over `/writing/` |
+| [ProjectFilter.tsx](components/ProjectFilter.tsx) | topic filter over `/projects/` |
+| [Panel.tsx](components/Panel.tsx) | home instrument panel from `/status.json` |
+| [UsesStatus.tsx](components/UsesStatus.tsx) | live box state on `/about/` from `/status.json` |
+| [Measured.tsx](components/Measured.tsx) | measured editor-time share beside a skill |
+| [SkillsBoard.tsx](components/SkillsBoard.tsx) | skills search box, measured shares |
+| [Journey.tsx](components/Journey.tsx) | hover/focus selection, below-the-fold draw-in |
+| [PrintCv.tsx](components/PrintCv.tsx) | print button named for the platform's shortcut |
+| [lib/status.ts](lib/status.ts) | `useStatus()`, the shared `/status.json` fetch |
 
-- Static export still applies. A client component hydrates in the browser; it does
-  not get a server. No server actions, no data fetching at request time.
-- **Every one of them must render something useful before JS runs, or degrade to
-  nothing.** `TopicMap`'s graph is in the static HTML and its text equivalent is a
-  real `<ul>`; `UsesStatus` renders `null` when `/status.json` is missing or older
-  than 48 hours; `ProjectFilter` and `PostFilter` server-render every project and
-  every post, and filtering only *removes* rows while sorting only reorders them,
-  so with JS off each page is a complete list. A client component whose absence
-  leaves a blank hole does not belong on this site.
-- **No `Math.random()` or `Date.now()` in render.** `TopicMap` derives its
-  per-node animation delay from the node index for exactly this reason — a random
-  value differs between server and client and breaks hydration.
-- `components/Search.tsx` loads Pagefind's **JS API** (`/pagefind/pagefind.js`) via
-  `new Function('return import(...)')` so the bundler leaves the path alone — that
-  file only exists in `out/` after `next build`, so a static import fails the build.
-- **`/pagefind/` does not exist under `npm run dev`.** Pagefind indexes `out/` after
-  the build, so search is dead on the dev server *by design*. Test it with the
-  `static` launch config (serves `./out` on :4321), not `npm run dev`.
-- The dialog must stay **outside `<nav>`**. Inside it, result links land in the
-  primary navigation landmark and inherit `.site-header nav a { display: inline-flex }`,
-  which breaks every hit row.
-- **Animating an SVG `<g>` uses the `translate` property, never `transform`.** A
-  node's position is a `transform` *attribute*, which maps to the `transform`
-  *property* — animating that property replaces the position and collapses every
-  node onto the origin. `translate` composes on top of it. See `.graph-node`.
-- **Nothing in the post grid may span rows.** A grid item placed across two
-  auto-sized rows makes those rows grow to hold it, so the old header rail
-  (`grid-row: 1 / span 2`, carrying topics and the contents list) pushed the
-  post's date a quarter of a screen below its title. The post is a title block
-  above a `.post-layout` — one row, sticky `.post-aside` in column one, the
-  article in column two — and the section numbers moved out of the margin into
-  the headings (`.sect-mark`), because the sidebar owns that column now.
-- **The contents list's scroller is `.post-aside`, not `.toc`.** Chrome's
-  `::details-content` puts a box between them that `display: contents` does not
-  remove, so a `max-height` on the `<ol>` is a height the wrapper overflows
-  freely. The scroll-spy that marks the reader's position is a plain script, not
-  a client component — hydrating every post for thirty lines of DOM work is not
-  worth it — and everything it sets (`aria-current`, `--toc-y`, `--toc-h`) is
-  decoration over links that already work.
-- **A closed `<details>` with `display: contents` no longer shows its content.**
-  Chrome 131 gave `<details>` a real `::details-content` pseudo-element and moved
-  the closed state onto it as `content-visibility: hidden`, which `display:
-  contents` on the parent does not bypass. The desktop table of contents relied
-  on that trick and was invisible for months. `globals.css` forces
-  `::details-content { content-visibility: visible }` above 900px.
+- **Each renders something true before JS, or nothing.** Filters server-render every row
+  and only remove or reorder; under `@media (scripting: none)` the filters, Copy and both
+  header controls are hidden and every list is complete. `useStatus()` is `undefined`
+  while loading (and in static HTML), `null` when missing, older than 48 h or malformed.
+- **Never value-import `lib/posts.ts`, `lib/readings.ts` or `lib/site.ts` in a client
+  file** (`import type` is fine). Whatever a client component receives ships in the
+  payload: pass server-built rows (`PostRow`, `ProjectRow`, `JourneyRow`, `BoardData`).
+- No `Date.now()`, `Math.random()`, `localStorage` or `matchMedia` during render.
+  Platform detection is in `lib/platform.ts`.
+- **Pagefind loads by native `import()`** with the URL in a variable and
+  `webpackIgnore`/`turbopackIgnore` comments. Never `new Function` or eval: the CSP has
+  no `'unsafe-eval'` and never gets one. The dialog stays outside `<nav>`.
 
 ## Where things live
 
-- **Site content is data, not JSX.** Projects, experience, skills, homelab entries, links
-  all live in [lib/site.ts](lib/site.ts) as typed exports. Components in `components/` map over
-  them and are ~20–30 lines each. Adding a project = edit `lib/site.ts`, not `Projects.tsx`.
-- **Blog posts** are `content/posts/*.md` with frontmatter `title, date (YYYY-MM-DD),
-  description, topics`, plus optional `spanDays` — the length in days of the stretch the piece
-  is *about*, which the post page sets its word count against. [lib/posts.ts](lib/posts.ts) reads them at
-  build time; the filename is the slug. Nothing to register.
-- **One vocabulary covers everything.** [lib/topics.ts](lib/topics.ts) is the only taxonomy: a `Post`,
-  a `Project` and a `Job` all reference the same slugs, which is what lets
-  `/topics/<slug>/` gather posts, projects *and paid roles* on one page. It replaced
-  three separate lists (`lib/tags.ts`, `lib/skills.ts`, and a loose `skills` string
-  array), which is why ".NET" used to exist as three unrelated strings. A topic with
-  `graph` coordinates appears on the stack diagram; one without simply does not.
-- **The readings are computed, never typed.** [lib/readings.ts](lib/readings.ts) counts posts, words,
-  ages and the code-to-prose ratio from `content/posts`, `lib/site.ts` and the source
-  tree, at build time. Any page printing a figure imports it from there rather than
-  restating it, so a page and a claim cannot drift. A hand-maintained number is a claim
-  pretending to be evidence. Figures that genuinely cannot be counted here live in
-  `Project.readings` and **each names its source**. It reads the filesystem and the
-  build clock: **never import it from a client component.**
-- **Three faces, two of them webfonts**, self-hosted by `next/font/google` in
-  [app/layout.tsx](app/layout.tsx): Inter as `--font-prose` → `--prose` (body, h3, everything read
-  at length) and Bricolage Grotesque as `--font-display` → `--display` (h1, h2,
-  `.post-row > a`, `.project-name`), variable, asked for at 600. `--figure` and `--code`
-  are system monospace with no webfont. **`--display` never goes below ~26px** — below
-  that it is a grotesk beside a grotesk and the reader has downloaded a second font for
-  nothing, which is why h3 is still Inter. No Cyrillic subset: non-latin falls through to
-  the system UI face. Do not add a `<link>` to fonts.googleapis.com — it puts a
-  render-blocking cross-origin request back on the critical path and loses the
-  `size-adjust` fallback that keeps CLS at 0 (measured: 0.0002).
-- **One modular type scale**, `--step--2` … `--step-5` at the top of
-  [app/globals.css](app/globals.css): fluid `clamp()` between a 360px and a 1280px viewport,
-  ratio 1.200 → 1.250 upward and a flat 1.180 for the two descending steps.
-  **The steps are primitives — never reference them outside `:root`.** Use the semantic
-  aliases (`--fs-rail`, `--fs-code`/`--fs-small`, `--fs-body`, `--fs-h3`, `--fs-title`,
-  `--fs-h2`, `--fs-h1`, `--fs-display`), and when a size is missing, add an alias rather
-  than a number. Every clamp keeps a `rem` term so text still grows under browser zoom
-  (WCAG 1.4.4) — a pure-`vw` font-size would fail it. Leading is picked by *measure*, not
-  taste (`--lh-flat` … `--lh-body`), and no prose block exceeds 66ch.
-  **`@media print` redeclares all eight steps in `pt`**, because the `vw` term resolves
-  against the paper width and would silently resize the one-page CV.
-- **All styling is one global stylesheet**, [app/globals.css](app/globals.css) — CSS variables at `:root`,
-  plain class names (`.sheet`, `.ledger-row`, `.entry-line`). No Tailwind, no CSS modules, no
-  styled-components. **No inline `style={{}}`** — add a class instead.
-- **Six colour tokens**: `--paper`, `--ink`, `--ink-2`, `--rule`, `--rule-firm`, `--accent`.
-  Warm paper, one amber accent, and the accent means **link** — do not use it to
-  decorate. The contrast ratios in `:root` are computed, not estimated, and are floors
-  a replacement has to clear. Figures set in `--figure` need
-  `font-variant-numeric: tabular-nums`.
-- **Primary nav is Writing · Projects · About · CV**, in [components/Nav.tsx](components/Nav.tsx). The design
-  before this one had *no* navigation by explicit rule — the home page was a trial
-  balance and every page was reached by opening the claim it was evidence for. It was
-  coherent and unusable by a stranger, who cannot navigate by claims they do not know
-  exist. [components/PageHead.tsx](components/PageHead.tsx) opens each page with its title and its own counted figures.
-- **The ledger is gone and is not coming back** — see [docs/adr/0002](docs/adr/0002-keep-the-computed-figures-drop-the-ledger.md). What went with it:
-  claims, a balance column, an `--open` colour, and **expiries that strike a page
-  through in public**. There is no cadence committed for this site, so nothing on it
-  scores itself against a deadline.
-- **Accessibility invariants** — these were failures that got fixed; don't regress them:
-  `:focus-visible` must stay visible (never `outline: none` without a replacement); every
-  page needs `<main id="main">` for the skip link; interactive targets stay ≥24×24px
-  (WCAG 2.5.8); `--border-strong` (not `--border`) on anything whose border is the only
-  boundary of a control; anything animated needs a `prefers-reduced-motion` escape.
-- `@/*` path alias maps to the repo root.
-- `app/sitemap.ts` and `app/robots.ts` generate `/sitemap.xml` and `/robots.txt` at build.
-- **OG cards** come from `lib/og.tsx` via `opengraph-image.tsx` routes — the homepage, every
-  post and every project. next/og writes them as **extensionless files**, so
-  `deploy/Caddyfile` sets `Content-Type: image/png` for `/opengraph-image`,
-  `/writing/*/opengraph-image` and `/projects/*/opengraph-image` — without that every
-  scraper rejects the card. A new route that renders a card is half the change; the
-  matcher is the other half.
-  **That matcher must match the `file`, not just the path** — a `header` keyed on path
-  alone is applied before the file is looked for, so `handle_errors` served `/404.html`
-  as `image/png` and every miss claimed to be a card. **Every matcher in the `(site)`
-  snippet that names files now carries `file` for the same reason**, and the worst case
-  was not the card: `@immutable` was serving a 404 for a deleted `/_next/static/*` chunk
-  with `max-age=31536000, immutable`, so a browser or Cloudflare could pin a miss for a
-  year at a content-hashed URL that never comes back. `@html` is the one deliberate
-  exception — it matches directories, so pinning it to a file means restating the
-  `try_files` list inside the matcher, where the two would drift; the cost is a 404 page
-  edge-cached for ten minutes. The card's colours are hard-coded there: a card renders
-  once at build and has no access to the stylesheet, so keep them in step with the tokens
-  by hand.
-- **JSON-LD** lives in [components/JsonLd.tsx](components/JsonLd.tsx): `Person` + `WebSite` on the homepage,
-  `BlogPosting` + `BreadcrumbList` on posts, `ProfilePage` on `/cv/`. Stable `@id`s let
-  the per-page graphs reference the Person rather than repeat it. `knowsAbout` is derived
-  from the topics jobs and projects actually reference, so the structured data cannot
-  claim more than the visible pages do.
-- **Routes moved on 2026-08 and the old URLs are redirected in [deploy/Caddyfile](deploy/Caddyfile)**, because a
-  static export cannot redirect: `/posts/*` → `/writing/*`, `/tags/*` → `/topics/*`,
-  `/blog/` → `/writing/`, `/resume/` → `/cv/`, and `/now/` + `/uses/` → `/about/`. They use
-  `handle` blocks rather than bare `redir` — bare directives get sorted into Caddy's own
-  order and `try_files` rewrites the path before the matcher ever runs.
-- **Post heading anchors** use `rehype-slug`. The TOC in `lib/posts.ts` uses
-  **`github-slugger`** — the same slugger — on purpose: a hand-rolled version produced
-  `secrets-config` where rehype-slug produced `secrets--config`, silently breaking anchors.
+- **`<Shell current?>`** ([Shell.tsx](components/Shell.tsx)) wraps every page: header and
+  footer outside the one `<main id="main">`. Nav: **Writing · Projects · About · CV**;
+  Skills is linked from About and the CV. Every page's metadata comes from
+  `pageMetadata()` ([lib/metadata.ts](lib/metadata.ts)); posts and projects pass
+  `ownCard: true` to keep their own `opengraph-image`. Every `<Link>` but the primary nav
+  and the home CTA sets `prefetch={false}`: prefetch fetched other routes' payloads on
+  every scroll of a list.
+- **Content is data** in [lib/site.ts](lib/site.ts): projects, jobs, skills, uses,
+  `site.timezone`, optional `site.engagement`. Home lists running projects that are not
+  side projects, plus side projects with `featured: true`. `Project.writeup` names a
+  published post (validated).
+- **Dates**: `Job.start`/`Job.end` are `"YYYY-MM"`, end inclusive, `null` = present.
+  [lib/dates.ts](lib/dates.ts) is the only parser; add helpers there. Absolute dates
+  only — no "N days ago".
+- **Posts**: `content/posts/<slug>.md`, frontmatter `title`, `date` (quoted `YYYY-MM-DD`,
+  not future), `description`, `topics`, optional `spanDays`, `updated`, `correction`
+  (needs `updated`; both for factual changes only), and `cyrillic` (`"uk"`/`"ru"`,
+  required once the title or prose has Cyrillic; never guessed — `ок` is both).
+  [lib/lang.ts](lib/lang.ts) marks those runs with `lang`, `Project.cyrillic` does it per
+  term for project text, and `npm run check` fails on unmarked Cyrillic. [lib/markdown.mjs](lib/markdown.mjs)
+  parses for both `lib/posts.ts` and the validator, so word counts and heading ids
+  (`rehype-slug`, `github-slugger`) cannot disagree. Code blocks: Shiki ([lib/highlight.ts](lib/highlight.ts)).
+- **Topics**: [lib/topics.ts](lib/topics.ts) is the one closed vocabulary for posts,
+  projects and jobs; keep its `export const TOPICS = {` / `} as const satisfies` markers
+  (the validator slices between them). A hub with < 2 items is `noindex` and out of the
+  sitemap (`app/sitemap.ts` and `app/topics/[topic]/page.tsx` both hold the threshold).
+- **Readings are computed** ([lib/readings.ts](lib/readings.ts), ADR 0002). A figure the
+  build cannot count names its source (`Project.readings`). Nothing renders its own staleness.
+- **JSON-LD** ([JsonLd.tsx](components/JsonLd.tsx)): every graph carries the Person
+  (`@id …/#person`); `knowsAbout` comes from `skills` in `lib/site.ts`. Feeds carry full
+  HTML bodies with absolute links.
+- `/status.json` is written on the box by cron (homelab-gitops);
+  `tests/fixtures/status.json` is a complete document for local runs.
 
-## Deploy — push to main is a live deploy
+## Styling
 
-[.github/workflows/deploy.yml](.github/workflows/deploy.yml) builds and `rsync --delete`s `out/` to the VPS on every
-push to `main`, then `docker compose up -d`. Pushing to `main` publishes the site. Get
-explicit approval before pushing; don't touch `deploy/` or the workflow casually.
+- **One stylesheet**, [app/globals.css](app/globals.css), plain class names; no Tailwind,
+  modules or CSS-in-JS. The only inline style sets a custom property for data-driven
+  geometry (`style={{ "--x": `${pct}%` } as React.CSSProperties}`), read by a class.
+- **A `{" "}` between the items of a `.run`** (and any flex line of facts): flex ignores
+  it, but search excerpts and screen readers otherwise read "28 July 2026838 words".
+- **Seven colour tokens**: `--paper`, `--ink`, `--ink-2`, `--rule` (decorative only),
+  `--rule-firm` (every control edge), `--accent` (links only), `--warn` (only "this
+  broke"). Dark is default, cool near-black `#0A0B0D`; light is `#FFFFFF`. The contrast
+  ratios in `:root` are computed floors.
+- **Faces** via `next/font/google` ([layout.tsx](app/layout.tsx)): Inter (`--prose`) and
+  Bricolage Grotesque (`--display`, h1/h2/list titles, never below ~26px); `--figure`
+  and `--code` are system monospace (`tabular-nums` on figures). Inter preloads Latin;
+  its Cyrillic face loads by `unicode-range` on demand. Bricolage has no Cyrillic and
+  falls through to the system face. Never `<link>` fonts.googleapis.com.
+- **Type scale**: `--step-*` are primitives, never used outside `:root` and `@media print`
+  (which redeclares them in `pt`). Use `--fs-*` aliases; add one rather than a number.
+  Clamps keep a `rem` term (WCAG 1.4.4).
+- **Measure**: prose stops at `--read` (33em, about 66 characters of Inter); code,
+  tables, figures and the panel use the 640px `--measure`. Cap prose with `--read`,
+  never `ch`: Inter's `ch` is its zero, about 1.25 characters, so `66ch` sets ~82.
+- **Accessibility**: visible `:focus-visible`; one `<main id="main">`; targets ≥ 24×24 px;
+  `--rule-firm` on a control's only border; `prefers-reduced-motion` escapes; animate SVG
+  `<g>` with `translate`, never `transform` (it replaces the position attribute).
+- **Post layout**: title block above `.post-layout` (sticky `.post-aside`, then the
+  article); nothing spans rows. `.post-aside` is the contents scroller. Above 900px
+  `::details-content { content-visibility: visible }` keeps the `display: contents`
+  `<details>` visible in Chrome ≥ 131. `.prose` is a subgrid of `.wrap`: never in a `.row`.
+- **CLS**: smoke holds < 0.01 at 375 px on `/`, `/writing/`, a post and `/about/`, < 0.1
+  elsewhere. The panel's reserved heights are measured; re-measure when its content changes.
 
-**Prelive is `:81` in the same Caddyfile**, served from `/srv-prelive` and published
-to the tailnet only — [.github/workflows/prelive.yml](.github/workflows/prelive.yml) builds with `SITE_URL` set
-(which is what keeps its comment threads out of production's) and rsyncs to
-`/opt/stacks/website/prelive/`. It deliberately does **not** ship `deploy/Caddyfile`:
-that file carries the `:80` block, so pushing it from a branch would reconfigure the
-live site pre-merge. Both site blocks share one `(site)` snippet — never let them
-drift, or prelive stops being a test of production. See the Prelive section of
-[README.md](README.md).
+## Caddy, Cloudflare, deploy
 
-The container Caddy ([deploy/Caddyfile](deploy/Caddyfile)) is **plain HTTP on :80**, published to the
-tailnet at `100.64.0.2:8090`. TLS, the public hostname and the `www` redirect belong to the
-edge — do not add `tls`, a hostname block, or a redirect to `deploy/Caddyfile`.
-
-**The edge is Traefik, not Caddy.** `/opt/stacks/headscale/Caddyfile` is dead config; no
-such container runs. Routing lives in `/opt/stacks/pangolin/config/traefik/dynamic_config.yml`
-(`watch: true`, so edits apply live).
-
-**A Caddyfile change needs `rsync --inplace` and an explicit `caddy reload`.** It is a
-single-file bind mount, so a normal rsync gives it a new inode the container never sees,
-and `docker compose up -d` is a no-op when the compose spec has not changed.
-
-**Cloudflare is in front of all of it** (`server: cloudflare` on every live response), which
-the README's DNS section previously did not say. It rewrites `robots.txt`, can strip or add
-response headers, and gates AI crawlers via AI Crawl Control. See
-the Deploy section of [README.md](README.md) before debugging anything header- or
-crawler-related.
-
+- **A push to `main` is a live deploy** ([deploy.yml](.github/workflows/deploy.yml)): CI
+  minus smoke, `X-Site-Rev` stamped, the build (with the stamped Caddyfile) published to
+  the `deploy-site` release the box pulls (homelab-gitops M5.7), a three-pass rsync
+  (`/_next/` additive → Caddyfile `--inplace` → the rest with `--delete`), optional
+  Cloudflare purge, then `caddy-test` live. The rsync goes once the pull is verified.
+  Get explicit approval before pushing to `main`.
+- The key is `webdeploy`, forced to `rrsync -wo /opt/stacks/website`: no shell, no docker.
+  **No `caddy reload` or `docker compose up -d`** — Caddy `--watch` reloads within a second,
+  and a file that fails to load keeps the old config. `--inplace` matters: the Caddyfile
+  is a single-file bind mount.
+- The Caddyfile is plain HTTP: `:80` production, `:81` prelive, one shared `(site)`
+  snippet — never let them drift. No `tls`, hostname or www redirect (the edge is Traefik,
+  `/opt/stacks/pangolin/config/traefik/dynamic_config.yml`). Each header in one place;
+  never add `'unsafe-eval'` or an origin to the CSP.
+- **Header matchers that name files carry `file`**, or a 404 inherits them (`/404.html`
+  served as `image/png`; missing chunks pinned `immutable` for a year). `@html` matches
+  directories and is the exception. OG cards are extensionless, so a new card route needs
+  its path in `@ogimages`; `lib/og.tsx` colours are hard-coded copies of the tokens.
+- **Redirects** (`/posts/*`, `/tags/*`, `/blog/`, `/resume/`, `/now/`, `/uses/`, `/links/`)
+  are `handle` blocks with `redir * <to> permanent`: bare `redir` sorts after `try_files`,
+  and without `*` the target parses as a matcher.
+- **Prelive** ([prelive.yml](.github/workflows/prelive.yml)), every same-repo PR: builds with
+  `SITE_URL=http://100.64.0.2:8091`, publishes `out/` to the `deploy-prelive` release, then
+  rsyncs with `PRELIVE_SSH_KEY` after a dry-run guard (`deploy/prelive-guard.sh`); never
+  ships the Caddyfile. Without the secret the rsync fails; the publish has already run.
+  `probe.yml` checks the live site and `/status.json` every 6 h. `deploy/deploy.sh` is the
+  manual path; it refuses with `SITE_URL` set or a dirty tree. Compose, cron and the
+  Remark42 container belong to homelab-gitops.
 
 ## Publishing
 
-- **Drafts live in `content/drafts/`**, published posts in `content/posts/`. Only the
-  latter is built. Moving a file between them is a deliberate, reviewed act — the
-  `/post` skill writes drafts and is forbidden from writing to `content/posts/`.
-- **`.claude/skills/post`** drafts in the site's voice; **`.claude/skills/review-post`**
-  critiques one adversarially before it ships. Both name the two published posts as
-  the voice reference rather than restating it.
-- **Topics are a closed vocabulary** in [lib/topics.ts](lib/topics.ts). `npm run validate` fails on
-  anything outside it, and `/topics/<slug>/` is generated only for topics a post,
-  project or job actually references — an empty hub is worse than a 404.
-  Adding a topic means editing that file *and* `public/admin/config.yml`.
-- **Sveltia CMS at `/admin/`** — a static SPA that talks to the GitHub API directly,
-  so it never touches the build or the static export. The bundle is **vendored**
-  (`npm run cms:vendor`, runs in `npm run build`) rather than loaded from a CDN,
-  because the CSP is `script-src 'self'`. It is 2.2 MB — the "~300 KB" figure in
-  circulation is wrong. **It needs no OAuth worker**: "Sign In Using Access Token"
-  takes a fine-grained GitHub PAT held in the browser's localStorage, so there is
-  no client secret anywhere in this repo, on the server, or in CI.
+Drafts live in `content/drafts/` (not built); moving one to `content/posts/` is a
+deliberate, reviewed act. `/post` writes drafts only; `/review-post` critiques before
+shipping. No CMS: an editor plus `/post`, or GitHub's web editor as a PR against
+`content/drafts/` (ADR 0004). Comments are Remark42 at `/c/`, lazy-loaded, a bounded
+exception to ADR 0001 (ADR 0005).

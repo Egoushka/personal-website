@@ -10,6 +10,11 @@ on:
 permissions:
   contents: read
 
+# One Caddy for every step that runs one: caddy validate, caddy-test, serve:prod.
+# Pin it to the version the box runs.
+env:
+  CADDY_IMAGE: caddy:2-alpine
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -33,25 +38,61 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Unit tests
+        run: npm test
+
       - name: Build static export
+        id: build
         run: npm run build
 
+      # Every check below reads the build, and each one runs even when an earlier
+      # one failed: one red run should list everything that is wrong, not the first.
+      - name: Assert the build output
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: npm run check
+
       - name: Validate Caddyfile
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: |
           docker run --rm -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
-            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
+            "$CADDY_IMAGE" caddy validate --config /etc/caddy/Caddyfile
+
+      # Redirects, content types, 404s and headers, from the real Caddyfile over out/.
+      # It leaves that container serving on :8080, which the smoke test uses.
+      - name: Caddy behaviour
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: npm run caddy-test
+
+      - name: Install Chromium
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: npx playwright install --with-deps chromium
+
+      # The browser checks run against Caddy with the production CSP, because the
+      # bugs they exist for (an eval the CSP refused, a shift after hydration) never
+      # showed up on a bare file server.
+      - name: Browser smoke test
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        env:
+          # serve:prod publishes on 127.0.0.1 only; "localhost" may resolve to ::1 first.
+          BASE_URL: http://127.0.0.1:8080
+        run: npm run smoke
 
       # --offline checks that internal hrefs resolve to real files and skips the
       # network entirely, so external link rot can never make this gate flaky.
       - name: Check internal links in the built site
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         uses: lycheeverse/lychee-action@v2
         with:
           # --root-dir (absolute) is what resolves root-relative hrefs like "/blog/"
           # against the build output. --base-url only accepts a full URL and rejects
-          # a relative path outright.
+          # a relative path outright. --include-fragments also resolves #anchors, and
+          # needs --index-files: without it "/cv/#umbraco" is looked up in the
+          # directory out/cv, not in out/cv/index.html, and every such link fails.
           args: >-
             --offline
             --no-progress
+            --include-fragments
+            --index-files index.html
             --root-dir ${{ github.workspace }}/out
             --exclude-path out/_next
             "out/**/*.html"

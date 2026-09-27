@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Lang from "@/components/Lang";
+import type { CyrillicLang } from "@/lib/lang";
 
 /**
  * The writing index, with the vocabulary as a filter over it.
  *
  * Every post is server-rendered into the static HTML, so the page is a complete
  * list before any JavaScript runs — the filter only ever *removes* rows, and the
- * sort only ever reorders ones already present. With JS off you get every post,
- * newest first, grouped by month, which is the correct degraded state.
+ * sort only ever reorders ones already present. With JS off the controls are
+ * hidden by CSS and you get every post, newest first, grouped by month.
  *
  * Topics are multi-select and union, not intersection: picking Python and
  * Postgres shows everything about either. Intersection reads like a mistake on a
@@ -22,7 +24,11 @@ import Link from "next/link";
 export type PostRow = {
   slug: string;
   title: string;
+  /** The post's `cyrillic` frontmatter: the language its title's Cyrillic is marked with. */
+  cyrillic?: CyrillicLang;
   description: string;
+  /** ISO `YYYY-MM-DD`, for ordering. */
+  date: string;
   dateLabel: string;
   /** "July 2026" — the running head when the order is chronological. */
   month: string;
@@ -53,14 +59,16 @@ export default function PostFilter({
     (p) => active.length === 0 || p.topics.some((t) => active.includes(t)),
   );
 
-  // `posts` arrives newest first, so chronological order is free in both
-  // directions and only length has to be computed.
-  const ordered =
+  // Every order breaks ties by slug, so two posts from the same day land the
+  // same way on the server and in the browser, and on every build.
+  const bySlug = (a: PostRow, b: PostRow) => a.slug.localeCompare(b.slug);
+  const ordered = [...shown].sort(
     sort === "longest"
-      ? [...shown].sort((a, b) => b.wordCount - a.wordCount)
+      ? (a, b) => b.wordCount - a.wordCount || bySlug(a, b)
       : sort === "oldest"
-        ? [...shown].reverse()
-        : shown;
+        ? (a, b) => a.date.localeCompare(b.date) || bySlug(a, b)
+        : (a, b) => b.date.localeCompare(a.date) || bySlug(a, b),
+  );
 
   // A running head only where it means something. Sorted by length, a month is
   // not a fact about the group — it is noise beside a list that is no longer in
@@ -99,7 +107,7 @@ export default function PostFilter({
               aria-pressed={active.includes(t.slug)}
               onClick={() => toggle(t.slug)}
             >
-              {t.name} <span className="rail-count">{t.count}</span>
+              {t.name} <span className="rail-count">{t.count}<span className="visually-hidden"> posts</span></span>
             </button>
           </li>
         ))}
@@ -120,7 +128,8 @@ export default function PostFilter({
             </button>
           ))}
         </div>
-        <span className="sort-count" aria-live="polite">
+        {/* Announces the count after a change; the page figures already show it. */}
+        <span className="sort-count visually-hidden" aria-live="polite">
           {ordered.length === posts.length
             ? `${posts.length} ${posts.length === 1 ? "post" : "posts"}`
             : `${ordered.length} of ${posts.length}`}
@@ -133,11 +142,11 @@ export default function PostFilter({
           <ol className="post-list">
             {g.rows.map((p) => (
               <li className="post-row" key={p.slug}>
-                <Link href={`/writing/${p.slug}/`}>{p.title}</Link>
+                <Link prefetch={false} href={`/writing/${p.slug}/`}><Lang text={p.title} lang={p.cyrillic} /></Link>
                 <p>{p.description}</p>
                 <span className="post-meta run">
-                  <span>{p.dateLabel}</span>
-                  <span>{p.readingTime} min read</span>
+                  <span>{p.dateLabel}</span>{" "}
+                  <span>{p.readingTime} min read</span>{" "}
                   <span>{p.wordCount.toLocaleString("en-GB")} words</span>
                 </span>
               </li>

@@ -1,7 +1,9 @@
 name: Prelive
 
 # The same build as production, served from a second root on the same Caddy
-# container, published to the tailnet only. Nothing here touches the live site.
+# container, published to the tailnet only. This runs for every pull request,
+# so it deploys with a key of its own that can write the prelive root and
+# nothing else — never the production key.
 on:
   workflow_dispatch:
   pull_request:
@@ -17,32 +19,31 @@ concurrency:
 permissions:
   contents: write
 
+defaults:
+  run:
+    shell: bash
+
 env:
   VPS_HOST: <origin-ip>
-  # Deploys as `webdeploy`, not root. Its only command on the box is
-  # `rrsync -wo /opt/stacks/website` (forced in authorized_keys), so every
-  # remote path below is relative to /opt/stacks/website and nothing but a
-  # write-only rsync is possible: no shell, no docker, no reads. Until
-  # 2026-09-24 this key was an unrestricted root login on public :22.
+  # PRELIVE_SSH_KEY logs in as webdeploy with a forced
+  # `rrsync -wo /opt/stacks/website/prelive`: every remote path below is
+  # relative to the prelive root, and a write-only rsync is all it can do.
   VPS_USER: webdeploy
   # Baked into canonicals, both feeds, the sitemap, the OG cards and the URL
-  # each post's comment thread is keyed by — see lib/site.ts.
-  #
-  # 100.64.0.2, settled by the file that actually binds the port:
-  # homelab-gitops website/compose.yaml publishes "100.64.0.2:8090:80" and now
-  # "100.64.0.2:8091:81". This repo had it written down twice and disagreeing —
-  # the Caddyfile's comment said .4 and was wrong. Still the only place the
-  # address appears in a build.
+  # each post's comment thread is keyed by — see lib/site.ts. It is the address
+  # homelab-gitops website/compose.yaml binds: "100.64.0.2:8091:81".
   PRELIVE_ORIGIN: http://100.64.0.2:8091
+  CADDY_IMAGE: caddy:2-alpine
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    # A pull_request from a fork gets no secrets, so the SSH steps would fail
-    # halfway through rather than not run. Skip the whole job instead.
+    # A pull request from a fork gets no secrets, and neither does one that
+    # Dependabot opens, so the key check would fail every time. Skip the job.
     if: >-
-      github.event_name == 'workflow_dispatch' ||
-      github.event.pull_request.head.repo.full_name == github.repository
+      github.actor != 'dependabot[bot]' &&
+      (github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.head.repo.full_name == github.repository)
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -72,12 +73,13 @@ jobs:
 
       # Prelive does NOT ship deploy/Caddyfile, and that is the point: the file
       # carries the production :80 block too, so rsyncing it from a branch would
-      # change the live site's config before the change was ever merged. It is
-      # only validated here; it reaches the box with the next production deploy.
+      # change the live site's config before the change was ever merged (and the
+      # prelive key cannot reach it anyway). It is only validated here; it
+      # reaches the box with the next production deploy.
       - name: Validate Caddyfile
         run: |
           docker run --rm -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
-            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
+            "$CADDY_IMAGE" caddy validate --config /etc/caddy/Caddyfile
 
       # The pull path (homelab-gitops host/website-pull.sh, M5.7): the box fetches
       # this archive from the `deploy-prelive` release every 2 minutes and checks its
@@ -102,29 +104,54 @@ jobs:
             --title "deploy-prelive (moving)" --notes "Pulled by the VPS every 2 minutes. Replaced on every prelive run; out/ only, never the Caddyfile."
           gh release upload deploy-prelive site.tar.gz site.tar.gz.sha256 --clobber
 
+      # The pull path above needs no key; the rsync below does. The check sits here,
+      # after publishing, so a missing key stops only the rsync.
+      - name: Require the prelive key
+        env:
+          PRELIVE_SSH_KEY: ${{ secrets.PRELIVE_SSH_KEY }}
+        run: |
+          if [ -z "$PRELIVE_SSH_KEY" ]; then
+            echo "::error title=PRELIVE_SSH_KEY is not set::Prelive deploys with its own key, forced to 'rrsync -wo /opt/stacks/website/prelive' in webdeploy's authorized_keys (README, Prelive). It never falls back to the production key."
+            exit 1
+          fi
+
       - name: Configure SSH
+        env:
+          PRELIVE_SSH_KEY: ${{ secrets.PRELIVE_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          printf '%s\n' "$PRELIVE_SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-      # A sibling of site/, never inside it: --delete on one must not be able to
-      # reach the other. No status.json exclude here — that file is generated on
-      # the box for production only, and prelive rendering /about/ without live
-      # status is the correct degraded state, not a bug to hide.
+      # The key's forced root is all that keeps --delete out of production's
+      # files. The same sync as a dry run first: if it would touch site/, the
+      # Caddyfile or production's status.json, the key was set up with the wrong
+      # root, and the job stops before anything is sent.
+      - name: Check the key's root with a dry run
+        run: |
+          rsync -azn --delete --itemize-changes -e "ssh -i $HOME/.ssh/id_ed25519" \
+            out/ "$VPS_USER@$VPS_HOST:./" > "$RUNNER_TEMP/prelive-plan.txt"
+          bash deploy/prelive-guard.sh < "$RUNNER_TEMP/prelive-plan.txt"
+
+      # The prelive root is a sibling of site/, never inside it, so --delete here
+      # cannot reach production. No status.json exclude: that file is generated on
+      # the box for production only, and prelive rendering without live status is
+      # the correct degraded state, not a bug to hide.
       - name: Sync prelive to VPS
         run: |
-          rsync -avz --delete -e "ssh -i ~/.ssh/id_ed25519" \
-            out/ "$VPS_USER@$VPS_HOST:prelive/"
+          rsync -azi --delete -e "ssh -i $HOME/.ssh/id_ed25519" \
+            out/ "$VPS_USER@$VPS_HOST:./"
 
-      # No verification step: prelive is tailnet-only (100.64.0.2:8091), the
-      # runner cannot reach it, and the deploy key can no longer `docker exec`
-      # a probe on the box. rsync failing still fails the job. Open the link
-      # below from a tailnet device.
+      # No verification step: the runner cannot reach the tailnet, and the key can
+      # only rsync. rsync failing still fails the job. Open the link below from a
+      # tailnet device.
       - name: Where to look
         run: |
-          echo "### Prelive updated" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "<$PRELIVE_ORIGIN/> — tailnet only, from \`${GITHUB_REF_NAME}\`" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "### Prelive updated"
+            echo ""
+            echo "<$PRELIVE_ORIGIN/> — tailnet only, from \`${GITHUB_REF_NAME}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

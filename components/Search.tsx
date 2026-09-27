@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { detectPlatform, MAC, type Platform } from "@/lib/platform";
 
 /**
  * Site search as a modal over Pagefind's JS API.
@@ -15,9 +16,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
  * All of that would otherwise be hand-written and half-wrong.
  *
  * Pagefind only exists after `next build` — `npm run dev` has no /pagefind/
- * path, so loading fails there by design. The empty state says so rather than
- * looking broken.
+ * path, so loading fails there by design. On the dev server's port the empty
+ * state says why; everywhere else it says only that search is unavailable.
  */
+
+const PAGEFIND = "/pagefind/pagefind.js";
 
 type PagefindResult = {
   id: string;
@@ -36,16 +39,27 @@ type Pagefind = {
 
 type Hit = { url: string; title: string; excerpt: string };
 
+/** The last search that finished, and what it found. */
+type Found = { query: string; hits: Hit[] };
+
 export default function Search() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const pagefind = useRef<Pagefind | null>(null);
+  const failedLoads = useRef(0);
 
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [hits, setHits] = useState<Hit[]>([]);
+  const [found, setFound] = useState<Found | null>(null);
   const [state, setState] = useState<"idle" | "busy" | "ready" | "unavailable">("idle");
   const [active, setActive] = useState(0);
+  const [platform, setPlatform] = useState<Platform>(MAC);
+
+  const q = query.trim();
+  const hits = found?.hits ?? [];
+  // Only a search that has finished for what is in the field may say
+  // "no matches": while the debounce runs, the last answer stands.
+  const settled = !!q && found?.query === q;
 
   const close = useCallback(() => {
     dialogRef.current?.close();
@@ -55,15 +69,21 @@ export default function Search() {
   const show = useCallback(() => {
     dialogRef.current?.showModal();
     setOpen(true);
+    // A failed load is retried on the next open, not remembered for the life
+    // of the page. Here rather than in close(): Esc closes the dialog without it.
+    setState((s) => (s === "unavailable" ? "idle" : s));
     // Focus after the dialog is in the top layer, or Safari drops it.
     requestAnimationFrame(() => inputRef.current?.focus());
   }, []);
 
-  // ⌘K / Ctrl+K from anywhere, and "/" when not already typing.
+  // The server renders ⌘; a PC reader gets Ctrl once the browser is asked.
+  useEffect(() => setPlatform(detectPlatform()), []);
+
+  // ⌘K / Ctrl+K from anywhere. No single-key shortcut: "/" fired for speech
+  // input and for anyone typing outside a form field (WCAG 2.1.4).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const typing = /^(INPUT|TEXTAREA)$/.test((e.target as HTMLElement)?.tagName ?? "");
-      if ((e.key === "k" && (e.metaKey || e.ctrlKey)) || (e.key === "/" && !typing)) {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         dialogRef.current?.open ? close() : show();
       }
@@ -72,20 +92,28 @@ export default function Search() {
     return () => document.removeEventListener("keydown", onKey);
   }, [show, close]);
 
-  // Load the index on first open, never on page load: it is ~740 KB of wasm and
-  // index shards that most visitors will never ask for.
+  // Load the index on first open, never on page load: it is wasm and index
+  // shards that most visitors will never ask for. Only from "idle" — this
+  // effect re-runs when it sets "busy" and must not start a second load.
   useEffect(() => {
-    if (!open || pagefind.current || state === "unavailable") return;
+    if (!open || pagefind.current || state !== "idle") return;
     (async () => {
       setState("busy");
       try {
-        // Hidden from the bundler on purpose — this path only exists in the
-        // built output, so a static import would fail the build.
-        const mod = (await (new Function('return import("/pagefind/pagefind.js")')() as Promise<Pagefind>));
+        // A real dynamic import the bundler leaves alone: the file only exists
+        // in the built output, and a literal specifier fails tsc (TS2307).
+        // Never route this through eval or `new Function` — the CSP has no
+        // 'unsafe-eval', so that loader throws in production.
+        // A retry needs a fresh URL: the browser remembers a failed module
+        // fetch for the life of the page and rejects a second import() of it
+        // without asking the server. Pagefind's base path ignores the query.
+        const url = failedLoads.current ? `${PAGEFIND}?retry=${failedLoads.current}` : PAGEFIND;
+        const mod = (await import(/* webpackIgnore: true */ /* turbopackIgnore: true */ url)) as Pagefind;
         await mod.init();
         pagefind.current = mod;
         setState("ready");
       } catch {
+        failedLoads.current += 1;
         setState("unavailable");
       }
     })();
@@ -95,31 +123,45 @@ export default function Search() {
   // loading, and without it this never re-runs once Pagefind is ready — the
   // first query silently returns nothing forever.
   useEffect(() => {
-    if (!pagefind.current || !query.trim()) {
-      setHits([]);
+    if (!q) {
+      setFound(null);
       return;
     }
+    if (!pagefind.current) return;
     let stale = false;
     (async () => {
-      const search = await pagefind.current!.debouncedSearch(query, undefined, 200);
+      const search = await pagefind.current!.debouncedSearch(q, undefined, 200);
       if (!search || stale) return;
       const top = await Promise.all(search.results.slice(0, 8).map((r) => r.data()));
       if (stale) return;
-      setHits(
-        top.map((d) => ({
+      setFound({
+        query: q,
+        hits: top.map((d) => ({
           url: d.url.replace(/\.html$/, "").replace(/\/index$/, "/"),
           title: d.meta?.title ?? d.url,
           excerpt: d.excerpt,
         })),
-      );
+      });
       setActive(0);
     })();
     return () => {
       stale = true;
     };
-  }, [query, state]);
+  }, [q, state]);
+
+  // Keep the active row in view as the arrows move it.
+  useEffect(() => {
+    document.getElementById(`hit-${active}`)?.scrollIntoView({ block: "nearest" });
+  }, [active, found]);
 
   const onInputKey = (e: React.KeyboardEvent) => {
+    // One Esc closes, even in a filled field, where Chrome's first would
+    // only clear it.
+    if (e.key === "Escape") {
+      e.preventDefault();
+      close();
+      return;
+    }
     if (!hits.length) return;
     if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -133,19 +175,28 @@ export default function Search() {
     }
   };
 
+  // Announced, never shown: the list itself is what a sighted reader reads.
+  const status =
+    state === "unavailable" ? "Search is unavailable right now."
+    : state === "busy" && q ? "Loading the index…"
+    : settled ? (hits.length ? `${hits.length} result${hits.length === 1 ? "" : "s"}` : "No matches")
+    : "";
+
   return (
     <>
       <button
         type="button"
         className="search-trigger"
         onClick={show}
-        aria-label="Search (Command K)"
+        aria-label={`Search (${platform.label} K)`}
       >
         <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
           <circle cx="7" cy="7" r="4.5" />
           <line x1="10.5" y1="10.5" x2="14.5" y2="14.5" />
         </svg>
-        <span className="search-trigger-key" aria-hidden="true">⌘K</span>
+        <span className="search-trigger-key" aria-hidden="true">
+          {platform === MAC ? "⌘K" : "Ctrl K"}
+        </span>
       </button>
 
       <dialog
@@ -167,6 +218,11 @@ export default function Search() {
             <input
               ref={inputRef}
               type="search"
+              role="combobox"
+              aria-expanded={hits.length > 0}
+              aria-controls="search-results"
+              aria-autocomplete="list"
+              aria-activedescendant={hits.length ? `hit-${active}` : undefined}
               value={query}
               placeholder="Search posts and pages"
               autoComplete="off"
@@ -178,40 +234,56 @@ export default function Search() {
             <kbd>esc</kbd>
           </div>
 
-          <div className="search-results" role="listbox" aria-label="Results">
+          <p className="visually-hidden" role="status">{status}</p>
+
+          <div className="search-body">
+            {/* Only ever rendered after a failed load on the client, so reading
+                `location` here cannot differ from the server's HTML. */}
             {state === "unavailable" && (
               <p className="search-note">
-                The search index is only built by <code>npm run build</code>, so it is
-                unavailable on the dev server.
+                Search is unavailable right now.
+                {location.port === "3000" && (
+                  <>
+                    {" "}The index is only built by <code>npm run build</code>, so it
+                    does not exist on the dev server.
+                  </>
+                )}
               </p>
             )}
-            {state !== "unavailable" && query && !hits.length && (
-              <p className="search-note">No matches for “{query}”.</p>
+            {state === "busy" && q && (
+              <p className="search-note">Loading the index…</p>
             )}
-            {!query && (
+            {settled && !hits.length && (
+              <p className="search-note">No matches for “{q}”.</p>
+            )}
+            {!q && (
               <p className="search-note">
                 Type to search. <kbd>↑</kbd> <kbd>↓</kbd> to move, <kbd>↵</kbd> to open.
               </p>
             )}
-            {hits.map((h, i) => (
-              <a
-                key={h.url}
-                href={h.url}
-                role="option"
-                aria-selected={i === active}
-                className={`search-hit${i === active ? " is-active" : ""}`}
-                onMouseEnter={() => setActive(i)}
-              >
-                {/* deliberately not .rail — that is flex-column and collides
-                    with the body text inside a hit row */}
-                <span className="search-hit-url">{h.url}</span>
-                <span className="search-hit-title">{h.title}</span>
-                <span
-                  className="search-hit-excerpt"
-                  dangerouslySetInnerHTML={{ __html: h.excerpt }}
-                />
-              </a>
-            ))}
+            <div className="search-results" id="search-results" role="listbox" aria-label="Results">
+              {hits.map((h, i) => (
+                <a
+                  key={h.url}
+                  id={`hit-${i}`}
+                  href={h.url}
+                  role="option"
+                  aria-selected={i === active}
+                  aria-labelledby={`hit-${i}-title`}
+                  className={`search-hit${i === active ? " is-active" : ""}`}
+                  onMouseEnter={() => setActive(i)}
+                >
+                  {/* deliberately not .rail — that is flex-column and collides
+                      with the body text inside a hit row */}
+                  <span className="search-hit-url">{h.url}</span>
+                  <span className="search-hit-title" id={`hit-${i}-title`}>{h.title}</span>
+                  <span
+                    className="search-hit-excerpt"
+                    dangerouslySetInnerHTML={{ __html: h.excerpt }}
+                  />
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </dialog>

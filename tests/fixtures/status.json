@@ -1,0 +1,22 @@
+{
+  "generated": "2026-09-27T00:00:00Z",
+  "uptimeDays": 41,
+  "containers": 58,
+  "unhealthy": 0,
+  "coding": {
+    "hours": 112,
+    "language": "C#",
+    "languagePercent": 54,
+    "editor": "Rider",
+    "editorPercent": 71,
+    "languages": [
+      { "name": "C#", "percent": 54, "hours": 60.5 },
+      { "name": "TypeScript", "percent": 21, "hours": 23.5 },
+      { "name": "Python", "percent": 11, "hours": 12.3 },
+      { "name": "YAML", "percent": 6, "hours": 6.7 },
+      { "name": "Bash", "percent": 4, "hours": 4.5 },
+      { "name": "Markdown", "percent": 2, "hours": 2.2 }
+    ]
+  },
+  "package": { "id": "Attest", "version": "1.4.0", "downloads": 1873 }
+}
