@@ -1,0 +1,9 @@
+personal-website
+Copyright 2026 Egoushka (https://github.com/Egoushka)
+
+The code in this repository is licensed under the Apache License 2.0 (LICENSE).
+
+The writing and personal content are not: the posts in content/posts/, the text
+about me, my work, projects and skills in lib/site.ts, and the images in
+public/. Copyright 2026 Yehor Hrabovskyi, all rights reserved. Quoting a post
+with a link back is fine.
