@@ -269,3 +269,8 @@ names the commit.
 
 The mount and the published port are in homelab-gitops `website/compose.yaml`
 (`./prelive:/srv-prelive:ro`, `100.64.0.2:8091:81`), which this repo does not own.
+
+## License
+
+The code is Apache-2.0 ([LICENSE](LICENSE)). The posts, the personal content in
+`lib/site.ts` and the images are not: all rights reserved, see [NOTICE](NOTICE).
