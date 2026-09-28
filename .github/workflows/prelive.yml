@@ -8,12 +8,6 @@ on:
   workflow_dispatch:
   pull_request:
 
-# One prelive, so the newest run wins. Separate from `deploy-production` on
-# purpose: a prelive run must never cancel a real deploy.
-concurrency:
-  group: deploy-prelive
-  cancel-in-progress: true
-
 # contents: write publishes the build to the deploy-prelive release, which the
 # VPS pulls. A fork PR never gets here (the job's `if`).
 permissions:
@@ -36,12 +30,18 @@ jobs:
       github.actor != 'dependabot[bot]' &&
       (github.event_name == 'workflow_dispatch' ||
       github.event.pull_request.head.repo.full_name == github.repository)
+    # One prelive, so the newest run wins. Separate from `deploy-production` on
+    # purpose: a prelive run must never cancel a real deploy. On the job, not the
+    # workflow: a skipped fork run must not cancel the one in progress.
+    concurrency:
+      group: deploy-prelive
+      cancel-in-progress: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm

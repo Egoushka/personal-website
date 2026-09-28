@@ -68,7 +68,7 @@ components/           Shell, Nav, Footer, PageHead, Byline, PostList, PostFilter
                       Panel, UsesStatus, Measured, SkillsBoard, Journey, PrintCv,
                       Icon, Picture, JsonLd
 content/posts/*.md    published posts
-content/drafts/       drafts. Not built. Moving a file out of here is deliberate.
+content/drafts/       drafts. Not built, not tracked: the repo is public, drafts stay local.
 lib/site.ts           site content: projects, jobs, skills, uses, links
 lib/topics.ts         the one topic vocabulary — posts, projects and jobs reference it
 lib/readings.ts       every counted figure, computed at build time
@@ -115,8 +115,9 @@ requires it.
 `lib/topics.ts`. Adding a topic means editing that file. A post appears on `/writing/`,
 at `/writing/my-post/` and on each of its topics' pages on the next build.
 
-From a phone: GitHub's web editor, as a pull request against `content/drafts/`. There
-is no CMS ([ADR 0004](docs/adr/0004-the-cms-is-removed.md)).
+From a phone: GitHub's web editor, as a pull request that adds the post to
+`content/posts/`. The repo is public, so the pull request is readable before it merges.
+There is no CMS ([ADR 0004](docs/adr/0004-the-cms-is-removed.md)).
 
 ## Deploy
 

@@ -23,9 +23,9 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm
@@ -81,7 +81,7 @@ jobs:
       # network entirely, so external link rot can never make this gate flaky.
       - name: Check internal links in the built site
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        uses: lycheeverse/lychee-action@v2
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
         with:
           # --root-dir (absolute) is what resolves root-relative hrefs like "/blog/"
           # against the build output. --base-url only accepts a full URL and rejects
@@ -97,3 +97,28 @@ jobs:
             --exclude-path out/_next
             "out/**/*.html"
           fail: true
+
+  # The repo is public: no secret and no personal address reaches it.
+  secrets:
+    runs-on: ubuntu-latest
+    # On pull requests gitleaks-action lists the PR's commits through the API.
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Prints short hashes only: echoing the offending address would publish it in the log.
+      - name: Every commit uses a GitHub noreply address
+        run: |
+          bad=$(git log --format='%h %ae%n%h %ce' \
+            | grep -vE ' ([^ @]+@users\.noreply\.github\.com|noreply@github\.com)$' || true)
+          if [ -n "$bad" ]; then
+            echo "Commits with an address that is not a GitHub noreply one:"
+            echo "$bad" | cut -d' ' -f1 | sort -u
+            exit 1
+          fi

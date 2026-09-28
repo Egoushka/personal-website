@@ -1,0 +1,8 @@
+# Copy to .private-terms (gitignored). One extended regex per line, matched
+# case-insensitively against every staged file and commit message. Lines starting
+# with # are ignored. List what must never appear in this public repo: the origin
+# server's public IP, employer and client internals, home-directory paths, keys.
+# Not your name, the domain or the tailnet namespace: the site publishes those.
+203\.0\.113\.
+/home/yourname/
+sk-[A-Za-z0-9_-]{16,}

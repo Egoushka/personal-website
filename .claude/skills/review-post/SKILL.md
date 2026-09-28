@@ -15,8 +15,8 @@ so in one line and move on — don't pad.
 - **Any specific that could be checked and found false.** Numbers, dates, error
   strings, command output, repo contents, employer names.
 - Claims about the author's own history. This site has already shipped two of
-  these wrong: an experience section saying "2023 — present · Boerse Stuttgart Digital" when
-  LinkedIn showed a different employer *and* different dates, and project blurbs
+  these wrong: an experience section whose employer name and dates disagreed
+  with LinkedIn, and project blurbs
   describing a "Jira tool" whose repo contains a `.gitignore` and nothing else.
 - Anything about the current employer's internals. Flag it hard.
 

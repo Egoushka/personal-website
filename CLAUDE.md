@@ -21,6 +21,12 @@ npm run smoke        # Playwright + axe against BASE_URL (default http://localho
 ```
 
 Before pushing: `npm run validate && npm run typecheck && npm test && npm run build && npm run check`.
+
+**The repo is public.** Enable the hooks once per clone: `git config core.hooksPath
+.githooks`, and copy `.private-terms.example` to `.private-terms` (gitignored). They block
+private terms in files and commit messages, run gitleaks, and require a GitHub noreply
+address; CI's `secrets` job checks the same. The origin IP, employer internals and local
+paths never go in a file, a commit message or a PR.
 No ESLint. **Test the build the way production serves it**: `serve:prod` (`SITE_PORT`,
 `CADDY_IMAGE`) has the real CSP, headers, redirects and 404s; `python3 -m http.server`
 has none. Re-run it after every build — the container keeps the deleted `out/` mounted.
@@ -173,8 +179,8 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
 
 ## Publishing
 
-Drafts live in `content/drafts/` (not built); moving one to `content/posts/` is a
-deliberate, reviewed act. `/post` writes drafts only; `/review-post` critiques before
-shipping. No CMS: an editor plus `/post`, or GitHub's web editor as a PR against
-`content/drafts/` (ADR 0004). Comments are Remark42 at `/c/`, lazy-loaded, a bounded
+Drafts live in `content/drafts/` (not built, gitignored: the repo is public); moving one
+to `content/posts/` is a deliberate, reviewed act. `/post` writes drafts only; `/review-post` critiques before
+shipping. No CMS: an editor plus `/post`, or GitHub's web editor as a PR that adds the
+post to `content/posts/` (ADR 0004). Comments are Remark42 at `/c/`, lazy-loaded, a bounded
 exception to ADR 0001 (ADR 0005).
