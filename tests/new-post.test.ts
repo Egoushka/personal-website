@@ -48,6 +48,8 @@ test("new: every kind has a skeleton the validator reads the kind from", () => {
       assert.match(content, /^TODO: /m, "note has TODO paragraphs to replace");
     } else {
       assert.match(content, /^## TODO: /m, `${kind} has TODO headings to rename`);
+      assert.match(content, /^TODO: open on the moment/m, `${kind} opens on a moment`);
+      assert.match(content.trimEnd(), /\n## Receipts\n\n[^#]+$/, `${kind} ends on Receipts`);
     }
   }
 });

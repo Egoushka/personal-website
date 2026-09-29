@@ -230,6 +230,7 @@ ${agreement(post)}
 - A derived figure (a ratio, percentage, difference, multiple or per-unit figure) gets a row whose source gives the formula and both operands, and both operands come from the same run.
 - Non-digit claims get rows too: every quoted string, every claim about a person (the author included), every claim with every, never, always, all or none.
 - What only Yehor knows has no source you can open: it stays a \`TODO:\` in the draft and goes in questionsForYehor.
+- The interview (W/.claude/skills/post/SKILL.md): you cannot ask it, so leave the opening moment as a \`TODO:\`, never an invented scene, and list in questionsForYehor: what did you expect; what did you do when you saw the result; what surprised you; what would you do differently. The verdict stays not-yet until he answers.
 
 6. Write the draft: W/.claude/skills/post/SKILL.md, step 4, the brief's suggested shape and its voice references. The frontmatter carries the agreed kind, project (no project line when it is none) and topics, exactly. If a topic is not in lib/topics.ts, or the project not in lib/site.ts, keep it, let validate report it, and say so in questionsForYehor: adding one is his decision. Choose the title by the README's rules, from the brief's working titles where one fits, and put it in questionsForYehor for his approval.
 
@@ -238,7 +239,7 @@ ${checksHowTo(slug)}
 Fix what they report, in the draft or the pack, and run them again until they pass or what is left needs Yehor. Never make a check pass by weakening the pack: a row's source must say what the row says.
 
 8. Return:
-- wordCount: \`${COUNT_WORDS} <draft>\` in W, the site's own count (the target is 1,000 to 1,800).
+- wordCount: \`${COUNT_WORDS} <draft>\` in W, the site's own count (the target is 700 to 1,100, receipts included).
 - todos: every line of the draft that contains TODO, verbatim.
 - inferredClaims: every claim in the draft that rests on your inference rather than a source you opened, with what it rests on and how Yehor can check it.
 - sha256: the hex digest from \`shasum -a 256 <draft>\`.

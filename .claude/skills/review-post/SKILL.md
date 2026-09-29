@@ -39,9 +39,9 @@ For each: quote the line, say what would falsify it, and say how to check.
 
 The `kind` in the frontmatter says what the post promised (docs/writing/README.md):
 
-- **finding**: the number within the first two paragraphs; the method told well
+- **finding**: the moment first, then the number within the first few paragraphs; the method told well
   enough to repeat; what the number changed.
-- **incident**: the moment it was found; the root cause with real output; **why
+- **incident**: the moment it was found, what was done next; the root cause with real output; **why
   nothing showed it**; the fix and how it is known to hold; what I got wrong.
 - **build**: opens on the question the thing answers or what it refuses to do, not
   its name; each decision with what was rejected and the price; what exists and what
@@ -51,8 +51,20 @@ The `kind` in the frontmatter says what the post promised (docs/writing/README.m
   summary of it; 300–700 words (past 800 the validator warns: it has outgrown the
   kind, so say which kind it is); no `##` heading, or one over its last part. A
   second finding is a second note, and a sentence the note survives without is padding.
-- **every kind** ends on what it does not know or has not built, and names its
+- **every kind but note** closes with `## Receipts`, after the story.
+- **every kind** ends its story on what it does not know or has not built, and names its
   `project` when it is about one.
+
+## Readability
+
+- Does it open on a moment (what was in front of me, what I expected, what made me
+  stop) rather than a number or a definition?
+- Can a reader outside the field follow the first two-thirds? Quote what they would
+  stall on.
+- Is the checkable detail in `## Receipts`, not in the way of the story?
+- **Must-fix:** any scene, feeling or motive that is not in the pack or in Yehor's
+  recorded answers (`Yehor, <date>` rows or field notes). Quote it; the fix is a
+  `TODO:` or a cut.
 
 ## 3. Voice
 
