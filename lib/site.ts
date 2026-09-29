@@ -341,7 +341,7 @@ export const projects: Project[] = [
       { label: "Noise", value: "65% under 20 characters", source: "same pass over the same archive", ref: "Egoushka/chronicle@741dbb1:README.md#L20" },
       { label: "Index", value: "13.4× fewer units", source: "685,401 events into 51,044 segments, measured on the reference deployment", ref: "Egoushka/chronicle@741dbb1:README.md#L30-31" },
       { label: "Against grep", value: "71.1% vs 54.2%", source: "make eval, 71 questions, 2026-09-29, grep’s keywords the question’s own words (68.4% with the answer’s words); chronicle CHANGELOG 0.3.0. The first run, 37 questions, lost 48.2% to 62.8%", ref: "Egoushka/chronicle@741dbb1:README.md#L150-152" },
-      { label: "Retrieval", value: "45× faster", source: "hybrid_search, measured before and after the CTE that hid the FTS index" },
+      { label: "Retrieval", value: "5,694 → 120–255 ms", source: "hybrid_search, measured before and after the CTE that hid the FTS index", ref: "Egoushka/chronicle@741dbb1:CLAUDE.md#L331" },
       { label: "Users", value: "1 — me", source: "counted" },
     ],
   },
@@ -368,7 +368,7 @@ export const projects: Project[] = [
     readings: [
       { label: "Claims governed", value: "5,369", source: "first census of the live backend, 2026-09-22" },
       { label: "Ever marked wrong", value: "0, before this", source: "the backend’s own state column: valid=5,369" },
-      { label: "Classifier bill", value: "$0.237 → $0.092 a night", source: "a cheap model with a Claude Haiku second opinion, for 1.3 macro-F1 points; ADR 0004" },
+      { label: "Nightly model bill", value: "$0.237 → $0.092, projected", source: "the whole nightly bill at its limits, not a measured night: a cheap classifier with a Claude Haiku second opinion; ADR 0004" },
       { label: "Applied automatically", value: "0", source: "every scope ships closed; findings wait as proposals" },
     ],
   },
@@ -437,13 +437,12 @@ export const projects: Project[] = [
     summary:
       "Answers a question about my sleep with a chart rather than a paragraph, rendered inside whichever assistant asked.",
     description:
-      "An MCP App over the Oura Platform warehouse. One tool, oura_trend, reads eight columns of the daily table — sleep, readiness and activity scores, HRV, resting heart rate, temperature deviation, SpO₂ and steps — and returns the series and an interactive chart together. Hosts that implement MCP Apps render the chart inline and let you change metric and range without another model turn, because the app calls the tool itself over the host bridge rather than asking the model to; hosts that do not still get a useful text summary out of the same call. The database user is read-only and the column names come from a fixed map rather than from tool input, because a tool the model can aim is a tool an injected instruction can aim. Version 0.2.0 dropped CORS and answers 403 to any Host header it was not told about, which is the guard against DNS rebinding: a server with no login of its own should not answer a page that merely resolves to it.",
+      "An MCP App over the Oura Platform warehouse. One tool, oura_trend, reads eight columns of the daily table — sleep, readiness and activity scores, HRV, resting heart rate, temperature deviation, SpO₂ and steps — and returns the series and an interactive chart together. Hosts that implement MCP Apps render the chart inline and let you change metric and range without another model turn, because the app calls the tool itself over the host bridge rather than asking the model to; hosts that do not still get a useful text summary out of the same call. The database user is read-only and the column names come from a fixed map rather than from tool input, because a tool the model can aim is a tool an injected instruction can aim.",
     topics: ["typescript", "postgres", "mcp"],
     readings: [
       { label: "Surface", value: "1 tool, 8 metrics", source: "the server’s registration; three ranges, one chart resource" },
       { label: "UI", value: "one inlined HTML file", source: "Vite single-file build — the host fetches exactly one resource" },
       { label: "Database access", value: "read-only, fixed column map", source: "db.ts; no tool input reaches the SQL" },
-      { label: "Foreign Host header", value: "403", source: "0.2.0; ALLOWED_HOSTS names the exceptions" },
       { label: "Users", value: "1 — me", source: "counted" },
     ],
   },
@@ -550,11 +549,11 @@ export const projects: Project[] = [
     summary:
       "Agent skills for Claude Code, OpenCode and Codex, each upstream one pinned to a commit and each showing what it costs in context.",
     description:
-      "A curated set of agent skills — my own and upstream ones I have read — that installs into Claude Code, OpenCode, Codex and anything else that reads SKILL.md. It treats skills the way a lockfile treats packages, because that is what they are: instructions and scripts handed to an agent that runs with my permissions. Every vendored skill is pinned to a commit, CI fails if it differs from upstream at that commit by a single byte, and upstream changes arrive only as pull requests whose review report flags changed allowed-tools, new scripts, new URLs and edited descriptions, since a description decides when a skill fires. The catalog prints what each skill costs: all 26 together take about 3.3k tokens of every session, and six have bodies over the 5,000-token guideline.",
+      "A curated set of agent skills — my own and upstream ones I have read — that installs into Claude Code, OpenCode, Codex and anything else that reads SKILL.md. It treats skills the way a lockfile treats packages, because that is what they are: instructions and scripts handed to an agent that runs with my permissions. Every vendored skill is pinned to a commit, CI fails if it differs from upstream at that commit, plus its recorded local patch, by a single byte, and upstream changes arrive only as pull requests whose review report flags changed allowed-tools, new scripts, new URLs and edited descriptions, since a description decides when a skill fires. The catalog prints what each skill costs: all 36 together take about 3.7k tokens of every session, and seven have bodies over the 5,000-token guideline.",
     topics: ["mcp", "python"],
     readings: [
-      { label: "Skills", value: "26", source: "the catalog the README generates from the skills themselves", ref: "Egoushka/agent-skills@06a52c6:README.md#L58" },
-      { label: "Always loaded", value: "≈3.3k tokens", source: "names and descriptions, estimated at characters ÷ 4", ref: "Egoushka/agent-skills@06a52c6:README.md#L58" },
+      { label: "Skills", value: "36", source: "the catalog the README generates from the skills themselves", ref: "Egoushka/agent-skills@84211d1:README.md#L68" },
+      { label: "Always loaded", value: "≈3.7k tokens", source: "names and descriptions, estimated at characters ÷ 4", ref: "Egoushka/agent-skills@84211d1:README.md#L68" },
       { label: "Vendored skills", value: "byte-identical to a pinned commit", source: "make verify, which CI runs" },
     ],
   },
