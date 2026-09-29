@@ -2,29 +2,29 @@
   "agent-skills": {
     "repo": "Egoushka/agent-skills",
     "path": "docs/guide",
-    "ref": "docs-guide",
-    "commit": "5df9db5f744bc62ae052ef29595779ae5bcf6e3c",
+    "ref": "main",
+    "commit": "84211d1f7fcb0f93f34c850bf9e306a2d0ba68f4",
     "pulled": "2026-09-29"
   },
   "attest": {
     "repo": "Egoushka/attest",
     "path": "docs/guide",
-    "ref": "docs-guide",
-    "commit": "d543f303654d5362194f62d1f1b488095060e5b9",
+    "ref": "main",
+    "commit": "ff0e5306bceafc42653f91b94612e2142bfbe6e3",
     "pulled": "2026-09-29"
   },
   "chargehand": {
     "repo": "Egoushka/chargehand",
     "path": "docs/guide",
-    "ref": "docs-guide-sections",
-    "commit": "3c60aac4cfd657c75af500b29faa7e91b26b8c3a",
+    "ref": "main",
+    "commit": "b5668901da66b01d828a4263fa8f7d7c03f78191",
     "pulled": "2026-09-29"
   },
   "chronicle": {
     "repo": "Egoushka/chronicle",
     "path": "docs/guide",
-    "ref": "docs-guide",
-    "commit": "47cc648532395fce6a721c99eab5c6c7b802c665",
+    "ref": "main",
+    "commit": "6e0f771fa1499076740518b29a2fdb9b0019c02a",
     "pulled": "2026-09-29"
   },
   "devbox-mcp": {
@@ -37,22 +37,22 @@
   "oura-mcp-app": {
     "repo": "Egoushka/oura-mcp-app",
     "path": "docs/guide",
-    "ref": "docs-guide",
-    "commit": "208ab073910a42eb85c977250b6d7d3ac41bd3df",
+    "ref": "main",
+    "commit": "720de9c639c913a92576b1c418489131422b7eaf",
     "pulled": "2026-09-29"
   },
   "oura-platform": {
     "repo": "Egoushka/oura-platform",
     "path": "docs/guide",
-    "ref": "docs-guide",
-    "commit": "1b72fbae6629092db71556a67395161df7d15805",
+    "ref": "master",
+    "commit": "9454d578613b9ed7685b6f1dc38843159122f885",
     "pulled": "2026-09-29"
   },
   "switchboard": {
     "repo": "Egoushka/switchboard",
     "path": "docs/guide",
-    "ref": "docs-guide",
-    "commit": "33fac4e12887125ba1c2e3a3ba7985d1e5ddd49c",
+    "ref": "main",
+    "commit": "36fb48816e662f01175867cb8c203e3777a1cb82",
     "pulled": "2026-09-29"
   }
 }
