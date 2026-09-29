@@ -292,10 +292,11 @@ export const projects: Project[] = [
   },
   {
     slug: "chargehand",
+    writeup: "chargehand-blind-test",
     visibility: "public",
     tech: ["C#", ".NET 10", "ASP.NET Core", "MCP", "Claude Code", "OpenCode", "OpenTelemetry", "Langfuse", "xUnit", "Docker"],
     phase:
-      "0.3.0, before 1.0. It runs from the CLI, over HTTP and over MCP; workers only read, the package is not on nuget.org yet, and the writing nodes that would let it change code do not exist.",
+      "0.4.0, before 1.0. It runs from the CLI, over HTTP and over MCP; workers only read, and the writing nodes that would let it change code do not exist.",
     status: "running",
     name: "chargehand",
     lang: "C#", shape: "orchestrator",
@@ -303,15 +304,15 @@ export const projects: Project[] = [
     summary:
       "Runs a question about a codebase on coding agents and returns an answer whose every citation is checked against a pinned commit.",
     description:
-      "An orchestrator for coding agents. A program that calls an agent gets prose back and has nothing to check it against; chargehand turns the request into a typed task, runs it on Claude Code or OpenCode sessions reading the repository at a pinned commit, and returns a result contract in which every claim carries its evidence — a file at that commit, a diff, a session message or an input the caller sent. A resolver checks that each citation resolves at that commit, and a claim whose evidence does not resolve is moved to open questions instead of being reported. Whether a cited line actually supports its claim is not checked yet; that is on the roadmap for 0.8. Budgets, retries and the task graph live in code rather than in a prompt. It is measured before it is believed, and the measurements are not flattering: the first version lost a blind comparison to a plain agent session, 0.333 to 0.667, and won it only after a prompt fix, at 28% more cost. Splitting a question across parallel agents cost 1.53× for a score of 0.967 against 0.950, so it now splits only when one session cannot cover the parts. Prompt CI, which gates every prompt change on paired evals, let both deliberately planted regressions through; once its score learned to count missing claims it caught one of them, and the other still passes.",
+      "An orchestrator for coding agents. A program that calls an agent gets prose back and has nothing to check it against; chargehand turns the request into a typed task, runs it on Claude Code or OpenCode sessions reading the repository at a pinned commit, and returns a result contract in which every claim carries its evidence — a file at that commit, a diff, a session message or an input the caller sent. A resolver checks that each citation resolves at that commit, and a claim whose evidence does not resolve is moved to open questions instead of being reported. Whether a cited line actually supports its claim is not checked yet; that is on the roadmap for 0.8. Budgets, retries and the task graph live in code rather than in a prompt. It is measured before it is believed, and the measurements are not flattering: the first version lost a blind comparison to a plain agent session, 0.333 to 0.667. A prompt fix won it back at 28% more cost, until an ablation moved that cost onto how much the preset told it to read, and the gap closed. Splitting a question across parallel agents cost 1.53× for a score of 0.967 against 0.950, so the decision record now limits splits to questions one session cannot cover; the intake prompt does not do that yet. Prompt CI, which gates prompt changes on paired evals, let both deliberately planted regressions through; once its score learned to count missing claims it caught one of them, and the other still passes.",
     resumeLine:
       "Orchestrator for coding agents in .NET 10: typed tasks run on Claude Code or OpenCode at a pinned commit, every citation checked against the commit before it is returned; CLI, HTTP and MCP; benchmarked blind against a plain agent session.",
     topics: ["dotnet", "architecture", "mcp"],
     readings: [
-      { label: "Releases", value: "5 tagged, 0.1.0 → 0.3.0", source: "git tags and CHANGELOG.md, 2026-09-27 and 09-28" },
+      { label: "Releases", value: "6 tagged, 0.1.0 → 0.4.0", source: "git tags and CHANGELOG.md, 2026-09-27 to 09-29" },
       { label: "Against a plain session", value: "0.333 → 0.556 blind", source: "phase 3 exit and its rerun, model-judged blind; docs/benchmarks.md", ref: "Egoushka/chargehand@b566890:docs/benchmarks.md#L104-130" },
       { label: "Splitting", value: "1.53× the cost for 0.967 vs 0.950", source: "phase 4 exit; ADR 0017 limits splits because of it", ref: "Egoushka/chargehand@b566890:docs/adr/0017-split-runs-forked-siblings-and-merge.md#L48" },
-      { label: "Decisions", value: "31 ADRs", source: "docs/adr, 0001 to 0031" },
+      { label: "Decisions", value: "33 ADRs", source: "docs/adr, 0001 to 0033" },
       { label: "Users", value: "1 — me", source: "counted" },
     ],
   },
