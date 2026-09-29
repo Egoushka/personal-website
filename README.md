@@ -57,6 +57,7 @@ is written into `out/` by the build.
 app/                  routes (App Router)
   page.tsx            home
   writing/            index + writing/[slug]/ post pages
+  notes/              the posts of kind `note` alone; each note's page is under writing/
   topics/[topic]/     one page per topic — posts, projects and jobs for it
   projects/           index + projects/[slug]/
   about/              about, what I'm doing now, and "Working with me" (#contact)
@@ -97,7 +98,7 @@ redirect: `/posts/*` → `/writing/*`, `/tags/*` → `/topics/*`, `/blog/` → `
 ## Add a blog post
 
 Every post follows [the post framework](docs/writing/README.md): a kind (`finding`,
-`incident` or `build`), the project it is about, a one-sentence thesis, and an
+`incident`, `build` or `note`), the project it is about, a one-sentence thesis, and an
 evidence pack that sources every figure before the prose is written.
 
 ```bash

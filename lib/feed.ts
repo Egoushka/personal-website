@@ -7,6 +7,7 @@ import rehypeSlug from "rehype-slug";
 import rehypeStringify from "rehype-stringify";
 import { site } from "./site";
 import { getAllPosts, getPost } from "./posts";
+import { kindLabel } from "./post-kinds.mjs";
 import { topicName } from "./topics";
 import { rehypeCyrillic, type CyrillicLang } from "./lang";
 
@@ -72,6 +73,9 @@ export function buildFeed(): Feed {
 
   for (const post of posts) {
     const url = `${site.url}/writing/${post.slug}/`;
+    // A note is in the same feeds as every post (ADR 0009), with its kind as a
+    // category, so a reader can tell it apart or filter it out.
+    const kind = kindLabel(post.kind);
     feed.addItem({
       title: post.title,
       id: url,
@@ -80,7 +84,10 @@ export function buildFeed(): Feed {
       content: bodyHtml(getPost(post.slug).content, url, post.cyrillic),
       published: new Date(post.date),
       date: new Date(post.updated ?? post.date),
-      category: post.topics.map((slug) => ({ name: topicName(slug) })),
+      category: [
+        ...(kind ? [{ name: kind }] : []),
+        ...post.topics.map((slug) => ({ name: topicName(slug) })),
+      ],
       author: [author],
     });
   }

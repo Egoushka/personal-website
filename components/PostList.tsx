@@ -2,21 +2,25 @@ import Link from "next/link";
 import type { PostMeta } from "@/lib/posts";
 import { formatDate } from "@/lib/posts";
 import Lang from "@/components/Lang";
+import KindLabel from "@/components/KindLabel";
 import { cn } from "@/lib/utils";
 
 /**
- * The post row, shared by the home page, /writing/, a project's page and a
- * topic page: date, title, the one-line description, reading time. The whole
- * row is the link's target; the title is the only link in it.
+ * The post row, shared by the home page, /notes/, a project's page and a
+ * topic page: date, title, the one-line description, reading time, and "Note"
+ * on a note. The whole row is the link's target; the title is the only link in it.
  */
 export default function PostList({
   posts,
   dates = true,
+  kinds = true,
   className,
 }: {
   posts: PostMeta[];
   /** The date column. Off where a list is already grouped by month. */
   dates?: boolean;
+  /** A note's label. Off where every row is a note. */
+  kinds?: boolean;
   className?: string;
 }) {
   return (
@@ -41,6 +45,7 @@ export default function PostList({
               </h3>
               <p className="mt-1 text-[0.9375rem] leading-relaxed text-muted-foreground">{p.description}</p>
               <p className="mt-2 text-xs text-muted-foreground">
+                {kinds && <KindLabel kind={p.kind} />}{" "}
                 {!dates && (
                   <>
                     <time dateTime={p.date}>{formatDate(p.date)}</time>

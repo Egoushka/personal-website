@@ -21,7 +21,7 @@ export const meta = {
 // agent commits, pushes, opens a pull request or moves a draft to content/posts/.
 
 // lib/post-kinds.mjs is the list of kinds; a kind added there is added here.
-const KINDS = ["finding", "incident", "build"];
+const KINDS = ["finding", "incident", "build", "note"];
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const USAGE =
   'Workflow({ name: "post-batch", args: [{ brief: "07-my-finding.md", slug: "my-finding", kind: "finding", ' +

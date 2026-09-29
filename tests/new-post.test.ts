@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import matter from "gray-matter";
+import { POST_KINDS } from "../lib/post-kinds.mjs";
 
 const SCRIPT = path.resolve("scripts/new-post.mjs");
 
@@ -24,6 +25,10 @@ test("new: a draft from the kind's skeleton, dated today, and an empty evidence 
     assert.match(draft, /## TODO: why nothing looked wrong/);
     assert.match(fs.readFileSync(path.join(dir, "content", "drafts", "a-post.evidence.md"), "utf8"), /^Thesis: TODO/m);
 
+    const note = run("note", "a-note");
+    assert.equal(note.status, 0, note.stderr);
+    assert.equal(matter(fs.readFileSync(path.join(dir, "content", "drafts", "a-note.md"), "utf8")).data.kind, "note");
+
     assert.equal(run("finding", "a-post").status, 1, "an existing draft is never overwritten");
     fs.mkdirSync(path.join(dir, "content", "posts"));
     fs.writeFileSync(path.join(dir, "content", "posts", "b-post.md"), "---\n---\n");
@@ -34,9 +39,15 @@ test("new: a draft from the kind's skeleton, dated today, and an empty evidence 
 });
 
 test("new: every kind has a skeleton the validator reads the kind from", () => {
-  for (const kind of ["finding", "incident", "build"]) {
+  for (const kind of POST_KINDS) {
     const { data, content } = matter(fs.readFileSync(`docs/writing/templates/${kind}.md`, "utf8"));
     assert.equal(data.kind, kind);
-    assert.match(content, /^## TODO: /m, `${kind} has TODO headings to rename`);
+    if (kind === "note") {
+      // Read top to bottom: the page draws a contents list only from two `##` headings.
+      assert.doesNotMatch(content, /^#+ /m, "a note's skeleton has no heading");
+      assert.match(content, /^TODO: /m, "note has TODO paragraphs to replace");
+    } else {
+      assert.match(content, /^## TODO: /m, `${kind} has TODO headings to rename`);
+    }
   }
 });
