@@ -4,11 +4,13 @@
 //   npm run evidence -- <slug> --init   start that file, one row per figure in the post
 // Reads the draft, or the published post when there is no draft of that slug.
 // Local only: packs sit beside the drafts, gitignored, because a source may name a
-// private repo, so CI never runs this.
+// private repo, so CI never runs this. Both are in the main checkout, whichever
+// worktree runs it (lib/drafts.mjs), so a pack outlives the branch that used it.
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import { checkPack, initPack, parsePack } from "../lib/evidence.mjs";
+import { draftsDir } from "../lib/drafts.mjs";
 
 const args = process.argv.slice(2);
 const slug = args.find((a) => !a.startsWith("--"));
@@ -18,10 +20,11 @@ if (!slug || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) {
 }
 
 const ROOT = process.cwd();
-const rel = (/** @type {string} */ p) => path.relative(ROOT, p);
-const packPath = path.join(ROOT, "content", "drafts", `${slug}.evidence.md`);
-const postPath = ["drafts", "posts"]
-  .map((dir) => path.join(ROOT, "content", dir, `${slug}.md`))
+// From a worktree the drafts are in the main checkout: print those paths whole.
+const rel = (/** @type {string} */ p) => (path.relative(ROOT, p).startsWith("..") ? p : path.relative(ROOT, p));
+const DRAFTS = draftsDir(ROOT);
+const packPath = path.join(DRAFTS, `${slug}.evidence.md`);
+const postPath = [path.join(DRAFTS, `${slug}.md`), path.join(ROOT, "content", "posts", `${slug}.md`)]
   .find((p) => fs.existsSync(p));
 
 function readPost() {
@@ -45,7 +48,7 @@ if (!fs.existsSync(packPath)) {
   process.exit(1);
 }
 if (!postPath) {
-  console.error(`ERROR no content/drafts/${slug}.md or content/posts/${slug}.md`);
+  console.error(`ERROR no ${rel(path.join(DRAFTS, `${slug}.md`))} or content/posts/${slug}.md`);
   process.exit(1);
 }
 
