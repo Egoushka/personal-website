@@ -2,6 +2,8 @@
 title: "Two thirds of my chat archive is the word \"ок\""
 date: "2026-09-22"
 description: "I built a searchable store over seven years of my own messages. The hard part was not the database — it was what not to index."
+kind: finding
+project: "chronicle"
 topics: ["python", "retrieval"]
 cyrillic: "ru"
 ---

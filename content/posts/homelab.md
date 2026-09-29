@@ -2,6 +2,8 @@
 title: "Running a homelab on one VPS"
 date: "2026-06-06"
 description: "Tailscale, Traefik, Vaultwarden and GitOps on a single Hetzner box — how my homelab is wired together."
+kind: build
+project: "homelab-gitops"
 topics: ["infrastructure", "self-hosting"]
 ---
 

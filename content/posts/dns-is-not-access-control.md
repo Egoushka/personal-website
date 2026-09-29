@@ -2,6 +2,8 @@
 title: "My private services were on the public internet. DNS was the only thing hiding them."
 date: "2026-09-29"
 description: "Every internal service on my homelab answered 200 to the open internet. The tailnet addresses in DNS looked like access control. They were a suggestion."
+kind: incident
+project: "homelab-gitops"
 topics: ["infrastructure", "self-hosting", "debugging"]
 ---
 

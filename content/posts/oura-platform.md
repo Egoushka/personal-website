@@ -2,6 +2,8 @@
 title: "My ring knows how I slept. It will not tell me why."
 date: "2026-09-22"
 description: "Pulling my own Oura data into a database I control, so it can be joined against the things the ring never sees — calendar, training, the air in the room."
+kind: build
+project: "oura-platform"
 topics: ["dotnet", "postgres", "self-hosting"]
 ---
 

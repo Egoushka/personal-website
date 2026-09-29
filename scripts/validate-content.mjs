@@ -2,15 +2,20 @@
 // Frontmatter and link gate for content/posts/*.md.
 // Runs locally (`npm run validate`) and in CI before the site is built, so a bad
 // post fails fast with a readable message instead of a stack trace from the renderer.
+// `--drafts` also checks content/drafts/*.md by the same rules. That is local only:
+// drafts are gitignored, so CI never has any.
 // Reads everything relative to the working directory, which is what lets the tests
 // run it over fixture trees.
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import { parseMarkdown, countWords, headings, proseText } from "../lib/markdown.mjs";
+import { POST_KINDS } from "../lib/post-kinds.mjs";
 
 const ROOT = process.cwd();
 const POSTS_DIR = path.join(ROOT, "content", "posts");
+const DRAFTS_DIR = path.join(ROOT, "content", "drafts");
+const WITH_DRAFTS = process.argv.includes("--drafts");
 const MAX_DESCRIPTION = 160; // Google truncates around here.
 
 /**
@@ -30,6 +35,24 @@ if (VOCAB.length === 0) {
   console.error("ERROR could not parse any topics out of lib/topics.ts — has its shape changed?");
   process.exit(1);
 }
+
+/**
+ * The projects, read out of lib/site.ts the same way: sliced to the `projects`
+ * literal, one entry per `{` at two spaces of indent, so a `slug:` in the jobs
+ * or the eras below it cannot pass for a project. Each keeps its write-up slug.
+ * A tree with no `projects` literal (the tests' fixtures) has none.
+ */
+const siteTs = fs.readFileSync(path.join(ROOT, "lib", "site.ts"), "utf8");
+const projectsAt = siteTs.indexOf("export const projects");
+const PROJECTS =
+  projectsAt < 0
+    ? []
+    : [...siteTs.slice(projectsAt, siteTs.indexOf("\n];", projectsAt)).matchAll(/^ {2}\{\n([\s\S]*?)^ {2}\},?$/gm)]
+        .map(([, body]) => ({
+          slug: body.match(/^ {4}slug: "([^"]+)"/m)?.[1],
+          writeup: body.match(/^ {4}writeup: "([^"]+)"/m)?.[1],
+        }))
+        .filter((p) => p.slug);
 
 // The latest date that is already today somewhere (UTC+14). A post dated after
 // it is dated in the future everywhere.
@@ -58,29 +81,40 @@ const errors = [];
 const warnings = [];
 const seenSlugs = new Map();
 
-const files = fs.readdirSync(POSTS_DIR).filter((f) => f.endsWith(".md")).sort();
-if (files.length === 0) errors.push("content/posts/ contains no .md files");
+/**
+ * Every post in a directory, parsed. An evidence pack (`<slug>.evidence.md`,
+ * docs/writing/README.md) sits beside its draft and is not a post.
+ */
+function readPosts(dir, label) {
+  const names = fs.existsSync(dir)
+    ? fs.readdirSync(dir).filter((f) => f.endsWith(".md") && !f.endsWith(".evidence.md")).sort()
+    : [];
+  return names.map((file) => {
+    const { data, content } = matter(fs.readFileSync(path.join(dir, file), "utf8"));
+    const tree = parseMarkdown(content);
+    return { file, where: `${label}/${file}`, slug: file.replace(/\.md$/, ""), data, content, tree };
+  });
+}
 
 // Parse every post first: a deep link from one post into another needs the
-// target's heading ids.
-const posts = files.map((file) => {
-  const { data, content } = matter(fs.readFileSync(path.join(POSTS_DIR, file), "utf8"));
-  const tree = parseMarkdown(content);
-  return { file, slug: file.replace(/\.md$/, ""), data, content, tree };
-});
+// target's heading ids. Only published posts are link targets — a draft that
+// links to another draft would ship a 404 if it went out first.
+const posts = readPosts(POSTS_DIR, "content/posts");
+const drafts = WITH_DRAFTS ? readPosts(DRAFTS_DIR, "content/drafts") : [];
+if (posts.length === 0) errors.push("content/posts/ contains no .md files");
 const ids = new Map(posts.map((p) => [p.slug, new Set(headings(p.tree).map((h) => h.id))]));
 
 /**
- * One internal href, wherever it was written. `self` is the post it appears in,
- * so a bare `#fragment` can be checked against that post's headings.
+ * One internal href, wherever it was written. `selfIds` are the heading ids of
+ * the post it appears in, so a bare `#fragment` can be checked against them.
  */
-function hrefProblems(href, self) {
+function hrefProblems(href, selfIds) {
   const problems = [];
   const [beforeHash, fragment] = href.split("#", 2);
   const route = beforeHash.split("?")[0];
 
   if (route === "") {
-    if (self && fragment && !ids.get(self)?.has(fragment)) {
+    if (selfIds && fragment && !selfIds.has(fragment)) {
       problems.push(`links to "#${fragment}" but this post has no heading with that id`);
     }
     return problems;
@@ -108,8 +142,8 @@ function urls(node, out = []) {
   return out;
 }
 
-for (const { file, slug, data, content, tree } of posts) {
-  const where = `content/posts/${file}`;
+for (const { where, slug, data, content, tree } of [...posts, ...drafts]) {
+  const draft = where.startsWith("content/drafts/");
   const fail = (msg) => errors.push(`${where}: ${msg}`);
   const warn = (msg) => warnings.push(`${where}: ${msg}`);
 
@@ -122,6 +156,18 @@ for (const { file, slug, data, content, tree } of posts) {
   seenSlugs.set(slug.toLowerCase(), where);
 
   if (!data.title || typeof data.title !== "string") fail("frontmatter: title is required");
+
+  // What the post owes a reader decides its shape and its review (docs/writing/).
+  if (data.kind === undefined) {
+    fail(`frontmatter: kind is required — one of ${POST_KINDS.join(", ")} (docs/writing/README.md)`);
+  } else if (!POST_KINDS.includes(data.kind)) {
+    fail(`frontmatter: kind must be one of ${POST_KINDS.join(", ")}, got ${JSON.stringify(data.kind)}`);
+  }
+
+  // A project a post names must exist, or its page would never list the post.
+  if (data.project !== undefined && !PROJECTS.some((p) => p.slug === data.project)) {
+    fail(`frontmatter: project ${JSON.stringify(data.project)} is not a project slug in lib/site.ts`);
+  }
 
   const dateBad = data.date === undefined ? "is required" : dateProblem(data.date);
   if (dateBad) fail(`frontmatter: date ${dateBad}`);
@@ -177,6 +223,11 @@ for (const { file, slug, data, content, tree } of posts) {
   }
 
   if (content.trim().length === 0) fail("body is empty");
+  // The skeletons in docs/writing/templates/ are TODO prompts. One left in a
+  // published post is a sentence nobody wrote; in a draft it is the next job.
+  if (/\bTODO\b/.test(`${data.title ?? ""} ${data.description ?? ""} ${content}`)) {
+    (draft ? warn : fail)("still has a TODO from its skeleton");
+  }
   if (headings(tree).some((h) => h.depth === 1)) {
     fail("body has a top-level '# heading' — the page already renders an <h1> from the title");
   }
@@ -184,7 +235,8 @@ for (const { file, slug, data, content, tree } of posts) {
   // Internal links must resolve to a real route. Static export has no redirects,
   // and trailingSlash: true means a missing slash costs a 404 behind the file server.
   const internal = urls(tree).filter((u) => u.startsWith("/") || u.startsWith("#"));
-  for (const href of internal) for (const p of hrefProblems(href, slug)) fail(p);
+  const selfIds = new Set(headings(tree).map((h) => h.id));
+  for (const href of internal) for (const p of hrefProblems(href, selfIds)) fail(p);
 
   const words = countWords(tree);
   if (words < 300) warn(`only ${words} words — thin for search`);
@@ -193,7 +245,6 @@ for (const { file, slug, data, content, tree } of posts) {
 
 // lib/site.ts carries hand-written internal hrefs and write-up slugs too.
 // Deleting or un-publishing a post would otherwise leave them dangling silently.
-const siteTs = fs.readFileSync(path.join(ROOT, "lib", "site.ts"), "utf8");
 for (const [, href] of siteTs.matchAll(/href:\s*"(\/[^"]*)"/g)) {
   for (const p of hrefProblems(href, null)) errors.push(`lib/site.ts: ${p}`);
 }
@@ -205,11 +256,21 @@ for (const [, slug] of siteTs.matchAll(/writeup:\s*"([^"]+)"/g)) {
   }
 }
 
+// A project's write-up is about that project and must say so: `project` is the one
+// field that ties a post to a project, and `writeup` only picks which post leads.
+for (const { slug, writeup } of PROJECTS) {
+  const post = writeup && posts.find((p) => p.slug === writeup);
+  if (post && post.data.project !== slug) {
+    errors.push(`${post.where}: it is ${slug}'s write-up in lib/site.ts, so it needs project: "${slug}"`);
+  }
+}
+
 for (const w of warnings) console.warn(`warn  ${w}`);
 for (const e of errors) console.error(`ERROR ${e}`);
 
 console.log(
-  `\n${files.length} post(s) + lib/site.ts checked against ${VOCAB.length} topics — ` +
+  `\n${posts.length} post(s)${WITH_DRAFTS ? ` + ${drafts.length} draft(s)` : ""} + lib/site.ts ` +
+    `checked against ${VOCAB.length} topics and ${PROJECTS.length} projects — ` +
     `${errors.length} error(s), ${warnings.length} warning(s)`,
 );
 process.exit(errors.length > 0 ? 1 : 0);

@@ -82,6 +82,7 @@ tests/                unit tests (node:test) and tests/fixtures/status.json
 deploy/               Caddyfile. The compose file and the pull script live in
                       homelab-gitops on the VPS, not here.
 docs/adr/             the decisions that are hard to reverse, and why
+docs/writing/         the post framework: kinds, skeletons, the evidence pack
 ```
 
 Routes that moved are redirected in `deploy/Caddyfile`, because a static export cannot
@@ -90,26 +91,20 @@ redirect: `/posts/*` → `/writing/*`, `/tags/*` → `/topics/*`, `/blog/` → `
 
 ## Add a blog post
 
-Draft in `content/drafts/` (the `/post` skill does this), then move the file to
-`content/posts/my-post.md` when it is ready:
+Every post follows [the post framework](docs/writing/README.md): a kind (`finding`,
+`incident` or `build`), the project it is about, a one-sentence thesis, and an
+evidence pack that sources every figure before the prose is written.
 
-```md
----
-title: "My post"
-date: "2026-06-10"
-description: "One-line summary for the list and the meta description. Max 160 chars."
-topics: ["infrastructure", "debugging"]
----
-
-Body in Markdown. Fenced code blocks are highlighted at build time.
+```bash
+npm run new -- finding my-post      # the draft from its skeleton, and its evidence pack
+npm run evidence -- my-post         # every figure in the post has a source
+npm run validate -- --drafts        # the publishing gate, over the drafts too
 ```
 
-Optional frontmatter: `spanDays` (how many days the piece is about), and `updated`
-(quoted date, not before `date`) with an optional `correction` note, which requires
-`updated`. Use `updated`/`correction` for factual changes only, not for rewording.
-A post whose title or prose has Cyrillic declares its language, `cyrillic: "uk"` or
-`"ru"`, so screen readers read those words in the right voice; `npm run validate`
-requires it.
+The `/post` skill walks through it and `/review-post` critiques the result. When it
+is ready, move `content/drafts/my-post.md` to `content/posts/` on a branch. The
+frontmatter, including the optional `spanDays`, `updated`/`correction` and
+`cyrillic`, is in [the framework's reference](docs/writing/README.md#frontmatter).
 
 `topics` is a **closed vocabulary** — `npm run validate` fails on anything not in
 `lib/topics.ts`. Adding a topic means editing that file. A post appears on `/writing/`,

@@ -81,25 +81,38 @@ function post(front: Record<string, string>, body: string): string {
   return `---\n${lines.join("\n")}\n---\n\n${body}\n\n${FILLER} [home](/)\n`;
 }
 
-const BASE = {
+const BASE: Record<string, string> = {
   title: '"A post"',
   date: '"2026-01-10"',
   description: '"A description."',
+  kind: '"finding"',
   topics: '["dotnet"]',
 };
 
-/** Runs the validator in a temporary tree holding these posts; returns its exit code and output. */
-function validate(posts: Record<string, string>, siteTs = "export const site = {};\n") {
+/**
+ * Runs the validator in a temporary tree holding these posts, and these drafts;
+ * returns its exit code and output.
+ */
+function validate(
+  posts: Record<string, string>,
+  siteTs = "export const site = {};\n",
+  drafts: Record<string, string> = {},
+  args: string[] = [],
+) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "validate-"));
   try {
     fs.mkdirSync(path.join(dir, "content", "posts"), { recursive: true });
+    fs.mkdirSync(path.join(dir, "content", "drafts"), { recursive: true });
     fs.mkdirSync(path.join(dir, "lib"));
     fs.writeFileSync(path.join(dir, "lib", "topics.ts"), TOPICS_TS);
     fs.writeFileSync(path.join(dir, "lib", "site.ts"), siteTs);
     for (const [slug, text] of Object.entries(posts)) {
       fs.writeFileSync(path.join(dir, "content", "posts", `${slug}.md`), text);
     }
-    const run = spawnSync(process.execPath, [VALIDATOR], { cwd: dir, encoding: "utf8" });
+    for (const [slug, text] of Object.entries(drafts)) {
+      fs.writeFileSync(path.join(dir, "content", "drafts", `${slug}.md`), text);
+    }
+    const run = spawnSync(process.execPath, [VALIDATOR, ...args], { cwd: dir, encoding: "utf8" });
     return { code: run.status, out: run.stdout + run.stderr };
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
@@ -169,4 +182,57 @@ test("validator: a write-up must be a published post", () => {
   passes({ a: TARGET }, 'const p = { writeup: "a" };\n');
   fails({ a: TARGET }, /writeup "draft-only" has no content\/posts\/draft-only.md/, 'const p = { writeup: "draft-only" };\n');
   fails({ a: TARGET }, /lib\/site.ts: links to \/writing\/a\/#nowhere/, 'const l = { href: "/writing/a/#nowhere" };\n');
+});
+
+// The projects literal the way lib/site.ts writes it: entries at two spaces, and
+// a `slug:` outside it that must not pass for a project.
+const PROJECTS_TS = [
+  "export const projects: Project[] = [",
+  "  {",
+  '    slug: "chronicle",',
+  '    writeup: "a",',
+  "    readings: [",
+  '      { label: "x", value: "1", source: "y" },',
+  "    ],",
+  "  },",
+  "  {",
+  '    slug: "attest",',
+  "  },",
+  "];",
+  "",
+  'export const jobs = [{ slug: "production" }];',
+  "",
+].join("\n");
+
+test("validator: every post has a kind", () => {
+  const noKind = Object.fromEntries(Object.entries(BASE).filter(([k]) => k !== "kind"));
+  fails({ a: post(noKind, "") }, /kind is required — one of finding, incident, build/);
+  fails({ a: post({ ...BASE, kind: '"essay"' }, "") }, /kind must be one of finding, incident, build, got "essay"/);
+  passes({ a: post({ ...BASE, kind: '"incident"' }, "") });
+});
+
+test("validator: a project is a slug in lib/site.ts, and a write-up names its project", () => {
+  const chronicle = post({ ...BASE, project: '"chronicle"' }, "");
+  passes({ a: chronicle, b: post({ ...BASE, project: '"attest"' }, "") }, PROJECTS_TS);
+  fails({ a: chronicle, b: post({ ...BASE, project: '"production"' }, "") }, /project "production" is not a project slug/, PROJECTS_TS);
+  fails({ a: post(BASE, "") }, /it is chronicle's write-up in lib\/site.ts, so it needs project: "chronicle"/, PROJECTS_TS);
+});
+
+test("validator: a TODO fails a published post and only warns in a draft", () => {
+  fails({ a: post(BASE, "TODO: the fix") }, /still has a TODO from its skeleton/);
+  const r = validate({ a: TARGET }, undefined, { d: post(BASE, "TODO: the fix") }, ["--drafts"]);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /warn {2}content\/drafts\/d.md: still has a TODO/);
+});
+
+test("validator: --drafts checks drafts by the same rules, and an evidence pack is not a draft", () => {
+  const drafts = { d: post({ ...BASE, kind: '"essay"' }, ""), "d.evidence": "# Evidence: d\n" };
+  assert.equal(validate({ a: TARGET }, undefined, drafts).code, 0, "drafts are read only with --drafts");
+  const r = validate({ a: TARGET }, undefined, drafts, ["--drafts"]);
+  assert.equal(r.code, 1, r.out);
+  assert.match(r.out, /content\/drafts\/d.md: frontmatter: kind must be one of/);
+  assert.doesNotMatch(r.out, /d\.evidence\.md/);
+  // A draft may link to a published post, never to another draft.
+  const linked = validate({ a: TARGET }, undefined, { d: post(BASE, "[x](/writing/e/)"), e: post(BASE, "") }, ["--drafts"]);
+  assert.match(linked.out, /links to \/writing\/e\/ which does not exist/);
 });
