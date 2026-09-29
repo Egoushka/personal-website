@@ -1,158 +1,81 @@
 ---
-title: "The library rejected all 36 million valid Hungarian tax numbers"
+title: "The package I installed to check a Belgian tax ID had 197 defects"
 date: "2026-09-22"
-description: "I needed to check whether an ID number was well formed. The package that did it had 197 defects, and the worst could never be right for any input."
+updated: "2026-09-29"
+description: "A request at work to check a Belgian tax ID led to a package with 197 defects. One rejected all 36,363,636 valid Hungarian tax numbers. I forked it as Attest."
 kind: finding
 project: "attest"
 topics: ["dotnet"]
 ---
 
-Most countries give people and companies an identification number — a tax ID,
-a national ID, a VAT number. Most of those numbers have a built-in check
-digit: one digit computed from the others, so a typo can be caught without
-asking anyone.
+At work I got a request to check a Belgian tax ID. There is a package for that, so I installed it. It rejected valid numbers.
 
-If you take those numbers in a form, you want to check that before you store
-it. It is a small job, and there is a package for it.
+A tax ID usually ends in a check digit: one digit worked out from the others, so a typo can be caught without asking anyone. A package that checks them is a small thing to depend on. When it is wrong, the person who typed a correct number is told it is not.
 
-I installed the package. It rejected valid numbers.
+I wanted to ship quality and present something to the world, so I did not stop at one country. I went through the package country by country, against the rules the issuing authorities publish, and confirmed each defect by running the code. The count came to 197, in a package that covers 87 countries.
 
-This is what was underneath, and why I ended up maintaining a fork of it.
+## Hungary: wrong for every input
 
-## The bug worth the whole post
+The worst was Hungary. A Hungarian personal tax number has ten digits, and the last is the check digit. You multiply each of the first nine digits by its position, 1 to 9, add the products up, and keep the remainder after dividing by 11.
 
-Hungary first, because it is the cleanest bug I have ever read.
+The package did that sum on characters instead of digits. A computer stores the character `'0'` as the number 48, `'1'` as 49, and so on, so every digit went into the sum 48 too big. The positions 1 to 9 add up to 45, which made the sum off by 48 × 45 = 2,160. Divided by 11, 2,160 leaves a remainder of 4. The check digit the package computed was always the right one plus four, wrapping past 10 back to 0, so it could never equal the real one.
 
-A Hungarian tax number ends in a check digit computed from the digits before
-it. Each digit gets multiplied by a weight, the products are summed, and the
-result modulo 11 gives the expected final digit.
+That check is wrong for every input, by arithmetic. There are exactly 36,363,636 valid Hungarian personal tax numbers, and the package accepted none of them. The proof is shorter than the fix.
 
-The library summed the **characters** instead of the digits.
+## It was not alone
 
-In code, the character `'0'` is the number 48, `'1'` is 49, and so on. So
-every digit in the calculation was 48 too big. Across the nine weighted
-positions that adds a constant:
+22 of the 87 validators crashed instead of answering, on empty input, on a short string, on a letter where a digit belonged. A form that relied on them could show a user a stack trace for typing one character too few.
 
-```
-48 × (1+2+…+9) = 2160
-```
+Mexico and South Africa could never validate anything, because a date helper always returned false. Malaysia, Canada and San Marino had their checks inverted, so they accepted everything, the empty string included, and rejected the real formats. Belgium rejected every number whose check number is below ten, roughly 9% of all Belgian numbers.
 
-The check runs modulo 11, and 2160 mod 11 is **4**.
+## Why the tests said nothing
 
-So the computed check digit was always the correct one plus four. It could
-never equal the correct one. Not usually wrong — *never right*, for any input,
-by arithmetic.
+The tests were green. The Thai tax-code tests used a Swedish personal number. The only Cyprus national-ID test used a Czech birth number copied from the Czech file. Both passed for years, so nothing pointed at the code.
 
-There are exactly **36,363,636** valid Hungarian tax identifiers. The library
-accepted none of them.
+## Forking it
 
-I like this bug because the proof is shorter than the fix.
-
-## What else was under there
-
-Hungary was not alone. Going country by country against the rules the issuing
-authorities publish turned up **197 defects**, over three passes, every one
-confirmed by running the code rather than reading it.
-
-**22 of the 87 validators crashed** instead of returning an answer — on empty
-input, on a short string, on a letter where a digit belonged. Not "returned
-invalid". Threw an exception. A form using this for validation would show a
-user a stack trace for typing one character too few.
-
-**Mexico and South Africa could never validate anything**, because a date
-helper always returned false.
-
-**Malaysia, Canada and San Marino had their checks inverted** — so they
-accepted everything, including an empty string, and rejected the real formats.
-That is worse than crashing. A validator that accepts empty input is not a
-broken feature, it is a safety check that is silently switched off.
-
-And then the one that explains how all of it survived:
-
-**The test data was fiction.** The Thai tax-code tests used a Swedish personal
-number. The only Cyprus national-ID test used a Czech birth number, copied
-from the Czech file.
-
-Both passed. For years.
-
-That is the whole mechanism. The tests were green, so nobody looked — and they
-were green because they asserted that the wrong country's number had the wrong
-country's shape.
-
-## Fork or patch
-
-The original had had no release in a long time. Issues open, no commits, no
-replies.
-
-So: carry a patched private copy forever, or fork it properly and put my name
-on it.
-
-I forked it, and it was the right call for a reason I did not expect. I
-thought I was inheriting 87 countries of coverage — which is real, and is the
-part I could not have written in a week. What I actually inherited was a list
-of things that were wrong, which is a curriculum you cannot buy.
-
-I would have written a worse library. I would have done the fifteen countries
-I needed, with a shared "weighted modulo" helper that mostly worked, and
-shipped the same class of bug. Because the original was not written by someone
-careless. It was written by someone who did the common cases and then ran out
-of real numbers to test against. The fiction in the test data is what running
-out looks like from the inside.
-
-The test suite went from **586 cases to 4,212**. Every validator has one now.
-
-## Answering a tracker I do not own
-
-Twelve issues were open on the original. Ten report a real defect; the other
-two ask whether anyone is still maintaining it.
-
-All ten are now answered — the Dutch VAT format that changed in 2020, a
-Belgian check number below ten, Finnish separators introduced in 2023, the
-printed form of the Swiss number, an Indian validator crashing on a letter,
-the Indian tax number that replaced another in 2017, a French number truncated
-to nine characters, and several South American ones.
-
-Each is asserted using the reporter's own value. If somebody spent the time to
-file a bug with a real number in it, that number belongs in the test suite.
+The original's last release was in November 2021. It had twelve open issues: ten reported a defect and two were questions. I forked it as Attest, and each of the ten is now a test that uses the reporter's own number. The test suite went from 586 cases to 4,212, and every validator has tests.
 
 ## What it does not tell you
 
-This matters more than anything above.
+Attest checks that a number is well formed: the right shape, carrying the check digit the authority publishes. It cannot tell you the number is registered, because a VAT number can be well formed and belong to nobody. For EU VAT only the European Commission's VIES service knows, so the two work together: reject the malformed ones here, and ask VIES about the rest. What I have not fixed is written down in a known-issues file of 33 entries, 19 of them gaps that are still open, almost all check digits no authority publishes.
 
-The library checks that a number is **well formed** — right shape for that
-country, carrying the check digit the authority publishes. It runs locally and
-makes no network call, so it is cheap enough to run on every keystroke.
+## Try it
 
-It cannot tell you the number is **real**. A VAT number can be perfectly well
-formed and belong to nobody, or have been cancelled last week. For EU VAT,
-only the European Commission's VIES service knows.
+```bash
+dotnet add package Attest
+```
 
-The two work together: reject the malformed ones instantly with no network
-call, and ask VIES about the ones that survive.
+```csharp
+using Attest;
 
-Being clear about that line is most of what makes this honest. "We validate
-VAT numbers" is a sentence worth distrusting — including when I say it, unless
-I tell you which half I mean.
+var validator = new CountryValidator();
 
-## It fails in public
+ValidationResult result = validator.ValidateIndividualTaxCode("93051822361", Country.BE);
+if (!result.IsValid)
+{
+    Console.WriteLine(result.ErrorMessage);
+}
+```
 
-This one is published. If I have a check digit wrong, somebody's signup form
-rejects a real customer and the bug report has my name on it. That is a
-different kind of pressure from anything else I have built, including
-[the homelab](/writing/homelab/), and it changed how I wrote the tests: as
-though a stranger would read them, because a stranger might.
+That is a Belgian number, and it passes. The [Attest project page](/projects/attest/) has the rest, and the [quickstart](/projects/attest/docs/quickstart/) walks through this call in a new console app.
 
-Which is why a change in verdict is never a patch release here. A minor
-version can change the answer for numbers you already stored, and the
-changelog says which ones, in both directions, every release. There is a
-migration document listing every verdict that differs from the original —
-including numbers that used to be accepted and now are not, which is the
-direction that breaks people.
+## Receipts
 
-And the known-issues file lists **33 entries**: 19 genuine remaining gaps,
-almost all of them check digits no authority publishes, and 14 that were
-investigated and closed as decided rather than pending.
+Attest at commit ff0e530 unless another is named.
 
-A library that lists what it still gets wrong is more useful than one that
-implies it gets everything right. The second kind is the one you find out
-about in production.
+- 197 defects fixed, 87 countries — Egoushka/attest@ff0e530:Attest/Attest.csproj#L5
+- Upstream sums the characters — Egoushka/attest@7ccf7b8:CountryValidator/CountriesValidators/HungaryValidator.cs#L86, tag `upstream-1.1.3`, the untouched upstream release
+- Attest sums the digits — Egoushka/attest@ff0e530:Attest/CountriesValidators/HungaryValidator.cs#L112
+- The weights are 1 to 9, which add up to 45 — Egoushka/attest@ff0e530:README.md#L49
+- 48 and 2,160, remainder 4 — Egoushka/attest@ff0e530:README.md#L49, and my arithmetic: 48 × 45 = 2160, 2160 mod 11 = 4
+- 36,363,636 valid numbers — Egoushka/attest@ff0e530:README.md#L48, an enumeration of the whole space
+- 22 of 87 crashed — Egoushka/attest@ff0e530:CHANGELOG.md#L398, first repair wave
+- Mexico, South Africa, Malaysia, Canada, San Marino — Egoushka/attest@ff0e530:README.md#L54
+- Belgium, roughly 9% — Egoushka/attest@ff0e530:CHANGELOG.md#L256
+- Thai and Cyprus test data — Egoushka/attest@ff0e530:README.md#L57
+- Last upstream release, November 2021 — Egoushka/attest@ff0e530:MIGRATION.md#L3
+- Twelve open issues, ten defects — Egoushka/attest@ff0e530:README.md#L59
+- 586 to 4,212 test cases — Egoushka/attest@ff0e530:README.md#L68
+- 33 known-issues entries, 19 still open — Egoushka/attest@ff0e530:README.md#L69
+- The call in "Try it" — Egoushka/attest@ff0e530:README.md#L79, run against a source build of that commit on .NET 10, which printed `valid: True`
