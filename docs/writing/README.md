@@ -67,6 +67,13 @@ project, and the validator fails it otherwise.
 with where it came from. Local only — `content/drafts/` is gitignored, because a
 source may name a private repo.
 
+Drafts and packs live in the main checkout's `content/drafts/`, whichever
+worktree runs `new`, `evidence` or `validate` (`lib/drafts.mjs`). Removing a
+worktree deletes its ignored files without a word, and a pack has to outlive
+the branch that used it: a correction starts from the pack, months after the
+post ships. Because every draft in flight is in that one folder,
+`npm run validate -- --draft <slug>` checks one; `--drafts` checks them all.
+
 ```md
 Thesis: Chronicle's semantic search lost to grep before it tied.
 
@@ -126,7 +133,7 @@ reference, not this list.
 2. Fill the pack first: the thesis, then every figure with its source.
 3. Write the draft (`/post` does this with you), renaming every skeleton heading
    and replacing every `TODO:`.
-4. `npm run evidence -- <slug>` and `npm run validate -- --drafts` until neither
+4. `npm run evidence -- <slug>` and `npm run validate -- --draft <slug>` until neither
    reports an error.
 5. `/review-post`, then a voice pass with `stop-slop`.
 6. Move the file to `content/posts/` on a branch and open a pull request: CI runs

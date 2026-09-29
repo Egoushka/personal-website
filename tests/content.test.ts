@@ -265,6 +265,16 @@ test("validator: --drafts checks drafts by the same rules, and an evidence pack 
   assert.match(linked.out, /links to \/writing\/e\/ which does not exist/);
 });
 
+test("validator: --draft <slug> checks that draft alone, since every worktree shares one drafts folder", () => {
+  const drafts = { good: post(BASE, ""), bad: post({ ...BASE, kind: '"essay"' }, "") };
+  const one = validate({ a: TARGET }, undefined, drafts, ["--draft", "good"]);
+  assert.equal(one.code, 0, one.out);
+  assert.doesNotMatch(one.out, /bad\.md/);
+  assert.match(one.out, /1 draft\(s\)/);
+  assert.equal(validate({ a: TARGET }, undefined, drafts, ["--draft", "bad"]).code, 1);
+  assert.match(validate({ a: TARGET }, undefined, drafts, ["--draft", "gone"]).out, /--draft: no content\/drafts\/gone.md/);
+});
+
 // ── docs (ADR 0006) ─────────────────────────────────────────────────────────
 
 const SOURCES = JSON.stringify({
