@@ -1,9 +1,58 @@
 {
+  "agent-skills": {
+    "repo": "Egoushka/agent-skills",
+    "path": "docs/guide",
+    "ref": "main",
+    "commit": "84211d1f7fcb0f93f34c850bf9e306a2d0ba68f4",
+    "pulled": "2026-09-29"
+  },
+  "attest": {
+    "repo": "Egoushka/attest",
+    "path": "docs/guide",
+    "ref": "main",
+    "commit": "ff0e5306bceafc42653f91b94612e2142bfbe6e3",
+    "pulled": "2026-09-29"
+  },
   "chargehand": {
     "repo": "Egoushka/chargehand",
     "path": "docs/guide",
     "ref": "main",
-    "commit": "2fb5811f9d748606b20f448d9a2ee846d93e65bd",
+    "commit": "b5668901da66b01d828a4263fa8f7d7c03f78191",
+    "pulled": "2026-09-29"
+  },
+  "chronicle": {
+    "repo": "Egoushka/chronicle",
+    "path": "docs/guide",
+    "ref": "main",
+    "commit": "6e0f771fa1499076740518b29a2fdb9b0019c02a",
+    "pulled": "2026-09-29"
+  },
+  "devbox-mcp": {
+    "repo": "Egoushka/devbox-mcp",
+    "path": "docs/guide",
+    "ref": "main",
+    "commit": "7b24b303447749d6093f391d4f284356f898c13e",
+    "pulled": "2026-09-29"
+  },
+  "oura-mcp-app": {
+    "repo": "Egoushka/oura-mcp-app",
+    "path": "docs/guide",
+    "ref": "main",
+    "commit": "720de9c639c913a92576b1c418489131422b7eaf",
+    "pulled": "2026-09-29"
+  },
+  "oura-platform": {
+    "repo": "Egoushka/oura-platform",
+    "path": "docs/guide",
+    "ref": "master",
+    "commit": "9454d578613b9ed7685b6f1dc38843159122f885",
+    "pulled": "2026-09-29"
+  },
+  "switchboard": {
+    "repo": "Egoushka/switchboard",
+    "path": "docs/guide",
+    "ref": "main",
+    "commit": "36fb48816e662f01175867cb8c203e3777a1cb82",
     "pulled": "2026-09-29"
   }
 }

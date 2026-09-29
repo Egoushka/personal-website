@@ -16,7 +16,7 @@ const prose = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   display: "swap",
-  variable: "--font-prose",
+  variable: "--font-inter",
 });
 
 // Titles only.
@@ -26,12 +26,12 @@ const prose = Inter({
 // at angles Inter would never allow — so at 28px and up it does not read as
 // Inter-but-bigger, which is the entire job.
 //
-// Variable, so `weight` is omitted and globals.css asks for 600 directly. No
-// Cyrillic subset: anything outside latin falls through to the stack below it.
+// Variable, so `weight` is omitted. No Cyrillic subset: anything outside latin
+// falls through to the stack under `--font-display` in globals.css.
 const display = Bricolage_Grotesque({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-display",
+  variable: "--font-bricolage",
 });
 
 export const metadata: Metadata = {

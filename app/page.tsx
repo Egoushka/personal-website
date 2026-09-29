@@ -4,7 +4,11 @@ import Shell from "@/components/Shell";
 import PostList from "@/components/PostList";
 import { PersonAndSiteLd } from "@/components/JsonLd";
 import Panel from "@/components/Panel";
+import ProjectCard, { type ProjectCardData } from "@/components/ProjectCard";
+import { buttonVariants } from "@/components/ui/button";
+import { ArrowRight, Mail } from "@/components/ui/icons";
 import { site, proof, projects, type Project } from "@/lib/site";
+import { getDocPages } from "@/lib/docs";
 import { pageMetadata } from "@/lib/metadata";
 import { formatDate, getAllPosts, type PostMeta } from "@/lib/posts";
 import { getReadings, getTopicUsage, n } from "@/lib/readings";
@@ -25,15 +29,37 @@ export const metadata: Metadata = pageMetadata({
  * frontmatter at build; the ones that cannot be counted name their source in
  * lib/site.ts. See ADR 0002.
  */
-function projectRow(p: Project) {
+function card(p: Project, posts: PostMeta[]): ProjectCardData {
+  return {
+    slug: p.slug,
+    name: p.name,
+    lang: p.lang,
+    shape: p.shape,
+    status: p.status,
+    summary: p.summary,
+    repo: p.visibility === "public" && p.href ? p.href : undefined,
+    docs: getDocPages(p.slug)[0]?.href,
+    posts: posts.filter((post) => post.project === p.slug).length,
+  };
+}
+
+/** A section's title and the link to everything in it, on one line. */
+function SectionHead({ id, title, href, more }: { id: string; title: string; href?: string; more?: string }) {
   return (
-    <li className="project-row" key={p.slug}>
-      <h3 className="project-name">
-        <Link prefetch={false} href={`/projects/${p.slug}/`}>{p.name}</Link>
-      </h3>
-      <span className="project-status run"><span>{p.lang}</span>{" "}<span>{p.shape}</span>{" "}<span className="project-state">{p.status}</span></span>
-      <p>{p.summary}</p>
-    </li>
+    <div className="flex flex-wrap items-end justify-between gap-2">
+      <h2 id={id} className="font-display text-3xl font-semibold tracking-tight">
+        {title}
+      </h2>
+      {href && more && (
+        <Link
+          prefetch={false}
+          href={href}
+          className="inline-flex min-h-6 items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {more} <ArrowRight className="size-3.5" />
+        </Link>
+      )}
+    </div>
   );
 }
 
@@ -70,44 +96,50 @@ export default function Home() {
 
       {/*
         The sentence is the h1, not the greeting. The line above it carries a
-        name's worth of context — where I am and whether I am available. The
+        name's worth of context: where I am and whether I am available. The
         address is the button's own text, so a desktop with no mail handler
         still shows something to copy.
       */}
-      <header className="home-greeting">
-        <p className="home-eyebrow">
+      <header className="pt-14 pb-12 md:pt-20 md:pb-16">
+        <p className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1 text-sm text-muted-foreground">
           <span className="live-dot" aria-hidden="true" />
-          {site.location} — {site.availability}
+          {site.location} · {site.availability}
         </p>
-        <h1>{site.intro}</h1>
-        <p className="home-status">
-          <a className="cta" href={`mailto:${site.email}`}>{site.email}</a>{" "}
-          <Link className="cta cta--ghost" href="/writing/">Read the writing</Link>
-        </p>
+        <h1 className="mt-6 max-w-4xl font-display text-5xl font-semibold tracking-tight text-balance md:text-6xl lg:text-7xl">
+          {site.intro}
+        </h1>
+        <p className="mt-6 max-w-2xl text-xl leading-relaxed text-muted-foreground text-pretty">{site.description}</p>
+        <div className="mt-9 flex flex-wrap gap-3">
+          <a className={buttonVariants({ size: "lg" })} href={`mailto:${site.email}`}>
+            <Mail /> {site.email}
+          </a>
+          <Link className={buttonVariants({ variant: "outline", size: "lg" })} href="/writing/">
+            Read the writing <ArrowRight />
+          </Link>
+        </div>
       </header>
 
-      {/*
-        The proof row. It deliberately does NOT use the rail-left / content-right
-        rhythm every section below it uses: four screens of identical rhythm is
-        what made this page scroll past unread, and the one block a cold reader
-        must not scroll past is this one.
-      */}
-      <ul className="proof">
+      {/* Three things a stranger can check in under a minute. */}
+      <ul className="grid gap-4 md:grid-cols-3">
         {proof.map((p) => {
           const post = p.post ? spanOf(posts, p.post) : undefined;
           return (
-            <li key={p.post ?? p.label}>
-              <span className="proof-label">{post ? `${n(post.spanDays)} days` : p.label}</span>{" "}
-              <span className="proof-text">{p.text}</span>{" "}
-              {p.links.map((l) => (
-                <a className="proof-link" key={l.href} href={l.href} rel="noopener">
-                  {l.label}
-                </a>
-              ))}
-              {post && (
-                <Link className="proof-link" prefetch={false} href={`/writing/${post.slug}/`}>
-                  read it
-                </Link>
+            <li key={p.post ?? p.label} className="flex flex-col rounded-xl border bg-card p-5">
+              <p className="text-sm font-medium text-muted-foreground">{post ? `${n(post.spanDays)} days` : p.label}</p>
+              <p className="mt-2 leading-relaxed">{p.text}</p>
+              {(p.links.length > 0 || post) && (
+                <p className="mt-auto flex flex-wrap gap-x-4 gap-y-1 pt-4 text-sm">
+                  {p.links.map((l) => (
+                    <a className="link inline-flex min-h-6 items-center" key={l.href} href={l.href} rel="noopener">
+                      {l.label}
+                    </a>
+                  ))}
+                  {post && (
+                    <Link className="link inline-flex min-h-6 items-center" prefetch={false} href={`/writing/${post.slug}/`}>
+                      read it
+                    </Link>
+                  )}
+                </p>
               )}
             </li>
           );
@@ -115,84 +147,73 @@ export default function Home() {
       </ul>
 
       {/* Live figures, below the claims a stranger can check without them. */}
-      <Panel />
+      <div className="mt-4">
+        <Panel />
+      </div>
 
-      <hr className="bleed" />
-      <section className="row">
-        <span className="rail rail--against-body">
-          <span className="rail--label">Writing</span>
-          <span>{r.posts} {r.posts === 1 ? "post" : "posts"}</span>
-          <span>{n(r.words)} words</span>
-          {r.latest && <span>latest {formatDate(r.latest.date)}</span>}
-        </span>
-        <div>
-          <div className="section-head">
-            <h2>Things I&apos;ve written down</h2>
-            <Link prefetch={false} href="/writing/">all posts</Link>
-          </div>
-          <PostList posts={posts.slice(0, 5)} />
-        </div>
+      <section className="mt-24" aria-labelledby="home-writing">
+        <SectionHead id="home-writing" title="Things I've written down" href="/writing/" more="All posts" />
+        <p className="mt-2 text-sm text-muted-foreground tabular-nums">
+          {r.posts} {r.posts === 1 ? "post" : "posts"} · {n(r.words)} words
+          {r.latest && <> · latest {formatDate(r.latest.date)}</>}
+        </p>
+        <PostList posts={posts.slice(0, 5)} className="mt-8" />
       </section>
 
-      <hr className="bleed" />
-      <section className="row">
-        <span className="rail rail--against-body">
-          <span className="rail--label">Projects</span>
-          <span>{r.projects} of them</span>
-          <span>{r.projectsRunning} still running</span>
-        </span>
-        <div>
-          <div className="section-head">
-            <h2>Built, and still running</h2>
-            <Link prefetch={false} href="/projects/">all {r.projects} projects</Link>
-          </div>
-          <ol className="project-list">{shipped.map(projectRow)}</ol>
-          {side.length > 0 && (
-            <>
-              <span className="project-sublabel">Side projects</span>
-              <ol className="project-list">{side.map(projectRow)}</ol>
-            </>
-          )}
-        </div>
+      <section className="mt-24" aria-labelledby="home-projects">
+        <SectionHead id="home-projects" title="Built, and still running" href="/projects/" more={`All ${r.projects} projects`} />
+        <p className="mt-2 text-sm text-muted-foreground tabular-nums">
+          {r.projects} projects · {r.projectsRunning} still running
+        </p>
+        <ul className="mt-8 grid gap-4 md:grid-cols-2">
+          {shipped.map((p) => (
+            <ProjectCard key={p.slug} p={card(p, posts)} />
+          ))}
+        </ul>
+        {side.length > 0 && (
+          <>
+            <h3 className="mt-10 text-sm font-medium text-muted-foreground">Side projects</h3>
+            <ul className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {side.map((p) => (
+                <ProjectCard key={p.slug} p={card(p, posts)} />
+              ))}
+            </ul>
+          </>
+        )}
       </section>
 
       {topics.length > 0 && (
-        <>
-          <hr className="bleed" />
-          <section className="row">
-            <span className="rail rail--against-body">
-              <span className="rail--label">Topics</span>
-              <span>{topics.length} of them</span>
-              <span>one vocabulary, across posts, projects and jobs</span>
-            </span>
-            <div>
-              <div className="section-head">
-                <h2>Things I keep coming back to</h2>
-              </div>
-              <ul className="topic-run">
-                {topics.map((t) => (
-                  <li key={t.slug}>
-                    <Link prefetch={false} href={`/topics/${t.slug}/`}>
-                      {topicName(t.slug)}
-                      {/* A count of 1 is not a count, it is a label repeating
-                          itself. The row stays: hiding every topic backed by
-                          one thing would hide most of what this site is for. */}
-                      {t.total > 1 && <>{" "}<span className="rail-count">{t.total}<span className="visually-hidden"> items</span></span></>}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
-        </>
+        <section className="mt-24" aria-labelledby="home-topics">
+          <SectionHead id="home-topics" title="Things I keep coming back to" />
+          <p className="mt-2 text-sm text-muted-foreground">One vocabulary, across posts, projects and jobs.</p>
+          <ul className="mt-6 flex flex-wrap gap-2">
+            {topics.map((t) => (
+              <li key={t.slug}>
+                <Link
+                  prefetch={false}
+                  href={`/topics/${t.slug}/`}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors hover:border-input hover:bg-accent"
+                >
+                  {topicName(t.slug)}
+                  {/* A count of 1 is not a count, it is a label repeating itself. */}
+                  {t.total > 1 && (
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {t.total}
+                      <span className="visually-hidden"> items</span>
+                    </span>
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       {/* Counted, and the site admitting something: the number makes the joke. */}
-      <p className="home-note">
-        {n(r.codeLines + r.cssLines)} lines of code and CSS for {n(r.words)}{" "}
-        words, counted at build, <time dateTime={r.builtOn}>{formatDate(r.builtOn)}</time>.
+      <p className="mt-24 font-mono text-xs text-muted-foreground">
+        {n(r.codeLines + r.cssLines)} lines of code and CSS for {n(r.words)} words, counted at build,{" "}
+        <time dateTime={r.builtOn}>{formatDate(r.builtOn)}</time>.
       </p>
-
     </Shell>
   );
 }

@@ -60,21 +60,23 @@ export default function Panel() {
   ].filter((x): x is string => typeof x === "string");
 
   return (
-    <section className="panel" aria-label="Live figures from my own machine" data-pagefind-ignore>
-      <div className="panel-head">
-        <span className="rail--label">Right now</span>
-        <span className="panel-note">read from my own box, not typed</span>
+    <section className="panel rounded-xl border bg-card p-5 md:p-6" aria-label="Live figures from my own machine" data-pagefind-ignore>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="flex items-center gap-2 text-sm font-medium">
+          <span className="live-dot" aria-hidden="true" /> Right now
+        </p>
+        <p className="text-xs text-muted-foreground">read from my own box, not typed</p>
       </div>
-      <div className="panel-body">
+      <div className="panel-body mt-5">
         {status === undefined ? (
-          <p className="panel-empty">Figures from my own box load here.</p>
+          <p className="max-w-prose text-sm text-muted-foreground">Figures from my own box load here.</p>
         ) : status === null ? (
-          <p className="panel-empty">
+          <p className="max-w-prose text-sm text-muted-foreground">
             The box is not reporting tonight, so there is nothing here to show.
             Whatever this said an hour ago, it will not pretend it still holds.
           </p>
         ) : (
-          <div className="panel-figs">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3 lg:grid-cols-6">
             <Fig
               value={status.containers}
               label="containers"
@@ -115,7 +117,7 @@ export default function Panel() {
           </div>
         )}
         {status && absent.length > 0 && (
-          <p className="panel-thin">
+          <p className="mt-4 max-w-prose text-xs text-muted-foreground">
             Tonight's document arrived without {absent.join(" or ")}. Missing is
             not zero, so there is nothing in its place.
           </p>

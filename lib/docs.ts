@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import { docLinkUrl, docPageUrl } from "./doc-links.mjs";
+import { DEFAULT_SECTION, DOC_SECTIONS } from "./doc-check.mjs";
+import type { CyrillicLang } from "./lang";
 
 /**
  * A project's docs, as this site renders them (ADR 0006).
@@ -33,8 +35,15 @@ export type DocPageMeta = {
   title: string;
   description: string;
   order: number;
+  /** The sidebar group, one of DOC_SECTIONS (lib/doc-check.mjs). */
+  section: string;
+  /** The language the page's Cyrillic is marked with, when it has any. */
+  cyrillic?: CyrillicLang;
   href: string;
 };
+
+/** The sidebar's groups: DOC_SECTIONS order, reading order inside each, empty ones left out. */
+export type DocSection = { title: string; pages: DocPageMeta[] };
 
 export type DocPage = DocPageMeta & { content: string };
 
@@ -56,6 +65,15 @@ function readPage(project: string, page: string): DocPage {
     title: String(data.title ?? page),
     description: String(data.description ?? ""),
     order: Number(data.order),
+    // The overview is always the first thing in Get started; a page that names
+    // no section is a guide.
+    section:
+      page === "index"
+        ? DOC_SECTIONS[0]
+        : typeof data.section === "string" && DOC_SECTIONS.includes(data.section)
+          ? data.section
+          : DEFAULT_SECTION,
+    cyrillic: data.cyrillic === "uk" || data.cyrillic === "ru" ? data.cyrillic : undefined,
     href: docPageUrl(project, page),
     content,
   };
@@ -77,6 +95,20 @@ export function getDocPages(project: string): DocPageMeta[] {
 
 export function getDocPage(project: string, page: string): DocPage {
   return readPage(project, page);
+}
+
+/** A project's pages grouped for the sidebar. */
+export function docSections(pages: DocPageMeta[]): DocSection[] {
+  return DOC_SECTIONS.map((title) => ({ title, pages: pages.filter((p) => p.section === title) })).filter(
+    (s) => s.pages.length > 0,
+  );
+}
+
+/** Every project with docs, in sources.json order (alphabetical by slug). */
+export function getDocProjects(): { slug: string; source: DocSource; pages: DocPageMeta[] }[] {
+  return Object.entries(getDocSources())
+    .map(([slug, source]) => ({ slug, source, pages: getDocPages(slug) }))
+    .filter((d) => d.pages.length > 0);
 }
 
 /** `v0.4.0` when the pull named a tag; otherwise the branch and the commit it was at. */

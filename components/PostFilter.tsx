@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Lang from "@/components/Lang";
+import { chip, chipCount, segment, segmentButton } from "@/components/ui/toggle";
 import type { CyrillicLang } from "@/lib/lang";
 
 /**
@@ -99,95 +100,115 @@ export default function PostFilter({
 
   return (
     <>
-      <ul className="filter-bar" aria-label="Filter by topic">
-        <li>
-          <button
-            type="button"
-            className="filter-chip"
-            aria-pressed={active.length === 0}
-            onClick={() => setActive([])}
-          >
-            All {posts.length}
-          </button>
-        </li>
-        {topics.map((t) => (
-          <li key={t.slug}>
-            <button
-              type="button"
-              className="filter-chip"
-              aria-pressed={active.includes(topicKey(t.slug))}
-              onClick={() => toggle(topicKey(t.slug))}
-            >
-              {t.name} <span className="rail-count">{t.count}<span className="visually-hidden"> posts</span></span>
+      <div className="flex flex-col gap-3 border-b pb-6">
+        <ul className="filter-bar flex flex-wrap gap-2" aria-label="Filter by topic">
+          <li>
+            <button type="button" className={chip} aria-pressed={active.length === 0} onClick={() => setActive([])}>
+              All <span className={chipCount}>{posts.length}</span>
             </button>
           </li>
-        ))}
-      </ul>
-
-      {projects.length > 0 && (
-        <div className="filter-row">
-          <span className="rail--label" id="filter-projects">Project</span>
-          <ul className="filter-bar" aria-labelledby="filter-projects">
-            {projects.map((p) => (
-              <li key={p.slug}>
-                <button
-                  type="button"
-                  className="filter-chip"
-                  aria-pressed={active.includes(projectKey(p.slug))}
-                  onClick={() => toggle(projectKey(p.slug))}
-                >
-                  {p.name} <span className="rail-count">{p.count}<span className="visually-hidden"> posts</span></span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div className="sort-bar">
-        <span className="rail--label">Order</span>
-        <div role="group" aria-label="Sort posts" className="sort-group">
-          {SORTS.map((s) => (
-            <button
-              key={s.key}
-              type="button"
-              className="sort-btn"
-              aria-pressed={sort === s.key}
-              onClick={() => setSort(s.key)}
-            >
-              {s.label}
-            </button>
+          {topics.map((t) => (
+            <li key={t.slug}>
+              <button
+                type="button"
+                className={chip}
+                aria-pressed={active.includes(topicKey(t.slug))}
+                onClick={() => toggle(topicKey(t.slug))}
+              >
+                {t.name} <span className={chipCount}>{t.count}<span className="visually-hidden"> posts</span></span>
+              </button>
+            </li>
           ))}
+        </ul>
+
+        {projects.length > 0 && (
+          <div className="filter-row flex flex-wrap items-center gap-2">
+            <span className="mr-1 text-sm text-muted-foreground" id="filter-projects">Project</span>
+            <ul className="filter-bar flex flex-wrap gap-2" aria-labelledby="filter-projects">
+              {projects.map((p) => (
+                <li key={p.slug}>
+                  <button
+                    type="button"
+                    className={chip}
+                    aria-pressed={active.includes(projectKey(p.slug))}
+                    onClick={() => toggle(projectKey(p.slug))}
+                  >
+                    {p.name} <span className={chipCount}>{p.count}<span className="visually-hidden"> posts</span></span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="sort-bar flex flex-wrap items-center gap-2">
+          <span className="mr-1 text-sm text-muted-foreground">Order</span>
+          <div role="group" aria-label="Sort posts" className={segment}>
+            {SORTS.map((s) => (
+              <button
+                key={s.key}
+                type="button"
+                className={segmentButton}
+                aria-pressed={sort === s.key}
+                onClick={() => setSort(s.key)}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+          {/* Announces the count after a change; the page figures already show it. */}
+          <span className="sort-count visually-hidden" aria-live="polite">
+            {ordered.length === posts.length
+              ? `${posts.length} ${posts.length === 1 ? "post" : "posts"}`
+              : `${ordered.length} of ${posts.length}`}
+          </span>
         </div>
-        {/* Announces the count after a change; the page figures already show it. */}
-        <span className="sort-count visually-hidden" aria-live="polite">
-          {ordered.length === posts.length
-            ? `${posts.length} ${posts.length === 1 ? "post" : "posts"}`
-            : `${ordered.length} of ${posts.length}`}
-        </span>
       </div>
 
       {groups.map((g) => (
-        <section className="row post-group" key={g.head}>
-          <span className="rail group-head">{g.head}</span>
-          <ol className="post-list">
+        <section
+          className="post-group grid gap-3 border-b py-8 last:border-b-0 md:grid-cols-[11rem_minmax(0,1fr)] md:gap-8"
+          key={g.head}
+          aria-label={g.head}
+        >
+          <h2 className="text-sm font-medium text-muted-foreground md:pt-1">{g.head}</h2>
+          <ol className="post-list divide-y">
             {g.rows.map((p) => (
-              <li className="post-row" key={p.slug}>
-                <Link prefetch={false} href={`/writing/${p.slug}/`}><Lang text={p.title} lang={p.cyrillic} /></Link>
-                <p>{p.description}</p>
-                <span className="post-meta run">
+              <li className="post-row group relative py-5 first:pt-0 last:pb-0" key={p.slug}>
+                <h3 className="text-lg font-semibold tracking-tight text-balance">
+                  <Link
+                    prefetch={false}
+                    href={`/writing/${p.slug}/`}
+                    className="after:absolute after:inset-0 group-hover:underline group-hover:decoration-brand group-hover:underline-offset-4"
+                  >
+                    <Lang text={p.title} lang={p.cyrillic} />
+                  </Link>
+                </h3>
+                <p className="mt-1 text-[0.9375rem] leading-relaxed text-muted-foreground">{p.description}</p>
+                <p className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                   <span>{p.dateLabel}</span>{" "}
                   <span>{p.readingTime} min read</span>{" "}
                   <span>{p.wordCount.toLocaleString("en-GB")} words</span>
                   {p.project && (
-                    <>{" "}<span><Link prefetch={false} href={`/projects/${p.project.slug}/`}>{p.project.name}</Link></span></>
+                    <>
+                      {" "}
+                      <Link
+                        prefetch={false}
+                        href={`/projects/${p.project.slug}/`}
+                        className="relative z-10 inline-flex min-h-6 items-center rounded-md border px-2 font-medium text-foreground transition-colors hover:bg-accent"
+                      >
+                        {p.project.name}
+                      </Link>
+                    </>
                   )}
-                </span>
+                </p>
               </li>
             ))}
           </ol>
         </section>
       ))}
+
+      {ordered.length === 0 && <p className="py-10 text-muted-foreground">Nothing matches that filter.</p>}
     </>
   );
 }

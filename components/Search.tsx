@@ -2,14 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { detectPlatform, MAC, type Platform } from "@/lib/platform";
+import { Search as SearchIcon } from "@/components/ui/icons";
+import { Kbd } from "@/components/ui/kbd";
 
 /**
  * Site search as a modal over Pagefind's JS API.
  *
  * Not Pagefind's prebuilt UI: that ships its own markup and stylesheet, and
  * restyling someone else's DOM into this design costs more than rendering the
- * results ourselves. The API returns plain data, so the results are ordinary
- * Marginalia rows — rail for the metadata, prose column for the text.
+ * results ourselves. The API returns plain data, rendered as the site's own rows.
  *
  * `<dialog>` + `showModal()` is doing real work here: focus trap, inertness of
  * the page behind, Esc to close, and a top-layer that no z-index can lose to.
@@ -186,16 +187,16 @@ export default function Search() {
     <>
       <button
         type="button"
-        className="search-trigger"
+        className="search-trigger inline-flex h-8 cursor-pointer items-center gap-2 rounded-md border border-input bg-card/60 px-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground md:w-52 lg:w-64"
         onClick={show}
         aria-label={`Search (${platform.label} K)`}
       >
-        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-          <circle cx="7" cy="7" r="4.5" />
-          <line x1="10.5" y1="10.5" x2="14.5" y2="14.5" />
-        </svg>
-        <span className="search-trigger-key" aria-hidden="true">
-          {platform === MAC ? "⌘K" : "Ctrl K"}
+        <SearchIcon className="size-3.5" />
+        <span className="hidden md:inline">Search…</span>
+        {/* The server paints ⌘K and a PC swaps in Ctrl K after mount; hidden on
+            phones, so the swap only ever touches a desktop header. */}
+        <span className="search-trigger-key ml-auto hidden sm:inline-flex" aria-hidden="true">
+          <Kbd>{platform === MAC ? "⌘K" : "Ctrl K"}</Kbd>
         </span>
       </button>
 
@@ -211,10 +212,7 @@ export default function Search() {
       >
         <div className="search-panel">
           <div className="search-field">
-            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-              <circle cx="7" cy="7" r="4.5" />
-              <line x1="10.5" y1="10.5" x2="14.5" y2="14.5" />
-            </svg>
+            <SearchIcon className="text-muted-foreground" />
             <input
               ref={inputRef}
               type="search"
@@ -231,7 +229,7 @@ export default function Search() {
               onKeyDown={onInputKey}
               aria-label="Search query"
             />
-            <kbd>esc</kbd>
+            <Kbd>esc</Kbd>
           </div>
 
           <p className="visually-hidden" role="status">{status}</p>
@@ -258,7 +256,7 @@ export default function Search() {
             )}
             {!q && (
               <p className="search-note">
-                Type to search. <kbd>↑</kbd> <kbd>↓</kbd> to move, <kbd>↵</kbd> to open.
+                Type to search posts, projects and docs. <Kbd>↑</Kbd> <Kbd>↓</Kbd> to move, <Kbd>↵</Kbd> to open.
               </p>
             )}
             <div className="search-results" id="search-results" role="listbox" aria-label="Results">
@@ -273,8 +271,6 @@ export default function Search() {
                   className={`search-hit${i === active ? " is-active" : ""}`}
                   onMouseEnter={() => setActive(i)}
                 >
-                  {/* deliberately not .rail — that is flex-column and collides
-                      with the body text inside a hit row */}
                   <span className="search-hit-url">{h.url}</span>
                   <span className="search-hit-title" id={`hit-${i}-title`}>{h.title}</span>
                   <span

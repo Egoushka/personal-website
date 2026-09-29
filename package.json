@@ -12,6 +12,7 @@
     "new": "node scripts/new-post.mjs",
     "docs:pull": "node scripts/docs.mjs pull",
     "docs:verify": "node scripts/docs.mjs verify",
+    "docs:check": "node scripts/docs.mjs check",
     "index": "pagefind --site out --output-subdir pagefind",
     "images": "node scripts/optimize-images.mjs",
     "test": "node --import tsx --test \"tests/**/*.test.ts\"",
@@ -22,6 +23,8 @@
   },
   "dependencies": {
     "@shikijs/rehype": "^4.4.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "feed": "^6.0.0",
     "github-slugger": "^2.0.0",
     "gray-matter": "^4.0.3",
@@ -37,15 +40,19 @@
     "remark-rehype": "^11.1.2",
     "sharp": "^0.35.3",
     "shiki": "^4.3.1",
+    "tailwind-merge": "^3.7.0",
     "unified": "^11.0.5"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@tailwindcss/typography": "^0.5.20",
     "@types/node": "^22.20.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "pagefind": "^1.5.2",
     "playwright": "1.63.0",
+    "tailwindcss": "^4.3.3",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   }

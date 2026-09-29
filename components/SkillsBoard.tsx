@@ -83,12 +83,10 @@ export default function SkillsBoard({
 
   return (
     <div className="board">
-      {/* The first thing on the page now that the title is gone, so it is a
-          field rather than a box: the whole thing is the target, the glyph
+      {/* A field rather than a box: the whole thing is the target, the glyph
           says what it does without a label taking a line, and the count lives
-          inside it. `.row` puts it in the prose column and collapses it with
-          everything else at 900px. */}
-      <div className="row">
+          inside it. */}
+      <div className="max-w-2xl">
         <div className="board-filter">
           <span className="board-filter-mark" aria-hidden="true">
             {searchMark}
@@ -114,10 +112,8 @@ export default function SkillsBoard({
       </div>
 
       {groups.map((group) => (
-        <section className="row board-group" key={group.group}>
-          <div className="rail">
-            <h2 className="rail--label">{group.group}</h2>
-          </div>
+        <section className="board-group mt-12 grid gap-4 border-t pt-8 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-8" key={group.group}>
+          <h2 className="text-sm font-semibold md:pt-0.5">{group.group}</h2>
           <ul className="board-list">
             {group.items.map((skill) => {
               const row = measured(skill.wakatime);
@@ -126,7 +122,7 @@ export default function SkillsBoard({
                   <span className="board-mark">{skill.icon}</span>
                   <span className="board-name">
                     {skill.href ? (
-                      <Link prefetch={false} href={skill.href}>{skill.name}</Link>
+                      <Link className="link" prefetch={false} href={skill.href}>{skill.name}</Link>
                     ) : (
                       skill.name
                     )}
@@ -150,10 +146,8 @@ export default function SkillsBoard({
         <p className="board-empty">Nothing matches “{q}”. That is also an answer.</p>
       )}
 
-      <section className="row board-group">
-        <div className="rail">
-          <h2 className="rail--label">How it gets used</h2>
-        </div>
+      <section className="board-group mt-12 grid gap-4 border-t pt-8 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-8">
+        <h2 className="text-sm font-semibold md:pt-0.5">How it gets used</h2>
         <ul className="board-list board-list--notes">
           {practice.map((p) => (
             <li key={p.name}>
@@ -168,10 +162,8 @@ export default function SkillsBoard({
           the versions and the other ninety containers are not this page's job,
           and the box's address is already public. */}
       {uses.map((group) => (
-        <section className="row board-group" key={group.group}>
-          <div className="rail">
-            <h2 className="rail--label">{group.group}</h2>
-          </div>
+        <section className="board-group mt-12 grid gap-4 border-t pt-8 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-8" key={group.group}>
+          <h2 className="text-sm font-semibold md:pt-0.5">{group.group}</h2>
           <ul className="board-box">
             {group.items.map((item) => (
               <li key={item.name}>

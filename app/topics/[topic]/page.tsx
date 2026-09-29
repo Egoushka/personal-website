@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import PostList from "@/components/PostList";
+import ProjectCard from "@/components/ProjectCard";
 import { site, projects, experience, skills } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
 import { formatSpan } from "@/lib/dates";
@@ -64,6 +65,7 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
 
       <PageHead
         title={topicName(topic)}
+        eyebrow={<span className="text-sm text-muted-foreground">Topic</span>}
         figures={
           <>
             <span>{posts.length} {posts.length === 1 ? "post" : "posts"}</span>{" "}
@@ -77,84 +79,87 @@ export default async function TopicPage({ params }: { params: Promise<Params> })
 
       {/*
         Where this one actually stands, from the curated skills list rather
-        than a second field here. `blurb` is reused in five places — the meta
-        description, the OG card, the graph's hover note and its aria-label —
-        so it cannot grow into a paragraph; `now` can, and it lives beside the
-        claim it qualifies on the CV.
+        than a second field here. `blurb` is reused in five places, so it cannot
+        grow into a paragraph; `now` can, and it lives beside the claim it
+        qualifies on the CV.
       */}
-      {now && <p className="topic-now">{now}</p>}
+      {now && (
+        <div className="mb-4 max-w-3xl rounded-xl border bg-muted/50 p-5">
+          <p className="text-sm font-semibold">Where it stands</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{now}</p>
+        </div>
+      )}
 
       {posts.length > 0 && (
-        <>
-          <hr className="bleed" />
-          <section className="row">
-            <span className="rail rail--label">Writing</span>
-            <PostList posts={posts} />
-          </section>
-        </>
+        <section className="border-t py-10" aria-labelledby="topic-writing">
+          <h2 id="topic-writing" className="text-2xl font-semibold tracking-tight">Writing</h2>
+          <PostList posts={posts} className="mt-6" />
+        </section>
       )}
 
       {built.length > 0 && (
-        <>
-          <hr className="bleed" />
-          <section className="row">
-            <span className="rail rail--label">Projects</span>
-            <ol className="project-list">
-              {built.map((p) => (
-                <li className="project-row" key={p.slug}>
-                  <h2 className="project-name">
-                    <Link prefetch={false} href={`/projects/${p.slug}/`}>{p.name}</Link>
-                  </h2>
-                  <span className="project-status run"><span>{p.lang}</span>{" "}<span>{p.shape}</span>{" "}<span className="project-state">{p.status}</span></span>
-                  <p>{p.summary}</p>
-                </li>
-              ))}
-            </ol>
-          </section>
-        </>
+        <section className="border-t py-10" aria-labelledby="topic-projects">
+          <h2 id="topic-projects" className="text-2xl font-semibold tracking-tight">Projects</h2>
+          <ul className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {built.map((p) => (
+              <ProjectCard
+                key={p.slug}
+                p={{
+                  slug: p.slug,
+                  name: p.name,
+                  lang: p.lang,
+                  shape: p.shape,
+                  status: p.status,
+                  summary: p.summary,
+                  repo: p.visibility === "public" && p.href ? p.href : undefined,
+                }}
+              />
+            ))}
+          </ul>
+        </section>
       )}
 
       {/*
-        The paid work. This is the half of a topic page that most personal sites
-        cannot show, because their tags only ever touch blog posts.
+        The paid work: the half of a topic page most personal sites cannot show,
+        because their tags only ever touch blog posts.
       */}
       {jobs.length > 0 && (
-        <>
-          <hr className="bleed" />
-          <section className="row">
-            <span className="rail rail--label">Used at work</span>
-            <div>
-              {jobs.map((job) => (
-                <div className="job" key={job.company + job.start}>
-                  <div className="job-head">
-                    <h2 className="job-name">{job.company}</h2>
-                    <span className="job-dates">{formatSpan(job)}</span>
-                  </div>
+        <section className="border-t py-10" aria-labelledby="topic-work">
+          <h2 id="topic-work" className="text-2xl font-semibold tracking-tight">Used at work</h2>
+          <ul className="mt-6 divide-y rounded-xl border">
+            {jobs.map((job) => (
+              <li className="job flex flex-wrap items-baseline justify-between gap-2 px-5 py-4" key={job.company + job.start}>
+                <div>
+                  <h3 className="job-name">{job.company}</h3>
                   <p className="job-meta">{job.role}</p>
                 </div>
-              ))}
-              <p className="page-figures">
-                The whole record is on the <Link prefetch={false} href="/cv/">CV</Link>.
-              </p>
-            </div>
-          </section>
-        </>
+                <span className="job-dates">{formatSpan(job)}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 text-sm text-muted-foreground">
+            The whole record is on the <Link className="link" prefetch={false} href="/cv/">CV</Link>.
+          </p>
+        </section>
       )}
 
       {others.length > 0 && (
-        <>
-          <hr className="bleed" />
-          <section className="row">
-            <span className="rail rail--label">Other topics</span>
-            <ul className="topic-run">
-              {others.map((t) => (
-                <li key={t}>
-                  <Link prefetch={false} href={`/topics/${t}/`}>{topicName(t)}</Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        </>
+        <section className="border-t py-10" aria-labelledby="topic-others">
+          <h2 id="topic-others" className="text-sm font-medium text-muted-foreground">Other topics</h2>
+          <ul className="mt-4 flex flex-wrap gap-2">
+            {others.map((t) => (
+              <li key={t}>
+                <Link
+                  prefetch={false}
+                  href={`/topics/${t}/`}
+                  className="inline-flex h-8 items-center rounded-full border px-3 text-sm transition-colors hover:border-input hover:bg-accent"
+                >
+                  {topicName(t)}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
     </Shell>

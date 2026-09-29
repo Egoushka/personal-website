@@ -3,8 +3,8 @@
 import { useEffect } from "react";
 
 /**
- * The post page's two behaviours: the code blocks' Copy button and the
- * contents list's current-section mark. Renders nothing; both are decoration
+ * The two behaviours of a post or docs page: the code blocks' Copy button and
+ * the contents list's current-section mark. Renders nothing; both are decoration
  * over markup that already works — with this gone the code is still
  * selectable and the contents list is still a list of working links.
  *
@@ -47,42 +47,48 @@ export default function PostEnhancements() {
     }
     document.addEventListener("click", onClick);
 
-    const ol = document.querySelector<HTMLOListElement>(".post-aside .toc");
-    const links = ol ? Array.from(ol.querySelectorAll("a")) : [];
-    const heads = links.map((a) => {
+    // A page with a rail renders its contents twice (components/Toc.tsx): the
+    // rail and a disclosure, one of them displayed. Both are marked alike; the
+    // headings are read once, from the first list.
+    const lists = Array.from(document.querySelectorAll<HTMLOListElement>("[data-toc] .toc"));
+    const heads = Array.from(lists[0]?.querySelectorAll("a") ?? []).map((a) => {
       try { return document.getElementById(decodeURIComponent(a.hash.slice(1))); }
       catch { return null; }
     });
-    const box = ol?.closest<HTMLElement>(".post-aside") ?? ol;
     const still = window.matchMedia("(prefers-reduced-motion: reduce)");
     let cur = -1;
     let frame = 0;
 
     function mark() {
       frame = 0;
-      if (!ol || !box || links.length === 0) return;
+      if (lists.length === 0 || heads.length === 0) return;
       // The last heading whose top has passed the reading line.
       let i = 0;
       heads.forEach((h, j) => { if (h && h.getBoundingClientRect().top <= 140) i = j; });
       if (i === cur) return;
       cur = i;
-      links.forEach((a, k) => {
-        if (k === i) a.setAttribute("aria-current", "location");
-        else a.removeAttribute("aria-current");
-      });
-      const li = links[i].parentElement as HTMLElement;
-      ol.style.setProperty("--toc-y", `${li.offsetTop}px`);
-      ol.style.setProperty("--toc-h", `${li.offsetHeight}px`);
-      // The rail scrolls on its own once the list outruns the viewport.
-      if (box.scrollHeight > box.clientHeight + 1) {
-        const top = ol.offsetTop + li.offsetTop - box.clientHeight / 2 + li.offsetHeight / 2;
-        box.scrollTo({ top, behavior: still.matches ? "auto" : "smooth" });
+      for (const ol of lists) {
+        const links = Array.from(ol.querySelectorAll("a"));
+        links.forEach((a, k) => {
+          if (k === i) a.setAttribute("aria-current", "location");
+          else a.removeAttribute("aria-current");
+        });
+        const li = links[i]?.parentElement;
+        if (!li) continue;
+        ol.style.setProperty("--toc-y", `${li.offsetTop}px`);
+        ol.style.setProperty("--toc-h", `${li.offsetHeight}px`);
+        // The rail scrolls on its own once the list outruns the viewport.
+        const box = ol.closest<HTMLElement>("[data-toc]");
+        if (box && box.scrollHeight > box.clientHeight + 1) {
+          const top = ol.offsetTop + li.offsetTop - box.clientHeight / 2 + li.offsetHeight / 2;
+          box.scrollTo({ top, behavior: still.matches ? "auto" : "smooth" });
+        }
       }
     }
     const schedule = () => { if (!frame) frame = requestAnimationFrame(mark); };
     const onResize = () => { cur = -1; schedule(); };
 
-    if (ol) {
+    if (lists.length > 0) {
       window.addEventListener("scroll", schedule, { passive: true });
       window.addEventListener("resize", onResize, { passive: true });
       mark();

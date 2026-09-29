@@ -1,10 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Moon, Sun } from "@/components/ui/icons";
 
 type Theme = "dark" | "light";
 
 const LIGHT = "(prefers-color-scheme: light)";
+
+/** One box for the button and its placeholder, so the header is laid out once. */
+const BOX = "inline-flex size-8 items-center justify-center rounded-md border border-input";
 
 /**
  * The manual theme switch.
@@ -20,8 +24,8 @@ const LIGHT = "(prefers-color-scheme: light)";
  * painted. The pre-paint script in app/layout.tsx applies a stored choice, and
  * the media query covers everyone who has never made one.
  *
- * Deliberately no icon and no third state: "system" is what having made no
- * choice already means. While no choice is stored, the label follows the OS.
+ * No third state: "system" is what having made no choice already means. The
+ * icon shows the theme it switches TO; the accessible name says so in words.
  */
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<Theme | null>(null);
@@ -49,11 +53,7 @@ export default function ThemeToggle() {
   }, []);
 
   if (!theme) {
-    return (
-      <span className="theme-toggle theme-toggle--pending" aria-hidden="true">
-        dark
-      </span>
-    );
+    return <span className={`theme-toggle theme-toggle--pending ${BOX}`} aria-hidden="true" />;
   }
 
   const next: Theme = theme === "dark" ? "light" : "dark";
@@ -61,8 +61,9 @@ export default function ThemeToggle() {
   return (
     <button
       type="button"
-      className="theme-toggle"
+      className={`theme-toggle ${BOX} cursor-pointer text-muted-foreground transition-colors hover:bg-accent hover:text-foreground`}
       aria-label={`Switch to the ${next} theme`}
+      title={`Switch to the ${next} theme`}
       onClick={() => {
         document.documentElement.dataset.theme = next;
         try {
@@ -73,7 +74,7 @@ export default function ThemeToggle() {
         setTheme(next);
       }}
     >
-      {next}
+      {next === "light" ? <Sun /> : <Moon />}
     </button>
   );
 }

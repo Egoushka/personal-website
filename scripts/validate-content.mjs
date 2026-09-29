@@ -11,7 +11,7 @@ import path from "node:path";
 import matter from "gray-matter";
 import { parseMarkdown, countWords, headings, proseText } from "../lib/markdown.mjs";
 import { POST_KINDS } from "../lib/post-kinds.mjs";
-import { classifyDocLink } from "../lib/doc-links.mjs";
+import { checkDocPages, highlightLangs, readDocDir } from "../lib/doc-check.mjs";
 
 const ROOT = process.cwd();
 const POSTS_DIR = path.join(ROOT, "content", "posts");
@@ -266,18 +266,8 @@ const DOCS_DIR = path.join(ROOT, "content", "docs");
 const SOURCES_FILE = path.join(DOCS_DIR, "sources.json");
 const docSources = fs.existsSync(SOURCES_FILE) ? JSON.parse(fs.readFileSync(SOURCES_FILE, "utf8")) : {};
 // The languages lib/highlight.ts loads. A fence in any other renders as plain text.
-const LANGS = new Set([
-  "text",
-  ...[...fs.readFileSync(path.join(ROOT, "lib", "highlight.ts"), "utf8").matchAll(/shiki\/langs\/([\w-]+)\.mjs/g)].map((m) => m[1]),
-]);
+const LANGS = await highlightLangs(ROOT);
 let docPages = 0;
-
-/** Every fenced code block's language, "" for none. */
-function fences(node, out = []) {
-  if (node.type === "code") out.push(node.lang ?? "");
-  if (node.children) for (const child of node.children) fences(child, out);
-  return out;
-}
 
 for (const [project, source] of Object.entries(docSources)) {
   const where = `content/docs/${project}`;
@@ -289,54 +279,12 @@ for (const [project, source] of Object.entries(docSources)) {
   const pulledBad = dateProblem(source.pulled);
   if (pulledBad) fail(`sources.json: pulled ${pulledBad}`);
 
-  const dir = path.join(DOCS_DIR, project);
-  const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith(".md")).sort() : [];
-  if (!files.includes("index.md")) fail("has no index.md — the overview is the docs root");
-  const pages = files.map((file) => {
-    const { data, content } = matter(fs.readFileSync(path.join(dir, file), "utf8"));
-    return { file, page: file.replace(/\.md$/, ""), data, content, tree: parseMarkdown(content) };
-  });
-  const pageIds = new Map(pages.map((p) => [p.page, new Set(headings(p.tree).map((h) => h.id))]));
-  const orders = new Map();
-  for (const p of pages) {
-    const pfail = (msg) => errors.push(`${where}/${p.file}: ${msg}`);
-    if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(p.page)) pfail("the file name must be lowercase kebab-case — it becomes the URL");
-    if (typeof p.data.title !== "string" || !p.data.title) pfail("frontmatter: title is required");
-    if (typeof p.data.description !== "string" || !p.data.description) {
-      pfail("frontmatter: description is required — it is the meta description and the list entry");
-    } else if (p.data.description.length > MAX_DESCRIPTION) {
-      pfail(`frontmatter: description is ${p.data.description.length} chars, max ${MAX_DESCRIPTION}`);
-    }
-    if (!Number.isInteger(p.data.order)) {
-      pfail("frontmatter: order must be a whole number — it sets the reading order");
-    } else if (orders.has(p.data.order)) {
-      pfail(`frontmatter: order ${p.data.order} is also ${orders.get(p.data.order)}'s`);
-    } else {
-      orders.set(p.data.order, p.file);
-    }
-    if (headings(p.tree).some((h) => h.depth === 1)) pfail("body has a '# heading' — the page renders its title as the <h1>");
-    if (/\bTODO\b/.test(p.content)) pfail("still has a TODO");
-    for (const lang of fences(p.tree)) {
-      if (lang && !LANGS.has(lang)) warnings.push(`${where}/${p.file}: a \`${lang}\` fence renders as plain text — lib/highlight.ts loads ${[...LANGS].join(", ")}`);
-    }
-    for (const href of urls(p.tree)) {
-      const link = classifyDocLink(href, source.path);
-      if (link.kind === "outside") {
-        pfail(`"${href}" climbs out of the repository`);
-      } else if (link.kind === "page") {
-        if (!pageIds.has(link.page)) pfail(`"${href}" links to a page these docs do not have`);
-        else if (link.fragment && !pageIds.get(link.page).has(link.fragment)) {
-          pfail(`"${href}" — ${link.page}.md has no heading #${link.fragment}`);
-        }
-      } else if (link.kind === "anchor" && link.fragment && !pageIds.get(p.page).has(link.fragment)) {
-        pfail(`"#${link.fragment}" — this page has no heading with that id`);
-      }
-    }
-  }
-  const index = pages.find((p) => p.page === "index");
-  if (index && pages.some((p) => p !== index && Number.isInteger(p.data.order) && p.data.order <= index.data.order)) {
-    fail("index.md must have the lowest order — the overview is read first");
-  }
+  // The page rules are lib/doc-check.mjs, the same ones `npm run docs:check`
+  // runs in the tool's checkout before a pull.
+  const pages = readDocDir(path.join(DOCS_DIR, project));
+  const found = checkDocPages(pages, { dir: source.path, where, langs: LANGS });
+  errors.push(...found.errors);
+  warnings.push(...found.warnings);
   docPages += pages.length;
 }
 
