@@ -325,16 +325,16 @@ export const projects: Project[] = [
     summary:
       "Makes seven years of chat history searchable by an assistant, by refusing to index the 65% of it that says “ok”.",
     description:
-      "A personal event store that makes seven years of chat history searchable by an assistant. I measured the archive before touching it rather than guessing at it, and the measurement is the whole story: 681,331 messages across 487 chats, of which 65% are under twenty characters. My previous setup embedded every one of them, so roughly 442,000 vectors stood for “ок”, “+1” and “да” — crowding out the 1.5% that carry an actual proposition. Chronicle groups events into segments using a time gap fitted per conversation, which turns 685,401 events into 51,044 segments and improves retrieval at the same time. It serves the result over MCP, so the assistant queries it directly — and the first version of that query path was 45× slower than it had to be, because a CTE hid the full-text index from the planner. It is scored against the obvious alternative, grep, on questions written from memory: the first run lost, 48.2% to 62.8%, and after the recall fixes it finds 63.5% — level with grep, not yet ahead of it.",
+      "A personal event store that makes seven years of chat history searchable by an assistant. I measured the archive before touching it rather than guessing at it, and the measurement is the whole story: 681,331 messages across 487 chats, of which 65% are under twenty characters. My previous setup embedded every one of them, so roughly 442,000 vectors stood for “ок”, “+1” and “да” — crowding out the 1.5% that carry an actual proposition. Chronicle groups events into segments using a time gap fitted per conversation, which turns 685,401 events into 51,044 segments and improves retrieval at the same time. It serves the result over MCP, so the assistant queries it directly — and the first version of that query path was 45× slower than it had to be, because a CTE hid the full-text index from the planner. It is scored against the obvious alternative, grep, on questions written from memory: the first run lost, 48.2% to 62.8%; the recall fixes brought it level at 63.5%; and on 71 questions, with grep’s keywords held to the question’s own words, it finds 71.1% against grep’s 54.2%, or 68.4% if grep may use the answer’s words.",
     cyrillic: { "ок": "ru", "да": "ru" },
     resumeLine:
-      "Event store over a 681k-message archive. Aggregates events into segments before indexing — 13.4× fewer units, better retrieval, level with grep on a blind eval — served over MCP.",
+      "Event store over a 681k-message archive. Aggregates events into segments before indexing — 13.4× fewer units, 71.1% against grep’s 54.2% on 71 of its owner’s questions — served over MCP.",
     topics: ["python", "retrieval", "mcp"],
     readings: [
       { label: "Archive", value: "681,331 messages · 487 chats", source: "counted, not sampled, before any embedding ran" },
       { label: "Noise", value: "65% under 20 characters", source: "same pass over the same archive" },
       { label: "Index", value: "13.4× fewer units", source: "685,401 events into 51,044 segments, measured on the reference deployment" },
-      { label: "Against grep", value: "63.5% vs 62.8%", source: "make eval, 37 labelled questions, 2026-09-26; the first run lost 48.2% to 62.8%" },
+      { label: "Against grep", value: "71.1% vs 54.2%", source: "make eval, 71 questions, 2026-09-29, grep’s keywords the question’s own words (68.4% with the answer’s words); chronicle CHANGELOG 0.3.0. The first run, 37 questions, lost 48.2% to 62.8%" },
       { label: "Retrieval", value: "45× faster", source: "hybrid_search, measured before and after the CTE that hid the FTS index" },
       { label: "Users", value: "1 — me", source: "counted" },
     ],
