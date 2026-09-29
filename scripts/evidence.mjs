@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// The evidence gate for one post (docs/writing/README.md):
+// The evidence gate for one post or method (docs/writing/README.md, ADR 0008):
 //   npm run evidence -- <slug>          check content/drafts/<slug>.evidence.md
 //   npm run evidence -- <slug> --init   start that file, one row per figure in the post
 // Reads the draft, or the published post when there is no draft of that slug.
@@ -20,7 +20,7 @@ if (!slug || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) {
 const ROOT = process.cwd();
 const rel = (/** @type {string} */ p) => path.relative(ROOT, p);
 const packPath = path.join(ROOT, "content", "drafts", `${slug}.evidence.md`);
-const postPath = ["drafts", "posts"]
+const postPath = ["drafts", "posts", "methods"]
   .map((dir) => path.join(ROOT, "content", dir, `${slug}.md`))
   .find((p) => fs.existsSync(p));
 
@@ -45,7 +45,7 @@ if (!fs.existsSync(packPath)) {
   process.exit(1);
 }
 if (!postPath) {
-  console.error(`ERROR no content/drafts/${slug}.md or content/posts/${slug}.md`);
+  console.error(`ERROR no content/drafts/${slug}.md, content/posts/${slug}.md or content/methods/${slug}.md`);
   process.exit(1);
 }
 

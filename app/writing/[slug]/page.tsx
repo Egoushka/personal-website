@@ -19,6 +19,7 @@ import {
   tableOfContents,
   getRelatedPosts,
 } from "@/lib/posts";
+import { getPostMethods } from "@/lib/methods";
 import { getTopicUsage, n } from "@/lib/readings";
 import { TOPICS, isTopic, topicName } from "@/lib/topics";
 
@@ -64,6 +65,7 @@ export default async function PostPage(
   const related = getRelatedPosts(slug, 1)[0];
   const usage = getTopicUsage();
   const project = projects.find((p) => p.slug === post.project);
+  const methods = getPostMethods(slug);
 
   return (
     <Shell current="writing">
@@ -153,6 +155,16 @@ export default async function PostPage(
               {Math.round(post.wordCount / post.spanDays)} words for every day of it.
             </p>
           ) : null}
+
+          {/* A method this post tells a story behind (ADR 0008): one line each. */}
+          {methods.map((m) => (
+            <p key={m.slug} className="mt-4 text-sm text-muted-foreground">
+              One of the stories behind how I work:{" "}
+              <Link prefetch={false} className="link" href={`/methods/${m.slug}/`}>
+                {m.title}
+              </Link>
+            </p>
+          ))}
 
           {project && (
             <section className="mt-14" aria-labelledby="about-project">

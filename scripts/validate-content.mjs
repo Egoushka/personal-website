@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Frontmatter and link gate for content/posts/*.md.
+// Frontmatter and link gate for content/posts/*.md and content/methods/*.md (ADR 0008).
 // Runs locally (`npm run validate`) and in CI before the site is built, so a bad
 // post fails fast with a readable message instead of a stack trace from the renderer.
 // `--drafts` also checks content/drafts/*.md by the same rules. That is local only:
@@ -133,6 +133,13 @@ function hrefProblems(href, selfIds) {
       problems.push(`links to /writing/${post}/#${fragment} but that post has no heading with that id`);
     }
   }
+  const method = route.match(/^\/methods\/([^/]+)\/?$/)?.[1];
+  if (method) {
+    if (!methodIds.has(method)) problems.push(`links to /methods/${method}/ which does not exist`);
+    else if (fragment && !methodIds.get(method).has(fragment)) {
+      problems.push(`links to /methods/${method}/#${fragment} but that method has no heading with that id`);
+    }
+  }
   return problems;
 }
 
@@ -142,6 +149,12 @@ function urls(node, out = []) {
   if (node.children) for (const child of node.children) urls(child, out);
   return out;
 }
+
+// Methods (ADR 0008), read like the posts and before any links are checked: a
+// link to /methods/<slug>/ from a post, a method or lib/site.ts resolves against
+// these. Their own rules are below the docs.
+const methods = readPosts(path.join(ROOT, "content", "methods"), "content/methods");
+const methodIds = new Map(methods.map((m) => [m.slug, new Set(headings(m.tree).map((h) => h.id))]));
 
 for (const { where, slug, data, content, tree } of [...posts, ...drafts]) {
   const draft = where.startsWith("content/drafts/");
@@ -288,6 +301,115 @@ for (const [project, source] of Object.entries(docSources)) {
   docPages += pages.length;
 }
 
+// ── Methods (ADR 0008) ───────────────────────────────────────────────────────
+// How I work, where two or more projects do it the same way. A method is kept
+// current rather than dated: an old review warns its owner here and never shows
+// its age on the page (ADR 0002).
+const REVIEW_WARN_DAYS = 180;
+const METHOD_SECTIONS = "the rule, where it came from, what it costs, when I break it";
+
+/**
+ * A body's `##` sections: each heading's text and the top-level nodes up to the
+ * next one. The sections are renamed to what they say, so they are counted and
+ * read in order, never matched by name.
+ */
+function sectionsOf(tree) {
+  const out = [];
+  for (const node of tree.children) {
+    if (node.type === "heading" && node.depth === 2) out.push({ title: proseText(node).trim(), nodes: [] });
+    else out.at(-1)?.nodes.push(node);
+  }
+  return out;
+}
+
+for (const { where, slug, data, content, tree } of methods) {
+  const fail = (msg) => errors.push(`${where}: ${msg}`);
+  const warn = (msg) => warnings.push(`${where}: ${msg}`);
+
+  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) {
+    fail(`slug "${slug}" must be lowercase kebab-case — it becomes the URL`);
+  }
+  // `npm run evidence -- <slug>` looks for a method's pack where it looks for a post's.
+  const twin = [...posts, ...drafts].find((p) => p.slug === slug);
+  if (twin) fail(`slug is also ${twin.where}: the two would share content/drafts/${slug}.evidence.md`);
+
+  if (!data.title || typeof data.title !== "string") fail("frontmatter: title is required — the rule itself");
+  if (!data.description || typeof data.description !== "string") {
+    fail("frontmatter: description is required — it is the meta description and the index's line");
+  } else if (data.description.length > MAX_DESCRIPTION) {
+    fail(`frontmatter: description is ${data.description.length} chars, max ${MAX_DESCRIPTION}`);
+  }
+
+  const reviewedBad = data.lastReviewed === undefined ? "is required" : dateProblem(data.lastReviewed);
+  if (reviewedBad) {
+    fail(`frontmatter: lastReviewed ${reviewedBad}`);
+  } else {
+    const days = Math.floor((Date.now() - Date.parse(`${data.lastReviewed}T00:00:00Z`)) / 86_400_000);
+    if (days > REVIEW_WARN_DAYS) {
+      warn(`lastReviewed "${data.lastReviewed}" is ${days} days old — check it against its projects, then review it again`);
+    }
+  }
+
+  // Earned by two projects: one project's lesson is a post.
+  const followers = Array.isArray(data.projects) ? [...new Set(data.projects)] : [];
+  if (!Array.isArray(data.projects) || data.projects.some((p) => typeof p !== "string")) {
+    fail("frontmatter: projects must be a list of project slugs from lib/site.ts");
+  } else if (followers.length < 2) {
+    fail(`frontmatter: projects names ${followers.length} project(s) — a method is earned by two or more (ADR 0008)`);
+  }
+  for (const p of followers) {
+    if (typeof p === "string" && !PROJECTS.some((x) => x.slug === p)) {
+      fail(`frontmatter: project ${JSON.stringify(p)} is not a project slug in lib/site.ts`);
+    }
+  }
+
+  if (!Array.isArray(data.posts) || data.posts.some((p) => typeof p !== "string")) {
+    fail("frontmatter: posts must be a list of published post slugs — [] while no post tells its story");
+  } else {
+    for (const p of data.posts) {
+      if (!ids.has(p)) fail(`frontmatter: posts names "${p}", which has no content/posts/${p}.md — a draft is not published`);
+    }
+  }
+
+  if (!Array.isArray(data.topics) || data.topics.length === 0) {
+    fail("frontmatter: topics must be a non-empty array");
+  } else {
+    for (const t of data.topics) {
+      if (!VOCAB.includes(t)) fail(`frontmatter: topic ${JSON.stringify(t)} is not in lib/topics.ts (known: ${VOCAB.join(", ")})`);
+    }
+  }
+
+  if (/\bTODO\b/.test(`${data.title ?? ""} ${data.description ?? ""} ${content}`)) fail("still has a TODO");
+  if (headings(tree).some((h) => h.depth === 1)) {
+    fail("body has a top-level '# heading' — the page already renders an <h1> from the title");
+  }
+
+  const sections = sectionsOf(tree);
+  if (sections.length !== 4) {
+    fail(`body has ${sections.length} \`##\` section(s) — a method has four, in order: ${METHOD_SECTIONS}`);
+  }
+  for (const s of sections) {
+    if (countWords({ type: "root", children: s.nodes }) === 0) fail(`section "${s.title}" has no prose`);
+  }
+
+  // Where it came from: a paragraph per project, each linking what shows it.
+  if (sections.length === 4) {
+    const linked = urls({ type: "root", children: sections[1].nodes }).map((u) => u.split(/[#?]/)[0]);
+    for (const p of followers) {
+      const shown = linked.some(
+        (route) =>
+          route.startsWith(`/projects/${p}/`) ||
+          posts.some((post) => route === `/writing/${post.slug}/` && post.data.project === p),
+      );
+      if (!shown) fail(`"${sections[1].title}" does not link ${p} — its project page, its docs, or a post about it`);
+    }
+  }
+
+  const internal = urls(tree).filter((u) => u.startsWith("/") || u.startsWith("#"));
+  const selfIds = new Set(headings(tree).map((h) => h.id));
+  for (const href of internal) for (const p of hrefProblems(href, selfIds)) fail(p);
+}
+
 // A project's write-up is about that project and must say so: `project` is the one
 // field that ties a post to a project, and `writeup` only picks which post leads.
 for (const { slug, writeup } of PROJECTS) {
@@ -302,7 +424,7 @@ for (const e of errors) console.error(`ERROR ${e}`);
 
 console.log(
   `\n${posts.length} post(s)${WITH_DRAFTS ? ` + ${drafts.length} draft(s)` : ""} + lib/site.ts ` +
-    `${docPages ? `+ ${docPages} docs page(s) ` : ""}checked against ${VOCAB.length} topics and ${PROJECTS.length} projects — ` +
+    `${docPages ? `+ ${docPages} docs page(s) ` : ""}${methods.length ? `+ ${methods.length} method(s) ` : ""}checked against ${VOCAB.length} topics and ${PROJECTS.length} projects — ` +
     `${errors.length} error(s), ${warnings.length} warning(s)`,
 );
 process.exit(errors.length > 0 ? 1 : 0);

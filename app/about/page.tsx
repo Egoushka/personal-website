@@ -95,6 +95,17 @@ export default function About() {
             </p>
           </section>
 
+          {/* The index of methods (ADR 0008): a rule is written down once two projects follow it. */}
+          <section className="mt-16 border-t pt-10" aria-labelledby="about-methods" data-pagefind-body>
+            <h2 id="about-methods" className="text-2xl font-semibold tracking-tight">How I work</h2>
+            <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+              When two of my projects do something the same way, I write it down as a rule: where it
+              came from, what it costs, and when I break it.{" "}
+              <Link className="link" prefetch={false} href="/methods/">The rules so far</Link>, each with the
+              projects that follow it.
+            </p>
+          </section>
+
           <section
             className="mt-16 border-t pt-10"
             id="contact"

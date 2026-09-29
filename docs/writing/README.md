@@ -18,9 +18,55 @@ Docs are written in the tool's own repository and the site renders a copy at a
 pinned commit ([ADR 0006](../adr/0006-docs-are-written-where-the-code-is.md)), so
 they cannot drift from the code. Writing them, mind the phone: a table cell over 60
 characters turns the table into stacked cards below 700px, so a table is for short
-facts and a paragraph of evidence belongs in prose (`lib/tables.ts`). Methods are planned, not built; a lesson becomes
-a Method once it has repeated in a second project, not before. A post never explains how to use a tool — it links
+facts and a paragraph of evidence belongs in prose (`lib/tables.ts`). A lesson becomes
+a Method once it has repeated in a second project, not before ([Methods](#methods), below). A post never explains how to use a tool — it links
 the docs — and a post never restates a Method; it tells the story that made one.
+
+## Methods
+
+A method is how I work, earned by two or more projects doing the same thing
+([ADR 0008](../adr/0008-methods-are-earned-by-two-projects.md)). It lives in
+`content/methods/<slug>.md`, tracked, and renders at `/methods/<slug>/`;
+`/methods/` lists them, the one more projects follow first, and `/about/` links
+there as "How I work". It is not a post: no date, no kind, no comments, not in
+the feeds. It is kept current, and `lastReviewed` says when it was last checked
+against its projects.
+
+```md
+---
+title: "A check that can fail silently eventually will"   # the rule: an imperative or a plain claim
+description: "At most 160 characters"
+lastReviewed: "YYYY-MM-DD"
+projects: ["homelab-gitops", "chronicle"]   # two or more slugs from lib/site.ts
+posts: ["silent-deploys"]                  # published posts that tell its stories; [] when none does yet
+topics: ["ci-cd"]                           # lib/topics.ts only
+---
+```
+
+The body is four `##` sections, in this order, each renamed to what it says:
+
+1. **The rule**, in one paragraph.
+2. **Where it came from**: one short paragraph per project, each linking the
+   post, docs page or project page that shows it. A method never retells a
+   post; it links it.
+3. **What it costs.** Every method has a price; name it.
+4. **When I break it**: the honesty section, like a post's last section.
+
+`npm run validate` fails a method with fewer than two projects, a project slug
+that is not in `lib/site.ts`, a `posts` slug with no `content/posts/` file, a
+body that is not four sections with prose in each, a "where it came from" that
+does not link one of its projects (its page, its docs, or a published post
+about it), a `TODO`, or a slug a post already has. It warns when `lastReviewed`
+is more than 180 days old; the page prints the date, never an age (ADR 0002).
+
+The evidence gate applies as it does to a post: every figure a method states
+needs a row in `content/drafts/<slug>.evidence.md`, and
+`npm run evidence -- <slug>` reads `content/methods/<slug>.md` when no draft or
+post has that slug.
+
+`projects` is the one field that ties a method to a project: a project's page
+lists the methods that name it, and a post in `posts` ends with one line
+linking the method.
 
 ## A post starts as one sentence
 
