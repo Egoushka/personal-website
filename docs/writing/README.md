@@ -16,7 +16,9 @@ it is enforced — by `npm run validate`, `npm run evidence` and the `/post` and
 
 Docs are written in the tool's own repository and the site renders a copy at a
 pinned commit ([ADR 0006](../adr/0006-docs-are-written-where-the-code-is.md)), so
-they cannot drift from the code. Methods are planned, not built; a lesson becomes
+they cannot drift from the code. Writing them, mind the phone: a table cell over 60
+characters turns the table into stacked cards below 700px, so a table is for short
+facts and a paragraph of evidence belongs in prose (`lib/tables.ts`). Methods are planned, not built; a lesson becomes
 a Method once it has repeated in a second project, not before. A post never explains how to use a tool — it links
 the docs — and a post never restates a Method; it tells the story that made one.
 
