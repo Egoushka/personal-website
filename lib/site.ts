@@ -340,7 +340,7 @@ export const projects: Project[] = [
       { label: "Archive", value: "681,331 messages · 487 chats", source: "counted, not sampled, before any embedding ran", ref: "Egoushka/chronicle@741dbb1:README.md#L16" },
       { label: "Noise", value: "65% under 20 characters", source: "same pass over the same archive", ref: "Egoushka/chronicle@741dbb1:README.md#L20" },
       { label: "Index", value: "13.4× fewer units", source: "685,401 events into 51,044 segments, measured on the reference deployment", ref: "Egoushka/chronicle@741dbb1:README.md#L30-31" },
-      { label: "Against grep", value: "71.1% vs 54.2%", source: "make eval, 71 questions, 2026-09-29, grep’s keywords the question’s own words (68.4% with the answer’s words); chronicle CHANGELOG 0.3.0. The first run, 37 questions, lost 48.2% to 62.8%", ref: "Egoushka/chronicle@741dbb1:README.md#L150-152" },
+      { label: "Against grep", value: "71.1% vs 54.2%", source: "make eval, 71 questions, 2026-09-29, grep’s keywords the question’s own words (68.4% with the answer’s words); chronicle CHANGELOG 0.3.0. The first run, 37 questions, scored 48.2%; after the fixes it was 63.5% against grep’s 62.8% on those 37", ref: "Egoushka/chronicle@741dbb1:README.md#L150-152" },
       { label: "Retrieval", value: "5,694 → 120–255 ms", source: "hybrid_search, measured before and after the CTE that hid the FTS index", ref: "Egoushka/chronicle@741dbb1:CLAUDE.md#L331" },
       { label: "Users", value: "1 — me", source: "counted" },
     ],
