@@ -143,6 +143,36 @@ reference, not this list.
    pull request.
 9. A LinkedIn version with `linkedin-post`, from the same pack, linking the post.
 
+## Several posts at once
+
+For posts whose thesis, kind, project and topics are already agreed, each with a
+brief in `content/drafts/prompts/`, the saved workflow
+[`post-batch`](../../.claude/workflows/post-batch.js) does steps 1 to 5 above, all
+but the voice pass, in one command from a Claude Code session in the main checkout:
+
+```js
+Workflow({ name: "post-batch", args: [
+  { brief: "07-my-finding.md", slug: "my-finding", kind: "finding",
+    project: "chronicle", topics: ["postgres"], thesis: "The one sentence already agreed." },
+] })
+```
+
+`project` is `null` for a post about no project; bad args stop the run before any
+agent starts. Each post gets up to three agents, and its review starts as soon as
+its own draft is done. An author sets up the worktree as the brief says, fills the
+pack first, writes the draft and runs the checks. A reviewer that did not write it
+applies `/review-post`, traces every derived figure to its formula and every claim
+the evidence script cannot read to the pack, looks for anything private, and edits
+nothing. A fixer applies only the must-fix findings: a claim it cannot source
+becomes a `TODO:` or is cut. Each post comes back as a report: paths, check output,
+the `TODO:`s left, the claims to confirm, the review and what was fixed, and a
+publish or not-yet verdict with its reason.
+
+It cannot ask anything mid-run, which is why it is only for agreed posts: what only
+I know stays a `TODO:` or a question in the report, and a post still being agreed
+starts with `/post`. Nothing is committed, pushed or moved to `content/posts/`; the
+voice pass and steps 6 to 9 stay mine.
+
 ## Frontmatter
 
 ```md
