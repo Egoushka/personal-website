@@ -1,5 +1,5 @@
 ---
-title: "The package I installed to check a Belgian tax ID had 197 defects"
+title: "A request to check a Belgian tax ID led me to a package with 197 defects"
 date: "2026-09-22"
 updated: "2026-09-29"
 description: "A request at work to check a Belgian tax ID led to a package with 197 defects. One rejected all 36,363,636 valid Hungarian tax numbers. I forked it as Attest."
@@ -8,7 +8,7 @@ project: "attest"
 topics: ["dotnet"]
 ---
 
-At work I got a request to check a Belgian tax ID. There is a package for that, so I installed it. It rejected valid numbers.
+At work I got a request to check a Belgian tax ID. An existing package did that, and it was wrong: not only for Belgium.
 
 A tax ID usually ends in a check digit: one digit worked out from the others, so a typo can be caught without asking anyone. A package that checks them is a small thing to depend on. When it is wrong, the person who typed a correct number is told it is not.
 
