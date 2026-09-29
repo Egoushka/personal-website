@@ -102,8 +102,7 @@ export default function Home() {
       */}
       <header className="pt-14 pb-12 md:pt-20 md:pb-16">
         <p className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1 text-sm text-muted-foreground">
-          <span className="live-dot" aria-hidden="true" />
-          {site.location} · {site.availability}
+          {site.location}
         </p>
         <h1 className="mt-6 max-w-4xl font-display text-5xl font-semibold tracking-tight text-balance md:text-6xl lg:text-7xl">
           {site.intro}

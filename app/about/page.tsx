@@ -114,7 +114,7 @@ export default function About() {
           >
             <h2 id="contact-title" className="text-2xl font-semibold tracking-tight">Working with me</h2>
             <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              {site.role}, in {site.location} ({site.timezone}), {site.availability}.
+              {site.role}, in {site.location} ({site.timezone}).
             </p>
             {site.engagement && <p className="mt-3 max-w-2xl text-lg leading-relaxed text-muted-foreground">{site.engagement}</p>}
             <div className="mt-6 rounded-xl border bg-card p-5">

@@ -48,11 +48,6 @@ export const site = {
   /** Kyiv's offset, winter and summer. Printed beside the location on /about/. */
   timezone: "UTC+2/+3",
   /**
-   * Prints next to the location. The reader this site is written for is buying
-   * a week of work, not filling a role.
-   */
-  availability: "available for contract work",
-  /**
    * What I can be hired for, in one line: scope, never rates or capacity.
    * Empty renders nothing. Only I write this; it is never inferred.
    */
