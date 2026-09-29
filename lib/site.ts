@@ -88,7 +88,7 @@ export const links: { label: string; href: string; handle: string; note: string 
     label: "GitHub",
     href: site.github,
     handle: `@${site.githubHandle}`,
-    note: "The public half of what I build. Attest lives here; most of the rest is still private.",
+    note: "Where most of what I build lives now: chargehand, Attest, Chronicle and the MCP servers. The homelab repo stays private.",
   },
   {
     label: "LinkedIn",
@@ -251,9 +251,10 @@ export type Project = {
 };
 
 /**
- * Attest is first because it is the only one that anybody else runs. The rest
- * carry `side: true` and are grouped under their own label rather than listed as
- * its equals.
+ * Attest is first because it is the only one that other people run; chargehand
+ * is second because it is built for them to, and says in its readings that one
+ * person does so far. The rest carry `side: true` and are grouped under their own
+ * label rather than listed as their equals.
  *
  * Every number below was read out of the repo it describes, not estimated, and
  * every reading names where it came from. If a claim here can't be checked
@@ -285,29 +286,55 @@ export const projects: Project[] = [
     ],
   },
   {
+    slug: "chargehand",
+    visibility: "public",
+    tech: ["C#", ".NET 10", "ASP.NET Core", "MCP", "Claude Code", "OpenCode", "OpenTelemetry", "Langfuse", "xUnit", "Docker"],
+    phase:
+      "0.3.0, before 1.0. It runs from the CLI, over HTTP and over MCP; workers only read, the package is not on nuget.org yet, and the writing nodes that would let it change code do not exist.",
+    status: "running",
+    name: "chargehand",
+    lang: "C#", shape: "orchestrator",
+    href: "https://github.com/Egoushka/chargehand",
+    summary:
+      "Runs a question about a codebase on coding agents and returns an answer whose every claim is checked against a pinned commit.",
+    description:
+      "An orchestrator for coding agents. A program that calls an agent gets prose back and has nothing to check it against; chargehand turns the request into a typed task, runs it on Claude Code or OpenCode sessions reading the repository at a pinned commit, and returns a result contract in which every claim carries its evidence — a file at that commit, a diff, a session message or an input the caller sent. A resolver checks each one, and a claim that does not resolve is moved to open questions instead of being reported. Budgets, retries and the task graph live in code rather than in a prompt. It is measured before it is believed, and the measurements are not flattering: the first version lost a blind comparison to a plain agent session, 0.333 to 0.667, and won it only after a prompt fix, at 28% more cost. Splitting a question across parallel agents cost 1.53× for a score of 0.967 against 0.950, so it now splits only when one session cannot cover the parts. Prompt CI, which gates every prompt change on paired evals, let both deliberately planted regressions through; once its score learned to count missing claims it caught one of them, and the other still passes.",
+    resumeLine:
+      "Orchestrator for coding agents in .NET 10: typed tasks run on Claude Code or OpenCode at a pinned commit, every claim's evidence resolved before it is returned; CLI, HTTP and MCP; benchmarked blind against a plain agent session.",
+    topics: ["dotnet", "architecture", "mcp"],
+    readings: [
+      { label: "Releases", value: "5 tagged, 0.1.0 → 0.3.0", source: "git tags and CHANGELOG.md, 2026-09-27 and 09-28" },
+      { label: "Against a plain session", value: "0.333 → 0.556 blind", source: "phase 3 exit and its rerun, model-judged blind; docs/benchmarks.md" },
+      { label: "Splitting", value: "1.53× the cost for 0.967 vs 0.950", source: "phase 4 exit; ADR 0017 limits splits because of it" },
+      { label: "Decisions", value: "31 ADRs", source: "docs/adr, 0001 to 0031" },
+      { label: "Users", value: "1 — me", source: "counted" },
+    ],
+  },
+  {
     slug: "chronicle",
     writeup: "chronicle",
     featured: true,
     print: true,
     side: true,
-    visibility: "private",
-    tech: ["Python", "FastAPI", "Postgres", "pgvector", "MCP", "sentence-transformers", "pymorphy3", "Docker"],
+    visibility: "public",
+    tech: ["Python", "FastAPI", "Postgres", "pgvector", "MCP", "BGE-M3", "ONNX Runtime", "pymorphy3", "Docker"],
     name: "Chronicle",
     status: "running",
     lang: "Python", shape: "event store",
-    href: "",
+    href: "https://github.com/Egoushka/chronicle",
     summary:
       "Makes seven years of chat history searchable by an assistant, by refusing to index the 65% of it that says “ok”.",
     description:
-      "A personal event store that makes seven years of chat history searchable by an assistant. I measured the archive before touching it rather than guessing at it, and the measurement is the whole story: 681,331 messages across 487 chats, of which 65% are under twenty characters. My previous setup embedded every one of them, so roughly 442,000 vectors stood for “ок”, “+1” and “да” — crowding out the 1.5% that carry an actual proposition. Chronicle groups events into segments using a time gap fitted per conversation, which cuts the index about elevenfold and improves retrieval at the same time. It serves the result over MCP, so the assistant queries it directly — and the first version of that query path was 45× slower than it had to be, because a CTE hid the full-text index from the planner.",
+      "A personal event store that makes seven years of chat history searchable by an assistant. I measured the archive before touching it rather than guessing at it, and the measurement is the whole story: 681,331 messages across 487 chats, of which 65% are under twenty characters. My previous setup embedded every one of them, so roughly 442,000 vectors stood for “ок”, “+1” and “да” — crowding out the 1.5% that carry an actual proposition. Chronicle groups events into segments using a time gap fitted per conversation, which turns 685,401 events into 51,044 segments and improves retrieval at the same time. It serves the result over MCP, so the assistant queries it directly — and the first version of that query path was 45× slower than it had to be, because a CTE hid the full-text index from the planner. It is scored against the obvious alternative, grep, on questions written from memory: the first run lost, 48.2% to 62.8%, and after the recall fixes it finds 63.5% — level with grep, not yet ahead of it.",
     cyrillic: { "ок": "ru", "да": "ru" },
     resumeLine:
-      "Event store over a 681k-message archive. Aggregates events into segments before indexing — ~11× smaller vector index, better retrieval — served over MCP.",
-    topics: ["python", "retrieval"],
+      "Event store over a 681k-message archive. Aggregates events into segments before indexing — 13.4× fewer units, better retrieval, level with grep on a blind eval — served over MCP.",
+    topics: ["python", "retrieval", "mcp"],
     readings: [
       { label: "Archive", value: "681,331 messages · 487 chats", source: "counted, not sampled, before any embedding ran" },
       { label: "Noise", value: "65% under 20 characters", source: "same pass over the same archive" },
-      { label: "Index", value: "~11× smaller", source: "Chronicle's own measurement pass — not recomputable from this repo" },
+      { label: "Index", value: "13.4× fewer units", source: "685,401 events into 51,044 segments, measured on the reference deployment" },
+      { label: "Against grep", value: "63.5% vs 62.8%", source: "make eval, 37 labelled questions, 2026-09-26; the first run lost 48.2% to 62.8%" },
       { label: "Retrieval", value: "45× faster", source: "hybrid_search, measured before and after the CTE that hid the FTS index" },
       { label: "Users", value: "1 — me", source: "counted" },
     ],
@@ -335,7 +362,7 @@ export const projects: Project[] = [
     readings: [
       { label: "Claims governed", value: "5,369", source: "first census of the live backend, 2026-09-22" },
       { label: "Ever marked wrong", value: "0, before this", source: "the backend’s own state column: valid=5,369" },
-      { label: "Classified", value: "1,094 — 20%", source: "stalled on a free-tier daily token quota, not on the model" },
+      { label: "Classifier bill", value: "$0.237 → $0.092 a night", source: "a cheap model with a Claude Haiku second opinion, for 1.3 macro-F1 points; ADR 0004" },
       { label: "Applied automatically", value: "0", source: "every scope ships closed; findings wait as proposals" },
     ],
   },
@@ -368,21 +395,21 @@ export const projects: Project[] = [
     slug: "oura-platform",
     writeup: "oura-platform",
     side: true,
-    visibility: "private",
+    visibility: "public",
     tech: ["C#", ".NET", "Postgres", "TimescaleDB", "Dapper", "DbUp", "Serilog", "Grafana", "OAuth", "xUnit", "Testcontainers"],
     phase:
       "Stages 1, 2 and 4 of 8. Ingestion, three Grafana dashboards, the calendar and tag importers and an MCP server over the warehouse all run. Stage 3’s webhooks are skipped deliberately; the bedroom sensors, the chest strap and the glucose curve (5–8) do not exist.",
     status: "building",
     name: "Oura Platform",
     lang: "C#", shape: "health warehouse",
-    href: "",
+    href: "https://github.com/Egoushka/oura-platform",
     summary:
       "Pulls Oura Ring data into a database I own, so it can be joined against everything Oura will never see.",
     description:
       "A self-hosted health warehouse. Oura's own app will show you last night's sleep; it will never show you last night's sleep against the meetings in the calendar, the training load, the CO₂ in the bedroom or the glucose curve, because it does not have any of those. This pulls the ring's data out over OAuth into Postgres with TimescaleDB, on the same box as everything else, where SQL and Grafana can ask questions across all of it. Two processes, one database, no Kubernetes. Stages 1, 2 and 4 of 8 are done — ingestion, three dashboards the Oura app cannot draw, the calendar and tag importers that put meetings beside sleep, and an MCP server so the assistant reads the warehouse directly. Stage 3’s webhooks are skipped on purpose rather than pending: they are a latency optimisation on a pipeline that already works, and the night’s data lands mid-morning either way. What is missing is the other half of every question — the room, the chest strap, the glucose curve.",
     resumeLine:
       "Self-hosted health warehouse in .NET: OAuth ingestion of wearable data into Postgres/TimescaleDB on a single VPS, joined against calendar and environment data.",
-    topics: ["dotnet", "postgres", "self-hosting"],
+    topics: ["dotnet", "postgres", "self-hosting", "mcp"],
     readings: [
       { label: "Stage", value: "1, 2 and 4 of 8", source: "the staged plan in the repo; 3 is skipped deliberately, 5–8 are unbuilt" },
       { label: "Storage", value: "Postgres + TimescaleDB", source: "hypertables, on the same box as the rest of the lab" },
@@ -393,23 +420,24 @@ export const projects: Project[] = [
   {
     slug: "oura-mcp-app",
     side: true,
-    visibility: "private",
+    visibility: "public",
     tech: ["TypeScript", "MCP Apps", "Express", "Vite", "Postgres"],
     phase:
-      "One tool and one chart, run against the warehouse from my laptop. It has no stack in the homelab repo yet, so nothing on the box serves it.",
+      "One tool and one chart. It runs on the box beside the warehouse, reachable only over the tailnet, and Claude Desktop on my laptop is its one client.",
     status: "building",
     name: "Oura MCP App",
     lang: "TypeScript", shape: "MCP app",
-    href: "",
+    href: "https://github.com/Egoushka/oura-mcp-app",
     summary:
       "Answers a question about my sleep with a chart rather than a paragraph, rendered inside whichever assistant asked.",
     description:
-      "An MCP App over the Oura Platform warehouse. One tool, oura_trend, reads eight columns of the daily table — sleep, readiness and activity scores, HRV, resting heart rate, temperature deviation, SpO₂ and steps — and returns the series and an interactive chart together. Hosts that implement MCP Apps render the chart inline and let you change metric and range without another model turn, because the app calls the tool itself over the host bridge rather than asking the model to; hosts that do not still get a useful text summary out of the same call. The database user is read-only and the column names come from a fixed map rather than from tool input, because a tool the model can aim is a tool an injected instruction can aim.",
-    topics: ["typescript", "postgres"],
+      "An MCP App over the Oura Platform warehouse. One tool, oura_trend, reads eight columns of the daily table — sleep, readiness and activity scores, HRV, resting heart rate, temperature deviation, SpO₂ and steps — and returns the series and an interactive chart together. Hosts that implement MCP Apps render the chart inline and let you change metric and range without another model turn, because the app calls the tool itself over the host bridge rather than asking the model to; hosts that do not still get a useful text summary out of the same call. The database user is read-only and the column names come from a fixed map rather than from tool input, because a tool the model can aim is a tool an injected instruction can aim. Version 0.2.0 dropped CORS and answers 403 to any Host header it was not told about, which is the guard against DNS rebinding: a server with no login of its own should not answer a page that merely resolves to it.",
+    topics: ["typescript", "postgres", "mcp"],
     readings: [
       { label: "Surface", value: "1 tool, 8 metrics", source: "the server’s registration; three ranges, one chart resource" },
       { label: "UI", value: "one inlined HTML file", source: "Vite single-file build — the host fetches exactly one resource" },
       { label: "Database access", value: "read-only, fixed column map", source: "db.ts; no tool input reaches the SQL" },
+      { label: "Foreign Host header", value: "403", source: "0.2.0; ALLOWED_HOSTS names the exceptions" },
       { label: "Users", value: "1 — me", source: "counted" },
     ],
   },
@@ -434,7 +462,7 @@ export const projects: Project[] = [
     readings: [
       { label: "Host", value: "one cx53, 32 GB", source: "the repo's own README; tailnet address, not a public one" },
       { label: "Secrets", value: "encrypted in git", source: "*.enc committed, plaintext gitignored — checkable in the tree" },
-      { label: "Stacks", value: "51, one directory each", source: "FACTS.md, regenerated by CI so the count cannot drift from the tree" },
+      { label: "Stacks", value: "61, one directory each", source: "FACTS.md, regenerated by CI so the count cannot drift from the tree" },
     ],
   },
   {
@@ -460,6 +488,68 @@ export const projects: Project[] = [
       { label: "Hypotheses", value: "6 registered, 0 survived", source: "the research log, which records the failures too" },
       { label: "Effective bets", value: "1.90 of 87", source: "mean pairwise correlation across the crypto basket; 18 cross-asset ETFs give 5.02" },
       { label: "Capital at risk", value: "none", source: "testnet only; there are no live orders" },
+    ],
+  },
+  {
+    slug: "switchboard",
+    side: true,
+    visibility: "public",
+    tech: ["Python", "MCP", "agentgateway", "JMESPath", "Prometheus", "Telegram Bot API", "Docker"],
+    status: "running",
+    name: "switchboard",
+    lang: "Python", shape: "MCP front door",
+    href: "https://github.com/Egoushka/switchboard",
+    summary:
+      "Shows an agent five tools instead of hundreds, and makes every one that writes wait for a tap on my phone.",
+    description:
+      "One MCP front door to every tool behind my gateway. An agent connected to all of them reads hundreds of tool definitions before it reads the task; through switchboard it sees five — search, describe, read, write and more — and looks up the one it needs. Whether a tool reads or writes is decided by config, never by the tool's own description of itself: a server with no entry is all write, and a destructive hint always forces write. Every write waits for Approve or Deny from a Telegram bot that shows every argument, with zero-width and bidi characters printed as visible escapes, because an approval prompt that can hide text is not an approval. Approvals are single-use, bound to exactly the arguments shown, denied on timeout and refused when Telegram cannot be reached. Results are trimmed before the model sees them: nulls dropped, an optional JMESPath query applied, the first page capped at 6k characters.",
+    topics: ["python", "mcp", "self-hosting"],
+    readings: [
+      { label: "Tools an agent sees", value: "5, instead of hundreds", source: "one MCP app per scope; the README" },
+      { label: "Writes", value: "approved per call, single-use", source: "Telegram, 50 s default, denied on timeout or outage" },
+      { label: "First page", value: "6k characters at most", source: "the result trimmer" },
+      { label: "Users", value: "1 — me", source: "counted" },
+    ],
+  },
+  {
+    slug: "devbox-mcp",
+    side: true,
+    visibility: "public",
+    tech: ["JavaScript", "Node.js", "MCP", "Express", "zod", "Docker", "docker-socket-proxy", "SonarQube"],
+    status: "running",
+    name: "devbox-mcp",
+    lang: "JavaScript", shape: "MCP server",
+    href: "https://github.com/Egoushka/devbox-mcp",
+    summary:
+      "Lets an assistant run a project's real test suite and a SonarQube scan without handing it a shell or the Docker socket.",
+    description:
+      "An MCP server that runs a project's own test suite — dotnet, npm or pytest — in a throwaway container with the repository mounted read-only, and a SonarQube scan against the same checkout. The design is mostly about what it is not given. A mounted Docker socket is root on the host, so it talks to a docker-socket-proxy that allows creating and starting containers and pulling images, with exec, networks and volumes switched off. It accepts only a project name its own listing returned, which is the whole defence against a prompt-injected path. Its README says in as many words that this narrows the damage a compromised instance can do and is not a sandbox. SonarQube on the box stops after twenty idle minutes, so a scan wakes it first; a cold start measured 33 seconds.",
+    topics: ["mcp", "docker"],
+    readings: [
+      { label: "Toolchains", value: "dotnet, npm, pytest", source: "detected per project by list_projects" },
+      { label: "Repository mount", value: "read-only", source: "the run_tests container spec; scratch space is a tmpfs" },
+      { label: "Docker access", value: "a scoped proxy, not the socket", source: "no exec, no networks, no volumes" },
+      { label: "SonarQube cold start", value: "33 s", source: "measured when sonar_scan learned to wake it, 2026-09-29" },
+    ],
+  },
+  {
+    slug: "agent-skills",
+    side: true,
+    visibility: "public",
+    tech: ["Agent Skills", "Python", "MCP", "GitHub Actions", "GitHub Pages"],
+    status: "running",
+    name: "agent-skills",
+    lang: "Markdown", shape: "skills hub",
+    href: "https://github.com/Egoushka/agent-skills",
+    summary:
+      "Agent skills for Claude Code, OpenCode and Codex, each upstream one pinned to a commit and each showing what it costs in context.",
+    description:
+      "A curated set of agent skills — my own and upstream ones I have read — that installs into Claude Code, OpenCode, Codex and anything else that reads SKILL.md. It treats skills the way a lockfile treats packages, because that is what they are: instructions and scripts handed to an agent that runs with my permissions. Every vendored skill is pinned to a commit, CI fails if it differs from upstream at that commit by a single byte, and upstream changes arrive only as pull requests whose review report flags changed allowed-tools, new scripts, new URLs and edited descriptions, since a description decides when a skill fires. The catalog prints what each skill costs: all 26 together take about 3.3k tokens of every session, and six have bodies over the 5,000-token guideline.",
+    topics: ["mcp", "python"],
+    readings: [
+      { label: "Skills", value: "26", source: "the catalog the README generates from the skills themselves" },
+      { label: "Always loaded", value: "≈3.3k tokens", source: "names and descriptions, estimated at characters ÷ 4" },
+      { label: "Vendored skills", value: "byte-identical to a pinned commit", source: "make verify, which CI runs" },
     ],
   },
   {
@@ -879,7 +969,7 @@ export const uses: { group: string; items: StackItem[] }[] = [
  * justify its own freshness, and nothing here expires in public (ADR 0002).
  */
 export const now = {
-  updated: "2026-09-23",
+  updated: "2026-09-29",
   items: [
     {
       label: "Work",
@@ -887,7 +977,7 @@ export const now = {
     },
     {
       label: "Building",
-      text: "Synapse — deciding which of the 5,369 facts my assistant has stored it should stop believing.",
+      text: "chargehand — sending questions about a codebase to coding agents, and checking every citation they come back with.",
     },
     {
       label: "Homelab",

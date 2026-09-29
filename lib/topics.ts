@@ -83,6 +83,11 @@ export const TOPICS = {
     kind: "technology",
     blurb: "This site, and anything else that reaches a browser.",
   },
+  mcp: {
+    name: "MCP",
+    kind: "technology",
+    blurb: "How my assistants reach my own data and tools instead of guessing at them.",
+  },
   angular: {
     name: "Angular",
     kind: "technology",
