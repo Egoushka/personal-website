@@ -93,11 +93,12 @@
   --brand: #a85d08;                /*  5.1:1 */
   --brand-foreground: #ffffff;
   --success: #15803d;
-  --warning: #a85d08;
-  --info: #2563eb;
-  --tip: #15803d;
-  --important: #7c3aed;
-  --caution: #dc2626;
+  /* Callout titles sit on a 7% tint of their own colour: each clears 5.7:1 there. */
+  --warning: #92400e;
+  --info: #1d4ed8;
+  --tip: #166534;
+  --important: #6d28d9;
+  --caution: #b91c1c;
 }
 
 @media (prefers-color-scheme: light) {
@@ -124,11 +125,11 @@
     --brand: #a85d08;
     --brand-foreground: #ffffff;
     --success: #15803d;
-    --warning: #a85d08;
-    --info: #2563eb;
-    --tip: #15803d;
-    --important: #7c3aed;
-    --caution: #dc2626;
+    --warning: #92400e;
+    --info: #1d4ed8;
+    --tip: #166534;
+    --important: #6d28d9;
+    --caution: #b91c1c;
   }
 }
 

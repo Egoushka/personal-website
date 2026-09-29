@@ -30,8 +30,8 @@
   "devbox-mcp": {
     "repo": "Egoushka/devbox-mcp",
     "path": "docs/guide",
-    "ref": "docs-guide",
-    "commit": "316cfbdb25f729c2fd366d61300f6eb55d2fafa8",
+    "ref": "main",
+    "commit": "7b24b303447749d6093f391d4f284356f898c13e",
     "pulled": "2026-09-29"
   },
   "oura-mcp-app": {
