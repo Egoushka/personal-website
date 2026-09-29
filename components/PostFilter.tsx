@@ -3,8 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import Lang from "@/components/Lang";
+import KindLabel from "@/components/KindLabel";
 import { chip, chipCount, segment, segmentButton } from "@/components/ui/toggle";
 import type { CyrillicLang } from "@/lib/lang";
+import type { PostKind } from "@/lib/posts";
 
 /**
  * The writing index, with the vocabulary and the projects as a filter over it.
@@ -28,6 +30,8 @@ export type PostRow = {
   /** The post's `cyrillic` frontmatter: the language its title's Cyrillic is marked with. */
   cyrillic?: CyrillicLang;
   description: string;
+  /** The post's kind: a note says so on its row. */
+  kind?: PostKind;
   /** ISO `YYYY-MM-DD`, for ordering. */
   date: string;
   dateLabel: string;
@@ -186,6 +190,7 @@ export default function PostFilter({
                 </h3>
                 <p className="mt-1 text-[0.9375rem] leading-relaxed text-muted-foreground">{p.description}</p>
                 <p className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  <KindLabel kind={p.kind} />{" "}
                   <span>{p.dateLabel}</span>{" "}
                   <span>{p.readingTime} min read</span>{" "}
                   <span>{p.wordCount.toLocaleString("en-GB")} words</span>

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import PostFilter, { type PostRow } from "@/components/PostFilter";
 import { pageMetadata } from "@/lib/metadata";
-import { getAllPosts, getTopicCounts, formatDate } from "@/lib/posts";
+import { getAllPosts, getNotes, getTopicCounts, formatDate } from "@/lib/posts";
 import { projects } from "@/lib/site";
 import { getReadings, n } from "@/lib/readings";
 import { topicName } from "@/lib/topics";
@@ -40,6 +41,7 @@ export default function WritingIndex() {
     title: p.title,
     cyrillic: p.cyrillic,
     description: p.description,
+    kind: p.kind,
     date: p.date,
     dateLabel: formatDate(p.date),
     month: formatMonth(p.date),
@@ -62,6 +64,10 @@ export default function WritingIndex() {
     .map((p) => ({ slug: p.slug, name: p.name, count: rows.filter((r) => r.project?.slug === p.slug).length }))
     .filter(({ count }) => count >= 2);
 
+  // The notes are posts, listed here with the rest; /notes/ has them alone.
+  // Linked once there is one: "0 notes" is true and reads as a shortfall.
+  const notes = getNotes().length;
+
   return (
     <Shell current="writing">
 
@@ -73,6 +79,15 @@ export default function WritingIndex() {
             <span>{r.posts} {r.posts === 1 ? "post" : "posts"}</span>{" "}
             <span>{n(r.words)} words</span>{" "}
             {r.latest && <span>latest {formatDate(r.latest.date)}</span>}{" "}
+            {notes > 0 && (
+              <>
+                <span>
+                  <Link className="link" prefetch={false} href="/notes/">
+                    {notes} {notes === 1 ? "note" : "notes"}
+                  </Link>
+                </span>{" "}
+              </>
+            )}
             <span><a className="link" href="/feed.xml">RSS</a></span>
           </>
         }

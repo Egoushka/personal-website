@@ -241,6 +241,9 @@ for (const { where, slug, data, content, tree } of [...posts, ...drafts]) {
 
   const words = countWords(tree);
   if (words < 300) warn(`only ${words} words — thin for search`);
+  // A note is one finding in 300–700 words (docs/writing/README.md). Past 800 it
+  // has outgrown the kind, and one of the others says better what it is.
+  if (data.kind === "note" && words > 800) warn(`${words} words — long for a note: past 800, make it a finding, incident or build`);
   if (!internal.some((u) => u.startsWith("/"))) warn("no internal links — costs SEO and session depth");
 }
 

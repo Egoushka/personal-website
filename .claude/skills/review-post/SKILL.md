@@ -39,6 +39,11 @@ The `kind` in the frontmatter says what the post promised (docs/writing/README.m
 - **build**: opens on the question the thing answers or what it refuses to do, not
   its name; each decision with what was rejected and the price; what exists and what
   does not. It links docs rather than explaining how to use the tool.
+- **note**: one finding, and the number or the surprise in its first sentences; the
+  evidence itself — the command and its output, or the file at its commit — not a
+  summary of it; 300–700 words (past 800 the validator warns: it has outgrown the
+  kind, so say which kind it is); no `##` heading, or one over its last part. A
+  second finding is a second note, and a sentence the note survives without is padding.
 - **every kind** ends on what it does not know or has not built, and names its
   `project` when it is about one.
 

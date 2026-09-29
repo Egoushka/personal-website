@@ -160,6 +160,11 @@ export function getPostsByTopic(topic: string): PostMeta[] {
   return getAllPosts().filter((p) => (p.topics as string[]).includes(topic));
 }
 
+/** The posts of kind `note`, newest first: /notes/ lists them on their own (ADR 0009). */
+export function getNotes(): PostMeta[] {
+  return getAllPosts().filter((p) => p.kind === "note");
+}
+
 /** Every topic a post actually uses, with counts. */
 export function getTopicCounts(): { topic: string; count: number }[] {
   const counts = new Map<string, number>();
