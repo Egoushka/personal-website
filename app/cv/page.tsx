@@ -21,107 +21,99 @@ export default function CV() {
   // out of a dangling link.
   const hasPage = new Set(getTopicUsage().map((t) => t.slug));
 
+  /** A section of the sheet: its label in a column of its own on a wide screen, a band on paper. */
+  const SECTION = "cv-section grid gap-4 border-b py-10 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-12";
+
   return (
     <Shell current="cv" className="cv">
       <ProfilePageLd />
 
-      <div className="rail masthead-rail">
-        <a href={`mailto:${site.email}`}>{site.email}</a>
-        <a href={site.url}>{site.domain}</a>
-        <a href={site.github} rel="noopener">github.com/{site.githubHandle}</a>
-        <a href={site.linkedin} rel="noopener">linkedin.com/in/{site.linkedinHandle}</a>
-        <span>{site.location}</span>
-      </div>
       {/* Search indexes the record and nothing around it: the masthead and
           each section below carry data-pagefind-body. */}
-      <div className="masthead" data-pagefind-body>
-        <h1>{site.name}</h1>
-        <p className="role-title">{site.role}</p>
-      </div>
-
-      <PrintCv />
+      <header className="masthead border-b pt-10 pb-8 md:pt-14" data-pagefind-body>
+        <h1 className="font-display text-4xl font-semibold tracking-tight md:text-5xl">{site.name}</h1>
+        <p className="role-title mt-2 text-lg text-muted-foreground">{site.role}</p>
+        <div className="masthead-rail mt-5 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+          <a className="link" href={`mailto:${site.email}`}>{site.email}</a>
+          <a className="link" href={site.url}>{site.domain}</a>
+          <a className="link" href={site.github} rel="noopener">github.com/{site.githubHandle}</a>
+          <a className="link" href={site.linkedin} rel="noopener">linkedin.com/in/{site.linkedinHandle}</a>
+          <span className="text-muted-foreground">{site.location}</span>
+        </div>
+        <PrintCv />
+      </header>
 
       {/*
-        The record, told as eras.
-
-        Each era carries its own prose and one obstacle, and wraps the roles of
-        that period. **All of the prose is display:none in print** — the sheet
-        that comes out of Cmd+P is the ordinary reverse-chronological record a
-        reader expects, and the screen is the version that explains it.
-
-        Bullets that survive to paper are chosen by `printBullets` on the data,
-        not by `:nth-child` in the stylesheet: the markup is nested inside eras
-        now, and a positional rule would have kept working while quietly
-        counting the wrong thing.
+        The record, told as eras. Each era carries its own prose and one
+        obstacle, and wraps the roles of that period. All of the prose is
+        display:none in print: the sheet that comes out of Cmd+P is the ordinary
+        reverse-chronological record, and the screen is the version that
+        explains it. Bullets that survive to paper are chosen by `printBullets`
+        on the data, never by position in the stylesheet.
       */}
       {eras.map((era) => (
-        <React.Fragment key={era.slug}>
-          <hr className="bleed" />
-          <section
-            className={`row section cv-era${era.jobs.length === 0 ? " print-hide" : ""}`}
-            id={era.slug}
-            data-pagefind-body
-          >
-            <div className="rail">
-              {/* Paper gets one "Experience" label above the whole record;
-                  screen gets the era's years. Both live in the same rail, and
-                  the print sheet swaps which one is visible. */}
-              <span className="rail--label print-only">Experience</span>
-              <span className="rail--label screen-only">{era.years}</span>
-            </div>
-            <div>
-              <h2 className="era-title">{era.title}</h2>
-              {era.body.map((paragraph) => (
-                <p className="era-prose" key={paragraph.slice(0, 40)}>{paragraph}</p>
-              ))}
-              {era.obstacle && (
-                <p className="era-obstacle">
-                  <span className="era-obstacle-label">What went wrong</span>
-                  {era.obstacle}
-                </p>
-              )}
+        <section
+          className={`${SECTION} cv-era${era.jobs.length === 0 ? " print-hide" : ""}`}
+          id={era.slug}
+          key={era.slug}
+          data-pagefind-body
+        >
+          <div>
+            {/* Paper gets one "Experience" band above the whole record; screen
+                gets the era's years. */}
+            <p className="cv-section-label print-only">Experience</p>
+            <p className="cv-section-label screen-only lg:sticky lg:top-20">{era.years}</p>
+          </div>
+          <div className="min-w-0 max-w-3xl">
+            <h2 className="era-title font-display text-3xl font-semibold tracking-tight">{era.title}</h2>
+            {era.body.map((paragraph) => (
+              <p className="era-prose mt-4 text-lg leading-relaxed text-foreground/90" key={paragraph.slice(0, 40)}>
+                {paragraph}
+              </p>
+            ))}
+            {era.obstacle && (
+              <p className="era-obstacle">
+                <span className="era-obstacle-label">What went wrong</span>
+                {era.obstacle}
+              </p>
+            )}
 
-              {experience
-                .filter((job) => era.jobs.includes(job.company))
-                .map((job) => (
-                  <div className={`job${job.resumeCompact ? " job--compact" : ""}`} key={job.company + job.start}>
-                    <div className="job-head">
-                      <h3 className="job-name">{job.company}</h3>
-                      <span className="job-dates">{formatSpan(job, "numeric")}</span>
-                    </div>
-                    <p className="job-meta run">
-                      <span>{job.role}</span>{" "}
-                      {job.focus && <span>{job.focus}</span>}{" "}
-                      {job.location && <span>{job.location}</span>}{" "}
-                      {job.mode && <span>{job.mode}</span>}
-                    </p>
-                    <ul>
-                      {job.points.map((pt, j) => (
-                        <li key={j} className={j >= (job.printBullets ?? 0) ? "print-hide" : undefined}>
-                          {pt.text}
-                        </li>
-                      ))}
-                    </ul>
+            {experience
+              .filter((job) => era.jobs.includes(job.company))
+              .map((job) => (
+                <div className={`job${job.resumeCompact ? " job--compact" : ""}`} key={job.company + job.start}>
+                  <div className="job-head">
+                    <h3 className="job-name">{job.company}</h3>
+                    <span className="job-dates">{formatSpan(job, "numeric")}</span>
                   </div>
-                ))}
-            </div>
-          </section>
-        </React.Fragment>
+                  <p className="job-meta">
+                    {[job.role, job.focus, job.location, job.mode].filter(Boolean).join(" · ")}
+                  </p>
+                  <ul>
+                    {job.points.map((pt, j) => (
+                      <li key={j} className={j >= (job.printBullets ?? 0) ? "print-hide" : undefined}>
+                        {pt.text}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+          </div>
+        </section>
       ))}
 
-      <hr className="bleed" />
-      <section className="row section" data-pagefind-body>
-        <h2 className="rail rail--label">Projects</h2>
-        <div>
+      <section className={SECTION} data-pagefind-body>
+        <h2 className="cv-section-label">Projects</h2>
+        <div className="min-w-0 max-w-3xl">
           {projects.map((p) => (
             <div className={`job${p.print ? "" : " print-hide"}`} key={p.slug}>
               <div className="job-head">
                 <h3 className="job-name">
-                  {p.href ? <a href={p.href} rel="noopener">{p.name}</a> : p.name}
+                  {p.href ? <a className="link" href={p.href} rel="noopener">{p.name}</a> : p.name}
                 </h3>
                 <span className="job-dates">{p.lang}</span>
               </div>
-              <p className="job-meta run project-stack">{p.tech.slice(0, 6).flatMap((t) => [<span key={t}>{t}</span>, " "])}</p>
+              <p className="job-meta project-stack">{p.tech.slice(0, 6).join(" · ")}</p>
               {/* One line on paper. The full account is on the project's own
                   page; a CV bullet that runs four lines does not get read. */}
               <ul><li>{p.resumeLine ?? p.summary}</li></ul>
@@ -131,32 +123,30 @@ export default function CV() {
       </section>
 
       {/*
-        Skills, curated and grouped, each saying where it actually stands.
-        The list is chosen rather than derived from the topic vocabulary; the
+        Skills, curated and grouped, each saying where it actually stands: the
         honesty is in the second line, which has to be specific enough to be
-        wrong.
-
-        `Measured` prints the share of my editor time from my own Wakapi, and
-        renders nothing when the box is not publishing. On paper the second
+        wrong. `Measured` prints the share of my editor time from my own Wakapi,
+        and renders nothing when the box is not publishing. On paper the second
         lines are hidden and this compresses back to names.
       */}
-      <hr className="bleed" />
-      <section className="row section" data-pagefind-body>
-        <h2 className="rail rail--label"><Link prefetch={false} href="/skills/">Skills</Link></h2>
-        <div className="skill-groups">
+      <section className={SECTION} data-pagefind-body>
+        <h2 className="cv-section-label">
+          <Link className="hover:text-foreground" prefetch={false} href="/skills/">Skills</Link>
+        </h2>
+        <div className="skill-groups grid gap-8 sm:grid-cols-2">
           {skills.map((group) => (
             <div className="skill-group" key={group.group}>
-              <h3>{group.group}</h3>
-              <dl>
+              <h3 className="text-sm font-semibold">{group.group}</h3>
+              <dl className="mt-3 space-y-3">
                 {group.items.map((skill) => (
                   <React.Fragment key={skill.name}>
-                    <dt>
+                    <dt className="font-medium">
                       {skill.topic && hasPage.has(skill.topic)
-                        ? <Link prefetch={false} href={`/topics/${skill.topic}/`}>{skill.name}</Link>
+                        ? <Link className="link" prefetch={false} href={`/topics/${skill.topic}/`}>{skill.name}</Link>
                         : skill.name}
                       {skill.wakatime && <Measured lang={skill.wakatime} />}
                     </dt>
-                    <dd>{skill.now}</dd>
+                    <dd className="-mt-2 text-sm leading-relaxed text-muted-foreground">{skill.now}</dd>
                   </React.Fragment>
                 ))}
               </dl>
@@ -165,20 +155,16 @@ export default function CV() {
         </div>
       </section>
 
-      <hr className="bleed" />
-      <section className="row section" data-pagefind-body>
-        <h2 className="rail rail--label">Education</h2>
-        <div>
+      <section className={SECTION} data-pagefind-body>
+        <h2 className="cv-section-label">Education</h2>
+        <div className="min-w-0 max-w-3xl">
           {education.map((e) => (
             <div className="job edu" key={e.school}>
               <div className="job-head">
                 <h3 className="job-name">{e.school}</h3>
                 <span className="job-dates">{e.when}</span>
               </div>
-              <p className="job-meta run">
-                <span>{e.degree}</span>{" "}
-                <span>{e.detail}</span>
-              </p>
+              <p className="job-meta">{[e.degree, e.detail].filter(Boolean).join(" · ")}</p>
               <ul className="print-hide"><li>{e.note}</li></ul>
             </div>
           ))}

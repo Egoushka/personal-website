@@ -1,2519 +1,1795 @@
 /* hrabovskyi.online
    ---------------------------------------------------------------------------
-   Warm paper, one amber accent, two faces. The site reads like a person talking
-   about work they like, so the palette is warm rather than neutral and the
-   accent is allowed to be an accent — the previous design banned one on purpose
-   and shipped a site the colour of a tax return.
+   shadcn/ui on Tailwind CSS v4 (ADR 0007). Colour, radius and type are the
+   tokens below; pages and components are written in the utilities those tokens
+   generate, so a new page is assembled from the system rather than measured
+   out in pixels.
 
-   What survived that design: every figure on this site is counted at build time
-   (lib/readings.ts). That is what keeps an informal voice from reading as an
-   unserious one, and it costs nothing to carry into a friendlier palette.
+   Component CSS remains only where utilities would be worse than a stylesheet:
+   rendered markdown (posts and docs), code blocks, the contents list, the docs
+   grid, search results, the home panel's figures, the skills board, the journey
+   chart, and the CV's A4 print sheet.
 
-   Contrast ratios in comments are computed, not estimated (WCAG 2.1). Every one
-   of them is a floor a replacement colour has to clear.
+   Contrast ratios in comments are computed (WCAG 2.1), not estimated, and each
+   is a floor a replacement colour has to clear.
    ------------------------------------------------------------------------- */
 
-:root {
-  /* --- typefaces (next/font, self-hosted — see app/layout.tsx) ------------ */
-  /* One family sets the whole site now. Literata was a serif at 19px on a
-     1.72 leading — an editorial setting, and the single thing that made this
-     site read as older than it is. Every reference in this class (Linear,
-     Vercel, the people who design for them) sets a grotesk around 15-16px at
-     ~1.55 and spends the room it saves on whitespace instead. */
-  --prose:  var(--font-prose), -apple-system, system-ui, "Segoe UI", sans-serif;
-  /* Titles. A display grotesk against a neutral one and a monospace rail is
-     three voices; one grotesk at three sizes is a gradient, which is what this
-     site had and why every page read the same. Falls through to the system UI
-     face for anything outside latin. */
-  --display: var(--font-display), -apple-system, system-ui, sans-serif;
-  /* Metadata, rails, kickers and counted figures. Monospace on purpose: it is
-     the same job the small-caps label used to do, and it reads as a developer
-     rather than as a broadsheet. */
-  --figure: ui-monospace, SFMono-Regular, Menlo, monospace;
-  --code:   ui-monospace, SFMono-Regular, Menlo, monospace;
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
-  /* --- colour: DARK is the default theme ----------------------------------
-     Cool near-black, not warm sepia. #191714 and a cream ink are PRINT
-     colours: they say paper, and a site that says paper reads as a decade
-     old. The reference value in this class is Linear's #08090a.
-
-     Contrast ratios are computed, not estimated (WCAG 2.1), and every one is
-     a floor a replacement has to clear. */
-  --paper:     #0A0B0D;
-  --ink:       #F2F4F6;   /* 18.2:1 on --paper — prose and headings          */
-  --ink-2:     #98A0A8;   /*  7.4:1 on --paper — figures, labels, detail     */
-  --rule:      #1E2126;   /* DECORATIVE ONLY — hairlines between rows        */
-  --rule-firm: #5B616A;   /*  3.1:1 on --paper — every control edge          */
-  --accent:    #F2A03D;   /*  9.2:1 on --paper — links, and only links       */
-  --warn:      #E2725B;   /*  5.6:1 on --paper — only ever "this broke"      */
-
-  /* Raised surfaces are mixed from the ink so a theme change carries them. */
-  --surface:   color-mix(in srgb, var(--ink) 4%, var(--paper));
-  --surface-2: color-mix(in srgb, var(--ink) 8%, var(--paper));
-  --accent-quiet: color-mix(in srgb, var(--accent) 22%, var(--paper));
-
-  /* --- grid ---------------------------------------------------------------- */
-  --rail:    168px;
-  --gutter:   40px;
-  /* The column. Code, tables, figures and the panel use all of it; prose stops
-     at --read. 640px of Inter sets about 80 characters per line. */
-  --measure: 640px;
-  /* The reading measure: about 66 characters per line of Inter at any size
-     (measured 2026-09 on a project page: 640px set ~80). Every block of prose
-     stops here. In em, never ch: `ch` is Inter's zero, 0.625em, about 1.25
-     characters, so "66ch" sets ~82. */
-  --read:    33em;
-  --bleed:   calc(var(--rail) + var(--gutter) + var(--measure));
-
-  /* --- type: ONE modular scale ----------------------------------------------
-     Eight steps, fluid between a 360px and a 1280px viewport. Every size on
-     this site resolves to one of them.
-
-     RATIO. 1.200 (minor third) at 360px widening to 1.250 (major third) at
-     1280px, so the hierarchy opens up where there is room for it and a 44px
-     page title stops eating half the fold on a phone. The two DESCENDING
-     steps use a flat 1.180 instead, deliberately: small text has almost no
-     room to lose before it stops being legible, so the bottom of a scale
-     should compress rather than mirror the top.
-
-     This is what was wrong before. Four sizes — 11, 13, 14, 15.5 — were
-     crowded into the bottom 1.4x, two of them 7% apart, while a single step
-     at the top spanned 1.63x (27 → 44). So labels and metadata were an
-     indistinguishable grey mush and there was no tier at all between a
-     sub-heading and a page title.
-
-     Steps are PRIMITIVES. Nothing outside this block references them: use the
-     semantic aliases below, and when something needs a size that is not
-     there, add an alias rather than a number. @media print redeclares all
-     eight in pt, because a `vw` unit must never reach paper. */
-  --step--2:   clamp(0.6956rem, 0.6780rem + 0.0783vw, 0.7406rem);   /* 11.13 → 11.85 */
-  --step--1:   clamp(0.8213rem, 0.8007rem + 0.0913vw, 0.8738rem);   /* 13.14 → 13.98 */
-  --step-0:    clamp(0.9688rem, 0.9443rem + 0.1087vw, 1.0312rem);   /* 15.50 → 16.50 */
-  --step-1:    clamp(1.1625rem, 1.1131rem + 0.2196vw, 1.2888rem);   /* 18.60 → 20.62 */
-  --step-2:    clamp(1.3950rem, 1.3104rem + 0.3761vw, 1.6113rem);   /* 22.32 → 25.78 */
-  --step-3:    clamp(1.6738rem, 1.5405rem + 0.5924vw, 2.0144rem);   /* 26.78 → 32.23 */
-  --step-4:    clamp(2.0088rem, 1.8097rem + 0.8848vw, 2.5175rem);   /* 32.14 → 40.28 */
-  --step-5:    clamp(2.4106rem, 2.1225rem + 1.2804vw, 3.1469rem);   /* 38.57 → 50.35 */
-
-  /* --- type: what each step is FOR -------------------------------------------
-     `--fs-small` and `--fs-code` resolve to the same step now. They were 14px
-     and 13px: a 7% difference nobody can perceive, maintained in sixty
-     places. `--fs-title` is the tier that did not exist — a title inside a
-     list, which must sit below any section heading above it. */
-  --fs-rail:    var(--step--2);   /* micro labels, uppercase, tracked   */
-  --fs-code:    var(--step--1);   /* code, and monospace metadata       */
-  --fs-small:   var(--step--1);   /* secondary prose: excerpts, notes   */
-  --fs-body:    var(--step-0);    /* anything read at length            */
-  --fs-h3:      var(--step-1);    /* lede, h3, run-in titles            */
-  --fs-title:   var(--step-2);    /* a title in a list — under any h2   */
-  --fs-h2:      var(--step-3);    /* section heads                      */
-  --fs-h1:      var(--step-4);    /* page titles                        */
-  --fs-display: var(--step-5);    /* hero, CV masthead, 404             */
-
-  /* --- leading: a function of size AND measure -------------------------------
-     Leading tracks line length, not taste. `--lh-body` is set for the
-     ~66-character line that `--read` produces; every step above it gets tighter as it
-     gets bigger, because a 50px line nineteen characters long needs none of
-     the 1.6 a 66-character line does. Do not put `--lh-body` on anything
-     narrower than ~45ch: it reads as a list, not a paragraph. */
-  --lh-flat:  1.04;   /* step 5,  ≤19ch  */
-  --lh-tight: 1.10;   /* step 4,  ≤24ch  */
-  --lh-head:  1.18;   /* step 3,  ≤30ch  */
-  --lh-snug:  1.28;   /* step 2,  ≤40ch  */
-  --lh-lede:  1.45;   /* step 1,  ≤56ch  */
-  --lh-body:  1.60;   /* step 0,  60-70ch */
-  --lh-rail:  1.45;   /* steps -1/-2, short runs */
-  --lh-code:  1.65;
-
-  /* Tracking tightens as size grows — the display face is a grotesk and wants
-     it. Below step 0 it goes POSITIVE, which is the whole reason 11px
-     uppercase is readable rather than a smudge. */
-  --ls-display: -0.034em;
-  --ls-h1:      -0.028em;
-  --ls-h2:      -0.024em;
-  --ls-h3:      -0.015em;
-  --ls-rail:     0.08em;
-  --ls-label:    0.14em;
-
-  /* --- weight and ink: the other half of the hierarchy -----------------------
-     Rank by weight and ink before reaching for size. Three weights, three
-     inks, and the accent is still only ever a link:
-       primary    --ink   + --w-med or --w-head
-       secondary  --ink-2 + --w-body, at the SAME size as its parent
-       metadata   --ink-2 + --figure at --fs-rail / --fs-code */
-  --w-body: 400;
-  --w-med:  500;
-  --w-head: 600;   /* Bricolage is wider and softer than Inter; 560 read thin */
-
-  /* --- space: 4px rhythm --------------------------------------------------- */
-  --s-1:  4px;  --s-2:  8px;  --s-3: 12px; --s-4: 16px;
-  --s-5: 20px;  --s-6: 26px;  --s-7: 34px; --s-8: 44px;
-  --s-9: 54px;  --s-10: 72px;
-
-  --radius: 10px;
-  --hair:   1px;
+/* `dark:` follows the site's own switch: a stored choice (`data-theme`, set
+   before paint by the script in app/layout.tsx) wins, and without one the OS
+   decides. Most components never need it — the tokens switch underneath them. */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
 }
 
-/* --- colour: LIGHT -----------------------------------------------------------
-   A true white rather than warm stock, for the same reason the dark theme is
-   cool: #FBF8F2 is paper. Only the seven colour tokens are redeclared;
-   everything mixed from them follows on its own.
+/* --- tokens: DARK is the default ------------------------------------------- */
+:root {
+  color-scheme: dark;
+  --radius: 0.625rem;
 
-   [data-theme] is honoured first so the toggle wins, and the media query
-   mirrors it for everyone who has not touched it. */
+  --background: #0a0b0d;
+  --foreground: #f2f4f6;           /* 18.2:1 on --background */
+  --card: #111215;
+  --card-foreground: #f2f4f6;
+  --popover: #111215;
+  --popover-foreground: #f2f4f6;
+  --primary: #f2f4f6;
+  --primary-foreground: #0a0b0d;
+  --secondary: #1b1d21;
+  --secondary-foreground: #f2f4f6;
+  --muted: #16181b;
+  --muted-foreground: #98a0a8;     /*  7.4:1 — metadata, descriptions, labels */
+  --accent: #1c1e22;               /* hover and current surfaces, not a colour */
+  --accent-foreground: #f2f4f6;
+  --destructive: #e2725b;          /*  5.6:1 — only ever "this broke" */
+  --border: #23262b;               /* decorative: cards, rules, table lines */
+  --input: #5b616a;                /*  3.1:1 — the edge of every control */
+  --ring: #f2a03d;
+  /* The one colour: links, the current item, focus. */
+  --brand: #f2a03d;                /*  9.2:1 */
+  --brand-foreground: #0a0b0d;
+
+  /* Status and callouts. Each sits beside a word or a shape, never alone. */
+  --success: #4ade80;
+  --warning: #f2a03d;
+  --info: #60a5fa;
+  --tip: #4ade80;
+  --important: #a78bfa;
+  --caution: #f87171;
+}
+
+/* --- tokens: LIGHT --------------------------------------------------------
+   [data-theme] first so the toggle wins; the media query mirrors it for
+   everyone who has not touched it. Only tokens are redeclared. */
 [data-theme="light"] {
-  --paper:     #FFFFFF;
-  --ink:       #0D0E10;   /* 19.1:1 on --paper */
-  --ink-2:     #5B6169;   /*  6.2:1 on --paper */
-  --rule:      #E9EBEE;
-  --rule-firm: #8A9099;   /*  3.3:1 on --paper — non-text AA */
-  --accent:    #A85D08;   /*  5.1:1 on --paper */
-  --warn:      #A63B22;   /*  5.9:1 on --paper */
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #0d0e10;           /* 19.1:1 */
+  --card: #ffffff;
+  --card-foreground: #0d0e10;
+  --popover: #ffffff;
+  --popover-foreground: #0d0e10;
+  --primary: #0d0e10;
+  --primary-foreground: #ffffff;
+  --secondary: #f2f3f5;
+  --secondary-foreground: #0d0e10;
+  --muted: #f5f6f7;
+  --muted-foreground: #5b6169;     /*  6.2:1 */
+  --accent: #f0f1f3;
+  --accent-foreground: #0d0e10;
+  --destructive: #a63b22;          /*  5.9:1 */
+  --border: #e4e6ea;
+  --input: #8a9099;                /*  3.3:1 */
+  --ring: #a85d08;
+  --brand: #a85d08;                /*  5.1:1 */
+  --brand-foreground: #ffffff;
+  --success: #15803d;
+  --warning: #a85d08;
+  --info: #2563eb;
+  --tip: #15803d;
+  --important: #7c3aed;
+  --caution: #dc2626;
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
-    --paper:     #FFFFFF;
-    --ink:       #0D0E10;
-    --ink-2:     #5B6169;
-    --rule:      #E9EBEE;
-    --rule-firm: #8A9099;
-    --accent:    #A85D08;
-    --warn:      #A63B22;
     color-scheme: light;
+    --background: #ffffff;
+    --foreground: #0d0e10;
+    --card: #ffffff;
+    --card-foreground: #0d0e10;
+    --popover: #ffffff;
+    --popover-foreground: #0d0e10;
+    --primary: #0d0e10;
+    --primary-foreground: #ffffff;
+    --secondary: #f2f3f5;
+    --secondary-foreground: #0d0e10;
+    --muted: #f5f6f7;
+    --muted-foreground: #5b6169;
+    --accent: #f0f1f3;
+    --accent-foreground: #0d0e10;
+    --destructive: #a63b22;
+    --border: #e4e6ea;
+    --input: #8a9099;
+    --ring: #a85d08;
+    --brand: #a85d08;
+    --brand-foreground: #ffffff;
+    --success: #15803d;
+    --warning: #a85d08;
+    --info: #2563eb;
+    --tip: #15803d;
+    --important: #7c3aed;
+    --caution: #dc2626;
   }
 }
 
-/* ============================================================================
-   THE GRID PRIMITIVE
-   One rule drives every page. Children default to the prose column; they opt
-   into the rail or a bleed with a class.
-   ========================================================================= */
+/* The utilities: `bg-card`, `text-muted-foreground`, `border-input`, `rounded-xl`,
+   `font-display`… all resolve to the tokens above. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-tip: var(--tip);
+  --color-important: var(--important);
+  --color-caution: var(--caution);
 
-.wrap {
-  position: relative;
-  z-index: 2;
-  display: grid;
-  grid-template-columns: var(--rail) minmax(0, var(--measure));
-  gap: var(--s-5) var(--gutter);
-  justify-content: center;
-  padding-inline: var(--s-6);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  /* Inter reads everything; Bricolage Grotesque sets display titles only, never
+     below ~26px; code and figures use the system monospace. All self-hosted
+     through next/font (app/layout.tsx). */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-bricolage), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
-.wrap > *           { grid-column: 2; }        /* prose column — the default  */
-.wrap > .rail       { grid-column: 1; }        /* metadata                    */
-.wrap > .bleed      { grid-column: 1 / -1; }   /* section rules, wide figures */
-
-/* A rail child and its prose sibling must share a row. Wrap the pair in `.row`
-   when they must align to the same baseline. */
-.row {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: var(--rail) minmax(0, var(--measure));
-  gap: 0 var(--gutter);
+/* A link inside running text: ink, with the brand colour as its underline.
+   UI links (nav, cards, buttons) carry no underline and use their own states. */
+@utility link {
+  color: var(--foreground);
+  text-decoration-line: underline;
+  text-decoration-color: color-mix(in oklab, var(--brand) 55%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  transition: text-decoration-color 0.15s;
+  &:hover {
+    text-decoration-color: var(--brand);
+  }
 }
-.row > .rail       { grid-column: 1; }
-.row > *           { grid-column: 2; }
-
-/* Reading text stops at --read inside the wider column, at every width. Not
-   .wrap or .row themselves: code, tables, figures and the panel use the width.
-   A classed <p> in a row is an item — a byline, a figure line, an /about/ row —
-   not running prose; wrapping one sentence onto a second line reads worse, so
-   items keep the column. */
-.prose > p, .prose > ul, .prose > ol, .prose > blockquote,
-.row > p:not([class]) { max-inline-size: var(--read); }
-.row > p[class]       { max-inline-size: var(--measure); }
 
 /* ============================================================================
    BASE
    ========================================================================= */
 
-* { box-sizing: border-box; }
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--border);
+  }
 
-html {
-  color-scheme: dark;
-  scroll-behavior: smooth;
-  scroll-padding-top: var(--s-6);
-  /* Reserve the scrollbar on every page, scrolling or not. Without it a short
-     page (/writing/, with two posts) centres its grid 7.5px right of a long
-     one and the whole site shifts under the reader on every click. */
-  scrollbar-gutter: stable;
-}
-[data-theme="light"] { color-scheme: light; }
+  html {
+    scroll-behavior: smooth;
+    /* The sticky header must not cover a heading a link just scrolled to. */
+    scroll-padding-top: 5rem;
+    /* Reserve the scrollbar on every page, scrolling or not, so a short page
+       does not centre its content a few pixels right of a long one. */
+    scrollbar-gutter: stable;
+  }
 
-body {
-  margin: 0;
-  background: var(--paper);
-  color: var(--ink);
-  font: 400 var(--fs-body)/var(--lh-body) var(--prose);
-  letter-spacing: -0.006em;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    /* Inter's single-storey a and open digits read better at text sizes. */
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
 
-/* Grain. A flat near-black is a void; a little noise makes it a surface. It is
-   four lines of inline SVG rather than an image request, it never visibly
-   repeats, and it is `pointer-events: none` so it can sit over everything. */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  opacity: .05;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-[data-theme="light"] body::before { opacity: .035; }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
 
-/* h1 and h2 are the display face; h3 stays Inter.
+  ::selection {
+    background: color-mix(in oklab, var(--brand) 32%, transparent);
+  }
 
-   The cut-off is size, not level. Bricolage earns its keep at 27px and up,
-   where the flat bowls and the cut terminals are visible; at 19px it is a
-   grotesk next to a grotesk and the reader gets a second font for nothing. So
-   it takes the two levels that are always large, which also means a post's
-   sub-subheads read as a different kind of thing from its sections rather than
-   a smaller copy of them.
+  /* Nothing in this file may remove the outline without replacing it. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
 
-   600 rather than --w-head's 560: this face is wider and softer than Inter and
-   needs the extra weight to hold a title. */
-h1, h2, h3 {
-  color: var(--ink);
-  text-wrap: balance;
-}
-h1, h2 {
-  font-family: var(--display);
-  font-weight: 600;
-  letter-spacing: var(--ls-h1);
-}
-h1 { font-size: var(--fs-h1); line-height: var(--lh-tight); }
-h2 { font-size: var(--fs-h2); line-height: var(--lh-head); letter-spacing: var(--ls-h2); }
-h3 {
-  font-size: var(--fs-h3); line-height: var(--lh-snug);
-  font-weight: var(--w-med); letter-spacing: var(--ls-h3);
-}
-p  { text-wrap: pretty; }
+  :not(pre) > code {
+    font-family: var(--font-mono);
+  }
 
-/* A link is ink with an amber rule under it.
-
-   The accent used to BE the link — coloured text, everywhere. That worked, and
-   it cost the site two things. Amber text at --fs-small is the lightest thing
-   on the page and it was carrying the most important job; and because colour
-   meant "link", nothing else was allowed to use colour, so every other kind of
-   emphasis had to be invented out of weight and underlines anyway.
-
-   Now the underline carries it. Ink text keeps prose at 14.7:1 (dark) and
-   16.4:1 (light) instead of the accent's 8.1/5.1, the amber survives as the
-   signal rather than the substance, and `aria-current` in the nav — already an
-   amber underline before this change — stops being a special case. */
-a {
-  color: inherit;
-  text-decoration-line: underline;
-  /* Not full amber. A page with five links stacked in the rail and twenty in a
-     chip list was reading as a page of yellow lines — the signal was louder
-     than the thing it pointed at. Half-strength at rest, full on hover, and
-     further off the baseline so it stops touching the descenders. */
-  text-decoration-color: color-mix(in srgb, var(--accent) 50%, transparent);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
-}
-a:hover { text-decoration-color: var(--accent); text-decoration-thickness: 2px; }
-
-/* Inline code stays mono inside serif prose: 0.9em keeps the x-heights level.
-   A proportional face renders `--inplace` and `workflow_dispatch` badly — never
-   let inline code inherit the prose serif or the figure sans. */
-:not(pre) > code {
-  font: 400 0.9em/1 var(--code);
-  background: var(--surface);
-  border: var(--hair) solid var(--rule);
-  border-radius: var(--radius);
-  padding: 1px 4px;
-}
-
-/* Nothing in this file may set outline:none without replacing it. */
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after {
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
-.skip-link {
-  position: absolute;
-  left: var(--s-2);
-  top: -100px;
-  z-index: 100;
-  font: 400 var(--fs-code)/1 var(--figure);
-  padding: 10px 14px;
-  background: var(--surface);
-  border: var(--hair) solid var(--rule-firm);
-  color: var(--ink);
-  transition: top .15s;
-}
-.skip-link:focus { top: var(--s-2); text-decoration: none; }
-
-/* Screen-reader-only text that still ships to assistive tech. */
-.visually-hidden {
-  position: absolute; width: 1px; height: 1px;
-  padding: 0; margin: -1px; overflow: hidden;
-  clip-path: inset(50%); white-space: nowrap; border: 0;
-}
-
 /* ============================================================================
-   THE RAIL — metadata in the margin
+   CHROME — skip link, hidden text, controls that need JavaScript
    ========================================================================= */
 
-.rail {
-  font: 400 var(--fs-rail)/var(--lh-rail) var(--figure);
-  letter-spacing: var(--ls-rail);
-  color: var(--ink-2);
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-width: 0;
-}
-
-/* Align the rail's first baseline to the prose's. */
-.row > .rail        { padding-top: 0.42em; }   /* against h2 */
-.rail--against-body { padding-top: 0.30em; }   /* against p  */
-
-/* Headings that live in the rail are metadata, not content: they must not
-   inherit the prose heading treatment. `text-wrap: balance` in particular
-   splits short labels across two lines to balance them. */
-.rail h1, .rail h2, .rail h3 {
-  text-wrap: initial;
-  font-family: inherit;       /* NOT the display serif — the rail is monospace */
-  font-weight: inherit;
-  font-size: inherit;
-  line-height: inherit;
-  letter-spacing: inherit;
-  color: inherit;
-  margin: 0;
-}
-
-.rail a:hover { text-decoration-thickness: 2px; }
-
-/* Group label: sits above a hairline and introduces the stack beneath it. */
-/* THE MICRO LABEL. This recipe existed in six places, every one of them typed
-   out at 10.5px — outside the scale, and the single biggest reason labels and
-   metadata read as one undifferentiated grey. It is one declaration now and it
-   resolves to step -2. */
-.rail--label {
-  font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
-  letter-spacing: var(--ls-label);
-  text-transform: uppercase;
-  color: var(--ink-2);
-}
-.rail--group {
-  border-top: var(--hair) solid var(--rule);
-  padding-top: 14px;
-  margin-top: var(--s-3);
-}
-
-/* Paper and screen want different words in the same slot. */
-.print-only { display: none; }
-
-/* A count beside a name must not read as part of it ("C# / .NET 9"). The
-   markup carries a hidden unit; where name and count share a colour — the
-   topic run — a hairline sets the count apart. A chip's border already does. */
-.rail-count {
-  color: var(--ink-2);
-  font-variant-numeric: tabular-nums;
-  margin-inline-start: var(--s-2);
-}
-.topic-run .rail-count {
-  padding-inline-start: var(--s-2);
-  border-inline-start: var(--hair) solid currentColor;
-}
-
-/* ============================================================================
-   SITE HEADER / FOOTER
-   ========================================================================= */
-
-/* The header sits in its own .wrap, above <main>, where the grid's row gap
-   cannot reach it; this margin is that gap. */
-.site-header {
-  padding: var(--s-6) 0 var(--s-4);
-  margin-bottom: var(--s-5);
-  border-bottom: var(--hair) solid var(--rule);
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s-5);
-  flex-wrap: wrap;
-}
-.site-header .brand {
-  display: inline-flex;
-  align-items: center;
-  min-height: 24px;      /* WCAG 2.5.8: line-height 1 left it 17px tall */
-  margin-block: calc((1lh - 24px) / 2);   /* the target grows, the line does not */
-  font: var(--w-head) var(--fs-body)/1 var(--prose);
-  letter-spacing: -0.015em;
-  color: var(--ink);
-  text-decoration: none;
-}
-.site-header .brand:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
-
-.site-header-end { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
-.site-header-controls { display: flex; align-items: center; gap: var(--s-2); }
-.site-header nav { display: flex; gap: 20px; flex-wrap: wrap; }
-.site-header nav a {
-  font: var(--w-body) var(--fs-small)/1 var(--prose);
-  color: var(--ink-2);
-  text-decoration: none;
-  /* WCAG 2.5.8 — the densest control cluster on the site. */
-  display: inline-flex; align-items: center; min-height: 24px;
-}
-.site-header nav a:hover { color: var(--ink); }
-/* The current section is underlined rather than recoloured: colour means link. */
-.site-header nav a[aria-current="page"] {
-  color: var(--ink);
-  text-decoration: underline;
-  text-decoration-color: var(--accent);
-  text-decoration-thickness: 2px;
-  text-underline-offset: 5px;
-}
-
-/* A run like any other, plus a row gap: wrapped, its 24px targets would
-   otherwise overlap the row above. */
-.site-footer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-2) var(--s-5);
-  margin-top: var(--s-10);
-  padding: var(--s-6) 0;
-  border-top: var(--hair) solid var(--rule);
-  font: 400 var(--fs-rail)/var(--lh-rail) var(--figure);
-  letter-spacing: var(--ls-rail);
-  color: var(--ink-2);
-}
-/* Standalone links, so no inline-text exception: 24px tall (WCAG 2.5.8). The
-   negative margin keeps the line where it was; only the target grows. */
-.site-footer a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 24px;
-  margin-block: calc((1lh - 24px) / 2);
-  color: var(--ink-2);
-  text-decoration: none;
-}
-.site-footer a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
-
-/* ============================================================================
-   BYLINE — who wrote this and how to reach me, where a reader finishes
-   ========================================================================= */
-
-.byline {
-  font: 400 var(--fs-small)/1.5 var(--figure);
-  color: var(--ink-2);
-  margin: 0;
-}
-/* A line of targets, not a sentence, so each gets the 24px floor (WCAG 2.5.8). */
-.byline a { display: inline-flex; align-items: center; min-height: 24px; }
-
-/* ============================================================================
-   RULES
-   ========================================================================= */
-
-hr.bleed {
-  border: 0;
-  border-top: var(--hair) solid var(--rule);
-  margin: var(--s-7) 0 var(--s-4);
-  width: 100%;
-}
-
-/* ============================================================================
-   PAGE HEADS
-   Every page opens the same way: title, one line of counted figures, a lede.
-   ========================================================================= */
-
-.page-head { padding-top: var(--s-8); }
-.page-head h1 { margin: 0; }
-/* No visible title, so the figures line is the first thing and the block that
-   was reserving room for a 40px heading should stop. */
-.page-head--quiet { padding-top: var(--s-7); }
-.page-head--quiet .page-figures { margin-top: 0; }
-/* A quiet head with no figures and no lede renders nothing at all, so it must
-   not go on reserving the room a title would have taken. /skills/ opens on its
-   filter; the space above it belongs to the header rule, not to a ghost. */
-.page-head--quiet:not(:has(.page-figures)):not(:has(.page-lede)) { padding-top: 0; }
-
-/* A RUN — several facts on one line, separated by space. A flex line with a
-   gap: the separator is the absence of a glyph, so it cannot drift between
-   call sites.
-
-   Children must be elements, not bare text: an anonymous flex item gets no
-   gap. And put a {" "} between them — flex ignores a whitespace-only node, but
-   without one, extracted text (search excerpts, reader mode) runs the facts
-   together: "28 July 2026982 words". */
-.run, .page-figures, .home-status, .post-row .post-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 var(--s-5);
-}
-
-.page-figures {
-  font: 400 var(--fs-small)/1.5 var(--figure);
-  font-variant-numeric: tabular-nums;
-  color: var(--ink-2);
-  margin: var(--s-3) 0 0;
-}
-
-/* Ink, and a step above body. It is the first sentence anyone reads on the
-   page; setting it in the same grey as a timestamp said it was optional. */
-.page-lede {
-  max-width: var(--read);
-  margin: var(--s-5) 0 0;
-  font-size: var(--fs-h3);
-  line-height: 1.5;
-  color: var(--ink);
-}
-
-/* ============================================================================
-   PROSE
-   ========================================================================= */
-
-/* The article is a subgrid of .wrap, not a block inside the measure column.
-   Without this, a `.row` nested in the article gets its own full-width grid
-   inside a 660px column: the rail has nothing to align to and code overflows. */
-.prose {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: subgrid;
-  row-gap: 22px;
-  align-content: start;
-}
-.prose > *           { grid-column: 2; }
-.prose > .bleed      { grid-column: 1 / -1; }
-
-/* THE POST BODY — a block in the prose column, not a subgrid.
-   The article used to span both columns so a header rail could sit beside the
-   h1 and section marks in the margin. Both are gone: the rail is now a sticky
-   sidebar for the whole post (.post-aside), which cannot share a column with
-   anything. A flex column keeps the 22px rhythm the grid's row-gap gave. */
-.post-body {
-  grid-column: 2;
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-}
-
-/* TABLES — lib/tables.ts wraps each one in a scroll region and labels its cells.
-   Hairlines and a small-caps header, not a box: the same treatment as every
-   other list on the site. The region scrolls a numeric table's columns in place,
-   so a wide grid never makes the page scroll sideways. */
-.table-scroll {
-  min-width: 0;
-  max-width: 100%;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scrollbar-width: thin;
-}
-.prose table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--fs-small);
-  line-height: 1.5;
-  font-variant-numeric: tabular-nums;
-}
-.prose th {
-  padding: 0 var(--s-5) var(--s-2) 0;
-  border-bottom: var(--hair) solid var(--rule-firm);
-  text-align: left;
-  vertical-align: bottom;
-  white-space: nowrap;
-  font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
-  letter-spacing: var(--ls-label);
-  text-transform: uppercase;
-  color: var(--ink-2);
-}
-.prose td {
-  padding: var(--s-3) var(--s-5) var(--s-3) 0;
-  border-bottom: var(--hair) solid var(--rule);
-  vertical-align: top;
-  overflow-wrap: anywhere;
-}
-.prose th:last-child, .prose td:last-child { padding-right: 0; }
-.prose td:first-child { font-weight: 600; min-width: 9em; }
-.prose td > code, .prose td > a > code { white-space: normal; }
-
-/* Status is a word and a shape, never a colour alone: filled, half, hollow. */
-.prose td[data-status] {
-  white-space: nowrap;
-  font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
-  letter-spacing: var(--ls-rail);
-  text-transform: uppercase;
-}
-.prose td[data-status]::before { margin-right: var(--s-2); }
-.prose td[data-status="works"]::before { content: "\25CF"; }
-.prose td[data-status="partial"]::before { content: "\25D0"; }
-.prose td[data-status="not yet"]::before { content: "\25CB"; }
-.prose td[data-status="partial"], .prose td[data-status="not yet"] { color: var(--ink-2); }
-
-/* A table with a long cell stacks on a narrow screen: each row becomes a block,
-   its first cell the title and every other cell under its header. The header
-   row stays in the tree, clipped, for the roles lib/tables.ts gives it. */
-@media (max-width: 700px) {
-  .table--text thead {
-    position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%);
+@layer components {
+  .skip-link {
+    position: absolute;
+    left: 0.5rem;
+    top: -100px;
+    z-index: 100;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--input);
+    border-radius: var(--radius-md);
+    background: var(--card);
+    color: var(--foreground);
+    font-size: 0.875rem;
+    transition: top 0.15s;
   }
-  .table--text, .table--text tbody, .table--text tr, .table--text td { display: block; }
-  .table--text tr { padding: var(--s-4) 0; border-bottom: var(--hair) solid var(--rule); }
-  .table--text tr:first-child { padding-top: 0; }
-  .table--text td { padding: 0; border: 0; min-width: 0; }
-  .table--text td + td { margin-top: var(--s-2); }
-  .table--text td:first-child { font-size: var(--fs-body, 1em); }
-  .table--text td[data-label]:not(:first-child):not([data-status])::before {
-    content: attr(data-label);
-    display: block;
-    font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
-    letter-spacing: var(--ls-label);
-    text-transform: uppercase;
-    color: var(--ink-2);
+  .skip-link:focus {
+    top: 0.5rem;
   }
-  .table--text.table--pairs td::before { display: none; }
-  /* A status cell has no label of its own: its shape and word are the label. */
-}
 
-.prose p            { margin: 0; }
-/* An unbroken token — an environment assignment, a long path, a URL — wraps at
-   the column edge rather than pushing the page sideways. Only when it must:
-   `anywhere` breaks a word only if it would otherwise overflow. */
-.prose :not(pre) > code, .prose a { overflow-wrap: anywhere; }
-.prose h2           { margin: 0; }
-.prose h3           { margin: var(--s-6) 0 0; }
-.prose ul, .prose ol { margin: 0; padding-left: 1.1em; }
-.prose li + li      { margin-top: var(--s-1); }
-.prose ul li::marker { content: "– "; color: var(--ink-2); }
-.prose strong       { font-weight: 600; }
-.prose em           { font-style: italic; }
-.prose blockquote {
-  margin: 0;
-  border-left: 2px solid var(--accent);
-  padding-left: 18px;
-  color: var(--ink-2);
-}
-.prose img { max-width: 100%; height: auto; }
-
-/* Section numbers are a CSS counter, so the markdown pipeline never has to know
-   about them, and each is its section's permalink. They sit on their own line
-   above the heading: in the margin they would collide with the sticky contents
-   list, which owns that column. */
-main { counter-reset: sect; }
-.sect-mark {
-  display: flex;
-  align-items: center;
-  width: fit-content;
-  min-height: 24px;                     /* WCAG 2.5.8 */
-  font: var(--w-head) var(--fs-rail)/1 var(--figure);
-  letter-spacing: var(--ls-label);
-  color: var(--accent);
-  text-decoration: none;
-  counter-increment: sect;
-}
-.sect-mark::before { content: "§ " counter(sect, decimal-leading-zero); }
-.sect-mark:hover { text-decoration: underline; text-underline-offset: 2px; }
-
-/* A note that the post was corrected, above the body it corrects. */
-.post-correction {
-  font-size: var(--fs-small);
-  color: var(--ink-2);
-  border-left: 2px solid var(--rule-firm);
-  padding-left: 18px;
-}
-.post-correction .rail--label { margin-inline-end: var(--s-2); }
-
-/* Confirmation of where you landed, for free — the zero-JS current-item mark. */
-.prose h2:target { color: var(--accent); }
-
-/* ============================================================================
-   CODE BLOCKS
-   ========================================================================= */
-
-pre {
-  background: var(--surface);
-  border: var(--hair) solid var(--rule);
-  border-radius: var(--radius);
-  padding: var(--s-4) 18px;
-  font: 400 var(--fs-code)/var(--lh-code) var(--code);
-  overflow-x: auto;
-  margin: 0;
-}
-pre code { background: none; border: none; padding: 0; font: inherit; }
-
-/* Shiki dual themes. Shiki inlines both palettes as CSS variables per token;
-   these rules pick one. No client JS, no flash, no second stylesheet. */
-.shiki, .shiki span { color: var(--s-dark); background-color: transparent; }
-:root[data-theme="light"] .shiki,
-:root[data-theme="light"] .shiki span { color: var(--s-light); }
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) .shiki,
-  :root:not([data-theme="dark"]) .shiki span { color: var(--s-light); }
-}
-
-/* A code block is one object: a header carrying the language and the copy
-   button, and the code under it, sharing the left edge of the prose, so the
-   control sits on the block it acts on. */
-figure.code {
-  margin: 0;
-  border: var(--hair) solid var(--rule);
-  border-radius: var(--radius);
-  background: var(--surface);
-  overflow: hidden;
-}
-/* Its own font and box: when a language is declared the header is a
-   <figcaption>, and the FIGURES rule would otherwise give it a caption's
-   margin and measure. */
-.code-head,
-figure.code > figcaption.code-head {
-  display: flex; align-items: center; justify-content: flex-end;
-  gap: var(--s-4);
-  margin: 0;
-  max-width: none;
-  font: 400 var(--fs-rail)/var(--lh-rail) var(--figure);
-  color: var(--ink-2);
-  padding: var(--s-2) var(--s-3) var(--s-2) var(--s-4);
-  border-bottom: var(--hair) solid var(--rule);
-}
-.code-lang {
-  margin-inline-end: auto;
-  font: 400 var(--fs-rail)/1 var(--figure);
-  letter-spacing: var(--ls-rail);
-  text-transform: uppercase;
-  color: var(--ink-2);
-}
-figure.code pre {
-  border: 0;
-  background: none;
-  border-radius: 0;
-  padding: var(--s-4);
-}
-.copy-btn {
-  font: 400 var(--fs-rail)/1 var(--figure);
-  letter-spacing: var(--ls-rail);
-  color: var(--ink-2);
-  background: none;
-  border: var(--hair) solid transparent;
-  border-radius: 6px;
-  padding: 0 var(--s-2);
-  cursor: pointer;
-  min-height: 24px;                     /* WCAG 2.5.8 */
-  display: inline-flex; align-items: center;
-  transition: color .12s ease, border-color .12s ease, background .12s ease;
-}
-.copy-btn:hover {
-  color: var(--ink);
-  border-color: var(--rule-firm);
-  background: var(--surface-2);
-}
-.copy-btn.is-copied { color: var(--accent); border-color: var(--accent); }
-/* No JavaScript, no Copy: a button that does nothing is worse than none, and a
-   header that held only the button goes with it. */
-@media (scripting: none) {
-  .copy-btn, .code-head--bare { display: none; }
-}
-
-/* ============================================================================
-   THE POST — title block, then a sticky contents rail beside the article
-   ========================================================================= */
-
-.post-head { padding-top: var(--s-8); }
-.post-head h1 { margin: 0; }
-
-/* The byline has no outer margin of its own; the post gives it room. */
-.post-byline { margin-top: var(--s-8); }
-
-/* One grid row holding both columns for the whole post. Row-spanning is what
-   broke the old header: a tall item in a spanned auto row grows that row, so an
-   eight-entry contents list pushed the date a quarter of a screen below the
-   title it belonged to. */
-.post-layout {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: subgrid;
-  align-items: start;
-}
-
-/* A grid item's containing block is its grid area, and this one's area is as
-   tall as the article — which is the whole trick: `sticky` then travels the
-   full length of the post. */
-.post-aside {
-  grid-column: 1;
-  position: sticky;
-  top: var(--s-5);
-  align-self: start;
-  max-height: calc(100vh - var(--s-7));
-  /* The scroller is the rail itself, not the list inside it. Chrome's
-     `::details-content` puts a box between the two that `display: contents`
-     does not remove, so a max-height on the <ol> is a height the wrapper is
-     free to overflow — the list ran off the bottom of the viewport on a short
-     window. The one element with a known height does the scrolling. */
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-}
-
-/* ============================================================================
-   TABLE OF CONTENTS — scrolls with the reader, marks where they are
-   ========================================================================= */
-
-.toc {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  margin: 0;
-  padding: 0 0 0 var(--s-3);
-  list-style: none;
-  border-left: var(--hair) solid var(--rule);
-}
-.toc a {
-  font: 400 var(--fs-rail)/1.45 var(--figure);
-  color: var(--ink-2);
-  text-decoration: none;
-  display: block;
-}
-.toc a:hover { color: var(--ink); }
-.toc a[aria-current] { color: var(--ink); }
-
-/* Where you are, drawn as a live segment of the rule the list hangs off.
-
-   Both custom properties are set from the scroll-spy script, and both default
-   to zero: with JavaScript off the segment has no height and the list is the
-   same set of working anchors it has always been. It is absolutely positioned
-   inside the scroller, so it tracks the list rather than the viewport. */
-.toc::before {
-  content: "";
-  position: absolute;
-  left: calc(-1 * var(--hair));
-  top: var(--toc-y, 0);
-  width: 2px;
-  height: var(--toc-h, 0);
-  background: var(--accent);
-  transition: top 180ms ease, height 180ms ease;
-}
-@media (forced-colors: active) {
-  .toc::before { background: Highlight; }
-}
-
-/* Below the collapse the TOC is the one place the rail becomes interactive —
-   a <details>, which needs no JS. Above it, the disclosure is not wanted at all:
-   `display: contents` dissolves the <details> box so the list sits in the rail. */
-.toc-details { display: contents; }
-.toc-details > summary { display: none; }
-
-@media (min-width: 901px) {
-  /*
-    …except that stopped working. Chrome 131 gave <details> a real
-    `::details-content` pseudo-element and moved the closed state onto it as
-    `content-visibility: hidden`, which `display: contents` on the parent no
-    longer bypasses — so the desktop TOC rendered in the DOM and was invisible
-    on screen. Force the content visible where the element is not a disclosure.
-    Browsers without ::details-content ignore this and keep working as before.
-  */
-  .toc-details::details-content { content-visibility: visible; }
-}
-
-/* A project's docs: its pages, in the rail above the page's own contents. The
-   same list as the contents, so the rail reads as one column; the page you are
-   on is set in the heading weight, as the site marks "current" everywhere. */
-.docs-pages {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  margin: 0 0 var(--s-6);
-  padding: 0 0 0 var(--s-3);
-  list-style: none;
-  border-left: var(--hair) solid var(--rule);
-}
-.docs-pages a {
-  font: 400 var(--fs-rail)/1.45 var(--figure);
-  color: var(--ink-2);
-  text-decoration: none;
-  display: block;
-}
-.docs-pages a:hover { color: var(--ink); }
-.docs-pages a[aria-current="page"] { color: var(--ink); font-weight: var(--w-head); }
-
-/* ============================================================================
-   POST LISTS
-   ========================================================================= */
-
-.post-list { list-style: none; margin: 0; padding: 0; }
-.post-row + .post-row {
-  margin-top: var(--s-6);
-  padding-top: var(--s-6);
-  border-top: var(--hair) solid var(--rule);
-}
-/* A title in a list is still a title, whatever heading level the markup gives
-   it. 26px is the floor: below it this face stops being a different face. */
-.post-row > a {
-  font: var(--w-head) var(--fs-title)/var(--lh-snug) var(--display);
-  letter-spacing: var(--ls-h2);
-  color: var(--ink);
-  text-decoration: none;
-  display: block;
-}
-.post-row > a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
-.post-row p { margin: var(--s-1) 0 0; font-size: var(--fs-small); color: var(--ink-2); }
-.post-row .post-meta {
-  margin-top: 5px;
-  font: 400 var(--fs-rail)/var(--lh-rail) var(--figure);
-  letter-spacing: var(--ls-rail);
-  color: var(--ink-2);
-}
-
-.post-item h2, .post-item h3 {
-  font: 600 var(--fs-h3)/1.35 var(--prose);
-  margin: 0;
-}
-.post-item a { color: inherit; text-decoration: none; }
-.post-item a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
-.post-item p {
-  font: 400 var(--fs-small)/1.6 var(--prose);
-  color: var(--ink-2);
-  margin: var(--s-1) 0 0;
-}
-
-/* /writing/ groups by month while the order is chronological, with the head in
-   the rail. When the reader sorts by length, the head says so rather than
-   printing a month that no longer describes the group. */
-.post-group {
-  border-top: var(--hair) solid var(--rule);
-  padding-top: var(--s-5);
-  margin-top: var(--s-6);
-}
-.group-head {
-  font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
-  letter-spacing: var(--ls-label);
-  text-transform: uppercase;
-  color: var(--ink-2);
-}
-
-/* ============================================================================
-   FILED UNDER — a post's topics, at the foot of the post
-   ========================================================================= */
-
-/* Two words stacked in the margin beside the title told the reader nothing and
-   asked for a decision before they had read a sentence. At the end, with the
-   blurb and the count of what else is under each one, the same two words are a
-   way further into the site. */
-.filed h2 { margin: 0; }
-.filed-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: var(--s-6) var(--gutter);
-  margin: var(--s-5) 0 0;
-  padding: 0;
-  list-style: none;
-}
-.filed-item > a {
-  display: inline-block;
-  min-height: 24px;                /* WCAG 2.5.8 */
-  font: var(--w-med) var(--fs-h3)/1.3 var(--prose);
-  color: var(--ink);
-  text-decoration: none;
-}
-.filed-item > a:hover {
-  text-decoration: underline;
-  text-decoration-color: var(--accent);
-  text-underline-offset: 2px;
-}
-.filed-item p {
-  font: 400 var(--fs-small)/1.6 var(--prose);
-  color: var(--ink-2);
-  margin: var(--s-1) 0 0;
-}
-.filed-count {
-  margin-top: var(--s-2);
-  font: 400 var(--fs-rail)/1 var(--figure);
-  letter-spacing: var(--ls-rail);
-  font-variant-numeric: tabular-nums;
-  color: var(--ink-2);
-}
-
-/* ============================================================================
-   TOPIC RUN — the shared vocabulary, as a run of text under a page head
-   ========================================================================= */
-
-.topic-run {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-2) var(--s-4);
-  margin: var(--s-5) 0 0;
-  padding: 0;
-  list-style: none;
-  font: 400 var(--fs-rail)/var(--lh-rail) var(--figure);
-  letter-spacing: var(--ls-rail);
-  text-transform: uppercase;
-}
-/* Links, so they carry the resting underline every other link does. */
-.topic-run a {
-  color: var(--ink-2);
-  display: inline-flex;
-  align-items: center;
-  min-height: 24px;      /* WCAG 2.5.8 */
-}
-.topic-run a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
-
-/* ============================================================================
-   HOME
-   No hero, no feature. A greeting, then the two things worth looking at.
-   ========================================================================= */
-
-.home-greeting { padding-top: var(--s-9); }
-
-/* The name, the place and the availability, above the sentence. Mono, because
-   it is metadata about the person rather than a claim about the work. */
-.home-eyebrow {
-  display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap;
-  font: 400 var(--fs-rail)/1.4 var(--figure);
-  letter-spacing: var(--ls-rail);
-  text-transform: uppercase;
-  color: var(--ink-2);
-  margin: 0 0 var(--s-5);
-}
-
-/* The smallest possible way to say the page is plugged into something rather
-   than written once and left. It pulses; `prefers-reduced-motion` stops it. */
-.live-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--accent);
-  animation: live-pulse 2.6s ease-out infinite;
-}
-@keyframes live-pulse {
-  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); }
-  70%  { box-shadow: 0 0 0 7px transparent; }
-  100% { box-shadow: 0 0 0 0 transparent; }
-}
-@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
-
-.home-greeting h1 {
-  font-size: var(--fs-display);
-  line-height: var(--lh-tight);
-  letter-spacing: var(--ls-display);
-  margin: 0;
-  max-width: 19ch;
-}
-
-.home-status {
-  display: flex; flex-wrap: wrap; gap: var(--s-3);
-  margin: var(--s-7) 0 0;
-}
-/* Buttons. This site refused them for two designs and the refusal cost it the
-   one thing a cold reader needs: somewhere obvious to click. */
-.cta {
-  display: inline-flex; align-items: center;
-  height: 38px; padding: 0 16px;
-  border-radius: var(--radius);
-  background: var(--ink); color: var(--paper);
-  border: var(--hair) solid transparent;   /* the only boundary left in forced colours */
-  font: 500 var(--fs-small)/1 var(--prose);
-  letter-spacing: -0.01em;
-  text-decoration: none; white-space: nowrap;
-  transition: transform .12s ease, opacity .12s ease;
-}
-.cta:hover { opacity: .9; transform: translateY(-1px); text-decoration: none; }
-.cta--ghost {
-  background: transparent; color: var(--ink);
-  border: var(--hair) solid var(--rule-firm);
-}
-.cta--ghost:hover { background: var(--surface); }
-
-/* ============================================================================
-   THE PROOF ROW — three things a stranger can check in under a minute.
-
-   Cards, which this site refused for two designs. On a flat near-black ground
-   a 1px line and a corner radius is not decoration: it is the only way to say
-   "these three are the same kind of thing", and the hairline-between-rows
-   version said nothing at all.
-   ========================================================================= */
-
-.proof {
-  grid-column: 1 / -1;
-  display: grid;
-  gap: var(--s-3);
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  list-style: none;
-  margin: var(--s-7) 0 0;
-  padding: 0;
-}
-.proof li {
-  background: var(--surface);
-  border: var(--hair) solid var(--rule);
-  border-radius: 14px;
-  padding: var(--s-5);
-  font-size: var(--fs-small);
-  color: var(--ink-2);
-  transition: background .15s ease, border-color .15s ease;
-}
-/* Only a card that holds a link answers the pointer; a card that lifts and
-   leads nowhere promises a click it cannot keep. */
-.proof li:has(a):hover { background: var(--surface-2); border-color: var(--rule-firm); }
-.proof-label {
-  display: block;
-  font: 400 var(--fs-rail)/1.4 var(--figure);
-  letter-spacing: var(--ls-rail);
-  text-transform: uppercase;
-  color: var(--ink-2);
-  font-variant-numeric: tabular-nums;
-  margin-bottom: var(--s-3);
-}
-.proof-text { display: block; margin-bottom: var(--s-4); }
-/* A link like every other link — ink, resting underline — not an accent-coloured
-   word that only underlines on hover. The flex box gives it a 24px target. */
-.proof-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 24px;      /* WCAG 2.5.8 */
-  font: 400 var(--fs-small)/1 var(--prose);
-  white-space: nowrap;
-  margin-inline-end: var(--s-4);
-  color: var(--ink);
-}
-
-/* ============================================================================
-   THE INSTRUMENT PANEL
-   The part of this site nobody else can copy: not a claim about caring what a
-   system is doing, but what it is doing, tonight, read from the machine.
-   ========================================================================= */
-
-/* Below the proof row, in its gap, so the two read as one group of cards. */
-.panel {
-  grid-column: 1 / -1;
-  margin-top: var(--s-3);
-  padding: var(--s-5);
-  border: var(--hair) solid var(--rule);
-  border-radius: 14px;
-  background: linear-gradient(180deg, var(--surface), var(--paper));
-}
-.panel-head {
-  display: flex; justify-content: space-between; gap: var(--s-4);
-  flex-wrap: wrap; margin-bottom: var(--s-5);
-}
-.panel-note {
-  font: 400 var(--fs-rail)/1.4 var(--figure);
-  color: var(--ink-2);
-  opacity: .8;
-}
-/* The body reserves the height the figures fill with a complete document, so
-   they arrive without moving anything below. Measured, not derived: the
-   populated body with tests/fixtures/status.json routed in, swept 300–1700 px
-   two pixels at a time, taking the tallest height in each band plus 2 px. Phones
-   need the most steps because each figure's source line wraps differently as a
-   column narrows. The loading line and the apology sit in the same box; a thin
-   document is shorter. Re-measure when a figure, its source text or the type
-   scale changes. */
-.panel-body { min-height: 230px; }
-@media (max-width: 900px) { .panel-body { min-height: 238px; } }
-@media (max-width: 610px) { .panel-body { min-height: 339px; } }
-@media (max-width: 402px) { .panel-body { min-height: 354px; } }
-@media (max-width: 336px) { .panel-body { min-height: 368px; } }
-@media (max-width: 314px) { .panel-body { min-height: 405px; } }
-.panel-empty {
-  margin: 0;
-  max-width: 54ch;
-  font-size: var(--fs-small);
-  color: var(--ink-2);
-}
-/* A document that arrived but came up short. Sits under the figures it is
-   explaining, in the same register as the note in the header. */
-.panel-thin {
-  margin: var(--s-2) 0 0;
-  max-width: 54ch;
-  font: 400 var(--fs-rail)/1.4 var(--figure);
-  color: var(--ink-2);
-  opacity: .8;
-}
-.panel-figs {
-  display: grid; gap: var(--s-1) var(--s-6);
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-}
-/* Two figures a row on a phone: one a row is five screens of thumb. */
-@media (max-width: 560px) {
-  .panel-figs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-1) var(--s-4); }
-}
-
-.fig { display: block; padding: var(--s-2) 0; }
-.fig-value {
-  display: block;
-  font: var(--w-med) var(--fs-title)/var(--lh-snug) var(--prose);
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-}
-.fig-value em {
-  font-style: normal; font-size: var(--fs-body);
-  color: var(--ink-2); margin-left: 2px;
-}
-.fig-label {
-  display: block; font-size: var(--fs-small);
-  color: var(--ink-2); margin-top: 2px;
-}
-/* Ask a number where it came from and it tells you. The space is reserved at
-   rest, so revealing it moves nothing. */
-.fig-source {
-  display: block;
-  font: 400 var(--fs-rail)/1.4 var(--figure);
-  color: var(--ink-2);
-  margin-top: 5px;
-  opacity: 0;
-  transition: opacity .16s ease;
-}
-.fig:hover .fig-source,
-.fig:focus-visible .fig-source { opacity: 1; }
-/* Nothing hovers on a touch screen, and the space is reserved anyway. */
-@media (hover: none) { .fig-source { opacity: 1; } }
-.fig:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 6px; }
-
-.section-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s-4);
-  margin: 0 0 var(--s-5);
-}
-.section-head h2 { margin: 0; font-size: var(--fs-h2); }
-.section-head a {
-  display: inline-flex; align-items: center;
-  min-block-size: 24px;                     /* WCAG 2.5.8: a standalone link */
-  font: 400 var(--fs-small)/1 var(--prose);
-  white-space: nowrap;
-}
-
-/* The self-deprecating one, kept because it is counted rather than felt. */
-.home-note {
-  max-width: var(--read);
-  margin: var(--s-8) 0 var(--s-10);
-  font: 400 var(--fs-small)/1.6 var(--figure);
-  color: var(--ink-2);
-}
-
-/* ============================================================================
-   PROJECTS
-   ========================================================================= */
-
-/* Introduces the second project list. Borrows the rail's small-caps treatment
-   for the same reason the proof row does: a fifth way of setting a label would
-   be a fifth thing to keep in step. */
-.project-sublabel {
-  display: block;
-  font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
-  letter-spacing: var(--ls-label);
-  text-transform: uppercase;
-  color: var(--ink-2);
-  margin: var(--s-8) 0 var(--s-5);
-}
-
-/* THE PROJECT INDEX (/projects/). Sections by what a visitor wants to know, one
-   compact entry per project. Not .project-row: the home page's list keeps that. */
-.pj-list { list-style: none; margin: 0; padding: 0; }
-.pj { padding: var(--s-5) 0; }
-.pj:first-child { padding-top: 0; }
-.pj:last-child { padding-bottom: 0; }
-.pj + .pj { border-top: var(--hair) solid var(--rule); }
-.pj-name {
-  font: var(--w-head) var(--fs-h3)/var(--lh-snug) var(--display);
-  letter-spacing: var(--ls-h2);
-  margin: 0;
-}
-.pj-name a { color: var(--ink); text-decoration: none; }
-.pj-name a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
-/* The name and its facts share a line and wrap together on a narrow screen. */
-.pj-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s-1) var(--s-5);
-}
-.pj-facts {
-  margin: 0;
-  font: 400 var(--fs-rail)/1.5 var(--figure);
-  letter-spacing: var(--ls-rail);
-  text-transform: uppercase;
-  color: var(--ink-2);
-}
-.pj-sum { margin: var(--s-2) 0 0; font-size: var(--fs-small); color: var(--ink-2); }
-
-/* What other people can run: a card each, with the figures a stranger can weigh. */
-.pj-list--lead .pj {
-  padding: var(--s-5);
-  background: var(--surface);
-  border: var(--hair) solid var(--rule);
-  border-radius: var(--radius);
-}
-.pj-list--lead .pj + .pj { margin-top: var(--s-4); }
-.pj--lead .pj-name { font-size: var(--fs-title); }
-.pj--lead .pj-sum { font-size: var(--fs-body); color: var(--ink); }
-.pj-figures {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-4) var(--s-7);
-  margin: var(--s-5) 0 0;
-  padding-top: var(--s-4);
-  border-top: var(--hair) solid var(--rule);
-}
-.pj-figures dt {
-  font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
-  letter-spacing: var(--ls-label);
-  text-transform: uppercase;
-  color: var(--ink-2);
-}
-.pj-figures dd {
-  margin: 2px 0 0;
-  font: 400 var(--fs-small)/1.4 var(--figure);
-  font-variant-numeric: tabular-nums;
-}
-
-.project-name {
-  font: var(--w-head) var(--fs-title)/var(--lh-snug) var(--display);
-  letter-spacing: var(--ls-h2);
-  margin: 0 0 var(--s-3);
-}
-.project-name a { color: var(--ink); text-decoration: none; }
-.project-name a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
-
-.project-list { list-style: none; margin: 0; padding: 0; }
-.project-row + .project-row {
-  margin-top: var(--s-6);
-  padding-top: var(--s-6);
-  border-top: var(--hair) solid var(--rule);
-}
-.project-row p { margin: var(--s-4) 0 0; font-size: var(--fs-small); color: var(--ink-2); }
-
-/* Status is a word, not a coloured pill. "running" is the normal case and must
-   not shout; there is no state here that needs an alarm colour. */
-.project-status {
-  display: flex; flex-wrap: wrap; gap: 0 var(--s-4);
-  font: 400 var(--fs-rail)/1.4 var(--figure);
-  letter-spacing: var(--ls-rail);
-  text-transform: uppercase;
-  color: var(--ink-2);
-}
-/* Status set apart by weight, not colour: no state here needs an alarm. */
-.project-state { font-weight: var(--w-head); color: var(--ink); }
-
-/* The byline closes the page under the links; it has no outer margin of its own. */
-.project-elsewhere .byline { margin-top: var(--s-4); }
-
-/* Readings on a project page: label, value, and where the figure came from.
-   The source line is not optional — a number with no provenance is the failure
-   this whole site is built to avoid. */
-.readings { margin: 0; padding: 0; list-style: none; }
-.readings li {
-  padding: var(--s-3) 0;
-  border-bottom: var(--hair) solid var(--rule);
-}
-.readings li:first-child { border-top: var(--hair) solid var(--rule); }
-.reading-value {
-  font: 400 var(--fs-body)/1.4 var(--figure);
-  font-variant-numeric: tabular-nums;
-  color: var(--ink);
-  display: block;
-}
-.reading-label {
-  font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
-  letter-spacing: var(--ls-label);
-  text-transform: uppercase;
-  color: var(--ink-2);
-  display: block;
-  margin-bottom: 3px;
-}
-.reading-source {
-  font: 400 var(--fs-small)/1.5 var(--prose);
-  color: var(--ink-2);
-  display: block;
-  margin-top: 2px;
-}
-
-/* Filters over /writing/ and /projects/. Both lists are server-rendered in
-   full and the controls only remove or reorder rows, so without JavaScript
-   they would be buttons that do nothing: hide them, and the list stands. */
-.filter-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-2);
-  margin: var(--s-5) 0 0;
-  padding: 0;
-  list-style: none;
-}
-.filter-chip {
-  font: var(--w-body) var(--fs-rail)/1 var(--figure);
-  letter-spacing: var(--ls-rail);
-  text-transform: uppercase;
-  color: var(--ink-2);
-  background: transparent;
-  border: var(--hair) solid var(--rule-firm);  /* a control edge */
-  border-radius: var(--radius);
-  padding: 6px 10px;
-  min-height: 24px;
-  cursor: pointer;
-}
-.filter-chip:hover { color: var(--ink); border-color: var(--accent); }
-/* The second vocabulary, projects, on its own labelled line so a chip never has
-   to say which kind it is. */
-.filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--s-2) var(--s-4);
-  margin: var(--s-3) 0 0;
-}
-.filter-row .filter-bar { margin: 0; }
-/* On a phone a long run of chips is one swipeable line, not a wall of controls
-   above the first result: the half chip at the edge says there is more. */
-@media (max-width: 700px) {
-  .filter-bar--strip {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: var(--s-2);
-    scrollbar-width: thin;
+  /* Screen-reader-only text that still ships to assistive tech. */
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
   }
-  .filter-bar--strip .filter-chip { white-space: nowrap; }
-}
-.filter-chip[aria-pressed="true"] {
-  color: var(--paper);
-  background: var(--accent);
-  border-color: var(--accent);
-}
-/* The count came along in --ink-2, which is a grey picked to sit on paper and
-   does not clear anything on amber. */
-.filter-chip[aria-pressed="true"] .rail-count { color: inherit; }
 
-/* The order control. A segmented run rather than more chips: the topics are a
-   multiple choice and this is a single one, and they must not look alike. */
-.sort-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--s-2) var(--s-4);
-  margin: var(--s-4) 0 0;
-}
-.sort-group { display: flex; }
-.sort-btn {
-  font: var(--w-body) var(--fs-rail)/1 var(--figure);
-  letter-spacing: var(--ls-rail);
-  text-transform: uppercase;
-  color: var(--ink-2);
-  background: transparent;
-  border: var(--hair) solid var(--rule-firm);
-  padding: 6px 10px;
-  min-height: 24px;
-  cursor: pointer;
-}
-.sort-btn + .sort-btn { border-inline-start: 0; }
-.sort-btn:first-child { border-radius: var(--radius) 0 0 var(--radius); }
-.sort-btn:last-child  { border-radius: 0 var(--radius) var(--radius) 0; }
-.sort-btn:hover { color: var(--ink); }
-.sort-btn[aria-pressed="true"] {
-  color: var(--paper);
-  background: var(--accent);
-  border-color: var(--accent);
-}
-/* `.sort-count` is the filters' polite live region and is visually hidden: the
-   page figures already print the count. */
+  /* Paper and screen want different words in the same slot. */
+  .print-only {
+    display: none;
+  }
 
-/* After the rules above, which it overrides. */
-@media (scripting: none) {
-  .filter-bar, .filter-row, .sort-bar { display: none; }
+  /* The theme switch before it mounts: the same box, unpainted, so the header
+     is laid out once. */
+  .theme-toggle--pending {
+    visibility: hidden;
+  }
 }
 
-/* Forced colours drop the amber fill, and with it the only sign of which chip
-   or order is on. */
+/* Forced colours drop the fill that marks a pressed filter or order; hand the
+   state back in system colours. */
 @media (forced-colors: active) {
   .filter-chip[aria-pressed="true"],
   .sort-btn[aria-pressed="true"] {
     forced-color-adjust: none;
-    color: SelectedItemText;
-    background: SelectedItem;
     border-color: SelectedItem;
+    background: SelectedItem;
+    color: SelectedItemText;
+  }
+}
+
+/* A control that cannot work without JavaScript is not painted without it: the
+   search trigger, the theme switch, the list filters and Copy. Every list they
+   act on is complete in the HTML. */
+@media (scripting: none) {
+  .search-trigger,
+  .theme-toggle,
+  .filter-bar,
+  .filter-row,
+  .sort-bar,
+  .copy-btn,
+  .code-head--bare {
+    display: none !important;
   }
 }
 
 /* ============================================================================
-   ABOUT — the stack and the "now" list live here since /uses/ and /now/ went
+   MARKDOWN — a post's body and a project's docs, through one renderer
+   (components/Prose.tsx). The typography plugin supplies the rhythm; this sets
+   its colours from the tokens and replaces the parts a docs site needs sharper.
+   Unlayered, like CODE BLOCKS and TABLES below: the plugin's own rules land in
+   a later cascade layer than `components`, so a layered override loses to them.
    ========================================================================= */
 
-/* The intro is the largest body text on the page; the lists under it are not.
-   A plain block, not `.prose`: that is a subgrid for the page's own columns,
-   and inside a `.row` it would pin the copy to a second, nested column. */
-.about-copy p {
+.markdown {
+  --tw-prose-body: color-mix(in oklab, var(--foreground) 86%, var(--background));
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-lead: var(--muted-foreground);
+  --tw-prose-links: var(--foreground);
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-counters: var(--muted-foreground);
+  --tw-prose-bullets: color-mix(in oklab, var(--muted-foreground) 65%, transparent);
+  --tw-prose-hr: var(--border);
+  --tw-prose-quotes: var(--foreground);
+  --tw-prose-quote-borders: var(--border);
+  --tw-prose-captions: var(--muted-foreground);
+  --tw-prose-kbd: var(--foreground);
+  --tw-prose-code: var(--foreground);
+  --tw-prose-pre-code: var(--foreground);
+  --tw-prose-pre-bg: var(--card);
+  --tw-prose-th-borders: var(--border);
+  --tw-prose-td-borders: var(--border);
+  max-width: none;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+.markdown--post {
+  font-size: 1.0625rem;
+}
+
+.markdown > :first-child {
+  margin-top: 0;
+}
+
+/* A heading and its permalink share a wrapper (components/Prose.tsx), which
+   carries the spacing; the heading runs inline so the # follows its last word. */
+.markdown .heading-wrap--h2 {
+  margin-top: 2.75em;
+  margin-bottom: 0.9em;
+  padding-bottom: 0.45em;
+  border-bottom: 1px solid var(--border);
+}
+.markdown .heading-wrap--h3 {
+  margin-top: 2em;
+  margin-bottom: 0.6em;
+}
+.markdown .heading-wrap > h2,
+.markdown .heading-wrap > h3 {
+  display: inline;
   margin: 0;
-  max-width: var(--read);
-  font-size: var(--fs-h3);
-  line-height: var(--lh-lede);
-}
-.about-copy p + p { margin-top: var(--s-5); }
-.about-intro > .rail { padding-top: 0.5em; }  /* first baseline, against --fs-h3 */
-
-/* The rail's links are the page's only quick contact. On screen each gets a
-   24px-tall target (WCAG 2.5.8); paper keeps the rail's own leading. */
-@media screen {
-  .about-rail a { display: inline-flex; align-items: center; min-block-size: 24px; }
-}
-
-.now-list { row-gap: var(--s-7); }          /* .row already sets the grid */
-.now-item {
-  margin: 0;
-  font-size: var(--fs-body);
-  line-height: var(--lh-body);
-}
-.now-list > .rail { padding-top: 0.30em; }  /* label baseline against body */
-
-/* Working with me. Plain lines, not cards: the address is the thing to copy. */
-.contact-lede { margin: 0 0 var(--s-4); max-width: var(--read); }
-.contact-email { margin: 0 0 var(--s-5); }
-.contact-email > a { font-size: var(--fs-h3); }
-.contact-links { list-style: none; margin: 0; padding: 0; }
-.contact-links li + li { margin-top: var(--s-3); }
-.contact-email > a,
-.contact-links a { display: inline-flex; align-items: center; min-block-size: 24px; }
-.contact-links a { font-weight: 600; }
-.contact-note {
-  display: block;
-  font-size: var(--fs-small);
-  color: var(--ink-2);
-}
-
-/* Live box state, appended when /status.json is fresh. Renders nothing when it
-   is missing or older than 48 hours. */
-.uses-status { display: flex; flex-direction: column; gap: 5px; }
-.uses-status-ok  { color: var(--accent); }
-.uses-status-bad { color: var(--ink); }
-
-/* SKILLS — a definition list per group. Name on one line, where it stands on
-   the next. Not a bar chart, not a five-dot rating: a proficiency bar is a
-   number nobody can check, and this site does not print those. */
-.skill-groups { display: flex; flex-direction: column; gap: var(--s-7); }
-.skill-group h3 {
-  font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
-  letter-spacing: var(--ls-label);
-  text-transform: uppercase;
-  color: var(--ink-2);
-  margin: 0 0 var(--s-4);
-}
-.skill-group dl { margin: 0; }
-.skill-group dt {
-  font-weight: 600;
-  margin-top: var(--s-4);
-}
-.skill-group dt:first-of-type { margin-top: 0; }
-.skill-group dd {
-  margin: 2px 0 0;
-  font-size: var(--fs-small);
-  color: var(--ink-2);
-  max-width: var(--read);
-}
-
-/* The measured share, beside the claim it corroborates. Set in the figure face
-   with tabular numerals: it is evidence, and it should look like the other
-   counted things rather than like emphasis. */
-.measured {
-  margin-inline-start: var(--s-3);
-  font: 400 var(--fs-rail)/1 var(--figure);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: var(--ls-rail);
-  color: var(--ink-2);
-}
-
-.topic-now {
-  margin: var(--s-5) 0 0;
-  max-width: var(--read);
-  color: var(--ink-2);
-}
-
-/* The stack of one project. A run of plain words — not chips, not badges: a
-   pill per technology turns a fact into a decoration, and twenty of them turn
-   a page into a CV from 2014. */
-.tech-run {
-  margin: 0;
-  gap: 0 var(--s-4);
-  font: 400 var(--fs-small)/1.7 var(--figure);
-  color: var(--ink-2);
-}
-.project-phase {
-  margin: var(--s-4) 0 0;
-  font-size: var(--fs-small);
-  color: var(--ink-2);
-  max-width: var(--read);
-}
-
-/* Portrait on /about/, if one is ever added. */
-.portrait {
-  float: right; margin: 0 0 var(--s-4) var(--s-6);
-  width: 180px; height: auto;
-  border: var(--hair) solid var(--rule-firm);
-  border-radius: var(--radius);
-}
-
-/* ============================================================================
-   CONTROLS — anything operable gets --rule-firm. Anything decorative gets
-   --rule. That distinction is the accessibility contract; never mix them up.
-   ========================================================================= */
-
-.control {
-  border: var(--hair) solid var(--rule-firm);
-  background: transparent;
-  color: var(--ink);
-  font: 400 var(--fs-code)/1 var(--figure);
-  padding: 10px 14px;
-  border-radius: var(--radius);
-  text-decoration: none;
-  display: inline-flex; align-items: center; min-height: 24px;
-}
-.control:hover { background: var(--surface-2); }
-.control kbd { font: inherit; }
-
-kbd {
-  font: var(--w-body) var(--fs-rail)/1 var(--figure);
-  color: var(--ink-2);
-  border: var(--hair) solid var(--rule);
-  border-radius: var(--radius);
-  padding: 3px 5px;
-}
-
-/* ============================================================================
-   SEARCH — a modal over Pagefind's JS API, reachable from every page
-   ========================================================================= */
-
-.search-trigger {
-  display: inline-flex; align-items: center; gap: 7px;
-  min-height: 24px; padding: 4px 9px;
-  background: transparent;
-  border: var(--hair) solid var(--rule-firm);   /* a control edge */
-  border-radius: var(--radius);
-  color: var(--ink-2);
-  cursor: pointer;
-  font: var(--w-body) var(--fs-rail)/1 var(--figure);
-  letter-spacing: var(--ls-rail);
-}
-.search-trigger:hover { color: var(--ink); border-color: var(--accent); }
-.search-trigger svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.6; }
-/* The server paints ⌘K and a PC swaps in Ctrl K after mount. Hidden on
-   phones, so that swap only ever nudges a desktop header sideways. */
-.search-trigger-key { color: var(--ink-2); }
-
-/* The theme switch. Same control edge and the same 24px minimum target as the
-   search trigger beside it — one control shape, two controls. The label names
-   the theme it switches TO; `min-width` keeps "dark" and "light" the same size
-   so the header does not shift when it is pressed. */
-.theme-toggle {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-height: 24px; min-width: 58px; padding: 4px 9px;
-  background: transparent;
-  border: var(--hair) solid var(--rule-firm);
-  border-radius: var(--radius);
-  color: var(--ink-2);
-  cursor: pointer;
-  font: var(--w-body) var(--fs-rail)/1 var(--figure);
-  letter-spacing: var(--ls-rail);
-  text-transform: uppercase;
-}
-.theme-toggle:hover { color: var(--ink); border-color: var(--accent); }
-/* Before mount: the same box, unpainted, so the header is laid out once. */
-.theme-toggle--pending { visibility: hidden; }
-
-/* Neither control works without JavaScript, so neither is painted. */
-@media (scripting: none) {
-  .search-trigger, .theme-toggle { display: none; }
-}
-
-.search-dialog {
-  margin: 0 auto;
-  /* Sits high rather than centred: results grow downward and the eye should not
-     have to track back up as they arrive. */
-  margin-top: 12vh;
   padding: 0;
-  width: min(640px, calc(100vw - 2 * var(--s-5)));
-  max-height: 70vh;
-  background: var(--surface);
-  color: var(--ink);
-  border: var(--hair) solid var(--rule-firm);
-  border-radius: var(--radius);
+  border: 0;
+  color: var(--foreground);
+  font-weight: 600;
+  scroll-margin-top: 5.5rem;
 }
-.search-dialog::backdrop { background: rgb(0 0 0 / 0.55); }
-
-.search-panel { display: flex; flex-direction: column; max-height: 70vh; }
-
-.search-field {
-  display: flex; align-items: center; gap: var(--s-3);
-  padding: var(--s-4) var(--s-5);
-  border-bottom: var(--hair) solid var(--rule);
+.markdown .heading-wrap--h2 > h2,
+.markdown .heading-wrap--h2 > .heading-anchor {
+  font-size: 1.5em;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
 }
-/* The input draws no outline of its own, so the field carries the ring. */
-.search-field:focus-within { outline: 2px solid var(--accent); outline-offset: -2px; }
-.search-field svg { width: 15px; height: 15px; flex: none; fill: none; stroke: var(--ink-2); stroke-width: 1.6; }
-.search-field input {
-  flex: 1; min-width: 0;
-  background: none; border: 0; outline: none;
-  color: var(--ink);
-  font: 400 var(--fs-body)/1.4 var(--prose);
+.markdown .heading-wrap--h3 > h3,
+.markdown .heading-wrap--h3 > .heading-anchor {
+  font-size: 1.2em;
+  line-height: 1.4;
+  letter-spacing: -0.012em;
 }
-.search-field input::placeholder { color: var(--ink-2); }
-.search-field input::-webkit-search-cancel-button { display: none; }
-
-.search-body { overflow-y: auto; padding: var(--s-3) 0; }
-
-.search-note {
-  margin: 0; padding: var(--s-3) var(--s-5);
-  font: 400 var(--fs-rail)/var(--lh-rail) var(--figure);
-  letter-spacing: var(--ls-rail);
-  color: var(--ink-2);
+.markdown h4 {
+  margin-top: 1.75em;
+  font-size: 1em;
+  font-weight: 600;
+}
+/* The heading you arrived at, marked for free. */
+.markdown h2:target,
+.markdown h3:target {
+  color: var(--brand);
 }
 
-.search-hit {
-  display: block;
-  padding: var(--s-3) var(--s-5);
+/* The permalink, shown when its heading is hovered or it has focus. */
+.heading-anchor {
+  margin-left: 0.35em;
+  color: var(--muted-foreground);
+  font-weight: 400;
   text-decoration: none;
-  color: inherit;
-  border-left: 2px solid transparent;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
 }
-.search-hit.is-active { background: var(--surface-2); border-left-color: var(--accent); }
-.search-hit-url {
-  display: block;
-  font: 400 var(--fs-rail)/var(--lh-rail) var(--figure);
-  letter-spacing: var(--ls-rail);
-  color: var(--ink-2);
-  margin-bottom: 2px;
+.heading-wrap:hover .heading-anchor,
+.heading-anchor:focus-visible {
+  opacity: 1;
+}
+.heading-anchor:hover {
+  color: var(--brand);
+}
+@media (hover: none) {
+  .heading-anchor {
+    display: none;
+  }
+}
+
+.markdown a {
+  font-weight: 500;
+  text-decoration-color: color-mix(in oklab, var(--brand) 55%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  overflow-wrap: anywhere;
+  transition: text-decoration-color 0.15s;
+}
+.markdown a:hover {
+  text-decoration-color: var(--brand);
+}
+
+.markdown strong {
+  font-weight: 600;
+}
+
+.markdown ul > li::marker {
+  color: var(--tw-prose-bullets);
+}
+.markdown li {
+  margin-top: 0.4em;
+  margin-bottom: 0.4em;
+}
+
+/* Inline code: a chip, no backticks. */
+.markdown :not(pre) > code {
+  padding: 0.15em 0.4em;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--muted);
+  font-size: 0.85em;
+  font-weight: 500;
   overflow-wrap: anywhere;
 }
-.search-hit-title {
-  display: block;
-  font: 600 var(--fs-small)/1.4 var(--prose);
-  color: var(--ink);
+.markdown :not(pre) > code::before,
+.markdown :not(pre) > code::after {
+  content: none;
 }
-.search-hit-excerpt {
-  font: 400 var(--fs-small)/1.55 var(--prose);
-  color: var(--ink-2);
-  /* Pagefind excerpts run long; two lines is enough to judge relevance. */
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+.markdown a > code {
+  color: inherit;
+}
+
+.markdown blockquote {
+  margin: 1.6em 0;
+  padding-left: 1.1em;
+  border-left: 2px solid var(--brand);
+  color: var(--muted-foreground);
+  font-style: normal;
+  font-weight: 400;
+  quotes: none;
+}
+.markdown blockquote p::before,
+.markdown blockquote p::after {
+  content: none;
+}
+
+.markdown hr {
+  margin: 3em 0;
+}
+.markdown img {
+  border-radius: var(--radius-lg);
+}
+
+/* A note that the post was corrected, above the body it corrects. */
+.post-correction {
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--input);
+  border-radius: var(--radius-md);
+  color: var(--muted-foreground);
+  font-size: 0.9375rem;
+}
+
+/* --- callouts: GitHub's alert syntax, `> [!NOTE]` (lib/callouts.mjs) ----- */
+.callout {
+  --callout: var(--info);
+  margin: 1.6em 0;
+  padding: 0.875rem 1.125rem;
+  border: 1px solid color-mix(in oklab, var(--callout) 32%, var(--border));
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklab, var(--callout) 7%, transparent);
+  color: var(--tw-prose-body, var(--foreground));
+  font-size: 0.9375em;
+}
+.callout--tip { --callout: var(--tip); }
+.callout--important { --callout: var(--important); }
+.callout--warning { --callout: var(--warning); }
+.callout--caution { --callout: var(--caution); }
+.callout > * {
+  margin-top: 0.5em;
+  margin-bottom: 0;
+}
+.callout > :first-child {
+  margin-top: 0;
+}
+.markdown .callout-title,
+.callout-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--callout);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.callout-title::before {
+  content: "";
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  background: currentColor;
+  -webkit-mask: var(--callout-icon) center / contain no-repeat;
+  mask: var(--callout-icon) center / contain no-repeat;
+}
+/* Lucide's info, lightbulb, message-square-warning, triangle-alert and
+   octagon-alert (ISC), as masks so the icon takes the callout's colour. */
+.callout--note {
+  --callout-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4'/%3E%3Cpath d='M12 8h.01'/%3E%3C/svg%3E");
+}
+.callout--tip {
+  --callout-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5'/%3E%3Cpath d='M9 18h6'/%3E%3Cpath d='M10 22h4'/%3E%3C/svg%3E");
+}
+.callout--important {
+  --callout-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z'/%3E%3Cpath d='M12 15h.01'/%3E%3Cpath d='M12 7v4'/%3E%3C/svg%3E");
+}
+.callout--warning {
+  --callout-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3'/%3E%3Cpath d='M12 9v4'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");
+}
+.callout--caution {
+  --callout-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 16h.01'/%3E%3Cpath d='M12 8v4'/%3E%3Cpath d='M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z'/%3E%3C/svg%3E");
+}
+@media (forced-colors: active) {
+  .callout-title::before {
+    background: CanvasText;
+  }
+}
+
+/* ============================================================================
+   CODE BLOCKS — one object: a header with the title or language and Copy,
+   the code under it. Shiki inlines both themes as variables; these pick one.
+   ========================================================================= */
+
+figure.code {
+  margin: 1.6em 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--card);
   overflow: hidden;
 }
-.search-hit-excerpt mark { background: var(--accent-quiet); color: var(--ink); }
-
-@media (max-width: 560px) {
-  .search-trigger-key { display: none; }
-  .search-dialog { margin-top: var(--s-5); }
+.code-head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  min-height: 2.5rem;
+  margin: 0;
+  padding: 0.25rem 0.375rem 0.25rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in oklab, var(--muted) 70%, transparent);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1.4;
 }
-
-/* ============================================================================
-   FIGURES — every <figure>. The caption rule also dresses the code-block
-   header (.code-head): its font, colour, measure and top margin come from here.
-   ========================================================================= */
-
-figure { margin: 0; }
-figure figcaption {
-  margin-top: var(--s-3);
-  font: 400 var(--fs-rail)/var(--lh-rail) var(--figure);
-  letter-spacing: var(--ls-rail);
-  color: var(--ink-2);
-  max-width: var(--measure);
+.code-title {
+  margin-inline-end: auto;
+  color: color-mix(in oklab, var(--foreground) 80%, transparent);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
 }
-
-/* ============================================================================
-   404
-   ========================================================================= */
-
-.notfound { padding-top: var(--s-10); }
-.notfound h1 { font-size: var(--fs-display); letter-spacing: var(--ls-display); }
-
-/* ============================================================================
-   CV (screen)
-   ========================================================================= */
-
-.masthead { border-bottom: 1.5px solid var(--ink); padding-bottom: var(--s-4); }
-.masthead h1 { font-size: var(--fs-display); letter-spacing: var(--ls-display); margin: 0; }
-.masthead .role-title { margin: var(--s-2) 0 0; color: var(--ink-2); }
-.masthead-rail { padding-top: 14px; }
-/* Five contact links stacked at 12px are 18px tall, which fails WCAG 2.5.8 —
-   the same 24px floor every other control on this site clears. They are the
-   most likely thing on the page to be tapped, too. */
-.masthead-rail a {
+.code-lang {
+  margin-inline-end: auto;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.code-title + .code-lang {
+  margin-inline-end: 0;
+}
+.copy-btn {
   display: inline-flex;
   align-items: center;
-  min-height: 24px;
+  min-height: 1.75rem;
+  padding: 0 0.625rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--muted-foreground);
+  font: 500 0.75rem/1 var(--font-sans);
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
 }
-.print-hint { margin: var(--s-5) 0 0; width: max-content; }
-/* The server paints the hint and the browser swaps in the button row after
-   mount. One height for both, taller than either, so the swap moves nothing. */
-.print-hint, .print-actions { min-block-size: 2.75rem; box-sizing: border-box; }
-/* The button and its shortcut. `.run` supplies the gap. */
-.print-actions { margin: var(--s-5) 0 0; align-items: center; }
-.print-actions button.control { cursor: pointer; font-family: var(--prose); }
-.print-hint-key {
-  font: var(--w-body) var(--fs-rail)/1 var(--figure);
-  color: var(--ink-2);
+.copy-btn:hover {
+  border-color: var(--input);
+  background: var(--accent);
+  color: var(--foreground);
+}
+.copy-btn.is-copied {
+  border-color: var(--brand);
+  color: var(--brand);
 }
 
-/* Dates sit right-aligned on the role line, so the right-hand column of a
-   printed CV is a straight edge rather than a ragged one. */
-.job-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-4); }
-.job-name { font: 600 var(--fs-h3)/1.3 var(--prose); margin: 0; }
-.job-name a { color: inherit; text-decoration: none; }
-.job-name a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
-.job-meta { font: 400 var(--fs-small)/1.4 var(--prose); color: var(--ink-2); margin: var(--s-1) 0 0; }
-.job-dates {
-  font: 400 var(--fs-rail)/1 var(--figure);
+figure.code pre,
+.markdown figure.code pre {
+  margin: 0;
+  padding: 1rem 1.125rem;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+pre code {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+}
+
+.shiki,
+.shiki span {
+  color: var(--s-dark);
+  background-color: transparent;
+}
+:root[data-theme="light"] .shiki,
+:root[data-theme="light"] .shiki span {
+  color: var(--s-light);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .shiki,
+  :root:not([data-theme="dark"]) .shiki span {
+    color: var(--s-light);
+  }
+}
+
+/* ============================================================================
+   TABLES — lib/tables.ts wraps each in a focusable scroll region, labels its
+   cells, and marks a table with a long cell as a text table that stacks into
+   cards on a phone. A Status column gets a shape as well as a word.
+   ========================================================================= */
+
+.table-scroll {
+  min-width: 0;
+  max-width: 100%;
+  margin: 1.6em 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+.markdown .table-scroll table,
+.table-scroll table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  line-height: 1.55;
   font-variant-numeric: tabular-nums;
-  color: var(--ink-2);
+}
+.markdown .table-scroll th,
+.table-scroll th {
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in oklab, var(--muted) 80%, transparent);
+  color: var(--foreground);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: left;
+  vertical-align: bottom;
   white-space: nowrap;
 }
-.job ul { margin: var(--s-2) 0 0; padding-left: 1.1em; font-size: var(--fs-small); }
-.job li::marker { content: "– "; color: var(--ink-2); }
-.job + .job { margin-top: var(--s-6); }
+.markdown .table-scroll td,
+.table-scroll td {
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.markdown .table-scroll tbody tr:last-child td,
+.table-scroll tbody tr:last-child td {
+  border-bottom: 0;
+}
+.markdown .table-scroll td:first-child {
+  color: var(--foreground);
+  font-weight: 500;
+}
+.markdown .table-scroll td > code {
+  white-space: normal;
+}
 
-/* THE CV AS ERAS — screen only.
-   The title belongs to the era rather than to a role, so it takes the section
-   heading and the companies under it stay h3. The prose sits at body size
-   because it is meant to be read; the roles beneath stay dense because they
-   are meant to be scanned. None of it survives to paper. */
-.era-title { font-size: var(--fs-h2); margin: 0 0 var(--s-5); }
-.era-prose { margin: 0 0 var(--s-5); max-width: var(--read); }
-.era-obstacle {
-  margin: var(--s-6) 0 var(--s-7);
-  padding-left: var(--s-5);
-  border-left: 2px solid var(--accent);
-  max-width: var(--read);
-  color: var(--ink-2);
+.markdown td[data-status] {
+  white-space: nowrap;
+  font-weight: 500;
 }
-.era-obstacle-label {
-  display: block;
-  font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
-  letter-spacing: var(--ls-label);
-  text-transform: uppercase;
-  color: var(--ink-2);
-  margin-bottom: var(--s-2);
+.markdown td[data-status]::before {
+  margin-right: 0.45rem;
 }
-.cv-era .job:first-of-type { margin-top: var(--s-7); }
+.markdown td[data-status="works"]::before {
+  content: "\25CF";
+  color: var(--success);
+}
+.markdown td[data-status="partial"]::before {
+  content: "\25D0";
+  color: var(--warning);
+}
+.markdown td[data-status="not yet"]::before {
+  content: "\25CB";
+  color: var(--muted-foreground);
+}
+.markdown td[data-status="partial"],
+.markdown td[data-status="not yet"] {
+  color: var(--muted-foreground);
+}
+
+@media (max-width: 700px) {
+  .table--text thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .table--text,
+  .table--text tbody,
+  .table--text tr,
+  .table--text td {
+    display: block;
+  }
+  .markdown .table--text tr {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .markdown .table--text tr:last-child {
+    border-bottom: 0;
+  }
+  .markdown .table--text td {
+    padding: 0;
+    border: 0;
+  }
+  .markdown .table--text td + td {
+    margin-top: 0.375rem;
+  }
+  .markdown .table--text td:first-child {
+    font-size: 0.9375rem;
+  }
+  .table--text td[data-label]:not(:first-child):not([data-status])::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .table--text.table--pairs td::before {
+    display: none;
+  }
+}
 
 /* ============================================================================
-   RESPONSIVE COLLAPSE — 900px
-   The rail does not become a sidebar, a drawer, or a sticky bar. It becomes an
-   inline label strip above the block it annotates: same DOM order, same content,
-   no duplication.
+   CONTENTS — "On this page". The scroll-spy (PostEnhancements) sets --toc-y and
+   --toc-h; both default to zero, so without JavaScript the list is plain links.
    ========================================================================= */
 
-@media (max-width: 900px) {
-  .wrap, .row { grid-template-columns: minmax(0, 1fr); }
-  .wrap > *, .wrap > .rail, .wrap > .bleed,
-  .row > *, .row > .rail { grid-column: 1; }
-
-  .rail {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0 var(--s-3);
-    margin-bottom: var(--s-2);
-    padding-top: 0 !important;
-  }
-  .rail { gap: 0 var(--s-5); }
-  /* The summary names the list here, so its label would say it twice. */
-  .toc-details > .rail--label { display: none; }
-  /* A group label starts a new strip rather than continuing the run. */
-  .rail--group { border-top: 0; padding-top: 0; margin-top: 0; }
-
-  .page-head, .home-greeting { padding-top: var(--s-7); }
-  .home-greeting h1 { font-size: var(--fs-h1); }
-
-  /* The TOC becomes a closed <details> — the only interactive rail element, and
-     it needs no JavaScript. */
-  .toc-details { display: block; }
-  .toc-details > summary {
-    display: list-item;
-    font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
-    letter-spacing: var(--ls-label);
-    text-transform: uppercase;
-    color: var(--ink-2);
-    cursor: pointer;
-    min-height: 24px;
-  }
+@layer components {
   .toc {
-    margin-top: var(--s-2);
-    gap: var(--s-2);
-    /* No column to hang off: the disclosure is as long as it is. */
-    border-left: 0;
-    padding-left: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-left: 1px solid var(--border);
+    font-size: 0.8125rem;
   }
-  .toc > li::before { content: none; }
-  .toc::before { content: none; }
-  .docs-pages {
-    margin: var(--s-2) 0 var(--s-4);
-    gap: var(--s-2);
-    border-left: 0;
-    padding-left: 0;
+  .toc a {
+    display: block;
+    padding: 0.25rem 0 0.25rem 0.875rem;
+    color: var(--muted-foreground);
+    line-height: 1.45;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .toc .toc-sub a {
+    padding-left: 1.625rem;
+  }
+  .toc a:hover,
+  .toc a[aria-current] {
+    color: var(--foreground);
+  }
+  .toc::before {
+    content: "";
+    position: absolute;
+    left: -1px;
+    top: var(--toc-y, 0);
+    width: 2px;
+    height: var(--toc-h, 0);
+    border-radius: 2px;
+    background: var(--brand);
+    transition: top 180ms ease, height 180ms ease;
+  }
+  @media (forced-colors: active) {
+    .toc::before {
+      background: Highlight;
+    }
   }
 
-  /* One column: the contents list becomes a strip between the figures and the
-     first paragraph, and needs the row gap the two-column grid never did. */
-  .post-layout { grid-template-columns: minmax(0, 1fr); row-gap: var(--s-5); }
-  .post-aside, .post-body { grid-column: 1; }
-  .post-aside { position: static; max-height: none; overflow: visible; }
-  .post-head { padding-top: var(--s-7); }
-
-  /* One column: each label must sit nearer its own item than the one above. */
-  .now-list  { row-gap: 0; }
-  .now-list > .rail { padding-top: 0; margin-bottom: var(--s-1); }
-  .now-list > .now-item:not(:last-child) { margin-bottom: var(--s-6); }
-  .about-intro > .rail { padding-top: 0; }
-
-  .uses-status { flex-direction: row; flex-wrap: wrap; gap: 0 var(--s-5); }
-}
-
-@media (max-width: 560px) {
-  .site-header { gap: var(--s-3); }
-  .site-header nav { gap: var(--s-4); }
 }
 
 /* ============================================================================
-   CV PRINT SHEET — target: exactly one A4 page.
-   The rail survives to paper: the same grid becomes the label column, so there
-   is no separate print layout to maintain.
-
-   If Cmd+P shows two pages, work down the cut order at the bottom of this file.
-   Do not go below 10pt or 1.4 line-height to do it.
+   THE DOCS GRID — sidebar, page, contents (components/docs/DocsLayout.tsx).
+   The sidebar and the contents list are each rendered twice: a disclosure for a
+   narrow screen and a rail for a wide one, only one of them displayed. Forcing a
+   closed <details> open on a wide screen works in one engine and not the next.
    ========================================================================= */
+
+@layer components {
+  .docs-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .docs-main {
+    min-width: 0;
+  }
+  .docs-nav,
+  .docs-toc {
+    display: none;
+  }
+
+  @media (min-width: 1024px) {
+    .docs-grid {
+      grid-template-columns: 15.5rem minmax(0, 1fr);
+      grid-template-areas: "nav inline" "nav main";
+      column-gap: 2.5rem;
+    }
+    .docs-menu {
+      display: none;
+    }
+    .docs-nav {
+      display: block;
+      grid-area: nav;
+      position: sticky;
+      top: 3.5rem;
+      align-self: start;
+      max-height: calc(100vh - 3.5rem);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
+    .docs-toc-inline { grid-area: inline; }
+    .docs-main { grid-area: main; }
+  }
+
+  @media (min-width: 1280px) {
+    .docs-grid {
+      grid-template-columns: 15.5rem minmax(0, 1fr) 13.5rem;
+      grid-template-areas: "nav main toc";
+      column-gap: 3rem;
+    }
+    .docs-toc-inline {
+      display: none;
+    }
+    .docs-toc {
+      display: block;
+      grid-area: toc;
+      position: sticky;
+      top: 3.5rem;
+      align-self: start;
+      max-height: calc(100vh - 3.5rem);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
+  }
+
+  .disclosure > summary {
+    list-style: none;
+    cursor: pointer;
+  }
+  .disclosure > summary::-webkit-details-marker {
+    display: none;
+  }
+  .disclosure[open] > summary .disclosure-chevron {
+    rotate: 180deg;
+  }
+}
+
+/* ============================================================================
+   THE POST — title block, then the article with its contents beside it; the
+   contents are a disclosure above the article until there is room for a rail.
+   ========================================================================= */
+
+@layer components {
+  .post-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 1.5rem;
+  }
+  .post-body {
+    min-width: 0;
+  }
+  .post-aside {
+    display: none;
+  }
+
+  @media (min-width: 1280px) {
+    .post-grid {
+      grid-template-columns: minmax(0, 46rem) 14rem;
+      grid-template-areas: "main toc";
+      justify-content: space-between;
+      column-gap: 4rem;
+    }
+    .post-toc-inline {
+      display: none;
+    }
+    .post-body { grid-area: main; }
+    .post-aside {
+      display: block;
+      grid-area: toc;
+      position: sticky;
+      top: 5rem;
+      align-self: start;
+      max-height: calc(100vh - 6rem);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
+  }
+}
+
+/* ============================================================================
+   SEARCH — a modal over Pagefind's JS API (components/Search.tsx)
+   ========================================================================= */
+
+@layer components {
+  .search-dialog {
+    margin: 12vh auto 0;
+    padding: 0;
+    width: min(40rem, calc(100vw - 2rem));
+    max-height: 70vh;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    background: var(--popover);
+    color: var(--popover-foreground);
+    box-shadow: 0 24px 64px -16px rgb(0 0 0 / 0.5);
+  }
+  .search-dialog::backdrop {
+    background: rgb(0 0 0 / 0.55);
+    backdrop-filter: blur(2px);
+  }
+  .search-panel {
+    display: flex;
+    flex-direction: column;
+    max-height: 70vh;
+  }
+  .search-field {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  /* The input draws no outline of its own, so the field carries the ring. */
+  .search-field:focus-within {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  }
+  .search-field input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: none;
+    color: var(--foreground);
+    font: 400 1rem/1.4 var(--font-sans);
+  }
+  .search-field input::placeholder {
+    color: var(--muted-foreground);
+  }
+  .search-field input::-webkit-search-cancel-button {
+    display: none;
+  }
+  .search-body {
+    overflow-y: auto;
+    padding: 0.5rem;
+  }
+  .search-note {
+    margin: 0;
+    padding: 0.625rem 0.75rem;
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+  }
+  .search-hit {
+    display: block;
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--radius-md);
+    color: inherit;
+    text-decoration: none;
+  }
+  .search-hit.is-active {
+    background: var(--accent);
+  }
+  .search-hit-url {
+    display: block;
+    margin-bottom: 0.125rem;
+    color: var(--muted-foreground);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    overflow-wrap: anywhere;
+  }
+  .search-hit-title {
+    display: block;
+    color: var(--foreground);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .search-hit-excerpt {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .search-hit-excerpt mark {
+    background: color-mix(in oklab, var(--brand) 28%, transparent);
+    color: var(--foreground);
+    border-radius: 2px;
+  }
+  @media (max-width: 560px) {
+    .search-dialog {
+      margin-top: 1rem;
+    }
+  }
+}
+
+/* ============================================================================
+   THE HOME PANEL — live figures from /status.json (components/Panel.tsx)
+   ========================================================================= */
+
+@layer components {
+  /* The body reserves the height the figures fill with a complete document, so
+     they arrive without moving anything below. Measured with
+     tests/fixtures/status.json across 300–1700 px; re-measure when a figure,
+     its source text or the layout changes. */
+  .panel-body { min-height: 9.5rem; }
+  @media (max-width: 639px) { .panel-body { min-height: 16.5rem; } }
+
+  .fig {
+    display: block;
+    padding: 0.25rem 0;
+    border-radius: var(--radius-md);
+  }
+  .fig-value {
+    display: block;
+    font-size: 1.625rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+  .fig-value em {
+    margin-left: 2px;
+    color: var(--muted-foreground);
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 500;
+  }
+  .fig-label {
+    display: block;
+    margin-top: 0.125rem;
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+  }
+  /* Ask a number where it came from and it tells you. The space is reserved at
+     rest, so revealing it moves nothing. */
+  .fig-source {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--muted-foreground);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    opacity: 0;
+    transition: opacity 0.16s;
+  }
+  .fig:hover .fig-source,
+  .fig:focus-visible .fig-source {
+    opacity: 1;
+  }
+  @media (hover: none) {
+    .fig-source { opacity: 1; }
+  }
+
+  .live-dot {
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 50%;
+    background: var(--success);
+    animation: live-pulse 2.6s ease-out infinite;
+  }
+  @keyframes live-pulse {
+    0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--success) 55%, transparent); }
+    70% { box-shadow: 0 0 0 7px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .live-dot { animation: none; }
+  }
+}
+
+/* ============================================================================
+   SKILLS AS A READOUT — /skills/ (components/SkillsBoard.tsx). One row per
+   skill, and a bar only where a machine measured something.
+   ========================================================================= */
+
+@layer components {
+  .board-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0 1rem;
+    border: 1px solid var(--input);
+    border-radius: var(--radius-lg);
+    background: var(--card);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .board-filter:focus-within {
+    border-color: var(--ring);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 25%, transparent);
+  }
+  .board-filter-mark {
+    display: flex;
+    flex: none;
+    color: var(--muted-foreground);
+  }
+  .board-filter input {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 2.875rem;
+    border: 0;
+    background: none;
+    color: var(--foreground);
+    font: 400 1rem/1 var(--font-sans);
+  }
+  .board-filter input:focus {
+    outline: none;
+  }
+  .board-filter input::placeholder {
+    color: var(--muted-foreground);
+  }
+  .board-filter input::-webkit-search-decoration,
+  .board-filter input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+  }
+  .board-count {
+    flex: none;
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .board-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .board-list > li {
+    display: grid;
+    grid-template-columns: 1.375rem minmax(0, 1fr) 6.5rem 2.75rem;
+    align-items: center;
+    gap: 0.25rem 1rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid var(--border);
+  }
+  .board-list > li:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+  .board-mark {
+    display: flex;
+    align-items: center;
+    color: var(--muted-foreground);
+  }
+  .board-list > li.is-measured .board-mark {
+    color: var(--brand);
+  }
+  .icon {
+    display: block;
+  }
+  .board-name {
+    min-width: 0;
+    font-weight: 500;
+  }
+  .board-meter {
+    height: 0.3125rem;
+    border-radius: 999px;
+  }
+  .board-list > li.is-measured .board-meter {
+    background: var(--muted);
+  }
+  .board-fill {
+    display: block;
+    width: var(--w);
+    height: 100%;
+    border-radius: 999px;
+    background: var(--brand);
+  }
+  @media (forced-colors: active) {
+    .board-meter,
+    .board-fill { forced-color-adjust: none; }
+    .board-list > li.is-measured .board-meter { background: Canvas; outline: 1px solid GrayText; }
+    .board-fill { background: Highlight; }
+  }
+  .board-num {
+    grid-column: 4;
+    color: var(--muted-foreground);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  .board-now {
+    grid-column: 2 / -1;
+    max-width: 42rem;
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+  }
+  .board-empty {
+    margin: 2rem 0 0;
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+  }
+  .board-list--notes > li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .board-list--notes .board-now {
+    grid-column: 1;
+  }
+  .board-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .board-box li {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .board-box li > * {
+    padding: 0.4375rem 0.75rem;
+    border-radius: 999px;
+    text-decoration: none;
+  }
+  .board-box li:has(a):hover {
+    border-color: var(--input);
+    background: var(--accent);
+  }
+  .board-box a:hover {
+    color: var(--foreground);
+  }
+  @media (max-width: 560px) {
+    .board-list > li { grid-template-columns: 1.375rem minmax(0, 1fr) 2.75rem; }
+    .board-meter { display: none; }
+    .board-num { grid-column: 3; }
+    .board-list--notes > li { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  /* The measured share beside a skill: evidence, set like the other counted things. */
+  .measured {
+    margin-inline-start: 0.75rem;
+    color: var(--muted-foreground);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ============================================================================
+   THE JOURNEY — /journey/ (components/Journey.tsx). Geometry arrives as custom
+   properties per element: --l and --w in percent of the axis, --i the index.
+   ========================================================================= */
+
+@layer components {
+  .jr {
+    --jr-label: 14rem;
+    --jr-inset: calc(var(--jr-label) + 1rem);
+  }
+  .jr-scale {
+    position: relative;
+    height: 1.25rem;
+    margin-left: var(--jr-inset);
+  }
+  .jr-year {
+    position: absolute;
+    left: var(--l);
+    transform: translateX(-50%);
+    color: var(--muted-foreground);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .jr-field { position: relative; }
+  .jr-grid {
+    position: absolute;
+    inset: 0 0 0 var(--jr-inset);
+    pointer-events: none;
+  }
+  .jr-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--l);
+    width: 1px;
+    background: var(--border);
+  }
+  .jr-gap {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--l);
+    width: var(--w);
+    background: repeating-linear-gradient(
+      45deg,
+      color-mix(in oklab, var(--destructive) 8%, transparent) 0 4px,
+      transparent 4px 11px
+    );
+  }
+  .jr-now {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--l);
+    width: 1px;
+    background: var(--brand);
+    opacity: 0.6;
+  }
+  @media (forced-colors: active) {
+    .jr-line, .jr-now, .jr-gap { forced-color-adjust: none; }
+    .jr-line { background: GrayText; }
+    .jr-now { background: Highlight; opacity: 1; }
+    .jr-gap { background: repeating-linear-gradient(45deg, GrayText 0 1px, transparent 1px 8px); }
+  }
+  .jr-rows {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .jr-row {
+    display: grid;
+    grid-template-columns: var(--jr-label) 1fr;
+    align-items: center;
+    gap: 1rem;
+  }
+  .jr-label {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    padding: 0.5rem 0;
+  }
+  .jr-name {
+    font-size: 0.9375rem;
+    font-weight: 500;
+  }
+  .jr-detail {
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+  .jr-track {
+    position: relative;
+    height: 2.625rem;
+  }
+  .jr-bar {
+    position: absolute;
+    top: 0.4375rem;
+    bottom: 0.4375rem;
+    left: var(--l);
+    width: var(--w);
+    display: block;
+    border: 1px solid var(--input);
+    border-radius: var(--radius-md);
+    background: var(--secondary);
+    text-decoration: none;
+    /* Visible as served. Journey.tsx arms the draw-in only when the chart
+       mounts below the fold; it then runs once, from the left. */
+    transform-origin: left center;
+    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.16s, border-color 0.16s;
+    transition-delay: calc(var(--i, 0) * 45ms), 0s, 0s;
+  }
+  .jr.is-armed .jr-bar { transform: scaleX(0); }
+  .jr.is-armed.is-drawn .jr-bar { transform: none; }
+  .jr-row:hover .jr-bar,
+  .jr-row.is-on .jr-bar {
+    border-color: var(--brand);
+    background: color-mix(in oklab, var(--brand) 22%, var(--background));
+  }
+  a.jr-bar:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+  .jr-read {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 4.6em;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .jr-read-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.75rem;
+  }
+  .jr-read-head strong {
+    font-size: 1.125rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+  .jr-read-head span,
+  .jr-read-head a {
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+  }
+  .jr-read-head a {
+    color: var(--foreground);
+  }
+  .jr-read-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .jr-read-tags span {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+  }
+  .jr-read-idle {
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+  }
+  .jr-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    max-width: 42rem;
+    margin: 1.5rem 0 0;
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+  }
+  .jr-note .icon {
+    flex: none;
+    margin-top: 3px;
+  }
+  @media (max-width: 760px) {
+    .jr { --jr-label: 7.5rem; }
+    .jr-track { height: 2.375rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .jr-bar,
+    .jr.is-armed .jr-bar {
+      transform: none;
+      transition: background 0.16s, border-color 0.16s;
+    }
+  }
+}
+
+/* ============================================================================
+   COMMENTS — Remark42, first-party at /c/, rendered into #remark42
+   ========================================================================= */
+
+@layer components {
+  /* 300px is the measured height of an empty thread; less shifts the page for
+     a reader who scrolls while it loads. */
+  .comments #remark42 {
+    min-height: 300px;
+  }
+}
+
+/* ============================================================================
+   THE CV — screen styles for the sheet, then the A4 print contract
+   ========================================================================= */
+
+@layer components {
+  .cv-section-label {
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .job-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .job-name {
+    margin: 0;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .job-meta {
+    margin: 0.25rem 0 0;
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
+  .job-dates {
+    color: var(--muted-foreground);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .job ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.1em;
+    color: color-mix(in oklab, var(--foreground) 86%, var(--background));
+    font-size: 0.9375rem;
+    list-style: disc;
+  }
+  .job li {
+    margin-top: 0.25rem;
+  }
+  .job li::marker {
+    color: var(--muted-foreground);
+  }
+  .job + .job {
+    margin-top: 1.75rem;
+  }
+  .era-obstacle {
+    max-width: 42rem;
+    margin: 1.5rem 0 2rem;
+    padding-left: 1.25rem;
+    border-left: 2px solid var(--brand);
+    color: var(--muted-foreground);
+  }
+  .era-obstacle-label {
+    display: block;
+    margin-bottom: 0.375rem;
+    color: var(--foreground);
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+  .cv-era .job:first-of-type {
+    margin-top: 2rem;
+  }
+  .print-hint,
+  .print-actions {
+    min-block-size: 2.75rem;
+    box-sizing: border-box;
+  }
+}
 
 @media print {
-
-  /* --- force a paper-white token set, regardless of the reader's theme ----- */
-  :root, [data-theme="dark"], [data-theme="light"] {
-    --paper:     #FFFFFF;
-    --surface:   #FFFFFF;
-    --surface-2: #FFFFFF;
-    --rule:      #DDD8CE;
-    --rule-firm: #14120F;
-    --ink:       #14120F;
-    --ink-2:     #4A463F;   /* darker than screen: toner, not pixels */
-    --accent:    #14120F;   /* no colour on a printed CV             */
-  }
-  html { color-scheme: light; }
-
-  /* The screen scale is fluid and its `vw` term resolves against the PAPER
-     width in print — an A4 sheet is ~794px at 96dpi, which lands mid-ramp and
-     would silently resize a CV that has to fit one page. Every step is pinned
-     in points here, so the semantic aliases keep working and nothing on this
-     sheet can move when the screen scale is retuned. These eight values are
-     the contract with @page below: change one and re-measure the CV. */
-  :root, [data-theme="dark"], [data-theme="light"] {
-    --step--2:   7.5pt;
-    --step--1:   8.5pt;
-    --step-0:   10.0pt;
-    --step-1:   11.5pt;
-    --step-2:   13.0pt;
-    --step-3:   15.0pt;
-    --step-4:   18.0pt;
-    --step-5:   21.0pt;
+  /* --- a paper-white token set, whatever the reader's theme --------------- */
+  :root,
+  [data-theme="dark"],
+  [data-theme="light"] {
+    color-scheme: light;
+    --background: #ffffff;
+    --foreground: #14120f;
+    --card: #ffffff;
+    --muted: #ffffff;
+    --muted-foreground: #4a463f;   /* darker than screen: toner, not pixels */
+    --border: #ddd8ce;
+    --input: #14120f;
+    --brand: #14120f;              /* no colour on a printed CV */
+    --ring: #14120f;
   }
 
-  @page { size: A4; margin: 11mm 13mm 10mm; }
+  @page {
+    size: A4;
+    margin: 11mm 13mm 10mm;
+  }
 
-  html, body {
+  html,
+  body {
     background: #fff;
     font-size: 10pt;
     line-height: 1.4;
   }
 
   /* --- strip the site chrome --------------------------------------------- */
-  .site-header, .site-footer, .skip-link, .print-hint, .print-actions,
-  .toc, .toc-details, .post-aside, .copy-btn, .filter-bar, .filter-row, .sort-bar {
+  .site-header,
+  .site-footer,
+  .skip-link,
+  .print-hint,
+  .print-actions,
+  .toc,
+  .post-aside,
+  .post-toc-inline,
+  .docs-menu,
+  .docs-nav,
+  .docs-toc,
+  .docs-toc-inline,
+  .copy-btn,
+  .filter-bar,
+  .filter-row,
+  .sort-bar,
+  .screen-only {
     display: none !important;
   }
 
-  /* --- the grid: ONE column ----------------------------------------------
-     The screen's rail/measure split came to paper and did not survive the
-     trip. 26mm of a 184mm sheet — 14% of the width — held four words and was
-     blank down the rest of the page, while the content it was supposed to
-     annotate wrapped an extra line in most bullets.
-
-     Paper gets the layout paper wants: full measure, and section headings as
-     ruled bands across it. The rail elements are still the headings; they
-     just span the sheet instead of sitting beside it. */
-  .wrap { display: flex; flex-direction: column; padding: 0; max-width: none; }
-  .row  { display: block; padding: 0; max-width: none; }
-  .post-layout { display: block; }
-
-  .rail {
+  .print-only {
     display: block;
-    font: 400 8.5pt/1.5 var(--figure);
-    letter-spacing: .02em;
-    color: var(--ink-2);
-    padding-top: 0;
   }
-  .rail > * + *::before { content: none; }
 
-  /* A section heading, not a margin note: small caps across the full measure
-     with a rule under it, so the eye can find Experience / Projects / Skills
-     / Education without reading. */
-  .rail--label {
+  /* --- the CV sheet: one column, section labels as ruled bands ------------ */
+  .cv {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .cv .cv-section {
     display: block;
-    font: 700 8pt/1 var(--figure);
-    letter-spacing: .18em;
-    text-transform: uppercase;
-    color: #000;
-    margin: 0 0 1mm;
+    padding: 0;
+    border: 0;
+  }
+  .cv .cv-section > div {
+    max-width: none;
+  }
+  .cv .cv-section-label {
+    position: static;
+  }
+  .cv .cv-section-label {
+    display: block;
+    margin: 1.4mm 0 1mm;
     padding-bottom: 0.7mm;
     border-bottom: 0.75pt solid #000;
-  }
-  /* A band needs air above it or it reads as a rule under the previous entry. */
-  .cv .section > .rail--label,
-  .cv .cv-era > .rail { margin-top: 1.4mm; }
-  .cv .cv-era:first-of-type > .rail { margin-top: 2mm; }
-
-  /* --- CV specifics ------------------------------------------------------- */
-  .cv h1 {
-    font: 600 18pt/1 var(--prose);
-    letter-spacing: -0.02em;
     color: #000;
-    margin: 0;
+    font: 700 8pt/1 var(--font-mono);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
   }
-  .cv .role-title { font: 400 10pt/1.2 var(--prose); margin: 1mm 0 0; }
-  .cv .masthead   { border-bottom: 1.25pt solid #000; padding-bottom: 1.6mm; }
+  .cv .cv-era:first-of-type .cv-section-label {
+    margin-top: 2mm;
+  }
+  .cv .cv-era:not(:first-of-type) .cv-section-label {
+    display: none;
+  }
 
-  /* The contact rail is long URLs and the label column is 26mm wide, so on
-     paper they would print over the name. Below the collapse they already run
-     inline; do the same here. `order` moves the masthead ahead of the rail
-     without touching DOM order, so the sheet reads name, rule, contacts. The
-     masthead spans BOTH columns, so the name aligns with its rule and address. */
-  .cv .masthead { order: -1; }
+  .cv h1 {
+    margin: 0;
+    color: #000;
+    font: 600 18pt/1 var(--font-sans);
+    letter-spacing: -0.02em;
+  }
+  .cv .role-title {
+    margin: 1mm 0 0;
+    font: 400 10pt/1.2 var(--font-sans);
+  }
+  .cv .masthead {
+    padding: 0 0 1.6mm;
+    border-bottom: 1.25pt solid #000;
+  }
   .cv .masthead-rail {
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0 1.6mm;   /* 2.2mm ran the last contact past the edge on macOS */
-    margin-top: 1mm;
-    /* 7.5pt is what fits all five on ONE line at 184mm. Two lines here
-       costs 4mm, and this block was already 18% of the sheet. */
     flex-wrap: nowrap;
-    white-space: nowrap;
+    gap: 0 1.6mm;
+    margin-top: 1mm;
     font-size: 7.5pt;
+    white-space: nowrap;
+  }
+  .cv .masthead-rail a {
+    display: inline;
+    min-height: 0;
   }
 
-  .cv .job           { break-inside: avoid; page-break-inside: avoid; }
-  .cv .rail--label   { break-after: avoid;  page-break-after: avoid;  }
-  .cv h2, .cv h3     { break-after: avoid;  page-break-after: avoid;  }
+  .cv .job { break-inside: avoid; page-break-inside: avoid; }
+  .cv .cv-section-label { break-after: avoid; page-break-after: avoid; }
+  .cv h2,
+  .cv h3 { break-after: avoid; page-break-after: avoid; }
 
-  /* The sheet is the record, not the story. Each era's title, prose and
-     obstacle line are screen furniture; what prints is the same job blocks a
-     reader expects from a CV, in the same order.
-
-     Bullets are budgeted by `printBullets` on the data and marked
-     `.print-hide` in the markup. This was `:nth-child(n+4)` and
-     `:nth-of-type(n+3)`, which count position in the DOM — and the DOM is
-     nested inside eras now, so those would have gone on matching while
-     quietly counting the wrong thing. */
+  /* The sheet is the record, not the story: each era's title, prose and
+     obstacle line stay on screen. Bullets are budgeted by `printBullets` and
+     marked `.print-hide` in the markup. */
   .cv .era-title,
   .cv .era-prose,
   .cv .era-obstacle,
-  .cv .screen-only,
-  .cv .print-hide      { display: none; }
-  .cv .print-only      { display: block; }
+  .cv .print-hide { display: none; }
   .cv .job--compact ul { display: none; }
   .cv .cv-era .job:first-of-type { margin-top: 0; }
+  .cv hr { display: none; }
 
-  /* Every other section on the sheet is labelled and this one — the longest —
-     was not: the era rails carry years the roles print for themselves, so they
-     were hidden and left a 26mm column blank down the whole record. One
-     "Experience" at the top, nothing under it. */
-  .cv .cv-era:not(:first-of-type) > .rail { display: none; }
-
-  /* Every section boundary was drawn twice: an <hr class="bleed"> in the markup
-     AND a border-top from `.section + .section`. On screen the hr is the rule;
-     on paper the section border is, so the hr goes. */
-  .cv hr.bleed { display: none; }
   .cv .job + .job { margin-top: 0.8mm; }
-  .cv .job-name   { font: 600 11.5pt/1.25 var(--prose); color: #000; }
-  .cv .job-meta   { font: 400 8.5pt/1.3 var(--figure); color: var(--ink-2); margin-top: 0.4mm; }
-  .cv .job ul     { margin: 0.8mm 0 0; padding-left: 4.2mm; font-size: 10pt; line-height: 1.4; }
-  .cv .job li + li{ margin-top: 0.3mm; }
+  .cv .job-name { color: #000; font: 600 11.5pt/1.25 var(--font-sans); }
+  .cv .job-meta { margin-top: 0.4mm; color: var(--muted-foreground); font: 400 8.5pt/1.3 var(--font-mono); }
+  .cv .job ul { margin: 0.8mm 0 0; padding-left: 4.2mm; color: #14120f; font-size: 10pt; line-height: 1.4; }
+  .cv .job li { margin-top: 0; }
+  .cv .job li + li { margin-top: 0.3mm; }
+  .cv .job-dates { color: var(--muted-foreground); font: 400 9pt/1 var(--font-mono); font-variant-numeric: tabular-nums; }
+  .cv .cv-section + .cv-section { margin-top: 0; }
+  .cv .cv-era + .cv-era { margin-top: 1.2mm; }
 
-  .cv .job-dates {
-    font: 400 9pt/1 var(--figure);
-    font-variant-numeric: tabular-nums;
-    color: var(--ink-2);
-    white-space: nowrap;
-  }
-
-  .cv .section + .section { margin-top: 0; }
-  .cv .cv-era + .cv-era     { margin-top: 1.2mm; }
-
-  /* Skills compress to names, one group per line with its label in the margin
-     of the prose column. The "where it stands" line is the argument, and an
-     argument is what the conversation after the CV is for. */
-  /* A run-in, not a nested column. `flex: 0 0 20mm` on the group heading put a
-     second label column INSIDE the prose column, so the sheet had five left
-     edges — contacts, name, headings, bullets, skill values — and the values
-     wrapped ragged against a flex gap. Now each group is one paragraph: the
-     name in small caps, then the list, separated by a mark rather than by
-     whitespace that could be a line break. */
+  /* Skills: one run-in paragraph per group. */
   .cv .skill-groups { display: block; }
-  .cv .skill-group   { display: block; margin: 0; }
+  .cv .skill-group { display: block; margin: 0; }
   .cv .skill-group + .skill-group { margin-top: 0.4mm; }
-  .cv .skill-group h3 {
-    display: inline;
-    font-size: 7.5pt;
-    margin: 0;
-  }
+  .cv .skill-group h3 { display: inline; margin: 0; font: 700 7.5pt/1 var(--font-mono); letter-spacing: 0.14em; text-transform: uppercase; }
   .cv .skill-group h3::after { content: "  "; letter-spacing: 1.5mm; }
   .cv .skill-group dl { display: inline; margin: 0; }
-  .cv .skill-group dt { display: inline; font-weight: 400; font-size: 9pt; margin: 0; }
-  /* NOT `dt + dt` — every dt is followed by its dd, so they are never
-     adjacent siblings and the separator silently never rendered. */
-  .cv .skill-group dt:not(:first-of-type)::before { content: " · "; color: var(--ink-2); }
+  .cv .skill-group dt { display: inline; margin: 0; font-size: 9pt; font-weight: 400; }
+  .cv .skill-group dt:not(:first-of-type)::before { content: " · "; color: var(--muted-foreground); }
   .cv .skill-group dd { display: none; }
   .cv .measured { display: none; }
-
-  /* A project's stack is already inside its one bullet; printing it twice costs
-     three lines and tells the reader nothing new. The roles keep their meta
-     line — that one carries the title, and the title is the point. */
   .cv .project-stack { display: none; }
 
-  /* Two schools, one line each: name, subject, place, date. On screen they get
-     room; on paper they are the last thing anyone reads. */
-  /* Same shape as a role: name and date on one line, detail under it. It was
-     a single flex run, so the school, the year, the subject and the city ran
-     together into one unreadable line. */
   .cv .edu { display: block; }
   .cv .edu .job-head { display: flex; justify-content: space-between; gap: 3mm; }
   .cv .edu .job-meta { margin: 0.2mm 0 0; }
   .cv .edu + .edu { margin-top: 1mm; }
 
-  /* The 24px touch target on the contact links is a screen concern. Paper has
-     no fingers, and it was costing two millimetres. */
-  .cv .masthead-rail a { min-height: 0; display: inline; }
-
-  /* Links print as text. The URLs a reader needs are already spelled out in the
-     contact rail; appending them inline just adds noise. */
   .cv a { color: #000; text-decoration: none; }
 
-  /* --- everything else on the site, when printed -------------------------- */
-  pre, blockquote, .job { break-inside: avoid; }
+  /* --- everything else, when printed ---------------------------------------- */
+  pre,
+  blockquote,
+  .job { break-inside: avoid; }
   pre {
     border: 0.5pt solid #999;
     border-left: 1.5pt solid #000;
     background: #fff;
     font-size: 8.5pt;
-    white-space: pre-wrap;      /* no clipped code on paper */
+    white-space: pre-wrap;
     word-break: break-word;
   }
-  h1, h2, h3 { break-after: avoid; }
-  img, svg, figure, table { break-inside: avoid; }
-}
-
-/* ============================================================================
-   FITTING ONE PAGE — if the CV grows past a single sheet, cut in this order:
-     1. GlobalLogic and LetsData drop to title + dates only (already the case).
-     2. UKAD drops from two bullets to one.
-     3. Skills becomes one line, no wrap.          ← SPENT (9pt)
-     4. Body from 10.5pt to 10pt. NOT below 10pt.  ← SPENT
-     5. @page margin from 16mm/15mm to 14mm/13mm.  ← SPENT (11mm/13mm)
-     6. IT INNOVATIONS from three bullets to two.   ← SPENT (printBullets)
-     7. Spacing between blocks: bands 1.4mm, roles 0.8mm, bullet lists 0.8mm,
-        bullets 0.3mm.                              ← SPENT
-
-     All seven are spent. Linux Chromium (CI) lays the sheet out taller than
-     macOS; measured there, it has about 20px to spare. The next cut is
-     CONTENT again — a bullet, a project or a skill group — and the owner
-     chooses it. Do not reach for the type size or the gaps again.
-   Do not shrink line-height below 1.4 and do not drop the masthead rule.
-   ========================================================================= */
-
-
-/* ============================================================================
-   COMMENTS — self-hosted, first-party
-
-   The widget renders itself into #remark42 and brings its own styling inside
-   an iframe, so there is very little to do here: reserve the room, and make
-   the fallback look like the rest of the site rather than like an error page.
-   ========================================================================= */
-
-.comments { margin-top: var(--s-9); }
-/* The thread arrives after its script does. Reserving height keeps CLS at 0
-   on a page that had none — the same reason .panel-body has a min-height.
-   300px is the measured height of an empty thread (sign-in box, toolbar, sort
-   control); anything less shifts for a reader who scrolls down while it
-   loads. */
-.comments #remark42 { min-height: 300px; }
-.comments-note {
-  margin: 0 0 var(--s-4);
-  max-width: var(--read);
-  font-size: var(--fs-small);
-  color: var(--ink-2);
-}
-
-/* ============================================================================
-   SKILLS AS A READOUT — /skills/
-
-   Two diagrams came before this one: a force simulation, then a radial tree.
-   Both were pictures of a claim rather than evidence for it — any developer
-   can draw a graph of the words they know. This is the version that is hard to
-   copy: one row per skill, and a bar only where a machine measured something.
-
-   Four bordered panels came after those, and they were the reason the page
-   read as small — a card inside the measure sets its own margin, so the
-   sentence that carries the whole claim was eleven pixels of monospace inside
-   two frames. The group name is in the page's own rail now and the rows start
-   on the title's line: prose in the prose face, monospace kept for the figures
-   it was chosen for.
-   ========================================================================= */
-
-.board { grid-column: 1 / -1; margin-top: var(--s-6); }
-
-/* The filter, and nothing else above the list. The measured shares from
-   /status.json are in the bars, where they mean something.
-
-   It is a field rather than a bare input because it opens the page: the
-   border is the control, the glyph carries the label, and the count sits
-   inside it rather than floating beside it. The input keeps no border of its
-   own and no focus ring — the ring belongs to the field, via :focus-within,
-   which is what the reader is actually looking at. */
-.board-filter {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
-  padding: 0 var(--s-4);
-  border: var(--hair) solid var(--rule-firm);
-  border-radius: var(--radius);
-  background: var(--surface);
-  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
-}
-.board-filter:hover { background: var(--surface-2); }
-/* The replacement for the input's own outline, not the absence of one. */
-.board-filter:focus-within {
-  border-color: var(--accent);
-  background: var(--paper);
-  box-shadow: 0 0 0 3px var(--accent-quiet);
-}
-.board-filter-mark { display: flex; color: var(--ink-2); flex: 0 0 auto; }
-.board-filter:focus-within .board-filter-mark { color: var(--accent); }
-
-.board-filter input {
-  flex: 1 1 auto;
-  min-width: 0;
-  min-height: 46px;                       /* WCAG 2.5.8, and it reads as a field */
-  border: 0;
-  background: none;
-  color: var(--ink);
-  font: var(--w-body) var(--fs-body)/1 var(--prose);
-}
-.board-filter input:focus { outline: none; }   /* the field carries it */
-.board-filter input::placeholder { color: var(--ink-2); }
-/* Safari draws its own clear button on type=search and it lands on the border. */
-.board-filter input::-webkit-search-decoration,
-.board-filter input::-webkit-search-cancel-button { -webkit-appearance: none; }
-
-.board-count {
-  flex: 0 0 auto;
-  font: var(--w-body) var(--fs-rail)/1 var(--figure);
-  letter-spacing: var(--ls-rail);
-  font-variant-numeric: tabular-nums;
-  text-transform: uppercase;
-  color: var(--ink-2);
-}
-
-/* `.row` supplies the rail/measure split and collapses it at 900px. */
-.board-group { margin-top: var(--s-8); }
-.board-group > .rail { padding-top: 0.25em; }
-
-.board-list { list-style: none; margin: 0; padding: 0; }
-.board-list > li {
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) 104px 2.6rem;
-  align-items: center;
-  gap: 3px var(--s-4);
-  padding: var(--s-3) 0;
-  border-top: var(--hair) solid var(--rule);
-}
-.board-list > li:first-child { border-top: 0; padding-top: 0; }
-
-.board-mark { display: flex; align-items: center; color: var(--ink-2); }
-.board-list > li.is-measured .board-mark { color: var(--accent); }
-.icon { display: block; }
-
-.board-name { font-weight: 500; min-width: 0; }
-
-/* The track exists only where there is something to put in it. */
-.board-meter { height: 5px; border-radius: 3px; }
-.board-list > li.is-measured .board-meter { background: var(--surface-2); }
-.board-fill { display: block; width: var(--w); height: 100%; border-radius: 3px; background: var(--accent); }
-@media (forced-colors: active) {
-  .board-meter, .board-fill { forced-color-adjust: none; }
-  .board-list > li.is-measured .board-meter { background: Canvas; outline: 1px solid GrayText; }
-  .board-fill { background: Highlight; }
-}
-
-/* Only a measured row prints one; an unmeasured row prints nothing. */
-.board-num {
-  grid-column: 4;
-  text-align: right;
-  font: 400 var(--fs-code)/1 var(--figure);
-  font-variant-numeric: tabular-nums;
-  color: var(--ink-2);
-}
-
-/* The line that actually says where a skill stands. Prose, at the size prose
-   is read at — it was the smallest thing on the page and it is the point. */
-.board-now {
-  grid-column: 2 / -1;
-  max-width: var(--read);
-  font-size: var(--fs-small);
-  color: var(--ink-2);
-}
-
-.board-empty { margin: var(--s-7) 0 0; color: var(--ink-2); font-size: var(--fs-small); }
-
-/* Practice is a note, not a row with a bar: nobody installs a habit. */
-.board-list--notes > li { grid-template-columns: minmax(0, 1fr); }
-.board-list--notes .board-now { grid-column: 1; }
-
-.board-box {
-  display: flex; flex-wrap: wrap; gap: var(--s-2);
-  list-style: none; margin: 0; padding: 0;
-}
-.board-box li {
-  display: flex;
-  font: 400 var(--fs-code)/1 var(--figure);
-  color: var(--ink-2);
-  border: var(--hair) solid var(--rule);
-  border-radius: 999px;
-  transition: border-color .15s ease, background .15s ease;
-}
-/* The padding belongs to the child, so the whole chip is the hit target and
-   the focus ring follows the shape rather than the word inside it. */
-.board-box li > * {
-  padding: 8px 12px;
-  text-decoration-line: none;
-  border-radius: 999px;
-}
-.board-box li:has(a):hover { border-color: var(--rule-firm); background: var(--surface); }
-.board-box a:hover { color: var(--ink); }
-
-@media (max-width: 560px) {
-  .board-list > li { grid-template-columns: 22px minmax(0, 1fr) 2.6rem; }
-  .board-meter { display: none; }
-  /* The last column here is 3. Left at 4, a measured row arriving from
-     /status.json opens an implicit column and rewraps the name beside it. */
-  .board-num { grid-column: 3; }
-  /* Restated after the rule above, which otherwise squeezes the notes into
-     the 22px icon column, one word per line. */
-  .board-list--notes > li { grid-template-columns: minmax(0, 1fr); }
-}
-
-/* ============================================================================
-   THE JOURNEY — /journey/
-
-   The record as a length of time. The CV tells it as chapters and /skills/ as a
-   readout; this is the only telling where the GAPS are visible, which is the
-   reason it exists.
-   ========================================================================= */
-
-.jr {
-  grid-column: 1 / -1; margin-top: var(--s-8);
-  --jr-label: 14rem;
-  /* Where the track starts: the label column plus the row's gap. The scale
-     and the grid use it too, or the bars sit a gap's width off the years. */
-  --jr-inset: calc(var(--jr-label) + var(--s-4));
-}
-
-/* Geometry arrives as custom properties set per element: --l and --w in
-   percent of the axis, --i the row's index. */
-.jr-scale {
-  position: relative; height: 20px;
-  margin-left: var(--jr-inset);
-}
-.jr-year {
-  position: absolute; left: var(--l); transform: translateX(-50%);
-  font: 400 var(--fs-rail)/1 var(--figure);
-  color: var(--ink-2);
-  font-variant-numeric: tabular-nums;
-}
-
-.jr-field { position: relative; }
-.jr-grid { position: absolute; inset: 0 0 0 var(--jr-inset); pointer-events: none; }
-.jr-line { position: absolute; top: 0; bottom: 0; left: var(--l); width: 1px; background: var(--rule); }
-/* The months with no employer, computed from the same dates as the bars so
-   they cannot be quietly dropped. */
-.jr-gap {
-  position: absolute; top: 0; bottom: 0; left: var(--l); width: var(--w);
-  background: repeating-linear-gradient(
-    45deg, color-mix(in srgb, var(--warn) 6%, transparent) 0 4px, transparent 4px 11px);
-}
-.jr-now { position: absolute; top: 0; bottom: 0; left: var(--l); width: 1px; background: var(--accent); opacity: .5; }
-/* Forced colours drop backgrounds, and with them the gridlines, "now" and the
-   gaps the lede promises. Hand them back in system colours. */
-@media (forced-colors: active) {
-  .jr-line, .jr-now, .jr-gap { forced-color-adjust: none; }
-  .jr-line { background: GrayText; }
-  .jr-now { background: Highlight; opacity: 1; }
-  .jr-gap { background: repeating-linear-gradient(45deg, GrayText 0 1px, transparent 1px 8px); }
-}
-
-.jr-rows { list-style: none; margin: 0; padding: 0; position: relative; }
-.jr-row {
-  display: grid; grid-template-columns: var(--jr-label) 1fr;
-  align-items: center; gap: var(--s-4);
-}
-.jr-label { display: flex; flex-direction: column; gap: 1px; min-width: 0; padding: var(--s-2) 0; }
-.jr-name { font-weight: 500; }
-.jr-detail { font: 400 var(--fs-rail)/1.4 var(--figure); color: var(--ink-2); }
-.jr-track { position: relative; height: 42px; }
-
-.jr-bar {
-  position: absolute; top: 7px; bottom: 7px; left: var(--l); width: var(--w);
-  display: block;
-  border: var(--hair) solid var(--rule-firm);
-  border-radius: 7px;
-  background: var(--surface-2);
-  text-decoration: none;
-  /* Visible as served. Journey.tsx arms the draw-in only when the chart
-     mounts below the fold; it then runs once, from the left. */
-  transform-origin: left center;
-  transition: transform .5s cubic-bezier(.2,.8,.2,1), background .16s ease, border-color .16s ease;
-  transition-delay: calc(var(--i, 0) * 45ms), 0s, 0s;
-}
-.jr.is-armed .jr-bar { transform: scaleX(0); }
-.jr.is-armed.is-drawn .jr-bar { transform: none; }
-.jr-row:hover .jr-bar,
-.jr-row.is-on .jr-bar { background: var(--accent-quiet); border-color: var(--accent); }
-a.jr-bar:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-
-.jr-read {
-  display: flex; flex-direction: column; gap: var(--s-2);
-  min-height: 4.6em;
-  margin-top: var(--s-6); padding-top: var(--s-4);
-  border-top: var(--hair) solid var(--rule);
-}
-.jr-read-head { display: flex; flex-wrap: wrap; gap: var(--s-3); align-items: baseline; }
-.jr-read-head strong { font-size: var(--fs-h3); font-weight: 500; letter-spacing: -0.015em; }
-.jr-read-head span { font: 400 var(--fs-rail)/1 var(--figure); color: var(--ink-2); }
-.jr-read-head a { font: 400 var(--fs-rail)/1 var(--figure); }
-.jr-read-tags { display: flex; flex-wrap: wrap; gap: var(--s-2); }
-.jr-read-tags span {
-  font: 400 var(--fs-rail)/1 var(--figure);
-  color: var(--ink-2);
-  border: var(--hair) solid var(--rule);
-  border-radius: 999px; padding: 5px 9px;
-}
-.jr-read-idle {
-  font: 400 var(--fs-rail)/1 var(--figure);
-  letter-spacing: var(--ls-rail); text-transform: uppercase; color: var(--ink-2);
-}
-
-.jr-note {
-  display: flex; gap: var(--s-3); align-items: flex-start;
-  margin: var(--s-6) 0 0; max-width: var(--read);
-  font-size: var(--fs-small); color: var(--ink-2);
-}
-.jr-note .icon { flex: 0 0 auto; margin-top: 3px; }
-
-@media (max-width: 760px) {
-  .jr { --jr-label: 7.5rem; }
-  .jr-track { height: 38px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .jr-bar,
-  .jr.is-armed .jr-bar { transition: background .16s ease, border-color .16s ease; transform: none; }
+  h1,
+  h2,
+  h3 { break-after: avoid; }
+  img,
+  svg,
+  figure,
+  table { break-inside: avoid; }
 }

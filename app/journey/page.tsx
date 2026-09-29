@@ -88,7 +88,6 @@ export default function JourneyPage() {
 
       <PageHead
         title="Journey"
-        quiet
         figures={
           <>
             <span>{from} — now</span>{" "}
@@ -99,6 +98,7 @@ export default function JourneyPage() {
         lede="Not the stack — how it was acquired. Every bar is a date from the record, every tag a technology that role actually used, and the shaded stretches are the months with no employer."
       />
 
+      <div className="rounded-xl border bg-card p-5 md:p-6">
       <Journey
         rows={rows}
         axis={axis}
@@ -112,9 +112,10 @@ export default function JourneyPage() {
           page for the same reason the {inWords(getSpanDays("silent-deploys"))} days are.
         </p>
       </Journey>
+      </div>
 
-      <p className="page-figures">
-        <span>The same record, told as chapters, is on <Link prefetch={false} href="/cv/">the CV</Link>.</span>
+      <p className="mt-6 text-sm text-muted-foreground">
+        The same record, told as chapters, is on <Link className="link" prefetch={false} href="/cv/">the CV</Link>.
       </p>
 
     </Shell>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import ProjectCard from "@/components/ProjectCard";
+import { chip, chipCount } from "@/components/ui/toggle";
 import { groupProjects, type ProjectRow } from "@/lib/project-rows";
 
 /**
@@ -23,63 +24,25 @@ import { groupProjects, type ProjectRow } from "@/lib/project-rows";
  */
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
-/** Language, shape and where to look: the line under a project's name. */
-function Facts({ p, withStatus }: { p: ProjectRow; withStatus?: boolean }) {
-  return (
-    <p className="pj-facts run">
-      <span>{p.lang}</span>
-      <span>{p.shape}</span>
-      {withStatus && <span className="project-state">{p.status}</span>}
-      {p.repo ? (
-        <span><a href={p.repo} rel="noopener">repo</a></span>
-      ) : (
-        <span>private</span>
-      )}
-      {p.docs && <span><Link prefetch={false} href={p.docs}>docs</Link></span>}
-      {p.posts > 0 && <span>{plural(p.posts, "post", "posts")}</span>}
-    </p>
-  );
-}
-
-function Entry({ p }: { p: ProjectRow }) {
-  return (
-    <li className={p.featured ? "pj pj--lead" : "pj"}>
-      <div className="pj-head">
-        <h3 className="pj-name">
-          <Link prefetch={false} href={`/projects/${p.slug}/`}>{p.name}</Link>
-        </h3>
-        <Facts p={p} withStatus={p.featured} />
-      </div>
-      <p className="pj-sum">{p.summary}</p>
-      {p.figures && p.figures.length > 0 && (
-        <dl className="pj-figures">
-          {p.figures.map((f) => (
-            <div key={f.label}>
-              <dt>{f.label}</dt>
-              <dd>{f.value}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-    </li>
-  );
-}
-
-function Section({ id, label, unit, rows }: { id: string; label: string; unit: string; rows: ProjectRow[] }) {
+function Section({ id, label, note, rows, wide }: { id: string; label: string; note?: string; rows: ProjectRow[]; wide?: boolean }) {
   if (rows.length === 0) return null;
   return (
-    <>
-      <hr className="bleed" />
-      <section className="row" aria-labelledby={id}>
-        <div className="rail">
-          <h2 className="rail--label" id={id}>{label}</h2>
-          <span>{plural(rows.length, unit, `${unit}s`)}</span>
-        </div>
-        <ol className={rows[0].featured ? "pj-list pj-list--lead" : "pj-list"}>
-          {rows.map((p) => <Entry key={p.slug} p={p} />)}
-        </ol>
-      </section>
-    </>
+    <section className="border-t py-10 first:border-t-0" aria-labelledby={id}>
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id={id} className="text-2xl font-semibold tracking-tight">
+          {label}
+        </h2>
+        <p className="text-sm text-muted-foreground tabular-nums">
+          {plural(rows.length, "project", "projects")}
+          {note && <> · {note}</>}
+        </p>
+      </div>
+      <ul className={wide ? "mt-6 grid gap-4 md:grid-cols-2" : "mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3"}>
+        {rows.map((p) => (
+          <ProjectCard key={p.slug} p={p} />
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -99,45 +62,47 @@ export default function ProjectFilter({
 
   return (
     <>
-      <ul className="filter-bar filter-bar--strip" aria-label="Filter by topic">
-        <li>
-          <button
-            type="button"
-            className="filter-chip"
-            aria-pressed={!filtered}
-            onClick={() => { setTopic(null); setPublicOnly(false); }}
-          >
-            All {projects.length}
-          </button>
-        </li>
-        {topics.map((t) => (
-          <li key={t.slug}>
-            <button
-              type="button"
-              className="filter-chip"
-              aria-pressed={topic === t.slug}
-              onClick={() => setTopic((a) => (a === t.slug ? null : t.slug))}
-            >
-              {t.name}
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      <div className="filter-row">
-        <span className="rail--label" id="filter-code">Code</span>
-        <ul className="filter-bar" aria-labelledby="filter-code">
+      <div className="flex flex-col gap-3 border-b pb-6">
+        <ul className="filter-bar flex flex-wrap gap-2" aria-label="Filter by topic">
           <li>
             <button
               type="button"
-              className="filter-chip"
-              aria-pressed={publicOnly}
-              onClick={() => setPublicOnly((v) => !v)}
+              className={chip}
+              aria-pressed={!filtered}
+              onClick={() => { setTopic(null); setPublicOnly(false); }}
             >
-              Public repository <span className="rail-count">{publicTotal}<span className="visually-hidden"> projects</span></span>
+              All <span className={chipCount}>{projects.length}</span>
             </button>
           </li>
+          {topics.map((t) => (
+            <li key={t.slug}>
+              <button
+                type="button"
+                className={chip}
+                aria-pressed={topic === t.slug}
+                onClick={() => setTopic((a) => (a === t.slug ? null : t.slug))}
+              >
+                {t.name}
+              </button>
+            </li>
+          ))}
         </ul>
+
+        <div className="filter-row flex flex-wrap items-center gap-2">
+          <span className="mr-1 text-sm text-muted-foreground" id="filter-code">Code</span>
+          <ul className="filter-bar flex flex-wrap gap-2" aria-labelledby="filter-code">
+            <li>
+              <button
+                type="button"
+                className={chip}
+                aria-pressed={publicOnly}
+                onClick={() => setPublicOnly((v) => !v)}
+              >
+                Public repository <span className={chipCount}>{publicTotal}<span className="visually-hidden"> projects</span></span>
+              </button>
+            </li>
+          </ul>
+        </div>
       </div>
 
       {/* Announces the count after a filter; the page figures already show it. */}
@@ -147,12 +112,12 @@ export default function ProjectFilter({
           : `${shown.length} of ${projects.length} projects`}
       </span>
 
-      <Section id="pj-featured" label="Built for other people" unit="project" rows={featured} />
+      <Section id="pj-featured" label="Built for other people" note="you can run these" rows={featured} wide />
       {states.map(({ status, label, rows }) => (
-        <Section key={status} id={`pj-${status}`} label={label} unit="project" rows={rows} />
+        <Section key={status} id={`pj-${status}`} label={label} rows={rows} />
       ))}
 
-      {shown.length === 0 && <p className="page-lede">Nothing matches both filters.</p>}
+      {shown.length === 0 && <p className="py-10 text-muted-foreground">Nothing matches both filters.</p>}
     </>
   );
 }

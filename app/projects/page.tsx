@@ -49,13 +49,13 @@ export default function Projects() {
 
       <PageHead
         title="Projects"
-        quiet
+        lede={description}
         figures={
           <>
             <span>{projects.length} projects</span>{" "}
             <span>{running} still running</span>{" "}
             <span>{open} with public code</span>{" "}
-            <span><a href={site.github} rel="noopener">GitHub</a></span>
+            <span><a className="link" href={site.github} rel="noopener">GitHub</a></span>
           </>
         }
       />

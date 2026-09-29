@@ -3,6 +3,8 @@
 //   npm run docs:pull -- <project> [ref]      copy <repo>@<ref>:<path>/*.md into content/docs/<project>/
 //   npm run docs:pull -- <project> <ref> --repo <owner/name> --path <dir>   the first time
 //   npm run docs:verify                       fail when a copy differs from its commit by a byte
+//   npm run docs:check -- <dir>               the site's page rules over a docs directory in a
+//                                             local checkout of the tool, before it is pushed
 // Both keep content/docs/sources.json, and both fail on a link from the docs to a
 // repository file or heading that does not exist at the commit. Network: GitHub
 // only — `git ls-remote` for the ref, codeload for the tarball; public repositories,
@@ -12,6 +14,7 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { brokenRepoLinks, diffDocs, pickCommit } from "../lib/doc-sources.mjs";
+import { checkDocPages, highlightLangs, readDocDir } from "../lib/doc-check.mjs";
 
 const ROOT = process.cwd();
 const DOCS = path.join(ROOT, "content", "docs");
@@ -133,10 +136,40 @@ async function verify() {
   if (errors.length > 0) process.exit(1);
 }
 
+/**
+ * The site's rules over a docs directory in a local checkout of the tool: what
+ * validate runs over the copy after a pull, plus the links into the rest of that
+ * repository, read from its working tree (tracked and new files, not ignored ones).
+ * So a docs change can be checked in the tool's repository before it is pushed.
+ */
+async function check() {
+  const [target] = positional;
+  if (!target) throw new Error("usage: npm run docs:check -- <path to the docs directory in a checkout>");
+  const dir = path.resolve(target);
+  if (!fs.existsSync(dir)) throw new Error(`${dir} does not exist`);
+  const root = execFileSync("git", ["-C", dir, "rev-parse", "--show-toplevel"], { encoding: "utf8" }).trim();
+  const rel = path.relative(root, dir).split(path.sep).join("/");
+  const listed = execFileSync("git", ["-C", root, "ls-files", "--cached", "--others", "--exclude-standard"], {
+    encoding: "utf8",
+  }).split("\n").filter(Boolean);
+  const files = new Set(listed);
+  for (const file of listed) {
+    for (let d = path.posix.dirname(file); d !== "."; d = path.posix.dirname(d)) files.add(d);
+  }
+  const pages = docsAt(root, rel);
+  const { errors, warnings } = checkDocPages(readDocDir(dir), { dir: rel, where: rel, langs: await highlightLangs(ROOT) });
+  errors.push(...linkProblems(root, files, rel, pages).map((p) => `${rel}/${p}`));
+  for (const w of warnings) console.warn(`warn  ${w}`);
+  for (const e of errors) console.error(`ERROR ${e}`);
+  console.log(`${rel}: ${pages.size} page(s) — ${errors.length} error(s), ${warnings.length} warning(s)`);
+  if (errors.length > 0) process.exit(1);
+}
+
 try {
   if (command === "pull") await pull();
   else if (command === "verify") await verify();
-  else throw new Error("usage: node scripts/docs.mjs pull|verify");
+  else if (command === "check") await check();
+  else throw new Error("usage: node scripts/docs.mjs pull|verify|check");
 } catch (e) {
   console.error(`ERROR ${e instanceof Error ? e.message : e}`);
   process.exit(1);

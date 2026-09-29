@@ -16,6 +16,7 @@ npm run new -- <kind> <slug>   # a draft from its skeleton, and its evidence pac
 npm run evidence -- <slug>     # every figure the post states has a source in its pack
 npm run docs:pull -- <project> [ref]   # copy a tool's docs from its repo at a commit (ADR 0006)
 npm run docs:verify            # the copies match their commits byte for byte (network; CI runs it)
+npm run docs:check -- <dir>    # a tool's docs directory against the contract, before it is pushed
 npm run typecheck    # tsc --noEmit
 npm test             # node:test over tests/**/*.test.ts; add tests/<area>.test.ts
 npm run build        # images -> next build -> pagefind; static export to ./out
@@ -87,8 +88,9 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
 ## Where things live
 
 - **`<Shell current?>`** ([Shell.tsx](components/Shell.tsx)) wraps every page: header and
-  footer outside the one `<main id="main">`. Nav: **Writing · Projects · About · CV**;
-  Skills is linked from About and the CV. Every page's metadata comes from
+  footer outside the one `<main id="main">`; `width="wide"` for the docs. Nav:
+  **Writing · Projects · Docs · About · CV**; Skills is linked from About and the CV.
+  Every page's metadata comes from
   `pageMetadata()` ([lib/metadata.ts](lib/metadata.ts)); posts and projects pass
   `ownCard: true` to keep their own `opengraph-image`. Every `<Link>` but the primary nav
   and the home CTA sets `prefetch={false}`: prefetch fetched other routes' payloads on
@@ -122,35 +124,46 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
 
 ## Styling
 
-- **One stylesheet**, [app/globals.css](app/globals.css), plain class names; no Tailwind,
-  modules or CSS-in-JS. The only inline style sets a custom property for data-driven
-  geometry (`style={{ "--x": `${pct}%` } as React.CSSProperties}`), read by a class.
-- **A `{" "}` between the items of a `.run`** (and any flex line of facts): flex ignores
-  it, but search excerpts and screen readers otherwise read "28 July 2026838 words".
-- **Seven colour tokens**: `--paper`, `--ink`, `--ink-2`, `--rule` (decorative only),
-  `--rule-firm` (every control edge), `--accent` (links only), `--warn` (only "this
-  broke"). Dark is default, cool near-black `#0A0B0D`; light is `#FFFFFF`. The contrast
-  ratios in `:root` are computed floors.
-- **Faces** via `next/font/google` ([layout.tsx](app/layout.tsx)): Inter (`--prose`) and
-  Bricolage Grotesque (`--display`, h1/h2/list titles, never below ~26px); `--figure`
-  and `--code` are system monospace (`tabular-nums` on figures). Inter preloads Latin;
-  its Cyrillic face loads by `unicode-range` on demand. Bricolage has no Cyrillic and
-  falls through to the system face. Never `<link>` fonts.googleapis.com.
-- **Type scale**: `--step-*` are primitives, never used outside `:root` and `@media print`
-  (which redeclares them in `pt`). Use `--fs-*` aliases; add one rather than a number.
-  Clamps keep a `rem` term (WCAG 1.4.4).
-- **Measure**: prose stops at `--read` (33em, about 66 characters of Inter); code,
-  tables, figures and the panel use the 640px `--measure`. Cap prose with `--read`,
-  never `ch`: Inter's `ch` is its zero, about 1.25 characters, so `66ch` sets ~82.
-- **Accessibility**: visible `:focus-visible`; one `<main id="main">`; targets ≥ 24×24 px;
-  `--rule-firm` on a control's only border; `prefers-reduced-motion` escapes; animate SVG
-  `<g>` with `translate`, never `transform` (it replaces the position attribute).
-- **Post layout**: title block above `.post-layout` (sticky `.post-aside`, then the
-  article); nothing spans rows. `.post-aside` is the contents scroller. Above 900px
-  `::details-content { content-visibility: visible }` keeps the `display: contents`
-  `<details>` visible in Chrome ≥ 131. `.prose` is a subgrid of `.wrap`: never in a `.row`.
+- **shadcn/ui on Tailwind CSS v4** ([ADR 0007](docs/adr/0007-the-site-is-built-on-shadcn-ui-and-tailwind.md)).
+  Compose pages from Tailwind utilities and the components in `components/ui/`
+  (shadcn/ui's button, badge, card, breadcrumb, kbd, copied in, no Radix) — not new
+  CSS. `cn()` (lib/utils.ts) merges classes in server components only: **no `cn()`,
+  `cva` or `*Variants` in a client component**, or tailwind-merge ships to every page
+  (`components/ui/toggle.ts` and `StatusBadge` are plain strings for that reason).
+- **Tokens** are CSS variables in `app/globals.css`, mapped by `@theme inline`:
+  `background`, `foreground`, `card`, `muted`/`muted-foreground`, `accent` (a hover
+  surface, not a colour), `border` (decorative), `input` (every control edge, ≥ 3:1),
+  `ring`, and `brand` (the amber: links, current item, focus). Status and callouts:
+  `success`, `warning`, `info`, `tip`, `important`, `caution`. Dark is the default
+  (`#0A0B0D`), light is `#FFFFFF`; a stored `data-theme` wins, else the OS decides, and
+  the `dark:` variant follows the same rule. The contrast ratios in `:root` are floors.
+- **Component CSS** stays in globals.css only for what utilities would do worse:
+  `.markdown` (posts and docs, over `@tailwindcss/typography`), code blocks and Shiki,
+  tables, `.toc`, the docs and post grids, search results, the panel's figures, the
+  skills board, the journey chart, and the CV print sheet. The typography plugin's rules
+  land in a later cascade layer than `components`, so the markdown, code and table
+  overrides are unlayered. The only inline style sets a custom property for
+  data-driven geometry (`style={{ "--x": `${pct}%` } as React.CSSProperties}`).
+- **Widths**: `lib/layout.ts` — pages `max-w-7xl`, docs `max-w-[90rem]`, one gutter.
+  Prose stops at `max-w-2xl`–`3xl` (a post's column is 46rem); lists and cards use the width.
+- **A `{" "}` between the items of a flex line of facts**: flex ignores it, but search
+  excerpts and screen readers otherwise read "28 July 2026838 words".
+- **Faces** via `next/font/google` ([layout.tsx](app/layout.tsx)): Inter (`font-sans`,
+  `--font-inter`) and Bricolage Grotesque (`font-display`, page titles only, never
+  below ~26px); `font-mono` is the system monospace. Never `<link>` fonts.googleapis.com.
+- **Icons**: interface icons are `components/ui/icons.tsx` (Lucide paths, server-rendered;
+  lucide-react would make each one a client component), brand marks are `lib/icons.ts`.
+- **Accessibility**: visible `:focus-visible` (2px `ring`); one `<main id="main">`, no
+  `<footer>` inside it; targets ≥ 24×24 px; `border-input` on a control's only border;
+  `prefers-reduced-motion` escapes; animate SVG `<g>` with `translate`, never `transform`.
+- **Hooks the gates read**: `site-header`, `toc`, `figure.code`, `copy-btn`,
+  `search-trigger`, `theme-toggle`, `filter-chip`, `sort-btn`, `jr-bar`. Keep them.
+- **Rendered twice**: the docs sidebar and every "On this page" list exist as a rail for
+  wide screens and a `<details>` for narrow ones, one displayed at a time — forcing a
+  closed `<details>` open works in one engine and not the next.
 - **CLS**: smoke holds < 0.01 at 375 px on `/`, `/writing/`, a post and `/about/`, < 0.1
-  elsewhere. The panel's reserved heights are measured; re-measure when its content changes.
+  elsewhere. The panel's reserved height (`.panel-body`) is measured; re-measure when
+  its content changes.
 
 ## Caddy, Cloudflare, deploy
 
@@ -187,15 +200,21 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
 A project's docs are written in **its own repository** and copied here at a commit
 ([ADR 0006](docs/adr/0006-docs-are-written-where-the-code-is.md)): `content/docs/<project>/`
 holds the copy, `content/docs/sources.json` says from where. Never edit the copy — change
-the docs in the tool's repo, then `npm run docs:pull`. The docs directory there is flat,
-`.md` only; each page has `title`, `description` (≤160) and a unique integer `order`,
-`index.md` first, and no `# heading`. Relative links to other pages stay on the site;
-links to other repo files go to GitHub at the pinned commit (`lib/doc-links.mjs`).
-Pages render through `components/Prose.tsx`, the same renderer as posts. Tables go
-through `lib/tables.ts`: each sits in a focusable scroll region, and one with a cell over
-60 characters is a "text table" that stacks into labelled cards below 700px (a numeric table
-keeps its columns and scrolls). So keep cells short and put long evidence in prose; a
-"Status" column of works / partial / not yet gets a shape (● ◐ ○) as well as the word.
+the docs in the tool's repo, then `npm run docs:pull`. What that directory must look like
+is [docs/project-docs.md](docs/project-docs.md): flat, `.md` only; `title` (≤ 48),
+`description` (≤ 160), a unique integer `order`, an optional `section` from the closed
+list in `lib/doc-check.mjs` (Get started, Guides, Concepts, Reference, Project), and
+`cyrillic` once a page has Cyrillic; `index.md` first, no `# heading`. The rules live in
+`lib/doc-check.mjs`, shared by `npm run validate` and `npm run docs:check`.
+The site renders them as a docs site (`components/DocView.tsx`): the sidebar groups
+pages by section, Previous/Next follow it, and `/docs/` lists every project with docs.
+GitHub's `> [!NOTE]` alert syntax renders as a callout (`lib/callouts.mjs`), a fence
+takes a `title="…"`, and `##`/`###` fill "On this page". Relative links to other pages
+stay on the site; links to other repo files go to GitHub at the pinned commit
+(`lib/doc-links.mjs`). Tables go through `lib/tables.ts`: each sits in a focusable
+scroll region, and one with a cell over 60 characters is a "text table" that stacks
+into labelled cards below 700px. A "Status" column of works / partial / not yet gets a
+shape (● ◐ ○) as well as the word.
 
 ## Publishing
 

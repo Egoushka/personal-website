@@ -67,13 +67,13 @@ export default function WritingIndex() {
 
       <PageHead
         title="Writing"
-        quiet
+        lede="Notes on backend engineering, debugging, and running a homelab on one box, and mostly about the parts that went wrong."
         figures={
           <>
             <span>{r.posts} {r.posts === 1 ? "post" : "posts"}</span>{" "}
             <span>{n(r.words)} words</span>{" "}
             {r.latest && <span>latest {formatDate(r.latest.date)}</span>}{" "}
-            <span><a href="/feed.xml">rss</a></span>
+            <span><a className="link" href="/feed.xml">RSS</a></span>
           </>
         }
       />

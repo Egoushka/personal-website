@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import DocView from "@/components/DocView";
 import { projects } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
-import { getDocPage, getDocPages, getDocSource, getDocSources } from "@/lib/docs";
+import { getDocPage, getDocPages, getDocProjects, getDocSource, getDocSources } from "@/lib/docs";
 
 /** `page` is absent for the overview (`index.md`, the docs root) and one segment otherwise. */
 type Params = { slug: string; page?: string[] };
@@ -47,12 +47,21 @@ export default async function Docs({ params }: { params: Promise<Params> }) {
   const { slug, page } = await params;
   const found = resolve(slug, page);
   if (!found) notFound();
+  // The other projects with docs, for the sidebar's switcher: name and summary
+  // only, never the pages.
+  const others = getDocProjects()
+    .filter((d) => d.slug !== slug)
+    .flatMap((d) => {
+      const p = projects.find((q) => q.slug === d.slug);
+      return p ? [{ slug: p.slug, name: p.name, summary: p.summary, href: d.pages[0].href }] : [];
+    });
   return (
     <DocView
       project={found.project}
       source={found.source}
       pages={found.pages}
       page={getDocPage(slug, found.name)}
+      others={others}
     />
   );
 }

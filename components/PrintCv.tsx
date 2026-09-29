@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { detectPlatform, type Platform } from "@/lib/platform";
+import { Download } from "@/components/ui/icons";
+import { Kbd } from "@/components/ui/kbd";
 
 /**
  * The CV's print control: a button, and beside it the shortcut named for the
@@ -22,19 +24,25 @@ export default function PrintCv() {
 
   if (!platform) {
     return (
-      <p className="control print-hint">
-        <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>P</kbd> prints one A4 page
+      <p className="print-hint mt-6 flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
+        <Kbd>Ctrl</Kbd>/<Kbd>⌘</Kbd> + <Kbd>P</Kbd> prints one A4 page
       </p>
     );
   }
 
   return (
-    <p className="print-actions run">
-      <button type="button" className="control" onClick={() => window.print()}>
-        Save as PDF
+    <p className="print-actions mt-6 flex flex-wrap items-center gap-3">
+      {/* The outline button's classes, written out: `buttonVariants` would ship cva
+          and tailwind-merge to the browser for one button. */}
+      <button
+        type="button"
+        className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm font-medium shadow-xs transition-colors hover:bg-accent"
+        onClick={() => window.print()}
+      >
+        <Download /> Save as PDF
       </button>
-      <span className="print-hint-key">
-        or <kbd>{platform.key}</kbd> + <kbd>P</kbd> — one A4 page
+      <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+        or <Kbd>{platform.key}</Kbd> + <Kbd>P</Kbd>, one A4 page
       </span>
     </p>
   );

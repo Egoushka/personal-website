@@ -312,18 +312,18 @@ export default function Comments({ url }: { url: string }) {
   }, [paintWidget]);
 
   return (
-    <section className="row comments" id="comments" ref={section} data-pagefind-ignore>
-      <h2 className="rail rail--label">Comments</h2>
-      <div>
+    <section className="comments mt-16 border-t pt-10" id="comments" ref={section} data-pagefind-ignore>
+      <h2 className="text-xl font-semibold tracking-tight">Comments</h2>
+      <div className="mt-4">
         {state === "failed" && (
-          <p className="comments-note">
+          <p className="comments-note mb-4 text-sm text-muted-foreground">
             The comment service is not answering. It runs on the same box as
             everything else here, so this is my problem rather than yours —
             the post is unaffected.
           </p>
         )}
         <noscript>
-          <p className="comments-note">
+          <p className="comments-note mb-4 text-sm text-muted-foreground">
             Comments need JavaScript. They are served from this domain, not a
             third party, and sign-in is through GitHub.
           </p>

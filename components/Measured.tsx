@@ -37,12 +37,10 @@ export function Downloads() {
   if (!pkg?.downloads) return null;
 
   return (
-    <li>
-      <span className="reading-label">Downloads</span>
-      <span className="reading-value">{pkg.downloads.toLocaleString("en-US")}</span>
-      <span className="reading-source">
-        nuget.org, read tonight — version {pkg.version}
-      </span>
+    <li className="rounded-xl border bg-card p-5">
+      <p className="text-sm text-muted-foreground">Downloads</p>
+      <p className="mt-2 text-2xl font-semibold tracking-tight tabular-nums">{pkg.downloads.toLocaleString("en-US")}</p>
+      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">nuget.org, read tonight — version {pkg.version}</p>
     </li>
   );
 }

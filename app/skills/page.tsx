@@ -19,10 +19,8 @@ export const metadata: Metadata = pageMetadata({ title: "Skills", description, p
  * what their editor actually did this month on a machine they run
  * themselves, which is the only version of this page that is hard to copy.
  *
- * There is no visible head. The nav already says which page this is and the
- * list is legible without one; what the bars are lives in the metadata
- * description, where a search result needs it. The `<h1>` is still in the
- * DOM — see PageHead's `quiet`.
+ * The head says what the bars are: a share of editor time, measured, where a
+ * skill has one.
  *
  * The board is a client component for its filter, so it gets only the fields
  * it renders, with the icons already drawn: lib/site.ts and lib/icons.ts stay
@@ -54,7 +52,7 @@ export default function Skills() {
   return (
     <Shell className="skills-page">
 
-      <PageHead title="Skills" quiet />
+      <PageHead title="Skills" lede={description} />
 
       <SkillsBoard data={data} searchMark={<Icon name="search" />} />
 

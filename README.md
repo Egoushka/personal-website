@@ -9,9 +9,13 @@ VPS, behind an edge Traefik and Cloudflare.
 - **Next.js 16** App Router, `output: 'export'` (static HTML, no Node runtime in prod)
 - **TypeScript**, React 19
 - **Markdown blog** — drop a `.md` in `content/posts/`, it appears automatically
-- One hand-written stylesheet, `app/globals.css`: cool near-black dark theme by default,
-  white light theme, one amber accent, Inter and Bricolage Grotesque. See
+- **shadcn/ui on Tailwind CSS v4** ([ADR 0007](docs/adr/0007-the-site-is-built-on-shadcn-ui-and-tailwind.md)):
+  shadcn/ui's tokens over the site's palette — cool near-black dark theme by default,
+  white light theme, one amber accent — with Inter and Bricolage Grotesque. See
   [docs/DESIGN-BRIEF.md](docs/DESIGN-BRIEF.md).
+- **Project docs** written in each project's repository and copied here at a commit,
+  rendered as a docs site under `/docs/` ([ADR 0006](docs/adr/0006-docs-are-written-where-the-code-is.md),
+  [docs/project-docs.md](docs/project-docs.md)).
 - **Pagefind** for search, indexed from `out/` after the build
 - **Caddy** serving the files over plain HTTP. TLS is terminated upstream, at
   Cloudflare and the edge Traefik.
@@ -231,8 +235,8 @@ that is missing, older than 48 hours, or malformed as absent. What each consumer
   which is also what the static HTML, crawlers and readers without JavaScript get — it
   says where the figures come from. On failure it says the box is not reporting. A
   document missing an optional half gets a line naming what is absent. Its height is
-  reserved by measured bands in `globals.css`; re-measure them when the figures, their
-  source text or the type scale change.
+  reserved by `.panel-body` in `globals.css`; re-measure it when the figures, their
+  source text or the layout change.
 - **`UsesStatus` (`/about/`) and `Measured` (the CV) render nothing** without a
   valid document.
 

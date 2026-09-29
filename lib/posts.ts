@@ -143,15 +143,16 @@ export function formatDate(iso: string): string {
 }
 
 /**
- * The `##` headings, for the in-page table of contents, with the ids rehype-slug
+ * The `##` headings (and `###` with `maxDepth` 3, as the docs use), for the
+ * in-page table of contents, with the ids rehype-slug
  * gives them on the page: both go through github-slugger over the same text, and
  * every heading is slugged in order so repeats are numbered alike. Read from the
  * parsed tree, so a `## ` line inside a code fence is not a heading.
  */
-export function tableOfContents(markdown: string): { id: string; text: string }[] {
+export function tableOfContents(markdown: string, maxDepth: 2 | 3 = 2): { id: string; text: string; depth: number }[] {
   return headings(parse(markdown))
-    .filter((h) => h.depth === 2)
-    .map(({ id, text }) => ({ id, text }));
+    .filter((h) => h.depth >= 2 && h.depth <= maxDepth)
+    .map(({ id, text, depth }) => ({ id, text, depth }));
 }
 
 /** Posts carrying a given topic, newest first. */

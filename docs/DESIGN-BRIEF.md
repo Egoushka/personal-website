@@ -3,7 +3,9 @@
 For anyone picking this site up cold. Everything below is a real constraint of the
 running system, not a preference. Where something is negotiable it says so.
 
-Rewritten 2026-08-01, after the third design. The two before it are worth knowing
+Rewritten 2026-08-01, after the third design; on 2026-09-29 the styling moved onto
+shadcn/ui and Tailwind ([ADR 0007](adr/0007-the-site-is-built-on-shadcn-ui-and-tailwind.md))
+and the pages widened, while the voice and the rules below stayed. The two designs before it are worth knowing
 about because their remains are in the git history and in the ADRs: **Marginalia**
 (a rail layout, `45b726b`) and **the Balance** (a double-entry trial balance as the
 home page, `6285ffd`). Both were coherent. Both were abandoned within weeks. The
@@ -97,7 +99,7 @@ Caddy behind Traefik behind Cloudflare. There is no Node runtime in production.
 |---|---|
 | **No server.** No server actions, middleware, ISR, `revalidate`, rewrites, redirects or `headers` in `next.config`. | Redirects for moved routes live in [deploy/Caddyfile](../deploy/Caddyfile). There are seven of them and they are load-bearing. |
 | **Client components are allowed, sparingly** — each one justified; the current list and reasons are in [CLAUDE.md](../CLAUDE.md). | Each must render something true before JS runs, or nothing. The filters server-render the full list and only ever remove or reorder rows; with scripting off their controls are hidden. No relative dates, no `Date.now()` or `Math.random()` in render. |
-| **One global stylesheet**, [app/globals.css](../app/globals.css). No Tailwind, no CSS modules, no CSS-in-JS. The only inline style sets a custom property for data-driven geometry, read by a class. | Deliver CSS as plain class names and custom properties that drop into that file. |
+| **shadcn/ui on Tailwind CSS v4** ([ADR 0007](adr/0007-the-site-is-built-on-shadcn-ui-and-tailwind.md)), compiled into one static stylesheet, [app/globals.css](../app/globals.css). No CSS modules, no CSS-in-JS, no Radix primitives. The only inline style sets a custom property for data-driven geometry, read by a class. | Deliver pages as Tailwind utilities and the components in `components/ui/`; hand-written CSS only for the component classes listed in globals.css. |
 | **Self-hosted fonts only**, via `next/font/google`. | You may change the typefaces, but they must load through `next/font`. Never add a `<link>` to fonts.googleapis.com — it puts a render-blocking cross-origin request on the critical path and loses the `size-adjust` fallback metric that keeps CLS at 0. |
 | **`next/image` optimization is off.** | Plain `<img>`, or `next/image` with `unoptimized`. |
 | **A strict CSP** — `script-src 'self'`, no `'unsafe-eval'`. | No CDN scripts, no external stylesheets, no remote fonts, no third-party embeds, no eval. The one embed, comments, is first-party at `/c/` ([ADR 0005](adr/0005-comments-are-a-bounded-exception.md)). |
@@ -125,45 +127,45 @@ this rewrite. That is the bar; a redesign shipping at 92 accessibility is a regr
 
 ## Design tokens
 
-Seven colours, from `:root` in [app/globals.css](../app/globals.css). Cool near-black
-by default, true white in light, one amber accent that means **link**, and one warning
-colour that means only "this broke".
+shadcn/ui's token names over this site's palette, in `:root` of
+[app/globals.css](../app/globals.css) and mapped to utilities by `@theme inline`. Cool
+near-black by default, true white in light, one amber `brand` colour that means link,
+current and focus, and `destructive` for "this broke".
 
 ```css
 /* dark — the default */
---paper:     #0A0B0D;
---ink:       #F2F4F6;   /* 18.2:1 on --paper */
---ink-2:     #98A0A8;   /*  7.4:1 */
---rule:      #1E2126;   /* decorative hairline only */
---rule-firm: #5B616A;   /*  3.1:1 — every control edge */
---accent:    #F2A03D;   /*  9.2:1 — links, and only links */
---warn:      #E2725B;   /*  5.6:1 — only ever "this broke" */
+--background:       #0A0B0D;
+--foreground:       #F2F4F6;   /* 18.2:1 on --background */
+--muted-foreground: #98A0A8;   /*  7.4:1 */
+--border:           #23262B;   /* decorative: cards, rules, table lines */
+--input:            #5B616A;   /*  3.1:1 — every control edge */
+--brand:            #F2A03D;   /*  9.2:1 — links, current item, focus ring */
+--destructive:      #E2725B;   /*  5.6:1 — only ever "this broke" */
 
 /* light */
---paper: #FFFFFF;  --ink: #0D0E10;   /* 19.1:1 */
---ink-2: #5B6169;  /* 6.2:1 */
---rule:  #E9EBEE;  --rule-firm: #8A9099;  /* 3.3:1 */
---accent: #A85D08; /* 5.1:1 */
---warn:  #A63B22;  /* 5.9:1 */
+--background: #FFFFFF;  --foreground: #0D0E10;   /* 19.1:1 */
+--muted-foreground: #5B6169;  /* 6.2:1 */
+--border: #E4E6EA;  --input: #8A9099;  /* 3.3:1 */
+--brand: #A85D08;  /* 5.1:1 */
+--destructive: #A63B22;  /* 5.9:1 */
 ```
 
 Those ratios are computed, not estimated. They are floors a replacement has to clear.
-Raised surfaces (`--surface`, `--surface-2`) are mixed from `--ink` and `--paper`, so a
-theme change carries them.
+`card`, `muted`, `secondary` and `accent` are raised and hover surfaces, not colours.
+Status and callouts get their own tokens (`success`, `warning`, `info`, `tip`,
+`important`, `caution`), always beside a word or a shape.
 
-Two webfonts: **Inter** for everything read (body, h3, labels), **Bricolage Grotesque**
-for display (h1, h2, list titles) and never below about 26px — smaller, it is a grotesk
-beside a grotesk and a second download for nothing. Figures, rails and code use the
-system monospace with no webfont; figures need `font-variant-numeric: tabular-nums`.
-Type sizes come from one fluid modular scale (`--step-*`), used only through the
-`--fs-*` aliases.
-
----
+Two webfonts: **Inter** for everything read (`font-sans`), **Bricolage Grotesque** for
+page titles (`font-display`) and never below about 26px — smaller, it is a grotesk
+beside a grotesk and a second download for nothing. Code and figures use the system
+monospace; figures take `tabular-nums`. Sizes, spacing and radii come from Tailwind's
+scale; pages run to 80rem (docs 90rem), and running prose stops around 46rem.
 
 ## Pages
 
 `/` · `/writing/` · `/writing/[slug]/` · `/topics/[topic]/` · `/projects/` ·
-`/projects/[slug]/` · `/about/` · `/cv/` · `/skills/` · `/journey/` · feeds · the 404
+`/projects/[slug]/` · `/docs/` · `/projects/[slug]/docs/…` · `/about/` · `/cv/` ·
+`/skills/` · `/journey/` · feeds · the 404
 
 - **`/` (home)** — greeting and email, a proof row of things a stranger can check, the live instrument panel, then latest writing, running projects and topics.
 - **`/writing/[slug]/`** — the page that matters most and has the most machinery: a contents list with the reader's position, numbered section permalinks, Copy on each code block, Shiki with separate light and dark themes, the project it is about, related post, lazy-loaded comments. Long-form reading is the primary job.
@@ -172,8 +174,14 @@ Type sizes come from one fluid modular scale (`--step-*`), used only through the
 - **`/about/`** — absorbed `/now/`, `/uses/` and `/links/`; ends in "Working with me" (`#contact`).
 - **`/skills/`** is reached from About and the CV; **`/journey/`** from the footer. Neither is in the nav.
 
-The primary nav is **Writing · Projects · About · CV**, with search (⌘K / Ctrl+K) and
-the theme toggle beside it. The CV is in the nav because the home page advertises
+- **`/projects/[slug]/`** — what the project is and where to go first (docs, source,
+  write-up), its readings as cards each naming a source, the full account, its docs
+  page by page, and the posts about it.
+- **`/docs/` and a project's docs** — a docs site: sections in a sidebar, the page, its
+  contents beside it, and a badge saying which commit the copy is of (ADR 0006).
+
+The primary nav is **Writing · Projects · Docs · About · CV**, with search (⌘K / Ctrl+K)
+and the theme toggle beside it. The CV is in the nav because the home page advertises
 contract work, and the CV is what a buyer forwards.
 
 ---
