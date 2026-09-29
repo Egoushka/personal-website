@@ -135,6 +135,54 @@ const sitemap = await (await fetch(`${BASE}/sitemap.xml`)).text();
 const ROUTES = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
 console.log(`smoke: ${BASE}, ${ROUTES.length} sitemap routes`);
 
+/**
+ * The docs pages the browser checks visit. Docs are checked per template, not per
+ * page: every page of every project (59 of them at the time, growing with each
+ * project's guide) in every browser section made this suite eighteen minutes,
+ * and what a check can find lives in what a page is made of (a table, a code
+ * block, the rail), which repeats. Per project: the overview, and up to two pages
+ * that hold a table, the component with the most markup of its own
+ * (lib/tables.ts). Section 1 reads HTML only and still covers every route.
+ */
+const hasTable = (project, page) => {
+  try {
+    const md = fs.readFileSync(path.join(ROOT, "content", "docs", project, `${page}.md`), "utf8");
+    return /^\s*\|[\s:|-]+\|\s*$/m.test(md);
+  } catch {
+    return false;
+  }
+};
+const docPages = ROUTES.flatMap((route) => {
+  const m = route.match(/^\/projects\/([^/]+)\/docs\/(?:([^/]+)\/)?$/);
+  return m ? [{ route, project: m[1], page: m[2] ?? "index" }] : [];
+});
+const SAMPLED_DOCS = [...new Set(docPages.map((p) => p.project))].flatMap((project) => {
+  const own = docPages.filter((p) => p.project === project);
+  return [
+    ...own.filter((p) => p.page === "index"),
+    ...own.filter((p) => p.page !== "index" && hasTable(project, p.page)).slice(0, 2),
+  ].map((p) => p.route);
+});
+/** Every sitemap route, minus the docs pages outside the sample. */
+const BROWSER_ROUTES = ROUTES.filter((r) => !docPages.some((d) => d.route === r) || SAMPLED_DOCS.includes(r));
+
+/** Runs the tasks with at most `size` in flight; results keep the tasks' order. */
+async function pool(tasks, size) {
+  const out = new Array(tasks.length);
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(size, tasks.length) }, async () => {
+      while (next < tasks.length) {
+        const i = next++;
+        out[i] = await tasks[i]();
+      }
+    }),
+  );
+  return out;
+}
+// axe is deterministic, so it runs in parallel; layout shift is timing, so it does not.
+const AXE_CONCURRENCY = Number(process.env.SMOKE_CONCURRENCY ?? 3);
+
 // ── the browser ──────────────────────────────────────────────────────────────
 const browser = await chromium.launch();
 
@@ -223,11 +271,11 @@ console.log("\n1. first-load JS, gzip bytes (the route's own /_next/static scrip
 }
 
 // ── 2. every route loads clean ───────────────────────────────────────────────
-console.log("\n2. page errors and console errors, every sitemap route, scrolled to the end");
+console.log(`\n2. page errors and console errors, ${BROWSER_ROUTES.length} of ${ROUTES.length} sitemap routes (docs sampled), scrolled to the end`);
 {
   // No status fixture here: the 404 is part of what every page must survive.
   const ctx = await context({ status: false });
-  for (const route of ROUTES) {
+  for (const route of BROWSER_ROUTES) {
     const page = await ctx.newPage();
     const errors = [];
     page.on("pageerror", (e) => errors.push(`pageerror: ${e.message.split("\n")[0]}`));
@@ -381,7 +429,7 @@ console.log("\n7. /cv/ as A4");
 console.log(`\n8. CLS on load, status fixture served, at ${WIDTHS.join(", ")} px`);
 {
   const rows = [["route", ...WIDTHS.map((w) => `${w}px`)]];
-  for (const route of [...ROUTES, "/404.html"]) {
+  for (const route of [...BROWSER_ROUTES, "/404.html"]) {
     const row = [route];
     for (const width of WIDTHS) {
       const ctx = await context({ width });
@@ -405,42 +453,11 @@ console.log("\n9. axe, wcag2a/2aa/21aa/22aa, serious and critical");
   const ALL = [[375, "light"], [375, "dark"], [1440, "light"], [1440, "dark"]];
   // A phone in dark and a desktop in light: both widths and both schemes across the two runs.
   const DOC_CONTEXTS = [[375, "dark"], [1440, "light"]];
+  const jobs = [...SMOKE_SET.map((route) => [route, ALL]), ...SAMPLED_DOCS.map((route) => [route, DOC_CONTEXTS])];
 
-  // Docs are checked per template, not per page. Every page of every project (59 of
-  // them, growing with each project's guide) at four contexts made this one step
-  // eighteen minutes, and a violation lives in what a page is made of (a table, a
-  // code block, the rail), which repeats. Per project: the overview, and up to two
-  // pages that hold a table, the component with the most markup of its own
-  // (lib/tables.ts).
-  const hasTable = (project, page) => {
-    try {
-      const md = fs.readFileSync(path.join(ROOT, "content", "docs", project, `${page}.md`), "utf8");
-      return /^\s*\|[\s:|-]+\|\s*$/m.test(md);
-    } catch {
-      return false;
-    }
-  };
-  const pages = ROUTES.flatMap((route) => {
-    const m = route.match(/^\/projects\/([^/]+)\/docs\/(?:([^/]+)\/)?$/);
-    return m ? [{ route, project: m[1], page: m[2] ?? "index" }] : [];
-  });
-  const sampled = [...new Set(pages.map((p) => p.project))].flatMap((project) => {
-    const own = pages.filter((p) => p.project === project);
-    return [
-      ...own.filter((p) => p.page === "index"),
-      ...own.filter((p) => p.page !== "index" && hasTable(project, p.page)).slice(0, 2),
-    ].map((p) => p.route);
-  });
-  const jobs = [...SMOKE_SET.map((route) => [route, ALL]), ...sampled.map((route) => [route, DOC_CONTEXTS])];
-
-  const rows = [["route", "375 light", "375 dark", "1440 light", "1440 dark"]];
-  for (const [route, contexts] of jobs) {
-    const row = [route];
-    for (const [width, scheme] of ALL) {
-      if (!contexts.some(([w, sc]) => w === width && sc === scheme)) {
-        row.push("-");
-        continue;
-      }
+  const found = new Map();
+  const tasks = jobs.flatMap(([route, contexts]) =>
+    contexts.map(([width, scheme]) => async () => {
       const ctx = await context({ width, scheme });
       const page = await ctx.newPage();
       await page.goto(`${BASE}${route}`);
@@ -449,17 +466,21 @@ console.log("\n9. axe, wcag2a/2aa/21aa/22aa, serious and critical");
         .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
         .analyze();
       const bad = violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-      row.push(bad.reduce((n, v) => n + v.nodes.length, 0));
+      found.set(`${route}|${width}|${scheme}`, bad.reduce((n, v) => n + v.nodes.length, 0));
       for (const v of bad) {
         const where = v.nodes.map((n) => n.target.join(" ")).slice(0, 2).join(", ");
         const inCode = /^(color-contrast|scrollable-region-focusable)$/.test(v.id) && v.nodes.every((n) => /\bpre\b|shiki|code/.test(n.target.join(" ")));
         fail(inCode ? "R-17" : "R-38", route, `axe ${v.id} (${v.impact}) ×${v.nodes.length} at ${width} ${scheme}: ${where}`);
       }
       await ctx.close();
-    }
-    rows.push(row);
-  }
-  table(rows);
+    }),
+  );
+  await pool(tasks, AXE_CONCURRENCY);
+
+  table([
+    ["route", "375 light", "375 dark", "1440 light", "1440 dark"],
+    ...jobs.map(([route]) => [route, ...ALL.map(([w, sc]) => found.get(`${route}|${w}|${sc}`) ?? "-")]),
+  ]);
 }
 
 // ── 10. measured, not asserted: home scrolled to the end ─────────────────────
