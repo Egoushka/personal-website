@@ -14,6 +14,8 @@ npm run validate     # frontmatter, topics, internal and #fragment links in cont
 npm run validate -- --drafts   # the same over content/drafts (local: drafts are gitignored)
 npm run new -- <kind> <slug>   # a draft from its skeleton, and its evidence pack
 npm run evidence -- <slug>     # every figure the post states has a source in its pack
+npm run evidence -- <slug> --verify   # and each source a machine can open bears out its row (network)
+npm run readings               # each reading's `ref` holds its value at its commit; `-- --latest` warns on drift (network)
 npm run docs:pull -- <project> [ref]   # copy a tool's docs from its repo at a commit (ADR 0006)
 npm run docs:verify            # the copies match their commits byte for byte (network; CI runs it)
 npm run docs:check -- <dir>    # a tool's docs directory against the contract, before it is pushed
@@ -116,7 +118,8 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
   sitemap (`app/sitemap.ts` and `app/topics/[topic]/page.tsx` both hold the threshold);
   `/notes/` follows the same rule (`app/notes/page.tsx`).
 - **Readings are computed** ([lib/readings.ts](lib/readings.ts), ADR 0002). A figure the
-  build cannot count names its source (`Project.readings`). Nothing renders its own staleness.
+  build cannot count names its source (`Project.readings`), and its `ref` when that is a
+  file in a public repository (`npm run readings`). Nothing renders its own staleness.
 - **JSON-LD** ([JsonLd.tsx](components/JsonLd.tsx)): every graph carries the Person
   (`@id …/#person`); `knowsAbout` comes from `skills` in `lib/site.ts`. Feeds carry full
   HTML bodies with absolute links.

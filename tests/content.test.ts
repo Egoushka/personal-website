@@ -273,6 +273,24 @@ test("validator: a project is a slug in lib/site.ts, and a write-up names its pr
   fails({ a: post(BASE, "") }, /it is chronicle's write-up in lib\/site.ts, so it needs project: "chronicle"/, PROJECTS_TS);
 });
 
+test("validator: a reading's ref is a file at a commit, on the reading's own line", () => {
+  const chronicle = { a: post({ ...BASE, project: '"chronicle"' }, "") };
+  const reading = '      { label: "x", value: "1", source: "y" },';
+  const withRef = (line: string) => PROJECTS_TS.replace(reading, line);
+  passes(chronicle, withRef('      { label: "x", value: "1", source: "y", ref: "Egoushka/chronicle@741dbb1:README.md#L150-152" },'));
+  fails(
+    chronicle,
+    /lib\/site.ts:6: chronicle "x": ref "the README" is not owner\/repo@<sha>:path/,
+    withRef('      { label: "x", value: "1", source: "y", ref: "the README" },'),
+  );
+  fails(chronicle, /a line range starts at line 1 or later/, withRef('      { label: "x", value: "1", source: "y", ref: "o/r@abcdef1:x.md#L9-3" },'));
+  fails(
+    chronicle,
+    /lib\/site.ts:7: a ref goes on the line of its reading/,
+    withRef('      { label: "x", value: "1", source: "y",\n        ref: "o/r@abcdef1:x.md" },'),
+  );
+});
+
 test("validator: a TODO fails a published post and only warns in a draft", () => {
   fails({ a: post(BASE, "TODO: the fix") }, /still has a TODO from its skeleton/);
   const r = validate({ a: TARGET }, undefined, { d: post(BASE, "TODO: the fix") }, ["--drafts"]);

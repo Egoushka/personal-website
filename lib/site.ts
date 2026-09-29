@@ -170,8 +170,13 @@ export const proof: {
   },
 ];
 
-/** One measured fact about a project. `source` says where it came from — always. */
-export type Reading = { label: string; value: string; source: string };
+/**
+ * One measured fact about a project. `source` says where it came from — always.
+ * `ref` is that source as a file at a commit, when it is one in a public
+ * repository: `owner/repo@<sha>:path`, optionally `#L12` or `#L12-40`.
+ * `npm run readings` finds the value's numbers in it (docs/writing/README.md).
+ */
+export type Reading = { label: string; value: string; source: string; ref?: string };
 
 export type Project = {
   /** The URL segment. Lowercase kebab-case, and it never changes once published. */
@@ -280,8 +285,8 @@ export const projects: Project[] = [
       "Published .NET validation library covering national ID, tax, VAT and postal codes for 87 countries; a fork of CountryValidator with 197 of its defects fixed.",
     topics: ["dotnet"],
     readings: [
-      { label: "Countries", value: "87", source: "one validator per country in the repo, each with its own test file" },
-      { label: "Defects fixed", value: "197", source: "counted against the upstream project; stated on the NuGet package page" },
+      { label: "Countries", value: "87", source: "one validator per country in the repo, each with its own test file", ref: "Egoushka/attest@ff0e530:Attest/Attest.csproj#L5" },
+      { label: "Defects fixed", value: "197", source: "counted against the upstream project; stated on the NuGet package page", ref: "Egoushka/attest@ff0e530:Attest/Attest.csproj#L5" },
       { label: "Published", value: "nuget.org/packages/Attest", source: "public package, Apache-2.0" },
     ],
   },
@@ -304,8 +309,8 @@ export const projects: Project[] = [
     topics: ["dotnet", "architecture", "mcp"],
     readings: [
       { label: "Releases", value: "5 tagged, 0.1.0 → 0.3.0", source: "git tags and CHANGELOG.md, 2026-09-27 and 09-28" },
-      { label: "Against a plain session", value: "0.333 → 0.556 blind", source: "phase 3 exit and its rerun, model-judged blind; docs/benchmarks.md" },
-      { label: "Splitting", value: "1.53× the cost for 0.967 vs 0.950", source: "phase 4 exit; ADR 0017 limits splits because of it" },
+      { label: "Against a plain session", value: "0.333 → 0.556 blind", source: "phase 3 exit and its rerun, model-judged blind; docs/benchmarks.md", ref: "Egoushka/chargehand@b566890:docs/benchmarks.md#L104-130" },
+      { label: "Splitting", value: "1.53× the cost for 0.967 vs 0.950", source: "phase 4 exit; ADR 0017 limits splits because of it", ref: "Egoushka/chargehand@b566890:docs/adr/0017-split-runs-forked-siblings-and-merge.md#L48" },
       { label: "Decisions", value: "31 ADRs", source: "docs/adr, 0001 to 0031" },
       { label: "Users", value: "1 — me", source: "counted" },
     ],
@@ -331,10 +336,10 @@ export const projects: Project[] = [
       "Event store over a 681k-message archive. Aggregates events into segments before indexing — 13.4× fewer units, 71.1% against grep’s 54.2% on 71 of its owner’s questions — served over MCP.",
     topics: ["python", "retrieval", "mcp"],
     readings: [
-      { label: "Archive", value: "681,331 messages · 487 chats", source: "counted, not sampled, before any embedding ran" },
-      { label: "Noise", value: "65% under 20 characters", source: "same pass over the same archive" },
-      { label: "Index", value: "13.4× fewer units", source: "685,401 events into 51,044 segments, measured on the reference deployment" },
-      { label: "Against grep", value: "71.1% vs 54.2%", source: "make eval, 71 questions, 2026-09-29, grep’s keywords the question’s own words (68.4% with the answer’s words); chronicle CHANGELOG 0.3.0. The first run, 37 questions, lost 48.2% to 62.8%" },
+      { label: "Archive", value: "681,331 messages · 487 chats", source: "counted, not sampled, before any embedding ran", ref: "Egoushka/chronicle@741dbb1:README.md#L16" },
+      { label: "Noise", value: "65% under 20 characters", source: "same pass over the same archive", ref: "Egoushka/chronicle@741dbb1:README.md#L20" },
+      { label: "Index", value: "13.4× fewer units", source: "685,401 events into 51,044 segments, measured on the reference deployment", ref: "Egoushka/chronicle@741dbb1:README.md#L30-31" },
+      { label: "Against grep", value: "71.1% vs 54.2%", source: "make eval, 71 questions, 2026-09-29, grep’s keywords the question’s own words (68.4% with the answer’s words); chronicle CHANGELOG 0.3.0. The first run, 37 questions, lost 48.2% to 62.8%", ref: "Egoushka/chronicle@741dbb1:README.md#L150-152" },
       { label: "Retrieval", value: "45× faster", source: "hybrid_search, measured before and after the CTE that hid the FTS index" },
       { label: "Users", value: "1 — me", source: "counted" },
     ],
@@ -411,7 +416,7 @@ export const projects: Project[] = [
       "Self-hosted health warehouse in .NET: OAuth ingestion of wearable data into Postgres/TimescaleDB on a single VPS, joined against calendar and environment data.",
     topics: ["dotnet", "postgres", "self-hosting", "mcp"],
     readings: [
-      { label: "Stage", value: "1, 2 and 4 of 8", source: "the staged plan in the repo; 3 is skipped deliberately, 5–8 are unbuilt" },
+      { label: "Stage", value: "1, 2 and 4 of 8", source: "the staged plan in the repo; 3 is skipped deliberately, 5–8 are unbuilt", ref: "Egoushka/oura-platform@9454d57:README.md#L9" },
       { label: "Storage", value: "Postgres + TimescaleDB", source: "hypertables, on the same box as the rest of the lab" },
       { label: "Read path", value: "Grafana + MCP", source: "three provisioned dashboards and an MCP server over the same database" },
       { label: "Users", value: "1 — me", source: "counted" },
@@ -507,7 +512,7 @@ export const projects: Project[] = [
     readings: [
       { label: "Tools an agent sees", value: "5, instead of hundreds", source: "one MCP app per scope; the README" },
       { label: "Writes", value: "approved per call, single-use", source: "Telegram, 50 s default, denied on timeout or outage" },
-      { label: "First page", value: "6k characters at most", source: "the result trimmer" },
+      { label: "First page", value: "6k characters at most", source: "the result trimmer", ref: "Egoushka/switchboard@36fb488:README.md#L13" },
       { label: "Users", value: "1 — me", source: "counted" },
     ],
   },
@@ -529,7 +534,7 @@ export const projects: Project[] = [
       { label: "Toolchains", value: "dotnet, npm, pytest", source: "detected per project by list_projects" },
       { label: "Repository mount", value: "read-only", source: "the run_tests container spec; scratch space is a tmpfs" },
       { label: "Docker access", value: "a scoped proxy, not the socket", source: "no exec, no networks, no volumes" },
-      { label: "SonarQube cold start", value: "33 s", source: "measured when sonar_scan learned to wake it, 2026-09-29" },
+      { label: "SonarQube cold start", value: "33 s", source: "measured when sonar_scan learned to wake it, 2026-09-29", ref: "Egoushka/devbox-mcp@7b24b30:src/index.js#L27" },
     ],
   },
   {
@@ -547,8 +552,8 @@ export const projects: Project[] = [
       "A curated set of agent skills — my own and upstream ones I have read — that installs into Claude Code, OpenCode, Codex and anything else that reads SKILL.md. It treats skills the way a lockfile treats packages, because that is what they are: instructions and scripts handed to an agent that runs with my permissions. Every vendored skill is pinned to a commit, CI fails if it differs from upstream at that commit by a single byte, and upstream changes arrive only as pull requests whose review report flags changed allowed-tools, new scripts, new URLs and edited descriptions, since a description decides when a skill fires. The catalog prints what each skill costs: all 26 together take about 3.3k tokens of every session, and six have bodies over the 5,000-token guideline.",
     topics: ["mcp", "python"],
     readings: [
-      { label: "Skills", value: "26", source: "the catalog the README generates from the skills themselves" },
-      { label: "Always loaded", value: "≈3.3k tokens", source: "names and descriptions, estimated at characters ÷ 4" },
+      { label: "Skills", value: "26", source: "the catalog the README generates from the skills themselves", ref: "Egoushka/agent-skills@06a52c6:README.md#L58" },
+      { label: "Always loaded", value: "≈3.3k tokens", source: "names and descriptions, estimated at characters ÷ 4", ref: "Egoushka/agent-skills@06a52c6:README.md#L58" },
       { label: "Vendored skills", value: "byte-identical to a pinned commit", source: "make verify, which CI runs" },
     ],
   },

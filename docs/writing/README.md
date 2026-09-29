@@ -91,7 +91,8 @@ Thesis: Chronicle's semantic search lost to grep before it tied.
 | Claim | Value | Source |
 |---|---|---|
 | first eval run, 37 questions | 48.2% vs 62.8% | chronicle-archive@89b4e20, CLAUDE.md |
-| after the recall fixes | 63.5% vs 62.8% | chronicle README, "Measure it" |
+| after the recall fixes | 63.5% vs 62.8% | Egoushka/chronicle@741dbb1:README.md#L157-158 |
+| the margin it tied by | 0.7 points | = 63.5 - 62.8 |
 ```
 
 - `npm run evidence -- <slug> --init` starts a pack; run on an existing post, it
@@ -99,11 +100,58 @@ Thesis: Chronicle's semantic search lost to grep before it tied.
 - `npm run evidence -- <slug>` fails on a figure in the title, description or
   prose that no row covers, on a row whose source is empty or a TODO, and on a
   missing thesis. It warns on a figure in the pack the post no longer states.
+- `npm run evidence -- <slug> --verify` does that, then opens every source a
+  machine can open and checks the row's Value against it. Each row reports `ok`,
+  `MISSING <number>`, `DERIVED MISMATCH`, `FETCH FAILED <reason>` or
+  `skipped (not machine-checkable)`; any but the last fails it. A draft is not
+  ready until it passes.
 - A source is something a stranger could check with access: a commit, a file at
   a commit, a URL, a command and its output. "I remember" is not one.
 - The script reads digits. A number written as a word ("fifty-one"), a quoted
   error string and a claim about a person are claims too, and the review reads
   those.
+
+`--verify` opens two kinds of source. **A file at a commit** is written
+`owner/repo@<sha>:path`, anywhere in the Source cell: a 7 to 40 character sha, then
+optionally `#L12` or `#L12-40`. Every number in the Value must be in that file, or
+in those lines, as a whole number: `681,331` is `681331`, `−0.021` is `-0.021` and
+`0.950` is `0.95`; a `$`, `%`, `×` or unit is not part of a number, and there is no
+`5` in `0.5`. A public repository is read from raw.githubusercontent.com, without a
+token. A private one is read from its clone, named in `content/drafts/.evidence-repos.json`,
+which is gitignored with the drafts and, like them, sits in the main checkout, so every
+worktree reads the same one:
+
+```json
+{ "Egoushka/chronicle": "/absolute/path/to/its/clone" }
+```
+
+**A derived figure**, a ratio or difference the post works out, gets a row whose
+Source is its formula: `=`, then arithmetic over literal numbers — digits, `.`,
+`+ - * /`, parentheses and spaces, nothing else. Its operands have rows of their
+own, from the same run, sample or question set. The formula must give the Value's
+first number to the decimal places the Value writes: `1.28×` takes
+`= 0.257 / 0.201`, and `28%` takes `= (0.257 / 0.201 - 1) * 100`.
+
+Every other source is listed as skipped. A commit message, a URL or a command's
+output is still a source; a reader checks it, and `/review-post` does.
+
+## Readings
+
+A project page's "By the numbers" is the project's `readings` in `lib/site.ts`, and
+every reading names its source. When the source is a file in a public repository,
+the reading carries it as `ref` too, in the same syntax and on the reading's own
+line:
+
+```ts
+{ label: "Archive", value: "681,331 messages · 487 chats", source: "counted, not sampled", ref: "Egoushka/chronicle@741dbb1:README.md#L16" },
+```
+
+`npm run validate` fails a malformed ref. `npm run readings` opens every ref and
+fails where the value's numbers are not in it. `npm run readings -- --latest` also
+follows the lines each ref names to the repository's default branch, and warns
+`DRIFT` where a number is no longer in them: the reading still holds at its commit,
+but the page may have gone stale. Change the value and the ref together. Like
+`--verify`, it reads the network or a clone, so the build never runs it.
 
 ## Titles, descriptions, headings
 
@@ -145,9 +193,10 @@ reference, not this list.
 2. Fill the pack first: the thesis, then every figure with its source.
 3. Write the draft (`/post` does this with you), renaming every skeleton heading
    and replacing every `TODO:`.
-4. `npm run evidence -- <slug>` and `npm run validate -- --draft <slug>` until neither
-   reports an error.
-5. `/review-post`, then a voice pass with `stop-slop`.
+4. `npm run evidence -- <slug> --verify` and `npm run validate -- --draft <slug>`
+   until neither reports an error.
+5. `/review-post`, in a fresh session or by an agent that did not write the draft,
+   then a voice pass with `stop-slop`.
 6. Move the file to `content/posts/` on a branch and open a pull request: CI runs
    every gate, and prelive publishes a preview on the tailnet.
 7. Merge. The deploy is the merge.
