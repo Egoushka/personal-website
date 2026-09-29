@@ -106,8 +106,8 @@ optionally `#L12` or `#L12-40`. Every number in the Value must be in that file, 
 in those lines, as a whole number: `681,331` is `681331`, `−0.021` is `-0.021` and
 `0.950` is `0.95`; a `$`, `%`, `×` or unit is not part of a number, and there is no
 `5` in `0.5`. A public repository is read from raw.githubusercontent.com, without a
-token. A private one is read from its clone, named in `.evidence-repos.json`, which
-is gitignored and sits at the root of the main checkout, beside the drafts, so every
+token. A private one is read from its clone, named in `content/drafts/.evidence-repos.json`,
+which is gitignored with the drafts and, like them, sits in the main checkout, so every
 worktree reads the same one:
 
 ```json

@@ -245,7 +245,7 @@ test("evidence: --verify opens a ref in the clone .evidence-repos.json names, wi
       path.join(drafts, "a.md"),
       '---\ntitle: "It lost 0.333 to 0.667"\ndescription: "x"\n---\n\nAt $0.257 against $0.201, 1.28× the cost.\n',
     );
-    fs.writeFileSync(path.join(dir, ".evidence-repos.json"), JSON.stringify({ "o/r": clone.dir }));
+    fs.writeFileSync(path.join(drafts, ".evidence-repos.json"), JSON.stringify({ "o/r": clone.dir }));
     fs.writeFileSync(path.join(drafts, "a.evidence.md"), pack("0.333 vs 0.667", "1.28×"));
 
     const offline = run("a");
@@ -297,7 +297,8 @@ test("readings: a reading's ref is opened at its commit, and --latest warns wher
     ].join("\n");
   try {
     fs.mkdirSync(path.join(dir, "lib"));
-    fs.writeFileSync(path.join(dir, ".evidence-repos.json"), JSON.stringify({ "o/r": clone.dir }));
+    fs.mkdirSync(path.join(dir, "content", "drafts"), { recursive: true });
+    fs.writeFileSync(path.join(dir, "content", "drafts", ".evidence-repos.json"), JSON.stringify({ "o/r": clone.dir }));
     fs.writeFileSync(path.join(dir, "lib", "site.ts"), site(`o/r@${old}:README.md`));
 
     const pinned = run();

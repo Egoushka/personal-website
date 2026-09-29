@@ -14,8 +14,8 @@ import { readingRefs, sourceChecker, sourceReader } from "../lib/evidence.mjs";
 
 const ROOT = process.cwd();
 const LATEST = process.argv.includes("--latest");
-// Beside the main checkout's content/, like the drafts, so every worktree reads one.
-const CLONES = path.join(draftsDir(ROOT), "..", "..", ".evidence-repos.json");
+// In the drafts folder, gitignored with the drafts, so every worktree reads one.
+const CLONES = path.join(draftsDir(ROOT), ".evidence-repos.json");
 const check = sourceChecker(sourceReader(fs.existsSync(CLONES) ? JSON.parse(fs.readFileSync(CLONES, "utf8")) : {}));
 const readings = readingRefs(fs.readFileSync(path.join(ROOT, "lib", "site.ts"), "utf8"));
 

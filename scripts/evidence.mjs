@@ -72,12 +72,12 @@ for (const v of result.unused) {
 for (const e of errors) console.error(`ERROR ${e}`);
 
 // A row whose source a machine can open is checked against it, in the pack's order.
-// Local clones, by "owner/repo", open private repositories: .evidence-repos.json,
-// beside the main checkout's content/ like the drafts, so every worktree reads one.
+// Local clones, by "owner/repo", open private repositories: .evidence-repos.json in
+// the drafts folder, gitignored with the drafts, so every worktree reads one.
 const VERIFY = args.includes("--verify");
 const opened = { ok: 0, MISSING: 0, "DERIVED MISMATCH": 0, "FETCH FAILED": 0, skipped: 0 };
 if (VERIFY) {
-  const clones = path.join(DRAFTS, "..", "..", ".evidence-repos.json");
+  const clones = path.join(DRAFTS, ".evidence-repos.json");
   const check = sourceChecker(sourceReader(fs.existsSync(clones) ? JSON.parse(fs.readFileSync(clones, "utf8")) : {}));
   for (const row of pack.rows) {
     const v = await check(row.source, row.value);

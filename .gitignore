@@ -42,6 +42,3 @@ graft/
 # Denylist for .githooks, one regex per line (see .private-terms.example).
 /.private-terms
 
-# Local clones by "owner/repo" for `npm run evidence -- <slug> --verify` and
-# `npm run readings` (docs/writing/README.md): absolute paths on one machine.
-/.evidence-repos.json
