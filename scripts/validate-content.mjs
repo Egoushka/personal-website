@@ -15,6 +15,7 @@ import { parseMarkdown, countWords, headings, proseText } from "../lib/markdown.
 import { POST_KINDS } from "../lib/post-kinds.mjs";
 import { checkDocPages, highlightLangs, readDocDir } from "../lib/doc-check.mjs";
 import { draftsDir } from "../lib/drafts.mjs";
+import { readingRefs, refProblem } from "../lib/evidence.mjs";
 
 const ROOT = process.cwd();
 const POSTS_DIR = path.join(ROOT, "content", "posts");
@@ -262,6 +263,14 @@ for (const [, slug] of siteTs.matchAll(/writeup:\s*"([^"]+)"/g)) {
       `lib/site.ts: writeup "${slug}" has no content/posts/${slug}.md — a draft cannot be a write-up`,
     );
   }
+}
+// A reading's `ref` is the file at a commit that `npm run readings` opens to find the
+// reading's value in (docs/writing/README.md), so it must be one it can open, on the
+// line that holds that value.
+for (const r of readingRefs(siteTs)) {
+  const bad = refProblem(r.ref);
+  if (bad) errors.push(`lib/site.ts:${r.line}: ${r.project} "${r.label}": ref ${bad}`);
+  else if (!r.label || !r.value) errors.push(`lib/site.ts:${r.line}: a ref goes on the line of its reading, beside the label and value`);
 }
 
 // ── Docs (ADR 0006) ──────────────────────────────────────────────────────────

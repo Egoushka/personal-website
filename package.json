@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit",
     "validate": "node scripts/validate-content.mjs",
     "evidence": "node scripts/evidence.mjs",
+    "readings": "node scripts/readings.mjs",
     "new": "node scripts/new-post.mjs",
     "docs:pull": "node scripts/docs.mjs pull",
     "docs:verify": "node scripts/docs.mjs verify",

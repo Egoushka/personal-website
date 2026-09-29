@@ -40,6 +40,10 @@ a commit, a file at a commit, a URL, a command and its output. Read every source
 yourself. Ask the user for what only they know and record the answer as its source
 ("Yehor, 2026-09-29"). A figure without a source does not go in the post.
 
+Write a file as `owner/repo@<sha>:path#L12-40`, and give a figure you work out its own
+row with the formula as its source (`= 0.257 / 0.201`): those are the rows `--verify`
+can open (docs/writing/README.md).
+
 ## 4. Write the draft
 
 - Read `content/posts/homelab.md` and `content/posts/silent-deploys.md` for the voice.
@@ -63,13 +67,15 @@ yourself. Ask the user for what only they know and record the answer as its sour
 ## 5. Check it
 
 ```bash
-npm run evidence -- <slug>
+npm run evidence -- <slug> --verify
 npm run validate -- --draft <slug>
 ```
 
-Neither may report an error. Warnings about length or links are the user's call.
+The draft is not ready until neither reports an error. Warnings about length or links
+are the user's call. Then `/review-post`, in a fresh session or by an agent that did
+not write the draft: its writer reads what it meant, not what it wrote.
 
 ## Finish by
 
 Telling the user plainly which claims came from sources you read, which are still
-`TODO:`, and which you inferred and they must verify. Then suggest `/review-post`.
+`TODO:`, which you inferred and they must verify, and which rows `--verify` skipped.
