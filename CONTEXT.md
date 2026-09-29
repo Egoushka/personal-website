@@ -36,6 +36,11 @@ The Site's description of something built — a Product, or a piece of work with
 users. A Project is a page about a thing; the thing itself is elsewhere.
 _Avoid_: work, portfolio item
 
+**Method**:
+A rule for how the owner works that two or more Projects follow the same way, with
+where it came from, what it costs and when he breaks it. Reviewed, never dated.
+_Avoid_: principle, value, best practice, manifesto
+
 **Job**:
 One paid role in the employment record. Feeds both the Site and the CV.
 _Avoid_: position, experience (that is the collection, not the item)

@@ -10,7 +10,7 @@ state the current constraint and why; history belongs in commits and [ADRs](docs
 ```bash
 npm ci
 npm run dev          # http://localhost:3000 — no search: /pagefind/ exists only after a build
-npm run validate     # frontmatter, topics, internal and #fragment links in content/posts
+npm run validate     # frontmatter, topics, internal and #fragment links in content/posts and content/methods
 npm run validate -- --drafts   # the same over content/drafts (local: drafts are gitignored)
 npm run new -- <kind> <slug>   # a draft from its skeleton, and its evidence pack
 npm run evidence -- <slug>     # every figure the post states has a source in its pack
@@ -112,6 +112,11 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
   term for project text, and `npm run check` fails on unmarked Cyrillic. [lib/markdown.mjs](lib/markdown.mjs)
   parses for both `lib/posts.ts` and the validator, so word counts and heading ids
   (`rehype-slug`, `github-slugger`) cannot disagree. Code blocks: Shiki ([lib/highlight.ts](lib/highlight.ts)).
+- **Methods**: `content/methods/<slug>.md` ([ADR 0008](docs/adr/0008-methods-are-earned-by-two-projects.md)),
+  read by [lib/methods.ts](lib/methods.ts), at `/methods/` (linked from About as "How I work")
+  and `/methods/<slug>/`. `projects` (two or more) is what a project page's "Methods it
+  follows" reads, and `posts` what a post's line under it reads: never copy either into
+  `lib/site.ts`. Not in the feeds; in the sitemap and search. The rules are in the validator.
 - **Topics**: [lib/topics.ts](lib/topics.ts) is the one closed vocabulary for posts,
   projects and jobs; keep its `export const TOPICS = {` / `} as const satisfies` markers
   (the validator slices between them). A hub with < 2 items is `noindex` and out of the

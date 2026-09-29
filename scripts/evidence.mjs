@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// The evidence gate for one post (docs/writing/README.md):
+// The evidence gate for one post or method (docs/writing/README.md, ADR 0008):
 //   npm run evidence -- <slug>            check content/drafts/<slug>.evidence.md
 //   npm run evidence -- <slug> --init     start that file, one row per figure in the post
 //   npm run evidence -- <slug> --verify   also open each row's source where a machine can
 //                                         (a file at a commit, or `=` arithmetic) and check
 //                                         the row's value against it
-// Reads the draft, or the published post when there is no draft of that slug.
+// Reads the draft, or the published post or method when there is no draft of that slug.
 // Local only: packs sit beside the drafts, gitignored, because a source may name a
 // private repo, so CI never runs this. Both are in the main checkout, whichever
 // worktree runs it (lib/drafts.mjs), so a pack outlives the branch that used it.
@@ -28,7 +28,11 @@ const ROOT = process.cwd();
 const rel = (/** @type {string} */ p) => (path.relative(ROOT, p).startsWith("..") ? p : path.relative(ROOT, p));
 const DRAFTS = draftsDir(ROOT);
 const packPath = path.join(DRAFTS, `${slug}.evidence.md`);
-const postPath = [path.join(DRAFTS, `${slug}.md`), path.join(ROOT, "content", "posts", `${slug}.md`)]
+const postPath = [
+  path.join(DRAFTS, `${slug}.md`),
+  path.join(ROOT, "content", "posts", `${slug}.md`),
+  path.join(ROOT, "content", "methods", `${slug}.md`),
+]
   .find((p) => fs.existsSync(p));
 
 function readPost() {
@@ -52,7 +56,7 @@ if (!fs.existsSync(packPath)) {
   process.exit(1);
 }
 if (!postPath) {
-  console.error(`ERROR no ${rel(path.join(DRAFTS, `${slug}.md`))} or content/posts/${slug}.md`);
+  console.error(`ERROR no ${rel(path.join(DRAFTS, `${slug}.md`))}, content/posts/${slug}.md or content/methods/${slug}.md`);
   process.exit(1);
 }
 

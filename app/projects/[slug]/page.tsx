@@ -23,6 +23,7 @@ import { ArrowRight, ArrowUpRight, BookOpen, FileText, Lock } from "@/components
 import { site, projects } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
 import { getProjectPosts } from "@/lib/posts";
+import { getProjectMethods } from "@/lib/methods";
 import { docSections, docVersion, getDocPages, getDocSource } from "@/lib/docs";
 import { topicName } from "@/lib/topics";
 import { cn } from "@/lib/utils";
@@ -69,13 +70,16 @@ function Fact({ label, children }: { label: string; children: React.ReactNode })
  * What it is and where to go first (the docs, the code, the write-up), then what
  * it is measured at — every reading names where its figure came from, because a
  * number with no provenance is the exact failure this site is built to avoid —
- * then the full account, the docs page by page, and the posts about it.
+ * then the full account, the docs page by page, the posts about it, and the
+ * methods it follows.
  */
 export default async function ProjectPage({ params }: { params: Promise<Params> }) {
   const { slug } = await params;
   const project = projects.find((p) => p.slug === slug);
   if (!project) notFound();
   const posts = getProjectPosts(project.slug, project.writeup);
+  // The methods that name this project, from their own frontmatter (ADR 0008).
+  const methods = getProjectMethods(project.slug);
   // Written in the tool's repository and copied here at a commit (ADR 0006).
   const docSource = getDocSource(project.slug);
   const docs = getDocPages(project.slug);
@@ -284,6 +288,33 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
                 Writing about it
               </h2>
               <PostList posts={posts} className="mt-6" />
+            </section>
+          )}
+
+          {methods.length > 0 && (
+            <section aria-labelledby="methods" data-pagefind-ignore>
+              <h2 id="methods" className="text-2xl font-semibold tracking-tight">
+                Methods it follows
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Rules I follow the same way in this project and at least one other.
+              </p>
+              <ul className="mt-6 grid gap-3">
+                {methods.map((m) => (
+                  <li
+                    key={m.slug}
+                    className="group relative flex gap-3 rounded-xl border bg-card p-4 transition-colors hover:border-input hover:bg-accent/50"
+                  >
+                    <div className="min-w-0">
+                      <Link prefetch={false} href={`/methods/${m.slug}/`} className="font-medium after:absolute after:inset-0 after:rounded-xl">
+                        {m.title}
+                      </Link>
+                      <p className="mt-1 text-sm text-muted-foreground">{m.description}</p>
+                    </div>
+                    <ArrowRight className="mt-1 ml-auto shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
         </div>
