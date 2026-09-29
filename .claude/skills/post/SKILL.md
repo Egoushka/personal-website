@@ -66,7 +66,7 @@ yourself. Ask the user for what only they know and record the answer as its sour
 
 ```bash
 npm run evidence -- <slug>
-npm run validate -- --drafts
+npm run validate -- --draft <slug>
 ```
 
 Neither may report an error. Warnings about length or links are the user's call.

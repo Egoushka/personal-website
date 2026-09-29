@@ -78,6 +78,13 @@ project, and the validator fails it otherwise.
 with where it came from. Local only — `content/drafts/` is gitignored, because a
 source may name a private repo.
 
+Drafts and packs live in the main checkout's `content/drafts/`, whichever
+worktree runs `new`, `evidence` or `validate` (`lib/drafts.mjs`). Removing a
+worktree deletes its ignored files without a word, and a pack has to outlive
+the branch that used it: a correction starts from the pack, months after the
+post ships. Because every draft in flight is in that one folder,
+`npm run validate -- --draft <slug>` checks one; `--drafts` checks them all.
+
 ```md
 Thesis: Chronicle's semantic search lost to grep before it tied.
 
@@ -138,7 +145,7 @@ reference, not this list.
 2. Fill the pack first: the thesis, then every figure with its source.
 3. Write the draft (`/post` does this with you), renaming every skeleton heading
    and replacing every `TODO:`.
-4. `npm run evidence -- <slug>` and `npm run validate -- --drafts` until neither
+4. `npm run evidence -- <slug>` and `npm run validate -- --draft <slug>` until neither
    reports an error.
 5. `/review-post`, then a voice pass with `stop-slop`.
 6. Move the file to `content/posts/` on a branch and open a pull request: CI runs
@@ -147,6 +154,36 @@ reference, not this list.
 8. If the post changes what a project page says, change `lib/site.ts` in the same
    pull request.
 9. A LinkedIn version with `linkedin-post`, from the same pack, linking the post.
+
+## Several posts at once
+
+For posts whose thesis, kind, project and topics are already agreed, each with a
+brief in `content/drafts/prompts/`, the saved workflow
+[`post-batch`](../../.claude/workflows/post-batch.js) does steps 1 to 5 above, all
+but the voice pass, in one command from a Claude Code session in the main checkout:
+
+```js
+Workflow({ name: "post-batch", args: [
+  { brief: "07-my-finding.md", slug: "my-finding", kind: "finding",
+    project: "chronicle", topics: ["postgres"], thesis: "The one sentence already agreed." },
+] })
+```
+
+`project` is `null` for a post about no project; bad args stop the run before any
+agent starts. Each post gets up to three agents, and its review starts as soon as
+its own draft is done. An author sets up the worktree as the brief says, fills the
+pack first, writes the draft and runs the checks. A reviewer that did not write it
+applies `/review-post`, traces every derived figure to its formula and every claim
+the evidence script cannot read to the pack, looks for anything private, and edits
+nothing. A fixer applies only the must-fix findings: a claim it cannot source
+becomes a `TODO:` or is cut. Each post comes back as a report: paths, check output,
+the `TODO:`s left, the claims to confirm, the review and what was fixed, and a
+publish or not-yet verdict with its reason.
+
+It cannot ask anything mid-run, which is why it is only for agreed posts: what only
+I know stays a `TODO:` or a question in the report, and a post still being agreed
+starts with `/post`. Nothing is committed, pushed or moved to `content/posts/`; the
+voice pass and steps 6 to 9 stay mine.
 
 ## Frontmatter
 
