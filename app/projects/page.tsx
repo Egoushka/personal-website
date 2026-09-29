@@ -5,9 +5,10 @@ import ProjectFilter, { type ProjectRow } from "@/components/ProjectFilter";
 import { site, projects } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
 import { topicName } from "@/lib/topics";
+import { getAllPosts } from "@/lib/posts";
 
 const description =
-  "A .NET validation library other people install, a homelab defined entirely in git, an event store over seven years of chat history, and a trading system whose result so far is two rejected hypotheses.";
+  "A .NET validation library other people install, an orchestrator that checks every claim a coding agent makes, a homelab defined entirely in git, and an event store over seven years of chat history.";
 
 export const metadata: Metadata = pageMetadata({ title: "Projects", description, path: "/projects/" });
 
@@ -20,12 +21,14 @@ export default function Projects() {
     .filter((slug) => counts.get(slug)! >= 2)
     .map((slug) => ({ slug, name: topicName(slug) }));
 
+  const posts = getAllPosts();
   const rows: ProjectRow[] = projects.map((p) => ({
     slug: p.slug,
     name: p.name,
     shape: p.shape,
     status: p.status,
     summary: p.summary,
+    posts: posts.filter((post) => post.project === p.slug).length,
     topics: p.topics.map((t) => ({ slug: t, name: topicName(t) })),
   }));
 

@@ -9,7 +9,7 @@ import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import rehypeSlug from "rehype-slug";
-import { byNewest, getAllPosts, getPost, tableOfContents, type PostMeta } from "../lib/posts";
+import { byNewest, getAllPosts, getPost, getProjectPosts, getRelatedPosts, tableOfContents, type PostMeta } from "../lib/posts";
 import { countWords, parseMarkdown } from "../lib/markdown.mjs";
 
 /** The h2 ids the post page gets: the same remark → rehype → rehype-slug chain react-markdown runs. */
@@ -68,6 +68,27 @@ test("posts sort newest first and the slug breaks ties", () => {
   assert.deepEqual(sorted, ["c", "a", "b"]);
   assert.deepEqual([...input].reverse().sort(byNewest).map((p) => p.slug), sorted);
   assert.deepEqual(getAllPosts(), [...getAllPosts()].sort(byNewest));
+});
+
+test("a project's posts: its write-up leads, the rest follow newest first", () => {
+  const homelab = getProjectPosts("homelab-gitops", "homelab").map((p) => p.slug);
+  assert.equal(homelab[0], "homelab");
+  const rest = getAllPosts().filter((p) => p.project === "homelab-gitops" && p.slug !== "homelab");
+  assert.deepEqual(homelab.slice(1), rest.map((p) => p.slug));
+  assert.ok(homelab.length >= 3, "the homelab write-up, the DNS post and the silent deploys");
+  // No write-up: newest first. No posts: nothing, never an error.
+  assert.deepEqual(getProjectPosts("homelab-gitops").map((p) => p.slug), [...homelab.slice(1), "homelab"].sort(
+    (a, b) => byNewest(getAllPosts().find((p) => p.slug === a)!, getAllPosts().find((p) => p.slug === b)!),
+  ));
+  assert.deepEqual(getProjectPosts("no-such-project"), []);
+});
+
+test("read next: another post about the same project comes before a shared topic", () => {
+  for (const post of getAllPosts().filter((p) => p.project)) {
+    const siblings = getAllPosts().filter((p) => p.project === post.project && p.slug !== post.slug);
+    if (siblings.length === 0) continue;
+    assert.equal(getRelatedPosts(post.slug, 1)[0]?.project, post.project, post.slug);
+  }
 });
 
 // ── validate-content, run over fixture trees ────────────────────────────────

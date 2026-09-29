@@ -59,7 +59,7 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
 | [ThemeToggle.tsx](components/ThemeToggle.tsx) | theme choice in `localStorage`; follows the OS while none is stored |
 | [PostEnhancements.tsx](components/PostEnhancements.tsx) | code Copy button, contents current-section mark; renders nothing |
 | [Comments.tsx](components/Comments.tsx) | loads Remark42 from `/c/` as the section nears the viewport |
-| [PostFilter.tsx](components/PostFilter.tsx) | multi-select topic filter and sort over `/writing/` |
+| [PostFilter.tsx](components/PostFilter.tsx) | multi-select topic and project filter and sort over `/writing/` |
 | [ProjectFilter.tsx](components/ProjectFilter.tsx) | topic filter over `/projects/` |
 | [Panel.tsx](components/Panel.tsx) | home instrument panel from `/status.json` |
 | [UsesStatus.tsx](components/UsesStatus.tsx) | live box state on `/about/` from `/status.json` |

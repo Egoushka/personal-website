@@ -171,7 +171,8 @@ export function getTopicCounts(): { topic: string; count: number }[] {
 }
 
 /**
- * Up to `limit` posts related to `slug`, ranked by shared topics. Falls back to
+ * Up to `limit` posts related to `slug`: another post about the same project
+ * first — it is the same story, continued — then by shared topics. Falls back to
  * the newest other posts so the section is never empty on a small blog.
  */
 export function getRelatedPosts(slug: string, limit = 3): PostMeta[] {
@@ -182,9 +183,21 @@ export function getRelatedPosts(slug: string, limit = 3): PostMeta[] {
   return others
     .map((p) => ({
       post: p,
+      sameProject: current.project !== undefined && p.project === current.project,
       shared: p.topics.filter((t) => current.topics.includes(t)).length,
     }))
-    .sort((a, b) => b.shared - a.shared || byNewest(a.post, b.post))
+    .sort((a, b) => Number(b.sameProject) - Number(a.sameProject) || b.shared - a.shared || byNewest(a.post, b.post))
     .slice(0, limit)
     .map((x) => x.post);
+}
+
+/**
+ * The posts about one project, for its page: the write-up first when it has one,
+ * then the rest newest first. A post's `project` decides whether it belongs;
+ * `writeup` in lib/site.ts only picks which one leads (docs/writing/README.md).
+ */
+export function getProjectPosts(project: string, writeup?: string): PostMeta[] {
+  const posts = getAllPosts().filter((p) => p.project === project);
+  const lead = posts.find((p) => p.slug === writeup);
+  return lead ? [lead, ...posts.filter((p) => p !== lead)] : posts;
 }
