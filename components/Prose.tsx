@@ -4,12 +4,13 @@ import rehypeShikiFromHighlighter from "@shikijs/rehype/core";
 import rehypeSlug from "rehype-slug";
 import { highlighter, shikiOptions } from "@/lib/highlight";
 import { rehypeCyrillic } from "@/lib/lang";
+import { rehypeTables } from "@/lib/tables";
 import type { CyrillicLang } from "@/lib/lang";
 
 /**
  * Markdown as the site renders it: a post's body, and a project's docs, through
  * one pipeline so the two cannot drift apart — the same highlighting, section
- * marks, code figures and Cyrillic marking.
+ * marks, code figures, tables and Cyrillic marking.
  *
  * `resolveHref` rewrites link targets and is only for docs, whose relative links
  * were written for the tool's repository (lib/doc-links.mjs). A post's links are
@@ -100,6 +101,7 @@ export default function Prose({
       remarkPlugins={[remarkGfm]}
       rehypePlugins={[
         rehypeSlug,
+        rehypeTables,
         [rehypeShikiFromHighlighter, highlighter, shikiOptions],
         rehypeCyrillic(cyrillic),
       ]}

@@ -601,7 +601,88 @@ hr.bleed {
   gap: 22px;
 }
 
+/* TABLES — lib/tables.ts wraps each one in a scroll region and labels its cells.
+   Hairlines and a small-caps header, not a box: the same treatment as every
+   other list on the site. The region scrolls a numeric table's columns in place,
+   so a wide grid never makes the page scroll sideways. */
+.table-scroll {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-small);
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+.prose th {
+  padding: 0 var(--s-5) var(--s-2) 0;
+  border-bottom: var(--hair) solid var(--rule-firm);
+  text-align: left;
+  vertical-align: bottom;
+  white-space: nowrap;
+  font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.prose td {
+  padding: var(--s-3) var(--s-5) var(--s-3) 0;
+  border-bottom: var(--hair) solid var(--rule);
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.prose th:last-child, .prose td:last-child { padding-right: 0; }
+.prose td:first-child { font-weight: 600; min-width: 9em; }
+.prose td > code, .prose td > a > code { white-space: normal; }
+
+/* Status is a word and a shape, never a colour alone: filled, half, hollow. */
+.prose td[data-status] {
+  white-space: nowrap;
+  font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
+  letter-spacing: var(--ls-rail);
+  text-transform: uppercase;
+}
+.prose td[data-status]::before { margin-right: var(--s-2); }
+.prose td[data-status="works"]::before { content: "\25CF"; }
+.prose td[data-status="partial"]::before { content: "\25D0"; }
+.prose td[data-status="not yet"]::before { content: "\25CB"; }
+.prose td[data-status="partial"], .prose td[data-status="not yet"] { color: var(--ink-2); }
+
+/* A table with a long cell stacks on a narrow screen: each row becomes a block,
+   its first cell the title and every other cell under its header. The header
+   row stays in the tree, clipped, for the roles lib/tables.ts gives it. */
+@media (max-width: 700px) {
+  .table--text thead {
+    position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%);
+  }
+  .table--text, .table--text tbody, .table--text tr, .table--text td { display: block; }
+  .table--text tr { padding: var(--s-4) 0; border-bottom: var(--hair) solid var(--rule); }
+  .table--text tr:first-child { padding-top: 0; }
+  .table--text td { padding: 0; border: 0; min-width: 0; }
+  .table--text td + td { margin-top: var(--s-2); }
+  .table--text td:first-child { font-size: var(--fs-body, 1em); }
+  .table--text td[data-label]:not(:first-child):not([data-status])::before {
+    content: attr(data-label);
+    display: block;
+    font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .table--text.table--pairs td::before { display: none; }
+  /* A status cell has no label of its own: its shape and word are the label. */
+}
+
 .prose p            { margin: 0; }
+/* An unbroken token — an environment assignment, a long path, a URL — wraps at
+   the column edge rather than pushing the page sideways. Only when it must:
+   `anywhere` breaks a word only if it would otherwise overflow. */
+.prose :not(pre) > code, .prose a { overflow-wrap: anywhere; }
 .prose h2           { margin: 0; }
 .prose h3           { margin: var(--s-6) 0 0; }
 .prose ul, .prose ol { margin: 0; padding-left: 1.1em; }

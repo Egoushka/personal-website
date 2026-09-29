@@ -403,7 +403,10 @@ console.log(`\n8. CLS on load, status fixture served, at ${WIDTHS.join(", ")} px
 console.log("\n9. axe, wcag2a/2aa/21aa/22aa, serious and critical");
 {
   const rows = [["route", "375 light", "375 dark", "1440 light", "1440 dark"]];
-  for (const route of SMOKE_SET) {
+  // Every page of every project's docs too: their tables stack, scroll and carry
+  // ARIA roles (lib/tables.ts), which is where a violation would be.
+  const docs = ROUTES.filter((r) => /^\/projects\/[^/]+\/docs\//.test(r));
+  for (const route of [...SMOKE_SET, ...docs]) {
     const row = [route];
     for (const width of [375, 1440]) {
       for (const scheme of ["light", "dark"]) {

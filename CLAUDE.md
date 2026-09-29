@@ -191,7 +191,11 @@ the docs in the tool's repo, then `npm run docs:pull`. The docs directory there 
 `.md` only; each page has `title`, `description` (≤160) and a unique integer `order`,
 `index.md` first, and no `# heading`. Relative links to other pages stay on the site;
 links to other repo files go to GitHub at the pinned commit (`lib/doc-links.mjs`).
-Pages render through `components/Prose.tsx`, the same renderer as posts.
+Pages render through `components/Prose.tsx`, the same renderer as posts. Tables go
+through `lib/tables.ts`: each sits in a focusable scroll region, and one with a cell over
+60 characters is a "text table" that stacks into labelled cards below 700px (a numeric table
+keeps its columns and scrolls). So keep cells short and put long evidence in prose; a
+"Status" column of works / partial / not yet gets a shape (● ◐ ○) as well as the word.
 
 ## Publishing
 
