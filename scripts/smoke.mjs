@@ -402,30 +402,60 @@ console.log(`\n8. CLS on load, status fixture served, at ${WIDTHS.join(", ")} px
 // ── 9. axe (R-38; code-token contrast is R-17) ───────────────────────────────
 console.log("\n9. axe, wcag2a/2aa/21aa/22aa, serious and critical");
 {
+  const ALL = [[375, "light"], [375, "dark"], [1440, "light"], [1440, "dark"]];
+  // A phone in dark and a desktop in light: both widths and both schemes across the two runs.
+  const DOC_CONTEXTS = [[375, "dark"], [1440, "light"]];
+
+  // Docs are checked per template, not per page. Every page of every project (59 of
+  // them, growing with each project's guide) at four contexts made this one step
+  // eighteen minutes, and a violation lives in what a page is made of (a table, a
+  // code block, the rail), which repeats. Per project: the overview, and up to two
+  // pages that hold a table, the component with the most markup of its own
+  // (lib/tables.ts).
+  const hasTable = (project, page) => {
+    try {
+      const md = fs.readFileSync(path.join(ROOT, "content", "docs", project, `${page}.md`), "utf8");
+      return /^\s*\|[\s:|-]+\|\s*$/m.test(md);
+    } catch {
+      return false;
+    }
+  };
+  const pages = ROUTES.flatMap((route) => {
+    const m = route.match(/^\/projects\/([^/]+)\/docs\/(?:([^/]+)\/)?$/);
+    return m ? [{ route, project: m[1], page: m[2] ?? "index" }] : [];
+  });
+  const sampled = [...new Set(pages.map((p) => p.project))].flatMap((project) => {
+    const own = pages.filter((p) => p.project === project);
+    return [
+      ...own.filter((p) => p.page === "index"),
+      ...own.filter((p) => p.page !== "index" && hasTable(project, p.page)).slice(0, 2),
+    ].map((p) => p.route);
+  });
+  const jobs = [...SMOKE_SET.map((route) => [route, ALL]), ...sampled.map((route) => [route, DOC_CONTEXTS])];
+
   const rows = [["route", "375 light", "375 dark", "1440 light", "1440 dark"]];
-  // Every page of every project's docs too: their tables stack, scroll and carry
-  // ARIA roles (lib/tables.ts), which is where a violation would be.
-  const docs = ROUTES.filter((r) => /^\/projects\/[^/]+\/docs\//.test(r));
-  for (const route of [...SMOKE_SET, ...docs]) {
+  for (const [route, contexts] of jobs) {
     const row = [route];
-    for (const width of [375, 1440]) {
-      for (const scheme of ["light", "dark"]) {
-        const ctx = await context({ width, scheme });
-        const page = await ctx.newPage();
-        await page.goto(`${BASE}${route}`);
-        await settle(page);
-        const { violations } = await new AxeBuilder({ page })
-          .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
-          .analyze();
-        const bad = violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-        row.push(bad.reduce((n, v) => n + v.nodes.length, 0));
-        for (const v of bad) {
-          const where = v.nodes.map((n) => n.target.join(" ")).slice(0, 2).join(", ");
-          const inCode = /^(color-contrast|scrollable-region-focusable)$/.test(v.id) && v.nodes.every((n) => /\bpre\b|shiki|code/.test(n.target.join(" ")));
-          fail(inCode ? "R-17" : "R-38", route, `axe ${v.id} (${v.impact}) ×${v.nodes.length} at ${width} ${scheme}: ${where}`);
-        }
-        await ctx.close();
+    for (const [width, scheme] of ALL) {
+      if (!contexts.some(([w, sc]) => w === width && sc === scheme)) {
+        row.push("-");
+        continue;
       }
+      const ctx = await context({ width, scheme });
+      const page = await ctx.newPage();
+      await page.goto(`${BASE}${route}`);
+      await settle(page);
+      const { violations } = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+        .analyze();
+      const bad = violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+      row.push(bad.reduce((n, v) => n + v.nodes.length, 0));
+      for (const v of bad) {
+        const where = v.nodes.map((n) => n.target.join(" ")).slice(0, 2).join(", ");
+        const inCode = /^(color-contrast|scrollable-region-focusable)$/.test(v.id) && v.nodes.every((n) => /\bpre\b|shiki|code/.test(n.target.join(" ")));
+        fail(inCode ? "R-17" : "R-38", route, `axe ${v.id} (${v.impact}) ×${v.nodes.length} at ${width} ${scheme}: ${where}`);
+      }
+      await ctx.close();
     }
     rows.push(row);
   }
