@@ -340,7 +340,11 @@ console.log("\n4. Pagefind ranking");
     return out;
   }, ["oura", "sops", "nothing"]);
   for (const [q, urls] of Object.entries(ranked)) console.log(`  "${q}": ${urls.length} results, top 3 ${urls.slice(0, 3).join(" ")}`);
-  const within = (urls, n, wanted) => urls.slice(0, n).some((u) => wanted.includes(u));
+  // A project's docs pages answer a search for it as well as its page does. As the index
+  // grows, one of them can rank first for the project's name, and that is still the right
+  // answer, so a wanted project page also matches its docs pages below it.
+  const within = (urls, n, wanted) =>
+    urls.slice(0, n).some((u) => wanted.some((w) => u === w || (w.startsWith("/projects/") && u.startsWith(w))));
   if (!within(ranked.oura, 2, ["/writing/oura-platform/", "/projects/oura-platform/"])) {
     fail("R-16", "/pagefind/", `"oura" top 2 is ${ranked.oura.slice(0, 2).join(", ")}`);
   }
