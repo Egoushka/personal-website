@@ -8,7 +8,7 @@ import { topicName } from "@/lib/topics";
 import { getAllPosts } from "@/lib/posts";
 
 const description =
-  "A .NET validation library other people install, an orchestrator that checks every claim a coding agent makes, a homelab defined entirely in git, and an event store over seven years of chat history.";
+  "A .NET validation library other people install, an orchestrator that checks every citation a coding agent returns, a homelab defined entirely in git, and an event store over seven years of chat history.";
 
 export const metadata: Metadata = pageMetadata({ title: "Projects", description, path: "/projects/" });
 

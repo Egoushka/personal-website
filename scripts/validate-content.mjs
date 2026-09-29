@@ -11,6 +11,7 @@ import path from "node:path";
 import matter from "gray-matter";
 import { parseMarkdown, countWords, headings, proseText } from "../lib/markdown.mjs";
 import { POST_KINDS } from "../lib/post-kinds.mjs";
+import { classifyDocLink } from "../lib/doc-links.mjs";
 
 const ROOT = process.cwd();
 const POSTS_DIR = path.join(ROOT, "content", "posts");
@@ -256,6 +257,89 @@ for (const [, slug] of siteTs.matchAll(/writeup:\s*"([^"]+)"/g)) {
   }
 }
 
+// ── Docs (ADR 0006) ──────────────────────────────────────────────────────────
+// A project's docs are copied from its repository into content/docs/<project>/,
+// and content/docs/sources.json says from where. `npm run docs:verify` checks the
+// copy against the commit, with the network; this checks what can be checked
+// offline: the sources, each page's frontmatter, and links between the pages.
+const DOCS_DIR = path.join(ROOT, "content", "docs");
+const SOURCES_FILE = path.join(DOCS_DIR, "sources.json");
+const docSources = fs.existsSync(SOURCES_FILE) ? JSON.parse(fs.readFileSync(SOURCES_FILE, "utf8")) : {};
+// The languages lib/highlight.ts loads. A fence in any other renders as plain text.
+const LANGS = new Set([
+  "text",
+  ...[...fs.readFileSync(path.join(ROOT, "lib", "highlight.ts"), "utf8").matchAll(/shiki\/langs\/([\w-]+)\.mjs/g)].map((m) => m[1]),
+]);
+let docPages = 0;
+
+/** Every fenced code block's language, "" for none. */
+function fences(node, out = []) {
+  if (node.type === "code") out.push(node.lang ?? "");
+  if (node.children) for (const child of node.children) fences(child, out);
+  return out;
+}
+
+for (const [project, source] of Object.entries(docSources)) {
+  const where = `content/docs/${project}`;
+  const fail = (msg) => errors.push(`${where}: ${msg}`);
+  if (!PROJECTS.some((p) => p.slug === project)) fail(`"${project}" is not a project slug in lib/site.ts`);
+  if (!/^[\w.-]+\/[\w.-]+$/.test(source.repo ?? "")) fail(`sources.json: repo must be "owner/name", got ${JSON.stringify(source.repo)}`);
+  if (typeof source.path !== "string" || !source.path) fail("sources.json: path is required — the docs directory in the repository");
+  if (!/^[0-9a-f]{40}$/.test(source.commit ?? "")) fail("sources.json: commit must be a full 40-character sha");
+  const pulledBad = dateProblem(source.pulled);
+  if (pulledBad) fail(`sources.json: pulled ${pulledBad}`);
+
+  const dir = path.join(DOCS_DIR, project);
+  const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith(".md")).sort() : [];
+  if (!files.includes("index.md")) fail("has no index.md — the overview is the docs root");
+  const pages = files.map((file) => {
+    const { data, content } = matter(fs.readFileSync(path.join(dir, file), "utf8"));
+    return { file, page: file.replace(/\.md$/, ""), data, content, tree: parseMarkdown(content) };
+  });
+  const pageIds = new Map(pages.map((p) => [p.page, new Set(headings(p.tree).map((h) => h.id))]));
+  const orders = new Map();
+  for (const p of pages) {
+    const pfail = (msg) => errors.push(`${where}/${p.file}: ${msg}`);
+    if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(p.page)) pfail("the file name must be lowercase kebab-case — it becomes the URL");
+    if (typeof p.data.title !== "string" || !p.data.title) pfail("frontmatter: title is required");
+    if (typeof p.data.description !== "string" || !p.data.description) {
+      pfail("frontmatter: description is required — it is the meta description and the list entry");
+    } else if (p.data.description.length > MAX_DESCRIPTION) {
+      pfail(`frontmatter: description is ${p.data.description.length} chars, max ${MAX_DESCRIPTION}`);
+    }
+    if (!Number.isInteger(p.data.order)) {
+      pfail("frontmatter: order must be a whole number — it sets the reading order");
+    } else if (orders.has(p.data.order)) {
+      pfail(`frontmatter: order ${p.data.order} is also ${orders.get(p.data.order)}'s`);
+    } else {
+      orders.set(p.data.order, p.file);
+    }
+    if (headings(p.tree).some((h) => h.depth === 1)) pfail("body has a '# heading' — the page renders its title as the <h1>");
+    if (/\bTODO\b/.test(p.content)) pfail("still has a TODO");
+    for (const lang of fences(p.tree)) {
+      if (lang && !LANGS.has(lang)) warnings.push(`${where}/${p.file}: a \`${lang}\` fence renders as plain text — lib/highlight.ts loads ${[...LANGS].join(", ")}`);
+    }
+    for (const href of urls(p.tree)) {
+      const link = classifyDocLink(href, source.path);
+      if (link.kind === "outside") {
+        pfail(`"${href}" climbs out of the repository`);
+      } else if (link.kind === "page") {
+        if (!pageIds.has(link.page)) pfail(`"${href}" links to a page these docs do not have`);
+        else if (link.fragment && !pageIds.get(link.page).has(link.fragment)) {
+          pfail(`"${href}" — ${link.page}.md has no heading #${link.fragment}`);
+        }
+      } else if (link.kind === "anchor" && link.fragment && !pageIds.get(p.page).has(link.fragment)) {
+        pfail(`"#${link.fragment}" — this page has no heading with that id`);
+      }
+    }
+  }
+  const index = pages.find((p) => p.page === "index");
+  if (index && pages.some((p) => p !== index && Number.isInteger(p.data.order) && p.data.order <= index.data.order)) {
+    fail("index.md must have the lowest order — the overview is read first");
+  }
+  docPages += pages.length;
+}
+
 // A project's write-up is about that project and must say so: `project` is the one
 // field that ties a post to a project, and `writeup` only picks which post leads.
 for (const { slug, writeup } of PROJECTS) {
@@ -270,7 +354,7 @@ for (const e of errors) console.error(`ERROR ${e}`);
 
 console.log(
   `\n${posts.length} post(s)${WITH_DRAFTS ? ` + ${drafts.length} draft(s)` : ""} + lib/site.ts ` +
-    `checked against ${VOCAB.length} topics and ${PROJECTS.length} projects — ` +
+    `${docPages ? `+ ${docPages} docs page(s) ` : ""}checked against ${VOCAB.length} topics and ${PROJECTS.length} projects — ` +
     `${errors.length} error(s), ${warnings.length} warning(s)`,
 );
 process.exit(errors.length > 0 ? 1 : 0);

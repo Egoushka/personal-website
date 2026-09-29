@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { site, projects } from "@/lib/site";
 import { getAllPosts } from "@/lib/posts";
 import { getTopicUsage } from "@/lib/readings";
+import { getDocPages, getDocSources } from "@/lib/docs";
 
 export const dynamic = "force-static";
 
@@ -32,6 +33,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly" as const,
       priority: 0.6,
     })),
+    // Every page of every project's docs, the same list the docs routes render.
+    ...Object.keys(getDocSources()).flatMap((project) =>
+      getDocPages(project).map((d) => ({
+        url: `${base}${d.href}`,
+        lastModified: getDocSources()[project].pulled,
+        changeFrequency: "monthly" as const,
+        priority: 0.5,
+      })),
+    ),
     ...topics.map((t) => ({
       url: `${base}/topics/${t}/`,
       changeFrequency: "weekly" as const,

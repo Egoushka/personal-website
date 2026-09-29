@@ -83,6 +83,7 @@ deploy/               Caddyfile. The compose file and the pull script live in
                       homelab-gitops on the VPS, not here.
 docs/adr/             the decisions that are hard to reverse, and why
 docs/writing/         the post framework: kinds, skeletons, the evidence pack
+content/docs/         projects' docs, copied from their repos at a commit (ADR 0006)
 ```
 
 Routes that moved are redirected in `deploy/Caddyfile`, because a static export cannot

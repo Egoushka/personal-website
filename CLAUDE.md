@@ -14,6 +14,8 @@ npm run validate     # frontmatter, topics, internal and #fragment links in cont
 npm run validate -- --drafts   # the same over content/drafts (local: drafts are gitignored)
 npm run new -- <kind> <slug>   # a draft from its skeleton, and its evidence pack
 npm run evidence -- <slug>     # every figure the post states has a source in its pack
+npm run docs:pull -- <project> [ref]   # copy a tool's docs from its repo at a commit (ADR 0006)
+npm run docs:verify            # the copies match their commits byte for byte (network; CI runs it)
 npm run typecheck    # tsc --noEmit
 npm test             # node:test over tests/**/*.test.ts; add tests/<area>.test.ts
 npm run build        # images -> next build -> pagefind; static export to ./out
@@ -179,6 +181,17 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
   checks the live site and `/status.json` every 6 h. The manual path is re-running
   `deploy.yml` from the Actions tab. Compose, cron, the pull script and the Remark42
   container belong to homelab-gitops.
+
+## Docs
+
+A project's docs are written in **its own repository** and copied here at a commit
+([ADR 0006](docs/adr/0006-docs-are-written-where-the-code-is.md)): `content/docs/<project>/`
+holds the copy, `content/docs/sources.json` says from where. Never edit the copy — change
+the docs in the tool's repo, then `npm run docs:pull`. The docs directory there is flat,
+`.md` only; each page has `title`, `description` (≤160) and a unique integer `order`,
+`index.md` first, and no `# heading`. Relative links to other pages stay on the site;
+links to other repo files go to GitHub at the pinned commit (`lib/doc-links.mjs`).
+Pages render through `components/Prose.tsx`, the same renderer as posts.
 
 ## Publishing
 

@@ -10,6 +10,8 @@
     "validate": "node scripts/validate-content.mjs",
     "evidence": "node scripts/evidence.mjs",
     "new": "node scripts/new-post.mjs",
+    "docs:pull": "node scripts/docs.mjs pull",
+    "docs:verify": "node scripts/docs.mjs verify",
     "index": "pagefind --site out --output-subdir pagefind",
     "images": "node scripts/optimize-images.mjs",
     "test": "node --import tsx --test \"tests/**/*.test.ts\"",

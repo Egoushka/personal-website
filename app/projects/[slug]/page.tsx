@@ -8,6 +8,7 @@ import Byline from "@/components/Byline";
 import { site, projects } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
 import { getProjectPosts } from "@/lib/posts";
+import { docVersion, getDocPages, getDocSource } from "@/lib/docs";
 import { Downloads } from "@/components/Measured";
 import Lang from "@/components/Lang";
 import { topicName } from "@/lib/topics";
@@ -51,6 +52,9 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
   const project = projects.find((p) => p.slug === slug);
   if (!project) notFound();
   const posts = getProjectPosts(project.slug, project.writeup);
+  // Written in the tool's repository and copied here at a commit (ADR 0006).
+  const docSource = getDocSource(project.slug);
+  const docs = getDocPages(project.slug);
   // The write-up leads only when there is one; otherwise every post is equal.
   const [lead, rest] = project.writeup && posts.length > 0 ? [posts.slice(0, 1), posts.slice(1)] : [posts, []];
 
@@ -70,6 +74,9 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
                 <span><a href={project.href} rel="noopener">the repository</a></span>
               ) : (
                 <span>private repository</span>
+              )}
+              {docs.length > 0 && (
+                <>{" "}<span><Link prefetch={false} href={docs[0].href}>the docs</Link></span></>
               )}
             </>
           }
@@ -126,6 +133,27 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
         <span className="rail rail--label">What it is</span>
         <p><Lang text={project.description} lang={project.cyrillic} /></p>
       </section>
+
+      {docSource && docs.length > 0 && (
+        <>
+          <hr className="bleed" />
+          <section className="row">
+            <span className="rail rail--against-body">
+              <span className="rail--label">Docs</span>
+              <span>{docs.length} {docs.length === 1 ? "page" : "pages"}</span>
+              <span>{docVersion(docSource)}</span>
+            </span>
+            <ol className="post-list">
+              {docs.map((d) => (
+                <li className="post-row" key={d.page}>
+                  <Link prefetch={false} href={d.href}>{d.title}</Link>
+                  <p>{d.description}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+        </>
+      )}
 
       {posts.length > 0 && (
         <>

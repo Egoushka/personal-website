@@ -14,10 +14,10 @@ it is enforced — by `npm run validate`, `npm run evidence` and the `/post` and
 | **Docs** | How to use one tool, versioned with it | `/projects/<slug>/docs/` | With each release of the tool |
 | **Methods** | How I work, where two or more projects do it the same way | `/methods/<slug>/` | Kept current, dated "last reviewed" |
 
-Docs and Methods are planned, not built. The rules that hold already: docs are
-written in the tool's own repository and the site only renders them, so they
-cannot drift from the code; a lesson becomes a Method once it has repeated in a
-second project, not before. A post never explains how to use a tool — it links
+Docs are written in the tool's own repository and the site renders a copy at a
+pinned commit ([ADR 0006](../adr/0006-docs-are-written-where-the-code-is.md)), so
+they cannot drift from the code. Methods are planned, not built; a lesson becomes
+a Method once it has repeated in a second project, not before. A post never explains how to use a tool — it links
 the docs — and a post never restates a Method; it tells the story that made one.
 
 ## A post starts as one sentence
