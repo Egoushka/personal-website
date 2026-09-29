@@ -181,8 +181,7 @@ scale; pages run to 80rem (docs 90rem), and running prose stops around 46rem.
   contents beside it, and a badge saying which commit the copy is of (ADR 0006).
 
 The primary nav is **Writing · Projects · Docs · About · CV**, with search (⌘K / Ctrl+K)
-and the theme toggle beside it. The CV is in the nav because the home page advertises
-contract work, and the CV is what a buyer forwards.
+and the theme toggle beside it. The CV is in the nav because it is what a reader forwards.
 
 ---
 

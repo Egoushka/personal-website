@@ -9,9 +9,8 @@ import { cn } from "@/lib/utils";
  * a tablet up; on a phone it scrolls away, and the sections take a row of their
  * own under the wordmark rather than hiding behind a menu button.
  *
- * Writing, Projects, Docs, About, CV. The CV is here because the home page
- * advertises contract work and the CV is what a buyer forwards. Skills is not:
- * About and the CV both link to it.
+ * Writing, Projects, Docs, About, CV. The CV is here because it is what a
+ * reader forwards. Skills is not: About and the CV both link to it.
  *
  * Search stays outside `<nav>`, so its result links never land inside the
  * navigation landmark.
