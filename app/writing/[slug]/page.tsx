@@ -4,6 +4,7 @@ import Shell from "@/components/Shell";
 import { BlogPostingLd } from "@/components/JsonLd";
 import Comments from "@/components/Comments";
 import Byline from "@/components/Byline";
+import KindLabel from "@/components/KindLabel";
 import PostEnhancements from "@/components/PostEnhancements";
 import Lang from "@/components/Lang";
 import Prose from "@/components/Prose";
@@ -92,6 +93,7 @@ export default async function PostPage(
           </h1>
           <p className="mt-5 max-w-[46rem] text-xl leading-relaxed text-muted-foreground text-pretty">{post.description}</p>
           <p className="page-figures mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground" data-pagefind-ignore>
+            <KindLabel kind={post.kind} />{" "}
             <span className="inline-flex items-center gap-1.5">
               <Calendar className="size-3.5" />
               <time dateTime={post.date}>{formatDate(post.date)}</time>

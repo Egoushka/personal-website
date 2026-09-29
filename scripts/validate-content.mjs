@@ -2,8 +2,10 @@
 // Frontmatter and link gate for content/posts/*.md and content/methods/*.md (ADR 0008).
 // Runs locally (`npm run validate`) and in CI before the site is built, so a bad
 // post fails fast with a readable message instead of a stack trace from the renderer.
-// `--drafts` also checks content/drafts/*.md by the same rules. That is local only:
-// drafts are gitignored, so CI never has any.
+// `--drafts` also checks content/drafts/*.md by the same rules, and `--draft <slug>`
+// only that one: from a worktree the drafts are the main checkout's (lib/drafts.mjs),
+// so every draft in flight is in the one folder. That is local only: drafts are
+// gitignored, so CI never has any.
 // Reads everything relative to the working directory, which is what lets the tests
 // run it over fixture trees.
 import fs from "node:fs";
@@ -12,11 +14,14 @@ import matter from "gray-matter";
 import { parseMarkdown, countWords, headings, proseText } from "../lib/markdown.mjs";
 import { POST_KINDS } from "../lib/post-kinds.mjs";
 import { checkDocPages, highlightLangs, readDocDir } from "../lib/doc-check.mjs";
+import { draftsDir } from "../lib/drafts.mjs";
+import { readingRefs, refProblem } from "../lib/evidence.mjs";
 
 const ROOT = process.cwd();
 const POSTS_DIR = path.join(ROOT, "content", "posts");
-const DRAFTS_DIR = path.join(ROOT, "content", "drafts");
-const WITH_DRAFTS = process.argv.includes("--drafts");
+const DRAFTS_DIR = draftsDir(ROOT);
+const ONE_DRAFT = process.argv.includes("--draft") ? process.argv[process.argv.indexOf("--draft") + 1] ?? "" : null;
+const WITH_DRAFTS = process.argv.includes("--drafts") || ONE_DRAFT !== null;
 const MAX_DESCRIPTION = 160; // Google truncates around here.
 
 /**
@@ -101,8 +106,11 @@ function readPosts(dir, label) {
 // target's heading ids. Only published posts are link targets — a draft that
 // links to another draft would ship a 404 if it went out first.
 const posts = readPosts(POSTS_DIR, "content/posts");
-const drafts = WITH_DRAFTS ? readPosts(DRAFTS_DIR, "content/drafts") : [];
+const drafts = (WITH_DRAFTS ? readPosts(DRAFTS_DIR, "content/drafts") : []).filter(
+  (d) => ONE_DRAFT === null || d.slug === ONE_DRAFT,
+);
 if (posts.length === 0) errors.push("content/posts/ contains no .md files");
+if (ONE_DRAFT !== null && drafts.length === 0) errors.push(`--draft: no content/drafts/${ONE_DRAFT}.md`);
 const ids = new Map(posts.map((p) => [p.slug, new Set(headings(p.tree).map((h) => h.id))]));
 
 /**
@@ -254,6 +262,9 @@ for (const { where, slug, data, content, tree } of [...posts, ...drafts]) {
 
   const words = countWords(tree);
   if (words < 300) warn(`only ${words} words — thin for search`);
+  // A note is one finding in 300–700 words (docs/writing/README.md). Past 800 it
+  // has outgrown the kind, and one of the others says better what it is.
+  if (data.kind === "note" && words > 800) warn(`${words} words — long for a note: past 800, make it a finding, incident or build`);
   if (!internal.some((u) => u.startsWith("/"))) warn("no internal links — costs SEO and session depth");
 }
 
@@ -268,6 +279,14 @@ for (const [, slug] of siteTs.matchAll(/writeup:\s*"([^"]+)"/g)) {
       `lib/site.ts: writeup "${slug}" has no content/posts/${slug}.md — a draft cannot be a write-up`,
     );
   }
+}
+// A reading's `ref` is the file at a commit that `npm run readings` opens to find the
+// reading's value in (docs/writing/README.md), so it must be one it can open, on the
+// line that holds that value.
+for (const r of readingRefs(siteTs)) {
+  const bad = refProblem(r.ref);
+  if (bad) errors.push(`lib/site.ts:${r.line}: ${r.project} "${r.label}": ref ${bad}`);
+  else if (!r.label || !r.value) errors.push(`lib/site.ts:${r.line}: a ref goes on the line of its reading, beside the label and value`);
 }
 
 // ── Docs (ADR 0006) ──────────────────────────────────────────────────────────

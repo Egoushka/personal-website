@@ -41,3 +41,4 @@ graft/
 
 # Denylist for .githooks, one regex per line (see .private-terms.example).
 /.private-terms
+

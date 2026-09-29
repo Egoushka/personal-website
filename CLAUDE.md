@@ -14,6 +14,8 @@ npm run validate     # frontmatter, topics, internal and #fragment links in cont
 npm run validate -- --drafts   # the same over content/drafts (local: drafts are gitignored)
 npm run new -- <kind> <slug>   # a draft from its skeleton, and its evidence pack
 npm run evidence -- <slug>     # every figure the post states has a source in its pack
+npm run evidence -- <slug> --verify   # and each source a machine can open bears out its row (network)
+npm run readings               # each reading's `ref` holds its value at its commit; `-- --latest` warns on drift (network)
 npm run docs:pull -- <project> [ref]   # copy a tool's docs from its repo at a commit (ADR 0006)
 npm run docs:verify            # the copies match their commits byte for byte (network; CI runs it)
 npm run docs:check -- <dir>    # a tool's docs directory against the contract, before it is pushed
@@ -118,9 +120,11 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
 - **Topics**: [lib/topics.ts](lib/topics.ts) is the one closed vocabulary for posts,
   projects and jobs; keep its `export const TOPICS = {` / `} as const satisfies` markers
   (the validator slices between them). A hub with < 2 items is `noindex` and out of the
-  sitemap (`app/sitemap.ts` and `app/topics/[topic]/page.tsx` both hold the threshold).
+  sitemap (`app/sitemap.ts` and `app/topics/[topic]/page.tsx` both hold the threshold);
+  `/notes/` follows the same rule (`app/notes/page.tsx`).
 - **Readings are computed** ([lib/readings.ts](lib/readings.ts), ADR 0002). A figure the
-  build cannot count names its source (`Project.readings`). Nothing renders its own staleness.
+  build cannot count names its source (`Project.readings`), and its `ref` when that is a
+  file in a public repository (`npm run readings`). Nothing renders its own staleness.
 - **JSON-LD** ([JsonLd.tsx](components/JsonLd.tsx)): every graph carries the Person
   (`@id …/#person`); `knowsAbout` comes from `skills` in `lib/site.ts`. Feeds carry full
   HTML bodies with absolute links.
@@ -224,7 +228,7 @@ shape (● ◐ ○) as well as the word.
 ## Publishing
 
 Posts follow [docs/writing/README.md](docs/writing/README.md): a `kind` (finding,
-incident, build), a `project` when the post is about one (a project's write-up must
+incident, build, note — a short post, ADR 0009), a `project` when the post is about one (a project's write-up must
 name it), a one-sentence thesis and an evidence pack before any prose. Drafts live in `content/drafts/` (not built, gitignored: the repo is public); moving one
 to `content/posts/` is a deliberate, reviewed act. `/post` writes drafts only; `/review-post` critiques before
 shipping. No CMS: an editor plus `/post`, or GitHub's web editor as a PR that adds the

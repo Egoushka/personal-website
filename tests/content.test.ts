@@ -11,6 +11,7 @@ import remarkRehype from "remark-rehype";
 import rehypeSlug from "rehype-slug";
 import { byNewest, getAllPosts, getPost, getProjectPosts, getRelatedPosts, tableOfContents, type PostMeta } from "../lib/posts";
 import { countWords, parseMarkdown } from "../lib/markdown.mjs";
+import { kindLabel, POST_KINDS } from "../lib/post-kinds.mjs";
 
 /** The h2 ids the post page gets: the same remark → rehype → rehype-slug chain react-markdown runs. */
 function renderedH2Ids(markdown: string): string[] {
@@ -34,14 +35,15 @@ const FIXTURES: Record<string, string> = {
 };
 
 test("TOC ids equal rehype-slug's h2 ids, on every post and every fixture", () => {
-  const cases: [string, string][] = [
-    ...getAllPosts().map((p): [string, string] => [p.slug, getPost(p.slug).content]),
+  const cases: [string, string, PostMeta["kind"]?][] = [
+    ...getAllPosts().map((p): [string, string, PostMeta["kind"]] => [p.slug, getPost(p.slug).content, p.kind]),
     ...Object.entries(FIXTURES),
   ];
-  for (const [name, markdown] of cases) {
+  for (const [name, markdown, kind] of cases) {
     const toc = tableOfContents(markdown).map((h) => h.id);
     assert.deepEqual(toc, renderedH2Ids(markdown), name);
-    assert.ok(toc.length > 0, `${name} has headings`);
+    // A note may have no `##` heading at all (docs/writing/templates/note.md).
+    if (kind !== "note") assert.ok(toc.length > 0, `${name} has headings`);
   }
 });
 
@@ -234,9 +236,34 @@ const PROJECTS_TS = [
 
 test("validator: every post has a kind", () => {
   const noKind = Object.fromEntries(Object.entries(BASE).filter(([k]) => k !== "kind"));
-  fails({ a: post(noKind, "") }, /kind is required — one of finding, incident, build/);
-  fails({ a: post({ ...BASE, kind: '"essay"' }, "") }, /kind must be one of finding, incident, build, got "essay"/);
+  fails({ a: post(noKind, "") }, /kind is required — one of finding, incident, build, note/);
+  fails({ a: post({ ...BASE, kind: '"essay"' }, "") }, /kind must be one of finding, incident, build, note, got "essay"/);
   passes({ a: post({ ...BASE, kind: '"incident"' }, "") });
+  passes({ a: post({ ...BASE, kind: '"note"' }, "") });
+});
+
+test("kinds: only a note is named, in the lists, on its page and in the feeds", () => {
+  assert.deepEqual(POST_KINDS.map((k) => kindLabel(k)), [undefined, undefined, undefined, "Note"]);
+  assert.equal(kindLabel(undefined), undefined, "a post the validator would reject has no kind, and no label");
+});
+
+test("validator: a note warns past 800 words, and under 300 like any post", () => {
+  // post() adds 321 words: the filler and its link.
+  const words = (count: number) => Array.from({ length: count }, (_, i) => `more${i}`).join(" ");
+  const note = { ...BASE, kind: '"note"' };
+
+  const fits = validate({ a: post(note, words(300)) });
+  assert.equal(fits.code, 0, fits.out);
+  assert.doesNotMatch(fits.out, /^warn/m, "621 words is a note");
+
+  // A warning, not an error: whether it is still one finding is the author's call.
+  const long = validate({ a: post(note, words(500)) });
+  assert.equal(long.code, 0, long.out);
+  assert.match(long.out, /warn {2}content\/posts\/a.md: 821 words — long for a note: past 800, make it a finding/);
+  assert.doesNotMatch(validate({ a: post(BASE, words(500)) }).out, /long for a note/, "821 words is a finding's length");
+
+  const thin = validate({ a: '---\ntitle: "A"\ndate: "2026-01-10"\ndescription: "D."\nkind: "note"\ntopics: ["dotnet"]\n---\n\nOne [line](/).\n' });
+  assert.match(thin.out, /content\/posts\/a.md: only 2 words — thin for search/);
 });
 
 test("validator: a project is a slug in lib/site.ts, and a write-up names its project", () => {
@@ -244,6 +271,24 @@ test("validator: a project is a slug in lib/site.ts, and a write-up names its pr
   passes({ a: chronicle, b: post({ ...BASE, project: '"attest"' }, "") }, PROJECTS_TS);
   fails({ a: chronicle, b: post({ ...BASE, project: '"production"' }, "") }, /project "production" is not a project slug/, PROJECTS_TS);
   fails({ a: post(BASE, "") }, /it is chronicle's write-up in lib\/site.ts, so it needs project: "chronicle"/, PROJECTS_TS);
+});
+
+test("validator: a reading's ref is a file at a commit, on the reading's own line", () => {
+  const chronicle = { a: post({ ...BASE, project: '"chronicle"' }, "") };
+  const reading = '      { label: "x", value: "1", source: "y" },';
+  const withRef = (line: string) => PROJECTS_TS.replace(reading, line);
+  passes(chronicle, withRef('      { label: "x", value: "1", source: "y", ref: "Egoushka/chronicle@741dbb1:README.md#L150-152" },'));
+  fails(
+    chronicle,
+    /lib\/site.ts:6: chronicle "x": ref "the README" is not owner\/repo@<sha>:path/,
+    withRef('      { label: "x", value: "1", source: "y", ref: "the README" },'),
+  );
+  fails(chronicle, /a line range starts at line 1 or later/, withRef('      { label: "x", value: "1", source: "y", ref: "o/r@abcdef1:x.md#L9-3" },'));
+  fails(
+    chronicle,
+    /lib\/site.ts:7: a ref goes on the line of its reading/,
+    withRef('      { label: "x", value: "1", source: "y",\n        ref: "o/r@abcdef1:x.md" },'),
+  );
 });
 
 test("validator: a TODO fails a published post and only warns in a draft", () => {
@@ -263,6 +308,16 @@ test("validator: --drafts checks drafts by the same rules, and an evidence pack 
   // A draft may link to a published post, never to another draft.
   const linked = validate({ a: TARGET }, undefined, { d: post(BASE, "[x](/writing/e/)"), e: post(BASE, "") }, ["--drafts"]);
   assert.match(linked.out, /links to \/writing\/e\/ which does not exist/);
+});
+
+test("validator: --draft <slug> checks that draft alone, since every worktree shares one drafts folder", () => {
+  const drafts = { good: post(BASE, ""), bad: post({ ...BASE, kind: '"essay"' }, "") };
+  const one = validate({ a: TARGET }, undefined, drafts, ["--draft", "good"]);
+  assert.equal(one.code, 0, one.out);
+  assert.doesNotMatch(one.out, /bad\.md/);
+  assert.match(one.out, /1 draft\(s\)/);
+  assert.equal(validate({ a: TARGET }, undefined, drafts, ["--draft", "bad"]).code, 1);
+  assert.match(validate({ a: TARGET }, undefined, drafts, ["--draft", "gone"]).out, /--draft: no content\/drafts\/gone.md/);
 });
 
 // ── docs (ADR 0006) ─────────────────────────────────────────────────────────

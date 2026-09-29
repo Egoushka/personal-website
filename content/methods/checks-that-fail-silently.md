@@ -31,6 +31,6 @@ And checking the outcome takes longer than checking the step. This site's deploy
 
 Two deliberate regressions went through chargehand's prompt CI. A better score now blocks the first; the second still passes, and [its docs](/projects/chargehand/docs/prompt-ci/#what-it-has-missed) say so. A ruleset on `main` still requires the gate for every prompt change.
 
-Chronicle has no alert for a source that stops sending. In June my phone stopped sending location and photos, and nothing on the box failed, so nothing fired. The only signal is still `doctor`'s warning for a source with nothing in 90 days, and [its status page](/projects/chronicle/docs/status/#what-is-not-built) lists the alert as not built.
+Chronicle has no alert for a source that stops sending. In June my location and photo backups stopped reporting, and nothing on the box failed, so nothing fired. The only signal is still `doctor`'s warning for a source with nothing in 90 days, and [its status page](/projects/chronicle/docs/status/#what-is-not-built) lists the alert as not built.
 
 And the script that checks this page's figures reads digits, so it cannot see that "fifty-one", above, is a number; a reviewer has to.
