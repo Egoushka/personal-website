@@ -1290,6 +1290,16 @@ figure.code pre {
   cursor: pointer;
 }
 .filter-chip:hover { color: var(--ink); border-color: var(--accent); }
+/* The second vocabulary, projects, on its own labelled line so a chip never has
+   to say which kind it is. */
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-4);
+  margin: var(--s-3) 0 0;
+}
+.filter-row .filter-bar { margin: 0; }
 .filter-chip[aria-pressed="true"] {
   color: var(--paper);
   background: var(--accent);
@@ -1334,7 +1344,7 @@ figure.code pre {
 
 /* After the rules above, which it overrides. */
 @media (scripting: none) {
-  .filter-bar, .sort-bar { display: none; }
+  .filter-bar, .filter-row, .sort-bar { display: none; }
 }
 
 /* Forced colours drop the amber fill, and with it the only sign of which chip
@@ -1829,7 +1839,7 @@ figure figcaption {
 
   /* --- strip the site chrome --------------------------------------------- */
   .site-header, .site-footer, .skip-link, .print-hint, .print-actions,
-  .toc, .toc-details, .post-aside, .copy-btn, .filter-bar, .sort-bar {
+  .toc, .toc-details, .post-aside, .copy-btn, .filter-bar, .filter-row, .sort-bar {
     display: none !important;
   }
 

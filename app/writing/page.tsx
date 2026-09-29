@@ -4,6 +4,7 @@ import PageHead from "@/components/PageHead";
 import PostFilter, { type PostRow } from "@/components/PostFilter";
 import { pageMetadata } from "@/lib/metadata";
 import { getAllPosts, getTopicCounts, formatDate } from "@/lib/posts";
+import { projects } from "@/lib/site";
 import { getReadings, n } from "@/lib/readings";
 import { topicName } from "@/lib/topics";
 
@@ -11,6 +12,12 @@ const description =
   "Notes on backend engineering, debugging, and running a homelab on one box — by Yehor Hrabovskyi.";
 
 export const metadata: Metadata = pageMetadata({ title: "Writing", description, path: "/writing/" });
+
+/** A post's project as its row needs it: the slug for the link and the chip, the name to print. */
+function projectOf(slug: string | undefined): PostRow["project"] {
+  const project = projects.find((p) => p.slug === slug);
+  return project && { slug: project.slug, name: project.name };
+}
 
 /** `2026-07-28` → `July 2026`. The running head, one step coarser than the date. */
 function formatMonth(iso: string): string {
@@ -39,6 +46,7 @@ export default function WritingIndex() {
     readingTime: p.readingTime,
     wordCount: p.wordCount,
     topics: p.topics,
+    project: projectOf(p.project),
   }));
 
   // Chips only for topics with at least two posts: one post is a link, not a filter.
@@ -47,6 +55,12 @@ export default function WritingIndex() {
     name: topicName(topic),
     count,
   }));
+
+  // The same rule for projects, in the order lib/site.ts lists them. A project
+  // with one post has it linked on its row and on its page already.
+  const projectChips = projects
+    .map((p) => ({ slug: p.slug, name: p.name, count: rows.filter((r) => r.project?.slug === p.slug).length }))
+    .filter(({ count }) => count >= 2);
 
   return (
     <Shell current="writing">
@@ -64,7 +78,7 @@ export default function WritingIndex() {
         }
       />
 
-      <PostFilter posts={rows} topics={topics} />
+      <PostFilter posts={rows} topics={topics} projects={projectChips} />
 
     </Shell>
   );

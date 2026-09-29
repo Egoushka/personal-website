@@ -21,6 +21,8 @@ export type ProjectRow = {
   shape: string;
   status: string;
   summary: string;
+  /** How many posts name this project; the project page lists them. */
+  posts: number;
   topics: { slug: string; name: string }[];
 };
 
@@ -80,6 +82,7 @@ export default function ProjectFilter({
             <span className="project-status">
               <span>{p.shape}</span>{" "}
               <span className="project-state">{p.status}</span>
+              {p.posts > 0 && <>{" "}<span>{p.posts} {p.posts === 1 ? "post" : "posts"}</span></>}
             </span>
             <p>{p.summary}</p>
             <ul className="topic-run">

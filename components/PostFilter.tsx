@@ -6,16 +6,16 @@ import Lang from "@/components/Lang";
 import type { CyrillicLang } from "@/lib/lang";
 
 /**
- * The writing index, with the vocabulary as a filter over it.
+ * The writing index, with the vocabulary and the projects as a filter over it.
  *
  * Every post is server-rendered into the static HTML, so the page is a complete
  * list before any JavaScript runs — the filter only ever *removes* rows, and the
  * sort only ever reorders ones already present. With JS off the controls are
  * hidden by CSS and you get every post, newest first, grouped by month.
  *
- * Topics are multi-select and union, not intersection: picking Python and
- * Postgres shows everything about either. Intersection reads like a mistake on a
- * blog this size — two topics almost always meet in zero posts.
+ * Topics and projects are multi-select and union, not intersection: picking
+ * Python and Chronicle shows everything about either. Intersection reads like a
+ * mistake on a blog this size — two filters almost always meet in zero posts.
  *
  * It takes rows, not `PostMeta`, because formatting a date means importing
  * lib/posts.ts, and that file reads the filesystem. The server formats; this
@@ -35,7 +35,13 @@ export type PostRow = {
   readingTime: number;
   wordCount: number;
   topics: string[];
+  /** The project the post is about, when it is about one: its page lists the post too. */
+  project?: { slug: string; name: string };
 };
+
+/** A chip's key. Topic and project slugs are separate vocabularies and may one day meet. */
+const topicKey = (slug: string) => `topic:${slug}`;
+const projectKey = (slug: string) => `project:${slug}`;
 
 type Sort = "newest" | "oldest" | "longest";
 
@@ -48,15 +54,20 @@ const SORTS: { key: Sort; label: string }[] = [
 export default function PostFilter({
   posts,
   topics,
+  projects,
 }: {
   posts: PostRow[];
   topics: { slug: string; name: string; count: number }[];
+  projects: { slug: string; name: string; count: number }[];
 }) {
   const [active, setActive] = useState<string[]>([]);
   const [sort, setSort] = useState<Sort>("newest");
 
   const shown = posts.filter(
-    (p) => active.length === 0 || p.topics.some((t) => active.includes(t)),
+    (p) =>
+      active.length === 0 ||
+      p.topics.some((t) => active.includes(topicKey(t))) ||
+      (p.project !== undefined && active.includes(projectKey(p.project.slug))),
   );
 
   // Every order breaks ties by slug, so two posts from the same day land the
@@ -83,12 +94,12 @@ export default function PostFilter({
           return acc;
         }, []);
 
-  const toggle = (slug: string) =>
-    setActive((a) => (a.includes(slug) ? a.filter((x) => x !== slug) : [...a, slug]));
+  const toggle = (key: string) =>
+    setActive((a) => (a.includes(key) ? a.filter((x) => x !== key) : [...a, key]));
 
   return (
     <>
-      <ul className="filter-bar">
+      <ul className="filter-bar" aria-label="Filter by topic">
         <li>
           <button
             type="button"
@@ -104,14 +115,34 @@ export default function PostFilter({
             <button
               type="button"
               className="filter-chip"
-              aria-pressed={active.includes(t.slug)}
-              onClick={() => toggle(t.slug)}
+              aria-pressed={active.includes(topicKey(t.slug))}
+              onClick={() => toggle(topicKey(t.slug))}
             >
               {t.name} <span className="rail-count">{t.count}<span className="visually-hidden"> posts</span></span>
             </button>
           </li>
         ))}
       </ul>
+
+      {projects.length > 0 && (
+        <div className="filter-row">
+          <span className="rail--label" id="filter-projects">Project</span>
+          <ul className="filter-bar" aria-labelledby="filter-projects">
+            {projects.map((p) => (
+              <li key={p.slug}>
+                <button
+                  type="button"
+                  className="filter-chip"
+                  aria-pressed={active.includes(projectKey(p.slug))}
+                  onClick={() => toggle(projectKey(p.slug))}
+                >
+                  {p.name} <span className="rail-count">{p.count}<span className="visually-hidden"> posts</span></span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="sort-bar">
         <span className="rail--label">Order</span>
@@ -148,6 +179,9 @@ export default function PostFilter({
                   <span>{p.dateLabel}</span>{" "}
                   <span>{p.readingTime} min read</span>{" "}
                   <span>{p.wordCount.toLocaleString("en-GB")} words</span>
+                  {p.project && (
+                    <>{" "}<span><Link prefetch={false} href={`/projects/${p.project.slug}/`}>{p.project.name}</Link></span></>
+                  )}
                 </span>
               </li>
             ))}

@@ -65,7 +65,7 @@ export default async function PostPage(
   const toc = tableOfContents(post.content);
   const related = getRelatedPosts(slug, 1)[0];
   const usage = getTopicUsage();
-  const project = projects.find((p) => p.writeup === slug);
+  const project = projects.find((p) => p.slug === post.project);
 
   return (
     <Shell current="writing">
@@ -89,6 +89,9 @@ export default async function PostPage(
           )}
           <span>{n(post.wordCount)} words</span>{" "}
           <span>{post.readingTime} min read</span>
+          {project && (
+            <>{" "}<span><Link prefetch={false} href={`/projects/${project.slug}/`}>{project.name}</Link></span></>
+          )}
         </p>
       </header>
 
