@@ -52,6 +52,17 @@ decisions that cost something, each with what was rejected and the price; and wh
 exists and what does not. The how-to is its docs' job. Examples:
 [oura-platform](../../content/posts/oura-platform.md), [homelab](../../content/posts/homelab.md).
 
+**`note`** — one finding, short on purpose: 300–700 words, where `/post` asks
+1,000–1,800 of the other kinds, so a gotcha or a number that should not be true
+ships without padding. It opens on the number or the surprise, shows the evidence
+— the command and its real output, or the file at its commit — and ends on what it
+does not tell you, in a paragraph or one short section. It owes the same evidence
+pack and validator as any post; past 800 words the validator warns that it has
+outgrown the kind. No `##` heading, or one over that last part: two draw a
+contents list. Lists and feeds label it "Note", [`/notes/`](../../app/notes/page.tsx)
+lists the notes alone, and its address is `/writing/<slug>/` like every post
+([ADR 0009](../adr/0009-a-note-is-a-short-post.md)).
+
 Every kind ends by saying what it does not know or has not built — "What it does
 not tell you", "What I have not solved", "What I got wrong". It is what makes the
 rest believable, and a reader who can check will look for it.
@@ -148,8 +159,9 @@ but the page may have gone stale. Change the value and the ref together. Like
   "Introducing", never a question the post then answers.
 - The description is at most 160 characters, reads as a feed summary on its own,
   and carries the searchable phrasing when the title is stylistic.
-- `##` headings become the table of contents. The skeletons' headings are prompts:
-  rename each to what its section actually says.
+- `##` headings become the table of contents once there are two. The skeletons'
+  headings are prompts: rename each to what its section actually says. A note's
+  skeleton has none.
 
 ## Voice
 
@@ -229,7 +241,7 @@ voice pass and steps 6 to 9 stay mine.
 title: "Sentence case, the finding, ideally with its number"
 date: "YYYY-MM-DD"
 description: "At most 160 characters: the meta description and the feed summary"
-kind: finding            # finding | incident | build
+kind: finding            # finding | incident | build | note
 project: "chronicle"     # a slug from lib/site.ts, when the post is about one
 topics: ["retrieval"]    # lib/topics.ts only; a new topic is added there, on purpose
 ---

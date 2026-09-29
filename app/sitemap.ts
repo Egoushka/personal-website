@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { site, projects } from "@/lib/site";
-import { getAllPosts } from "@/lib/posts";
+import { getAllPosts, getNotes } from "@/lib/posts";
 import { getTopicUsage } from "@/lib/readings";
 import { getDocPages, getDocSources } from "@/lib/docs";
 
@@ -20,9 +20,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
     .filter((t) => t.total >= 2)
     .map((t) => t.slug);
 
+  // /notes/ by the same rule: below two notes it is `noindex` (app/notes/page.tsx).
+  const notes = getNotes();
+
   return [
     { url: `${base}/`, lastModified: newest, changeFrequency: "monthly", priority: 1 },
     { url: `${base}/writing/`, lastModified: newest, changeFrequency: "weekly", priority: 0.8 },
+    ...(notes.length >= 2
+      ? [
+          {
+            url: `${base}/notes/`,
+            lastModified: notes.map((p) => p.updated ?? p.date).sort().at(-1),
+            changeFrequency: "weekly" as const,
+            priority: 0.6,
+          },
+        ]
+      : []),
     { url: `${base}/projects/`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/docs/`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${base}/skills/`, changeFrequency: "monthly", priority: 0.6 },
