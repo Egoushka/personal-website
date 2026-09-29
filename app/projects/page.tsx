@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
-import ProjectFilter, { type ProjectRow } from "@/components/ProjectFilter";
+import ProjectFilter from "@/components/ProjectFilter";
+import { figuresOf, type ProjectRow } from "@/lib/project-rows";
 import { site, projects } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
 import { topicName } from "@/lib/topics";
 import { getAllPosts } from "@/lib/posts";
+import { getDocPages } from "@/lib/docs";
 
 const description =
   "A .NET validation library other people install, an orchestrator that checks every citation a coding agent returns, a homelab defined entirely in git, and an event store over seven years of chat history.";
@@ -25,15 +27,22 @@ export default function Projects() {
   const rows: ProjectRow[] = projects.map((p) => ({
     slug: p.slug,
     name: p.name,
+    lang: p.lang,
     shape: p.shape,
     status: p.status,
     summary: p.summary,
+    visibility: p.visibility,
+    repo: p.visibility === "public" && p.href ? p.href : undefined,
     posts: posts.filter((post) => post.project === p.slug).length,
+    docs: getDocPages(p.slug)[0]?.href,
+    featured: !p.side,
+    figures: p.side ? undefined : figuresOf(p.readings),
     topics: p.topics.map((t) => ({ slug: t, name: topicName(t) })),
   }));
 
   // Counted rather than written out, so the figure cannot outlive the fact.
   const running = projects.filter((p) => p.status === "running").length;
+  const open = projects.filter((p) => p.visibility === "public").length;
 
   return (
     <Shell current="projects">
@@ -45,6 +54,7 @@ export default function Projects() {
           <>
             <span>{projects.length} projects</span>{" "}
             <span>{running} still running</span>{" "}
+            <span>{open} with public code</span>{" "}
             <span><a href={site.github} rel="noopener">GitHub</a></span>
           </>
         }

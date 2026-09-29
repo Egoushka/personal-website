@@ -1307,6 +1307,67 @@ figure.code pre {
   margin: var(--s-8) 0 var(--s-5);
 }
 
+/* THE PROJECT INDEX (/projects/). Sections by what a visitor wants to know, one
+   compact entry per project. Not .project-row: the home page's list keeps that. */
+.pj-list { list-style: none; margin: 0; padding: 0; }
+.pj { padding: var(--s-5) 0; }
+.pj:first-child { padding-top: 0; }
+.pj:last-child { padding-bottom: 0; }
+.pj + .pj { border-top: var(--hair) solid var(--rule); }
+.pj-name {
+  font: var(--w-head) var(--fs-h3)/var(--lh-snug) var(--display);
+  letter-spacing: var(--ls-h2);
+  margin: 0;
+}
+.pj-name a { color: var(--ink); text-decoration: none; }
+.pj-name a:hover { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 2px; }
+/* The name and its facts share a line and wrap together on a narrow screen. */
+.pj-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-1) var(--s-5);
+}
+.pj-facts {
+  margin: 0;
+  font: 400 var(--fs-rail)/1.5 var(--figure);
+  letter-spacing: var(--ls-rail);
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.pj-sum { margin: var(--s-2) 0 0; font-size: var(--fs-small); color: var(--ink-2); }
+
+/* What other people can run: a card each, with the figures a stranger can weigh. */
+.pj-list--lead .pj {
+  padding: var(--s-5);
+  background: var(--surface);
+  border: var(--hair) solid var(--rule);
+  border-radius: var(--radius);
+}
+.pj-list--lead .pj + .pj { margin-top: var(--s-4); }
+.pj--lead .pj-name { font-size: var(--fs-title); }
+.pj--lead .pj-sum { font-size: var(--fs-body); color: var(--ink); }
+.pj-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-4) var(--s-7);
+  margin: var(--s-5) 0 0;
+  padding-top: var(--s-4);
+  border-top: var(--hair) solid var(--rule);
+}
+.pj-figures dt {
+  font: var(--w-head) var(--fs-rail)/var(--lh-rail) var(--figure);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.pj-figures dd {
+  margin: 2px 0 0;
+  font: 400 var(--fs-small)/1.4 var(--figure);
+  font-variant-numeric: tabular-nums;
+}
+
 .project-name {
   font: var(--w-head) var(--fs-title)/var(--lh-snug) var(--display);
   letter-spacing: var(--ls-h2);
@@ -1402,6 +1463,17 @@ figure.code pre {
   margin: var(--s-3) 0 0;
 }
 .filter-row .filter-bar { margin: 0; }
+/* On a phone a long run of chips is one swipeable line, not a wall of controls
+   above the first result: the half chip at the edge says there is more. */
+@media (max-width: 700px) {
+  .filter-bar--strip {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: var(--s-2);
+    scrollbar-width: thin;
+  }
+  .filter-bar--strip .filter-chip { white-space: nowrap; }
+}
 .filter-chip[aria-pressed="true"] {
   color: var(--paper);
   background: var(--accent);
