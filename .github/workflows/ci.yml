@@ -35,6 +35,11 @@ jobs:
       - name: Validate content
         run: npm run validate
 
+      # The docs copies against the commits they claim to be (ADR 0006). The
+      # only step that reaches GitHub for content; the build itself stays offline.
+      - name: Verify vendored docs
+        run: npm run docs:verify
+
       - name: Typecheck
         run: npm run typecheck
 

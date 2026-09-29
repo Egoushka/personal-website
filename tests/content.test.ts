@@ -95,6 +95,7 @@ test("read next: another post about the same project comes before a shared topic
 
 const VALIDATOR = path.resolve("scripts/validate-content.mjs");
 const TOPICS_TS = fs.readFileSync("lib/topics.ts", "utf8");
+const HIGHLIGHT_TS = fs.readFileSync("lib/highlight.ts", "utf8");
 const FILLER = Array.from({ length: 320 }, (_, i) => `word${i}`).join(" ");
 
 function post(front: Record<string, string>, body: string): string {
@@ -119,6 +120,7 @@ function validate(
   siteTs = "export const site = {};\n",
   drafts: Record<string, string> = {},
   args: string[] = [],
+  files: Record<string, string> = {},
 ) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "validate-"));
   try {
@@ -126,6 +128,11 @@ function validate(
     fs.mkdirSync(path.join(dir, "content", "drafts"), { recursive: true });
     fs.mkdirSync(path.join(dir, "lib"));
     fs.writeFileSync(path.join(dir, "lib", "topics.ts"), TOPICS_TS);
+    fs.writeFileSync(path.join(dir, "lib", "highlight.ts"), HIGHLIGHT_TS);
+    for (const [file, text] of Object.entries(files)) {
+      fs.mkdirSync(path.dirname(path.join(dir, file)), { recursive: true });
+      fs.writeFileSync(path.join(dir, file), text);
+    }
     fs.writeFileSync(path.join(dir, "lib", "site.ts"), siteTs);
     for (const [slug, text] of Object.entries(posts)) {
       fs.writeFileSync(path.join(dir, "content", "posts", `${slug}.md`), text);
@@ -256,4 +263,55 @@ test("validator: --drafts checks drafts by the same rules, and an evidence pack 
   // A draft may link to a published post, never to another draft.
   const linked = validate({ a: TARGET }, undefined, { d: post(BASE, "[x](/writing/e/)"), e: post(BASE, "") }, ["--drafts"]);
   assert.match(linked.out, /links to \/writing\/e\/ which does not exist/);
+});
+
+// ── docs (ADR 0006) ─────────────────────────────────────────────────────────
+
+const SOURCES = JSON.stringify({
+  chronicle: { repo: "Egoushka/chronicle", path: "docs/guide", ref: "main", commit: "a".repeat(40), pulled: "2026-01-10" },
+});
+const doc = (title: string, order: number, body: string) =>
+  `---\ntitle: "${title}"\ndescription: "What it is."\norder: ${order}\n---\n\n${body}\n`;
+const DOCS = {
+  "content/docs/sources.json": SOURCES,
+  "content/docs/chronicle/index.md": doc("Overview", 0, "## Start\n\nSee [the quickstart](quickstart.md#install) and [the ADR](../adr/0001.md)."),
+  "content/docs/chronicle/quickstart.md": doc("Quickstart", 1, "## Install\n\n```bash\nmake\n```"),
+};
+
+test("validator: docs pages carry frontmatter, and links between them resolve", () => {
+  const ok = validate({ a: post({ ...BASE, project: '"chronicle"' }, "") }, PROJECTS_TS, {}, [], DOCS);
+  assert.equal(ok.code, 0, ok.out);
+  assert.match(ok.out, /\+ 2 docs page\(s\)/);
+
+  const broken = validate({ a: post({ ...BASE, project: '"chronicle"' }, "") }, PROJECTS_TS, {}, [], {
+    ...DOCS,
+    "content/docs/chronicle/index.md": doc("Overview", 0, "# Title\n\n[x](quickstart.md#nowhere) [y](missing.md) [z](#nope) [w](../../../up.md)"),
+    "content/docs/chronicle/quickstart.md": doc("Quickstart", 0, "```ruby\nputs 1\n```"),
+  });
+  assert.equal(broken.code, 1, broken.out);
+  for (const problem of [
+    /index.md: body has a '# heading'/,
+    /"quickstart.md#nowhere" — quickstart.md has no heading #nowhere/,
+    /"missing.md" links to a page these docs do not have/,
+    /"#nope" — this page has no heading with that id/,
+    /"..\/..\/..\/up.md" climbs out of the repository/,
+    /order 0 is also index.md's/,
+    /a `ruby` fence renders as plain text/,
+  ]) assert.match(broken.out, problem);
+});
+
+test("validator: docs belong to a project, name a commit, and have an overview", () => {
+  const r = validate({ a: post({ ...BASE, project: '"chronicle"' }, "") }, PROJECTS_TS, {}, [], {
+    "content/docs/sources.json": JSON.stringify({ nobody: { repo: "x", path: "", commit: "main", pulled: "2026-02-31" } }),
+    "content/docs/nobody/quickstart.md": doc("Quickstart", 1, "text"),
+  });
+  assert.equal(r.code, 1, r.out);
+  for (const problem of [
+    /"nobody" is not a project slug in lib\/site.ts/,
+    /repo must be "owner\/name"/,
+    /path is required/,
+    /commit must be a full 40-character sha/,
+    /pulled "2026-02-31" is not a real date/,
+    /has no index.md/,
+  ]) assert.match(r.out, problem);
 });

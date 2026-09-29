@@ -836,6 +836,27 @@ figure.code pre {
   .toc-details::details-content { content-visibility: visible; }
 }
 
+/* A project's docs: its pages, in the rail above the page's own contents. The
+   same list as the contents, so the rail reads as one column; the page you are
+   on is set in the heading weight, as the site marks "current" everywhere. */
+.docs-pages {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 0 0 var(--s-6);
+  padding: 0 0 0 var(--s-3);
+  list-style: none;
+  border-left: var(--hair) solid var(--rule);
+}
+.docs-pages a {
+  font: 400 var(--fs-rail)/1.45 var(--figure);
+  color: var(--ink-2);
+  text-decoration: none;
+  display: block;
+}
+.docs-pages a:hover { color: var(--ink); }
+.docs-pages a[aria-current="page"] { color: var(--ink); font-weight: var(--w-head); }
+
 /* ============================================================================
    POST LISTS
    ========================================================================= */
@@ -1766,6 +1787,12 @@ figure figcaption {
   }
   .toc > li::before { content: none; }
   .toc::before { content: none; }
+  .docs-pages {
+    margin: var(--s-2) 0 var(--s-4);
+    gap: var(--s-2);
+    border-left: 0;
+    padding-left: 0;
+  }
 
   /* One column: the contents list becomes a strip between the figures and the
      first paragraph, and needs the row gap the two-column grid never did. */
