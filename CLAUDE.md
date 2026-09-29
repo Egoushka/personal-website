@@ -11,6 +11,9 @@ state the current constraint and why; history belongs in commits and [ADRs](docs
 npm ci
 npm run dev          # http://localhost:3000 — no search: /pagefind/ exists only after a build
 npm run validate     # frontmatter, topics, internal and #fragment links in content/posts
+npm run validate -- --drafts   # the same over content/drafts (local: drafts are gitignored)
+npm run new -- <kind> <slug>   # a draft from its skeleton, and its evidence pack
+npm run evidence -- <slug>     # every figure the post states has a source in its pack
 npm run typecheck    # tsc --noEmit
 npm test             # node:test over tests/**/*.test.ts; add tests/<area>.test.ts
 npm run build        # images -> next build -> pagefind; static export to ./out
@@ -179,7 +182,9 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
 
 ## Publishing
 
-Drafts live in `content/drafts/` (not built, gitignored: the repo is public); moving one
+Posts follow [docs/writing/README.md](docs/writing/README.md): a `kind` (finding,
+incident, build), a `project` when the post is about one (a project's write-up must
+name it), a one-sentence thesis and an evidence pack before any prose. Drafts live in `content/drafts/` (not built, gitignored: the repo is public); moving one
 to `content/posts/` is a deliberate, reviewed act. `/post` writes drafts only; `/review-post` critiques before
 shipping. No CMS: an editor plus `/post`, or GitHub's web editor as a PR that adds the
 post to `content/posts/` (ADR 0004). Comments are Remark42 at `/c/`, lazy-loaded, a bounded

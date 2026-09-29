@@ -1,6 +1,6 @@
 ---
 name: review-post
-description: Critique a draft or published post before it ships — voice, factual risk, SEO, accessibility. Use when the user asks to review, check, or improve a post.
+description: Critique a draft or published post before it ships — evidence, what its kind owes, voice, SEO, accessibility — against the post framework in docs/writing/README.md. Use when the user asks to review, check, or improve a post.
 ---
 
 # Review a post
@@ -12,6 +12,12 @@ so in one line and move on — don't pad.
 
 ## 1. Factual risk — highest priority
 
+Run `npm run evidence -- <slug>` first and report its output. A post with no pack
+has had no fact check: say so before anything else, and offer
+`npm run evidence -- <slug> --init`, which writes a row per figure to source. The
+script reads digits only; a number written as a word, a quoted error string and a
+claim about a person are yours to check by hand.
+
 - **Any specific that could be checked and found false.** Numbers, dates, error
   strings, command output, repo contents, employer names.
 - Claims about the author's own history. This site has already shipped two of
@@ -22,13 +28,27 @@ so in one line and move on — don't pad.
 
 For each: quote the line, say what would falsify it, and say how to check.
 
-## 2. Voice
+## 2. What its kind owes
+
+The `kind` in the frontmatter says what the post promised (docs/writing/README.md):
+
+- **finding**: the number within the first two paragraphs; the method told well
+  enough to repeat; what the number changed.
+- **incident**: the moment it was found; the root cause with real output; **why
+  nothing showed it**; the fix and how it is known to hold; what I got wrong.
+- **build**: opens on the question the thing answers or what it refuses to do, not
+  its name; each decision with what was rejected and the price; what exists and what
+  does not. It links docs rather than explaining how to use the tool.
+- **every kind** ends on what it does not know or has not built, and names its
+  `project` when it is about one.
+
+## 3. Voice
 
 Compare against `content/posts/homelab.md` and `content/posts/silent-deploys.md`.
 Flag: passive constructions, "In this post we will", tutorial register, hedging,
 bullet lists standing in for prose, a lesson stated before it was earned.
 
-## 3. Structure and SEO
+## 4. Structure and SEO
 
 - Title: specific, ideally a number or a surprise. Searchable phrasing in the
   `description` even when the title is stylistic.
@@ -39,7 +59,7 @@ bullet lists standing in for prose, a lesson stated before it was earned.
 - `updated` / `correction` only for a factual change to a published post, never for
   rewording; `correction` requires `updated`, and neither belongs on a draft.
 
-## 4. Accessibility
+## 5. Accessibility
 
 - Every image has meaningful `alt` (or `alt=""` if genuinely decorative).
 - Code blocks carry a language so Shiki highlights them and the block gets a header —
@@ -51,6 +71,5 @@ bullet lists standing in for prose, a lesson stated before it was earned.
 
 ## Finish by
 
-Running `npm run validate` and reporting the actual output. It reads `content/posts/`
-only; for a draft, say that it was not validated. Then state clearly
-whether you would publish it as-is.
+Running `npm run validate` — with `-- --drafts` for a draft — and reporting the
+actual output. Then state clearly whether you would publish it as-is.

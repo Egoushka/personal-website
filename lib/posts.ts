@@ -2,16 +2,26 @@ import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import { parseMarkdown, countWords, headings } from "./markdown.mjs";
+import { POST_KINDS } from "./post-kinds.mjs";
 import type { TopicSlug } from "./topics";
 import type { CyrillicLang } from "./lang";
 
 const POSTS_DIR = path.join(process.cwd(), "content", "posts");
+
+export type PostKind = (typeof POST_KINDS)[number];
 
 export type PostMeta = {
   slug: string;
   title: string;
   date: string;
   description: string;
+  /**
+   * What the post owes a reader (docs/writing/README.md). The validator requires
+   * it; read as-is here, so a post the validator would reject has none.
+   */
+  kind?: PostKind;
+  /** Slug of the project in lib/site.ts the post is about, when it is about one. */
+  project?: string;
   /** Slugs from lib/topics.ts, the one vocabulary posts, projects and jobs share. */
   topics: TopicSlug[];
   /** Whole minutes at 200 wpm, floored to 1. */
@@ -46,6 +56,8 @@ function readPostFile(slug: string): Post {
     title: String(data.title ?? slug),
     date: String(data.date ?? ""),
     description: String(data.description ?? ""),
+    kind: (POST_KINDS as readonly unknown[]).includes(data.kind) ? (data.kind as PostKind) : undefined,
+    project: typeof data.project === "string" ? data.project : undefined,
     topics: Array.isArray(data.topics) ? (data.topics.map(String) as TopicSlug[]) : [],
     readingTime: Math.max(1, Math.round(words / 200)),
     wordCount: words,

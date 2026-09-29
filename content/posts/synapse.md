@@ -2,6 +2,8 @@
 title: "My AI's memory has never forgotten anything, and that is the problem"
 date: "2026-09-22"
 description: "A count of my agent's memory found 5,357 stored facts, not one ever marked wrong, and three contradictory claims about one server."
+kind: finding
+project: "synapse"
 topics: ["architecture", "retrieval", "postgres"]
 ---
 

@@ -2,6 +2,8 @@
 title: "The library rejected all 36 million valid Hungarian tax numbers"
 date: "2026-09-22"
 description: "I needed to check whether an ID number was well formed. The package that did it had 197 defects, and the worst could never be right for any input."
+kind: finding
+project: "attest"
 topics: ["dotnet"]
 ---
 

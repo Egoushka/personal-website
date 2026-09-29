@@ -1,79 +1,75 @@
 ---
 name: post
-description: Draft a new blog post for hrabovskyi.online into content/drafts/. Use when the user wants to write, draft, or start a post. Never writes to content/posts/ — publishing is a separate, reviewed step.
+description: Draft a new blog post for hrabovskyi.online into content/drafts/, following the post framework in docs/writing/README.md — a kind, a thesis and an evidence pack before any prose. Use when the user wants to write, draft, or start a post. Never writes to content/posts/ — publishing is a separate, reviewed step.
 ---
 
 # Draft a post
 
-Write to `content/drafts/<slug>.md`. **Never** `content/posts/` — that directory is
-published output, and moving a file into it is the user's decision, not yours.
+The rules live in [docs/writing/README.md](../../../docs/writing/README.md). Read it
+first, every time; this file is the procedure, not the rules. Write to
+`content/drafts/`, **never** `content/posts/` — moving a file there is the user's
+decision, not yours.
 
-## Before writing
+## 1. Agree the post before writing it
 
-Read these two published posts first. They are the voice reference, not this file:
+Settle three things with the user and say each back in one line:
 
-- `content/posts/homelab.md`
-- `content/posts/silent-deploys.md`
+- **The thesis**, in one sentence. If it takes two, propose two posts.
+- **The kind**: `finding`, `incident` or `build`. The README says what each owes.
+- **The project**: a slug from `lib/site.ts`, or none.
 
-Then read `lib/topics.ts`. Topics are a closed vocabulary; `npm run validate` fails on
-anything outside it. If the post genuinely needs a new topic, add it there with a
-`name`, `kind` and `blurb` like its neighbours and say so — don't quietly invent one.
+A post that introduces a tool is a `build` post that opens on the question the tool
+answers or the thing it refuses to do — never "Introducing X". How to use the tool
+is its docs' job.
 
-## The voice, from those two posts
+## 2. Start it
 
-- **First person, past tense, specific.** "I went to add a security header and found…"
-  not "Developers often encounter…".
-- **A real thing that happened**, with real numbers, real command output, real file
-  paths. Both existing posts are war stories with a lesson, not tutorials.
-- **The lesson is earned at the end**, not announced at the start. No "In this post
-  we will explore".
-- **Short paragraphs.** Em dashes. No bullet-point padding; lists only for things
-  that are genuinely a list.
-- **Admits what was hard or embarrassing.** "it still took fifty-one days to notice"
-  is the strongest line in that post because it costs something.
-
-## Frontmatter
-
-```md
----
-title: "Sentence-case, specific, ideally with a number or a surprise"
-date: "YYYY-MM-DD"
-description: "≤160 chars — this is the meta description AND the feed summary"
-topics: ["from lib/topics.ts only"]
----
+```bash
+npm run new -- <kind> <slug>
 ```
 
-Optional, and only when true:
+That writes `content/drafts/<slug>.md` from the kind's skeleton, dated today, and an
+empty evidence pack beside it. The slug becomes the URL and never changes once
+published.
 
-- `spanDays: 51` — how many days the piece is *about* (a positive integer). The post
-  page sets the word count against it.
-- `updated: "YYYY-MM-DD"` and `correction: "…"` — for a published post whose facts
-  changed, never for rewording or typo fixes. `updated` is not before `date`;
-  `correction` requires `updated` and renders as a note above the body. A new draft
-  has neither.
-- `cyrillic: "uk"` or `"ru"` — required when the title or prose has Cyrillic words;
-  they are marked with that `lang`. Ask which, never guess: `ок` and `ага` are both.
+## 3. The evidence pack, before the prose
 
-Slug = filename, lowercase kebab-case. It becomes the URL and cannot change later
-without breaking links.
+Fill `content/drafts/<slug>.evidence.md`: the `Thesis:` line, then one row for every
+figure the post will state, each with a source a stranger could check with access —
+a commit, a file at a commit, a URL, a command and its output. Read every source
+yourself. Ask the user for what only they know and record the answer as its source
+("Yehor, 2026-09-29"). A figure without a source does not go in the post.
+
+## 4. Write the draft
+
+- Read `content/posts/homelab.md` and `content/posts/silent-deploys.md` for the voice.
+- Rename every skeleton heading to what its section says; replace every `TODO:`.
+- Keep the kind's last section: what it does not tell you, has not built, or got wrong.
+- Topics from `lib/topics.ts` only. A genuinely new topic is added there with a
+  `name`, `kind` and `blurb` like its neighbours, and you say so.
+- At least one internal link with a trailing slash; 1,000–1,800 words.
+- No `# heading` in the body: the page renders the title as the `<h1>`.
+- Cyrillic words need `cyrillic: "uk"` or `"ru"`. Ask which; `ок` and `ага` are both.
 
 ## Hard rules
 
-- **Never invent detail.** If you don't know the real error message, the real
-  number, or the real timeline, leave a `TODO:` marker and say so in your summary.
-  A fabricated specific is worse than an admitted gap — this site is read by people
-  who can check.
-- **Do not write about the current employer's internal systems.** A post naming an
-  internal job class and an incident's blast radius was removed from this site for
-  exactly that reason.
-- No `# heading` in the body — the page renders an `<h1>` from the title.
-- At least one internal link (`/writing/…/`, `/about/`, `/topics/…/`), with a trailing
-  slash. `npm run validate` warns without one.
-- Aim 1,000–1,800 words. Under 300 the validator warns.
+- **Never invent a detail.** A number, error message or timeline you do not have
+  stays a `TODO:` and goes in your summary. A fabricated specific is worse than an
+  admitted gap: the site is read by people who can check, and the validator fails a
+  published post that still has a `TODO`.
+- **Nothing about the current employer's internal systems.** A post that named an
+  internal job and its blast radius was taken down for exactly that.
+
+## 5. Check it
+
+```bash
+npm run evidence -- <slug>
+npm run validate -- --drafts
+```
+
+Neither may report an error. Warnings about length or links are the user's call.
 
 ## Finish by
 
-1. Checking the frontmatter against the rules above by hand: `npm run validate` reads
-   `content/posts/` only, so it sees a draft once it is moved there, not before.
-2. Telling the user, plainly: what you invented nothing about, what is a `TODO:`,
-   and which claims they need to verify because you inferred them.
+Telling the user plainly which claims came from sources you read, which are still
+`TODO:`, and which you inferred and they must verify. Then suggest `/review-post`.

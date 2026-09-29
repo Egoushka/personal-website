@@ -2,6 +2,8 @@
 title: "The deploy said success. Nothing had deployed for 51 days."
 date: "2026-07-28"
 description: "A pipeline that reported success while shipping nothing, a config the container could never see, and one shared cause: failure that looks like success."
+kind: incident
+project: "homelab-gitops"
 topics: ["infrastructure", "debugging", "ci-cd"]
 spanDays: 51
 ---
