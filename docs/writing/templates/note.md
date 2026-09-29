@@ -7,7 +7,7 @@ project: "TODO: a project slug from lib/site.ts, or delete this line"
 topics: ["TODO"]
 ---
 
-TODO: open on the number or the surprise, in the first sentence. One finding: a second one is a second note.
+TODO: open on the number or the surprise, in the first sentence, with what I expected next to it. One finding: a second one is a second note.
 
 TODO: the evidence — the command and its real output, or the file at its commit. Enough that a reader could check it.
 

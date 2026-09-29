@@ -77,30 +77,33 @@ surprise in it, it is not a post yet.
 ## Kinds
 
 Every post declares one in its frontmatter (`kind:`), and the kind decides its
-shape and what the review asks of it. Each has a skeleton in
+shape and what the review asks of it. Every kind opens on a moment and puts its
+checkable detail in a closing `## Receipts` (see
+[What makes a post readable](#what-makes-a-post-readable)). Each has a skeleton in
 [`templates/`](templates/); `npm run new -- <kind> <slug>` starts a draft from it.
 
-**`finding`** — a measured result is the point. It opens on the number and on why
-it should not be true, shows how it was counted well enough to repeat, says what
-the number means and what it changed. Examples: [attest](../../content/posts/attest.md),
+**`finding`** — a measured result is the point. It opens on the moment I looked
+at it and what I expected, gives the number early after that and why it should not
+be true, tells what I did about it in the order it happened, says what the number
+means and what it changed. How it was counted, well enough to repeat, is in Receipts. Examples: [attest](../../content/posts/attest.md),
 [chronicle](../../content/posts/chronicle.md), [synapse](../../content/posts/synapse.md).
 
-**`incident`** — something broke. It opens on the moment it was found and the
-damage in one line, then what should have happened, what happened instead, and
-above all **why nothing showed it**: that is the part a reader takes home. It ends
-on what I got wrong. Examples: [silent-deploys](../../content/posts/silent-deploys.md),
+**`incident`** — something broke. It opens on the moment it was found, then what I
+did next and why that was not enough, the damage in one line, what should have
+happened, what happened instead, and above all **why nothing showed it**: that is
+the part a reader takes home. It ends on what I got wrong, then Receipts. Examples: [silent-deploys](../../content/posts/silent-deploys.md),
 [dns-is-not-access-control](../../content/posts/dns-is-not-access-control.md).
 
 **`build`** — why a thing I built is shaped the way it is. This is how a tool is
 introduced on this site: never "Introducing X", always the question it exists to
-answer or the thing it refuses to do. The problem, measured; the shape of it; the
+answer or the thing it refuses to do. It may open on the moment that made it worth building. The problem, measured; the shape of it; the
 decisions that cost something, each with what was rejected and the price; and what
 exists and what does not. The how-to is its docs' job. Examples:
 [oura-platform](../../content/posts/oura-platform.md), [homelab](../../content/posts/homelab.md).
 
 **`note`** — one finding, short on purpose: 300–700 words, where `/post` asks
 1,000–1,800 of the other kinds, so a gotcha or a number that should not be true
-ships without padding. It opens on the number or the surprise, shows the evidence
+ships without padding. It opens on the number or the surprise, with what I expected beside it, shows the evidence
 — the command and its real output, or the file at its commit — and ends on what it
 does not tell you, in a paragraph or one short section. It owes the same evidence
 pack and validator as any post; past 800 words the validator warns that it has
@@ -109,14 +112,39 @@ contents list. Lists and feeds label it "Note", [`/notes/`](../../app/notes/page
 lists the notes alone, and its address is `/writing/<slug>/` like every post
 ([ADR 0009](../adr/0009-a-note-is-a-short-post.md)).
 
-Every kind ends by saying what it does not know or has not built — "What it does
-not tell you", "What I have not solved", "What I got wrong". It is what makes the
-rest believable, and a reader who can check will look for it.
+Every kind ends its story by saying what it does not know or has not built — "What
+it does not tell you", "What I have not solved", "What I got wrong" — and then
+lists its receipts. It is what makes the rest believable, and a reader who can
+check will look for it. A note has no Receipts section: its evidence is the body.
 
 `project:` names the project in `lib/site.ts` a post is about, when it is about
 one. It is the one field that ties a post to a project — `writeup` in
 `lib/site.ts` only picks which post leads — so a project's write-up must name that
 project, and the validator fails it otherwise.
+
+## What makes a post readable
+
+The complaint that started this: a post read as a report, so it got scrolled, not
+read. A post is a story a reader outside the field can follow, and the evidence
+sits behind it.
+
+- **The moment first.** Open on what was in front of me, what I expected, what I
+  was about to do and what made me stop and look. Not a number, not a definition.
+- **Discoveries in order.** Each one makes the previous plan not enough. The reader
+  learns things when I did.
+- **Plain words for the first two-thirds.** A reader who has never used the tool
+  can follow the story. Jargon, flags and output belong to the last third or to
+  Receipts.
+- **What I expected and what I did about it.** A result without the expectation it
+  broke, and the move I made next, is just a result.
+- **Receipts at the end.** A closing `## Receipts`: one line per figure, the figure
+  and then the command, or the file at its commit. Checkable detail there is not
+  in the way of the story.
+- **Only what happened.** A scene, feeling or motive comes from the evidence pack
+  or from what Yehor said when `/post` interviewed him; a gap stays a `TODO:`.
+
+Length is 700–1,100 words, receipts included, and one table at most. The
+validator warns under 300 words, and past 800 for a note.
 
 ## The evidence pack
 
@@ -220,7 +248,7 @@ reference, not this list.
 - A real thing that happened, with real numbers, output and file paths. A story
   with a lesson, not a tutorial.
 - The lesson is earned at the end, not announced at the start. No "In this post".
-- Short paragraphs. Lists only for what is genuinely a list.
+- Short paragraphs. Lists only for what is genuinely a list; Receipts is one.
 - Admit what was hard or embarrassing. "It still took fifty-one days to notice" is
   the strongest line on the site because it costs something.
 
@@ -237,8 +265,8 @@ reference, not this list.
 
 1. `npm run new -- <kind> <slug>` — the draft from its skeleton, and an empty pack.
 2. Fill the pack first: the thesis, then every figure with its source.
-3. Write the draft (`/post` does this with you), renaming every skeleton heading
-   and replacing every `TODO:`.
+3. Write the draft (`/post` does this with you, after interviewing me for the
+   moment), renaming every skeleton heading and replacing every `TODO:`.
 4. `npm run evidence -- <slug> --verify` and `npm run validate -- --draft <slug>`
    until neither reports an error.
 5. `/review-post`, in a fresh session or by an agent that did not write the draft,
@@ -276,7 +304,7 @@ the `TODO:`s left, the claims to confirm, the review and what was fixed, and a
 publish or not-yet verdict with its reason.
 
 It cannot ask anything mid-run, which is why it is only for agreed posts: what only
-I know stays a `TODO:` or a question in the report, and a post still being agreed
+I know, above all the moment the post opens on, stays a `TODO:` and its interview questions go in the report, and a post still being agreed
 starts with `/post`. Nothing is committed, pushed or moved to `content/posts/`; the
 voice pass and steps 6 to 9 stay mine.
 

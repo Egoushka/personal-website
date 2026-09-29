@@ -45,14 +45,33 @@ Write a file as `owner/repo@<sha>:path#L12-40`, and give a figure you work out i
 row with the formula as its source (`= 0.257 / 0.201`): those are the rows `--verify`
 can open (docs/writing/README.md).
 
+## Interview before drafting
+
+The moment a post opens on is not in any commit. Ask Yehor, one question at a time,
+what the pack cannot answer:
+
+1. What did you expect?
+2. What did you do when you saw the result?
+3. What surprised you?
+4. What would you do differently?
+
+Record each answer as a pack row with source `Yehor, <date>`, or in the project's
+`ws note` field notes (`content/drafts/field-notes/<project>.md`) when they exist.
+The opening paragraph uses only those answers and the pack; an unanswered question
+stays a `TODO:`, never an invented scene.
+
 ## 4. Write the draft
 
 - Read `content/posts/homelab.md` and `content/posts/silent-deploys.md` for the voice.
+- Open on the moment, discoveries in the order they happened, plain words for the
+  first two-thirds, the checkable detail in the closing `## Receipts` (README:
+  "What makes a post readable").
 - Rename every skeleton heading to what its section says; replace every `TODO:`.
-- Keep the kind's last section: what it does not tell you, has not built, or got wrong.
+- Keep the kind's honest section (what it does not tell you, has not built, or got
+  wrong) as the last of the story, before Receipts.
 - Topics from `lib/topics.ts` only. A genuinely new topic is added there with a
   `name`, `kind` and `blurb` like its neighbours, and you say so.
-- At least one internal link with a trailing slash; 1,000–1,800 words, or 300–700
+- At least one internal link with a trailing slash; 700–1,100 words with receipts, or 300–700
   for a `note`, whose skeleton has no headings (it may take one, over its last part).
 - No `# heading` in the body: the page renders the title as the `<h1>`.
 - Cyrillic words need `cyrillic: "uk"` or `"ru"`. Ask which; `ок` and `ага` are both.
