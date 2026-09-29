@@ -19,12 +19,12 @@ This site's repository is the one that taught me. Rewriting it in place would ha
 
 ## The old history stays behind
 
-The new repository has no past. Anyone reading the two Oura repositories sees a project that appears finished on its first day, and the reasons behind early decisions sit in the private one. On this site the 26 pull requests stayed in the archive.
+The new repository has no past. Anyone reading the two Oura repositories sees a history that begins on 2026-09-28; what came before it stays in the private one. On this site the 26 pull requests stayed in the archive.
 
-It is also work. The copy needs its own checks before the first push: every author address, a denylist run over every file and message, and a secret scanner over the history. The site's post lists them ([the checks](https://github.com/Egoushka/personal-website/blob/dceb85b36e604118c23e12866c4f4e7178536cb3/content/posts/making-a-repo-public.md?plain=1#L79)). A second repository has to be kept private for as long as the first one matters.
+It is also work. The copy needs its own checks before the first push: every author address, a denylist run over every file and message, and a secret scanner over the history. The site's post lists them ([the checks](https://github.com/Egoushka/personal-website/blob/dceb85b36e604118c23e12866c4f4e7178536cb3/content/posts/making-a-repo-public.md?plain=1#L79)).
 
 The cleaning is also only as good as its list. The site's post says the denylist finds what I thought to write a pattern for, and a private detail I never listed would pass ([the post](https://github.com/Egoushka/personal-website/blob/dceb85b36e604118c23e12866c4f4e7178536cb3/content/posts/making-a-repo-public.md?plain=1#L63-L64)).
 
 ## When I break it
 
-I would flip the setting on a repository whose whole history clears every check and that has no pull requests to leave behind. The site's post ends on that condition: if the pull-request count is above zero and the history needs rewriting, I make a new repository. Otherwise the copy costs more than it protects.
+The site's post ends on the condition: if the pull-request count is above zero and the history needs rewriting, I make a new repository. With no pull requests to leave behind, rewriting in place is an option; the checks above still apply.

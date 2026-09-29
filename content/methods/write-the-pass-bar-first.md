@@ -27,4 +27,4 @@ And it is slower. Trader's page says it was built in the order that makes the an
 
 ## When I break it
 
-I break it by leaving a hole, not by choice. Chronicle's keyword rule was written down only after the scores had moved, and the question set is not in the public repository, so nobody else can rerun it. When a run shows a hole in the bar I add a line to the bar and say so; I do not move the number the bar asks for.
+I break it by leaving a hole, not by choice. Chronicle's keyword rule was written down only after the scores had moved, and the question set is not in the public repository, so nobody else can rerun it.
