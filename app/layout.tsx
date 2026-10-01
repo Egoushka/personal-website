@@ -106,6 +106,25 @@ export default function RootLayout({
           defer
           src="/s/script.js"
           data-website-id="fd5da82a-ef38-46c5-8c7e-46ad293df97f"
+          data-performance="true"
+        />
+        {/*
+          What the tracker cannot see on its own: leaving the site, feed and PDF
+          clicks, and how far down a page people read. Delegated, so it covers
+          every link without a client component. umami is undefined when the
+          tracker is blocked or still loading, and then nothing is sent.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){function t(n,d){if(window.umami)window.umami.track(n,d)}" +
+              "document.addEventListener('click',function(e){var a=e.target&&e.target.closest&&e.target.closest('a[href]');if(!a)return;" +
+              "if(a.origin!==location.origin)t('outbound',{url:a.href});" +
+              "else if(/\\.(xml|json|pdf)$/.test(a.pathname))t('download',{file:a.pathname})},true);" +
+              "var seen={};addEventListener('scroll',function(){var d=document.documentElement,h=d.scrollHeight;if(h<innerHeight*2)return;" +
+              "var p=(scrollY+innerHeight)/h,k=location.pathname;" +
+              "[50,90].forEach(function(m){var id=k+m;if(p*100>=m&&!seen[id]){seen[id]=1;t('scroll-'+m)}})},{passive:true})})()",
+          }}
         />
       </body>
     </html>

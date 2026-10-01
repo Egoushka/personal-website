@@ -189,6 +189,7 @@ export default function Search() {
         type="button"
         className="search-trigger inline-flex h-8 cursor-pointer items-center gap-2 rounded-md border border-input bg-card/60 px-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground md:w-52 lg:w-64"
         onClick={show}
+        data-umami-event="search-open"
         aria-label={`Search (${platform.label} K)`}
       >
         <SearchIcon className="size-3.5" />

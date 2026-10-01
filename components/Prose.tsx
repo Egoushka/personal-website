@@ -67,7 +67,7 @@ export default function Prose({
         : null;
       const controls = (
         <>
-          <button type="button" className="copy-btn">Copy</button>
+          <button type="button" className="copy-btn" data-umami-event="code-copy">Copy</button>
           <span className="copy-status visually-hidden" role="status" />
         </>
       );
