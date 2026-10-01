@@ -38,6 +38,7 @@ export default function PrintCv() {
         type="button"
         className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm font-medium shadow-xs transition-colors hover:bg-accent"
         onClick={() => window.print()}
+        data-umami-event="cv-save-pdf"
       >
         <Download /> Save as PDF
       </button>

@@ -51,6 +51,12 @@ function bodyHtml(markdown: string, postUrl: string, lang?: CyrillicLang): strin
 }
 
 /** Shared feed object — serialised as RSS 2.0, Atom or JSON Feed by the route handlers. */
+/**
+ * Feed readers send no Referer, so every feed visit looked like a direct one.
+ * Only the link carries it: `id` stays the bare URL, which readers key on.
+ */
+const FEED_UTM = "?utm_source=feed&utm_medium=rss";
+
 export function buildFeed(): Feed {
   const posts = getAllPosts();
   const modified = posts.map((p) => p.updated ?? p.date).sort().at(-1);
@@ -79,7 +85,7 @@ export function buildFeed(): Feed {
     feed.addItem({
       title: post.title,
       id: url,
-      link: url,
+      link: `${url}${FEED_UTM}`,
       description: post.description,
       content: bodyHtml(getPost(post.slug).content, url, post.cyrillic),
       published: new Date(post.date),

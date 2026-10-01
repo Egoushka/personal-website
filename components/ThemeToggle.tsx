@@ -64,6 +64,8 @@ export default function ThemeToggle() {
       className={`theme-toggle ${BOX} cursor-pointer text-muted-foreground transition-colors hover:bg-accent hover:text-foreground`}
       aria-label={`Switch to the ${next} theme`}
       title={`Switch to the ${next} theme`}
+      data-umami-event="theme-toggle"
+      data-umami-event-to={next}
       onClick={() => {
         document.documentElement.dataset.theme = next;
         try {
