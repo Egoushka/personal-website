@@ -31,7 +31,6 @@
 	header {
 		X-Content-Type-Options nosniff
 		Referrer-Policy strict-origin-when-cross-origin
-		X-Frame-Options DENY
 		Cross-Origin-Opener-Policy same-origin
 		# interest-cohort is intentionally absent — FLoC was abandoned in 2022 and
 		# Chrome now logs it as an unrecognised feature.
@@ -49,15 +48,17 @@
 		# iframe served from /c/ on THIS origin. It is not a third-party embed —
 		# every hosted option (Giscus, utterances, Disqus) is refused by
 		# script-src and connect-src above, which is the policy working.
-		# frame-ancestors stays 'none': this site frames its own widget, and
-		# nobody frames this site.
+		# frame-ancestors names one origin: the Umami dashboard, tailnet-only, whose
+		# heatmap view draws the page in an iframe under the clicks. Nobody else
+		# frames this site. No X-Frame-Options: it cannot name an origin, and with
+		# frame-ancestors present browsers ignore it anyway.
 		# The directives that DO close real surface here are object-src, base-uri,
 		# form-action and frame-ancestors.
 		# No upgrade-insecure-requests: TLS ends at Cloudflare and every subresource
 		# is relative, so production gains nothing from it, while on prelive's
 		# plain-HTTP tailnet origin it would rewrite every asset to https and leave
 		# the page unstyled.
-		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors https://umami.lab.hrabovskyi.online"
 
 		# The commit this file was deployed from. deploy.yml writes it over the
 		# placeholder before publishing, and caddy-test polls for it afterwards:

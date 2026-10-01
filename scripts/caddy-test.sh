@@ -143,8 +143,8 @@ else
   same "one CSP header, as deploy/Caddyfile writes it" "$want" "${csp:-(none)}"
 fi
 case $csp in
-  *"frame-ancestors 'none'"*) ok "the CSP forbids framing" ;;
-  *) fail "the CSP forbids framing" "frame-ancestors 'none'" "${csp:-(none)}" ;;
+  *"frame-ancestors https://umami.lab.hrabovskyi.online") ok "only the Umami dashboard may frame the site" ;;
+  *) fail "only the Umami dashboard may frame the site" "frame-ancestors https://umami.lab.hrabovskyi.online" "${csp:-(none)}" ;;
 esac
 case $csp in
   *upgrade-insecure-requests*) fail "the CSP leaves http alone" "no upgrade-insecure-requests" "$csp" ;;
