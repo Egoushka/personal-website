@@ -37,7 +37,7 @@ const SMOKE_SET = ["/", "/writing/", POST, "/projects/", "/projects/attest/", "/
 // CLS below 0.01 on the pages people land on, below 0.1 everywhere else (BRIEF §16).
 const STRICT_CLS = new Set(["/", "/writing/", POST, "/about/"]);
 // Local servers have no Umami, no status cron and no Remark42; their 404s are expected.
-const EXPECTED_404 = /^\/(?:s\/script\.js|status\.json|c\/.*)$/;
+const EXPECTED_404 = /^\/(?:s\/(?:script|recorder)\.js|status\.json|c\/.*)$/;
 
 /**
  * First-load JS per route at the baseline (c1e2038), in gzip bytes: every
