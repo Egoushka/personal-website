@@ -189,7 +189,8 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
 - The Caddyfile is plain HTTP: `:80` production, `:81` prelive, one shared `(site)`
   snippet — never let them drift. No `tls`, hostname or www redirect (the edge is Traefik,
   `/opt/stacks/pangolin/config/traefik/dynamic_config.yml`). Each header in one place;
-  never add `'unsafe-eval'` or an origin to the CSP.
+  never add `'unsafe-eval'` or an origin to the CSP; the one origin it names is the Umami
+  dashboard in `frame-ancestors`, for its heatmaps.
 - **Header matchers that name files carry `file`**, or a 404 inherits them (`/404.html`
   served as `image/png`; missing chunks pinned `immutable` for a year). `@html` matches
   directories and is the exception. OG cards are extensionless, so a new card route needs

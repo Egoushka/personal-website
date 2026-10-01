@@ -107,6 +107,7 @@ export default function RootLayout({
           src="/s/script.js"
           data-website-id="fd5da82a-ef38-46c5-8c7e-46ad293df97f"
           data-performance="true"
+          data-before-send="umamiBeforeSend"
         />
         {/*
           Session replay and heatmaps. A second script, same first-party prefix: it
@@ -124,10 +125,15 @@ export default function RootLayout({
           clicks, and how far down a page people read. Delegated, so it covers
           every link without a client component. umami is undefined when the
           tracker is blocked or still loading, and then nothing is sent.
+          umamiBeforeSend drops everything sent from inside a frame: the Umami
+          heatmap view loads each page in an iframe, and those loads are not
+          visits. With no tracker response there is no session, so the recorder
+          sends nothing either.
         */}
         <script
           dangerouslySetInnerHTML={{
             __html:
+              "window.umamiBeforeSend=function(t,p){return window.top===window?p:null};" +
               "(function(){function t(n,d){if(window.umami)window.umami.track(n,d)}" +
               "document.addEventListener('click',function(e){var a=e.target&&e.target.closest&&e.target.closest('a[href]');if(!a)return;" +
               "if(a.origin!==location.origin)t('outbound',{url:a.href});" +
