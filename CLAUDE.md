@@ -60,7 +60,7 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
 
 | File | Why it needs the browser |
 |---|---|
-| [Search.tsx](components/Search.tsx) | Pagefind's JS API, `<dialog>.showModal()`, ⌘K/Ctrl+K |
+| [Search.tsx](components/Search.tsx) | Pagefind's JS API, `<dialog>.showModal()`, ⌘K/Ctrl+K, one Umami `search` event per finished search |
 | [ThemeToggle.tsx](components/ThemeToggle.tsx) | theme choice in `localStorage`; follows the OS while none is stored |
 | [PostEnhancements.tsx](components/PostEnhancements.tsx) | code Copy button, contents current-section mark; renders nothing |
 | [Comments.tsx](components/Comments.tsx) | loads Remark42 from `/c/` as the section nears the viewport |

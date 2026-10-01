@@ -43,11 +43,20 @@ type Hit = { url: string; title: string; excerpt: string };
 /** The last search that finished, and what it found. */
 type Found = { query: string; hits: Hit[] };
 
+declare global {
+  interface Window {
+    umami?: { track: (name: string, data?: Record<string, string | number>) => void };
+  }
+}
+
 export default function Search() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const pagefind = useRef<Pagefind | null>(null);
   const failedLoads = useRef(0);
+  // The last finished search, reported once: when the dialog closes or a hit
+  // is opened. Per keystroke would log every prefix of every query.
+  const lastSearch = useRef<{ q: string; results: number } | null>(null);
 
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -61,6 +70,14 @@ export default function Search() {
   // Only a search that has finished for what is in the field may say
   // "no matches": while the debounce runs, the last answer stands.
   const settled = !!q && found?.query === q;
+
+  // A query with no results is a topic someone came for and did not find.
+  const report = useCallback((picked?: string) => {
+    const s = lastSearch.current;
+    lastSearch.current = null;
+    if (!s) return;
+    window.umami?.track("search", { q: s.q, results: s.results, ...(picked ? { picked } : {}) });
+  }, []);
 
   const close = useCallback(() => {
     dialogRef.current?.close();
@@ -133,6 +150,7 @@ export default function Search() {
     (async () => {
       const search = await pagefind.current!.debouncedSearch(q, undefined, 200);
       if (!search || stale) return;
+      lastSearch.current = { q: q.slice(0, 100), results: search.results.length };
       const top = await Promise.all(search.results.slice(0, 8).map((r) => r.data()));
       if (stale) return;
       setFound({
@@ -172,6 +190,7 @@ export default function Search() {
       setActive((i) => (i - 1 + hits.length) % hits.length);
     } else if (e.key === "Enter") {
       e.preventDefault();
+      report(hits[active].url);
       window.location.href = hits[active].url;
     }
   };
@@ -205,7 +224,10 @@ export default function Search() {
         ref={dialogRef}
         className="search-dialog"
         aria-label="Search this site"
-        onClose={() => setOpen(false)}
+        onClose={() => {
+          setOpen(false);
+          report();
+        }}
         // Clicking the backdrop closes; clicks inside the panel do not bubble here.
         onClick={(e) => {
           if (e.target === dialogRef.current) close();
@@ -271,6 +293,7 @@ export default function Search() {
                   aria-labelledby={`hit-${i}-title`}
                   className={`search-hit${i === active ? " is-active" : ""}`}
                   onMouseEnter={() => setActive(i)}
+                  onClick={() => report(h.url)}
                 >
                   <span className="search-hit-url">{h.url}</span>
                   <span className="search-hit-title" id={`hit-${i}-title`}>{h.title}</span>
