@@ -1,6 +1,8 @@
 ---
 title: "My private services were on the public internet. DNS was the only thing hiding them."
 date: "2026-09-29"
+updated: "2026-09-29"
+correction: "The post is dated 2026-09-29, but the events it describes happened on 2026-07-28 and 2026-07-29, and the closing line called them the second time in two days without saying when; it now gives the dates. Internal hostnames and the tailnet address were also replaced with placeholders."
 description: "Every internal service on my homelab answered 200 to the open internet. The tailnet addresses in DNS looked like access control. They were a suggestion."
 kind: incident
 project: "homelab-gitops"
@@ -13,14 +15,14 @@ It isn't. The problem was what the box served to anyone who had it.
 
 ## The setup that felt safe
 
-Every internal service on my box lived on a `.lab` subdomain. Forgejo at `git.lab`, the analytics dashboard, the reverse-proxy admin, the file-sharing app. Each one resolved to my tailnet address:
+Every internal service on my box lived on a `.lab` subdomain. The git server at `git.lab`, the analytics dashboard, the reverse-proxy admin, the file-sharing app. Each one resolved to my tailnet address:
 
 ```
-$ dig +short git.lab.hrabovskyi.online
-100.64.0.2
+$ dig +short git.lab.example
+<tailnet-ip>
 ```
 
-`100.64.0.0/10` is carrier-grade NAT space. It isn't routable from the internet. If you type `git.lab.hrabovskyi.online` into a browser without being on my VPN, you get nothing, because the address you resolve goes nowhere that's mine.
+The tailnet range is carrier-grade NAT space. It isn't routable from the internet. If you type `git.lab.example` into a browser without being on my VPN, you get nothing, because the address you resolve goes nowhere that's mine.
 
 That's the mental model I'd been running on for months. Private DNS, private addresses, private services. It's tidy, it needs no auth layer, and it *feels* like a boundary.
 
@@ -29,7 +31,7 @@ That's the mental model I'd been running on for months. Private DNS, private add
 My tailnet uses a self-hosted control plane, and the control plane has to be reachable from wherever my devices happen to be — a café, a phone on mobile data, a machine that isn't on the VPN yet. So one hostname resolves straight to the box:
 
 ```
-$ dig +short headscale.hrabovskyi.online
+$ dig +short control-plane.example
 <the origin address>
 ```
 
@@ -41,8 +43,8 @@ I'd always known this and filed it as harmless. The services are on tailnet addr
 
 ```
 $ curl -s -o /dev/null -w '%{http_code}\n' \
-       --resolve git.lab.hrabovskyi.online:443:<origin> \
-       https://git.lab.hrabovskyi.online/
+       --resolve git.lab.example:443:<origin> \
+       https://git.lab.example/
 200
 ```
 
@@ -89,6 +91,6 @@ What I got wrong was treating a **naming** decision as an **access** decision. D
 
 I'd internalised "these are on the tailnet" as a property of the services. It was a property of *how I reached them*. Those are not the same sentence, and the gap between them was four services and a `curl` flag.
 
-I run this lab [on a single VPS](/writing/homelab/) specifically to make mistakes like this somewhere the only person who gets paged is me. That worked exactly as intended. But it was the second time in two days that the interesting bug was [a working thing that was never doing what I assumed](/writing/silent-deploys/), and I only found it because I went looking for something else entirely.
+I run this lab [on a single VPS](/writing/homelab/) specifically to make mistakes like this somewhere the only person who gets paged is me. That worked exactly as intended. But on 28 and 29 July 2026 it was the second time in two days that the interesting bug was [a working thing that was never doing what I assumed](/writing/silent-deploys/), and I only found it because I went looking for something else entirely.
 
 I'm starting to think that's not a coincidence. The bugs that survive are the ones your habits can't reach.
