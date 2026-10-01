@@ -39,7 +39,7 @@ test("Atom parses; published is the post date, updated is updated ?? date", () =
   assert.equal(entries.length, posts.length);
   entries.forEach((entry: any, i: number) => {
     const post = posts[i];
-    assert.equal(entry.link._attributes.href, `${site.url}/writing/${post.slug}/`);
+    assert.equal(entry.link._attributes.href, `${site.url}/writing/${post.slug}/?utm_source=feed&utm_medium=rss`);
     assert.equal(entry.published._text.slice(0, 10), post.date);
     assert.equal(entry.updated._text.slice(0, 10), post.updated ?? post.date);
   });
@@ -124,10 +124,10 @@ test("notes: /notes/ lists the notes alone, newest first, and the sitemap lists 
 });
 
 test("notes: every feed carries a note with its kind as a category", () => {
-  const tags = Object.fromEntries(twoNotes.json.map((item) => [item.url.replace(site.url, ""), item.tags]));
+  const tags = Object.fromEntries(twoNotes.json.map((item) => [item.url.replace(site.url, "").split("?")[0], item.tags]));
   assert.deepEqual(tags["/writing/first-note/"], ["Note", topicName("dotnet")]);
   for (const p of posts) assert.ok(!tags[`/writing/${p.slug}/`]?.includes("Note"), `${p.slug} is not a note`);
   const items = [xml2js(twoNotes.rss, { compact: true }) as any].flatMap((d) => d.rss.channel.item);
-  const item = items.find((i: any) => i.link._text === `${site.url}/writing/second-note/`);
+  const item = items.find((i: any) => i.link._text === `${site.url}/writing/second-note/?utm_source=feed&utm_medium=rss`);
   assert.deepEqual([item.category].flat().map((c: any) => c._text), ["Note", topicName("dotnet")]);
 });

@@ -109,6 +109,17 @@ export default function RootLayout({
           data-performance="true"
         />
         {/*
+          Session replay and heatmaps. A second script, same first-party prefix: it
+          posts to /s/api/record and reads its settings from /s/api/websites/<id>/recorder
+          (edge routes in homelab-gitops). It records only once both are switched on
+          for the website in the Umami dashboard, and masks form input by default.
+        */}
+        <script
+          defer
+          src="/s/recorder.js"
+          data-website-id="fd5da82a-ef38-46c5-8c7e-46ad293df97f"
+        />
+        {/*
           What the tracker cannot see on its own: leaving the site, feed and PDF
           clicks, and how far down a page people read. Delegated, so it covers
           every link without a client component. umami is undefined when the
