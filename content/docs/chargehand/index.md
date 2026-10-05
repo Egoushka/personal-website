@@ -42,10 +42,10 @@ Sources: [README](../../README.md#how-a-run-works), [ADR 0009](../adr/0009-resul
 
 ## Current status
 
-- **Before 1.0.** The latest release is v0.3.0. Goal 0.4 in the roadmap, "it runs with nothing configured", comes next.
-- **Read-only workers.** Writing nodes in worktrees belong to goal 0.7.
-- **Not on nuget.org.** Neither the `Chargehand` tool package nor `Chargehand.Contracts` is published, so you run chargehand from a clone of the repository. The `dnx` lines in the README and on [the MCP page](mcp.md) work only once the package is published.
-- **Main is ahead of the release.** This guide describes the `main` branch. The changes under Unreleased in the [changelog](../../CHANGELOG.md#unreleased) (optional profile file, runtime selection, unknown cost for unpriced models) are not in a release. Neither are `chargehand mcp`, the Claude Code plugin and the `review` preset, which no section of the changelog lists yet. Pages mark these "on main, not yet released".
+- **Before 1.0.** The latest release is v0.8.4. Goal 0.4, "it runs with nothing configured", is done: v0.4.0 shipped it and v0.4.1 added its MCP Registry listing. Goal 0.5 in the roadmap, one prompt to a reviewed change, is still open: its code (the plugin, the command and the `review` preset) shipped in 0.4.0, there is no 0.5.0, and what is left is the maintainer's own use of the command on real tasks. Goal 0.6, runs that use your MCP services and memory, is done and released in v0.6.0 ([Memory and services](memory-and-services.md)). Goal 0.7 (writing workers) and goal 0.8 (support checking and signed results) are released together in v0.8.0; there is no 0.7.0. The 0.7 exit bar, five real issues taken to a merged change, is not met yet.
+- **Read-only workers, and one writer.** Every shipped preset but `code` denies edits. Since 0.8.0, the `code` preset writes a branch that passes its tests in a sandbox ([Writing a branch](writing.md)).
+- **On nuget.org and in the MCP Registry.** The `Chargehand` tool package and `Chargehand.Contracts` are published, so `dnx Chargehand@<version> --yes -- mcp` runs chargehand without a clone ([the MCP page](mcp.md#from-the-package)). The registry lists `io.github.Egoushka/chargehand` from 0.4.1, and the release workflow lists each new version.
+- **Main and the release.** This guide describes the `main` branch, which is v0.8.4 plus the changes under Unreleased in the [changelog](../../CHANGELOG.md#unreleased). A change that lands on `main` after a release appears there, and pages mark it "on main, not yet released".
 
 ## Where to go next
 
@@ -53,6 +53,10 @@ Sources: [README](../../README.md#how-a-run-works), [ADR 0009](../adr/0009-resul
 - [Quickstart](quickstart.md): one question from a checkout, end to end.
 - [Use it from an MCP client](mcp.md): the `orchestrate` tool over stdio or HTTP.
 - [Run the HTTP server](server.md): `chargehand serve`, its routes and the container image.
+- [Writing a branch](writing.md): the `code` preset, its sandbox, what it verifies and what it does not.
+- [Driven writing sessions](driven.md): a list of tasks as parallel headless sessions in containers, ending in draft pull requests; what is built and what is not wired yet.
+- [Support checking and signed results](support-and-signing.md): each claim checked against the text it cites, and results signed and verified offline.
+- [Memory and services](memory-and-services.md): recall from MCP memory servers, retain only claims whose citations resolved, and give a preset's workers read-only MCP tools.
 - [The change command](change.md): `/chargehand:change` in Claude Code.
 - [Prompt CI](prompt-ci.md): how prompt and preset changes get gated.
 - [Reference](reference.md): commands, presets, contracts, profile fields, environment variables.

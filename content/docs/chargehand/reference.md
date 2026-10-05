@@ -1,7 +1,7 @@
 ---
 title: "Reference"
 description: "Commands, HTTP routes, presets, contracts, error codes, profile fields, environment variables, and where the run log lives."
-order: 7
+order: 8
 section: "Reference"
 ---
 
@@ -16,15 +16,18 @@ From a checkout, every command runs as `dotnet run --project src/Chargehand.Cli 
 | `cache <run-id>` | cache reads, writes and hit rate per call, and the first block that broke a prefix the nodes should have shared | 1 when the run has no calls |
 | `reconcile <run-id> < spend-rows.jsonl` | joins the run's calls to exported gateway spend rows by model, token counts and time, and prints own against gateway cost | 1 when a call stays unmatched |
 | `serve` | HTTP and MCP, on `127.0.0.1` unless the profile's `http` block opens it | 2 without an `http` block |
-| `mcp` | MCP over stdio, for a client that starts chargehand itself; no port, no key (on main, not yet released) | |
+| `mcp` | MCP over stdio, for a client that starts chargehand itself; no port, no key | |
 | `routes [run-log.jsonl ...]` | routing report per preset, node kind and model, from the given logs or the default one | |
 | `score <run-id> <0-1> [name]` | records a hand score for a run; the name defaults to `quality` | |
 | `eval seed <cell> <run-id>...` | proposes eval items (JSONL on stdout) from runs in the log | |
 | `eval push <cell>` | pushes reviewed items (JSONL on stdin) to the cell's Langfuse dataset | |
 | `eval gate <base> <change> [options]` | Prompt CI's paired runs and verdict, see [Prompt CI](prompt-ci.md#the-eval-commands) | 1 when blocked |
 | `prompts sync` | mirrors prompt blocks to Langfuse prompt management | |
+| `extensions check [--preset <name>] [--probe <query>]` | connects every `mcp_servers` entry, lists its tools, and checks each `memory` mapping, the `prompt_enhancer` and each preset's `services` against them; one line per item, with an action on every problem. It reads every preset in `presets/`, or only `--preset`. `--probe` also runs one recall per memory and prints how many facts came back | 0 nothing wrong, 1 a problem, 2 usage error or a profile that does not load |
 
 Any other command prints the usage and exits 2. `eval` and `prompts sync` need the profile's `telemetry` block.
+
+`extensions check` prints one line per item and never a URL, a credential, an argument value or a recalled fact. A server line reads `server gw: connected, 3 tools` or `server gw: unreachable: <reason>; action: <what to do>`. A memory line reads `memory hindsight: recall -> recall ok` (operation, then the tool it calls), or `memory hindsight: retain -> tool 'retain' is not listed by server 'gw'; action: ...` for a tool the server lacks, an argument its schema does not declare or a required one the mapping leaves out; with `--probe`, `memory hindsight: probe returned 3 fact(s)`. A service line reads `preset docs: service team-docs: search_docs ok`, or `tool 'x' is not listed; action: ...`. A memory or service on a server that is down says it was not checked; the server's own line says why.
 
 `routes` shows runs, completions, score, prompt tokens, cache rate, cost and latency. It names a model a candidate only when it and the default each have 20 scored runs, it scores within 0.10 of the default, and it costs at least 15% less; nothing routes on its own ([ADR 0019](../adr/0019-prompt-ci-and-routing-report.md)).
 
@@ -36,7 +39,9 @@ Any other command prints the usage and exits 2. `eval` and `prompts sync` need t
 |---|---|
 | `POST /v1/runs` | takes `request/v1`. With `Prefer: wait=N` (default 10 s, at most 60): `200` and `result/v1` if the run finishes in time, else `202`, `run-status/v1` and a `Location` |
 | `GET /v1/runs/{id}` | `202` while queued or running, `200` and `result/v1` once finished, `410` if the process that ran it ended first, `404` if unknown |
-| `GET /v1/runs/{id}/events` | server-sent events `accepted`, `started`, `intake`, `node_started`, `node_finished`, `run_finished` |
+| `GET /v1/runs` | run summaries, newest first, filtered by `status` and `since`; [Run the HTTP server](server.md#routes) |
+| `POST /v1/runs/{id}/cancel`, `POST /v1/halt`, `POST /v1/resume` | cancel one run, cancel every run and refuse new ones, and lift that; a cancelled run ends `failed` with `cancelled` ([driven sessions](driven.md#limits-and-the-kill-switch)) |
+| `GET /v1/runs/{id}/events` | server-sent events `accepted`, `started`, `intake`, `node_started`, `node_finished`, `run_finished`; a driven batch adds `container_started`, `session_progress`, `verify_finished`, `pushed`, `pr_opened`, `task_finished` ([driven guide](driven.md#watching-a-batch)) |
 | `/v1/mcp` | MCP over Streamable HTTP: tool `orchestrate`, `inputSchema` `request/v1`, `outputSchema` `result/v1` |
 
 Every route needs `Authorization: Bearer <key>`. [Run the HTTP server](server.md#routes) has the details.
@@ -52,7 +57,7 @@ Each preset is a `preset/v1` file in `presets/`. Intake picks one action; when t
 | `thorough` | 0.3.0 | `answer`, `split`, `improve`, `ask`, `deny` | `worker` | `provider/worker-model` |
 | `strict` | 0.2.0 | `answer`, `split`, `improve`, `ask`, `deny` | `worker` | `provider/worker-model` |
 | `draft` | 0.1.0 | `answer`, `deny` | `draft`, with `checkout: false` | `provider/small-model` |
-| `review` (on main, not yet released) | 0.1.0 | `answer` | `worker` | `provider/worker-model` |
+| `review` | 0.1.0 | `answer` | `worker` | `provider/worker-model` |
 
 | preset | input tokens per node | USD per node | compaction trigger | critic | approval |
 |---|---|---|---|---|---|
@@ -71,12 +76,16 @@ The profile's `models` map turns the placeholders into real model ids.
 
 Rules are ordered and the last matching rule wins; a trailing deny for an action removes that tool from the worker's catalog. Every preset except `draft` starts with `* * allow`, then denies `edit`, reading `*.env` and `*.env.*` (allowing `*.env.example` again), `shell`, `webfetch`, `external_directory`, `question` and `subagent`. On OpenCode the workers read and search with the `read`, `grep` and `glob` tools and have no git history ([ADR 0006](../adr/0006-presets.md)). `draft` has one rule, `* * deny`: no tools, and no repository, in an empty directory under `worker_root`.
 
-On Claude Code, chargehand translates the rules into `--tools`, `--allowedTools` and `--disallowedTools`. Claude Code's rules are deny-wins, so an allow inside an earlier deny stays denied: `*.env.example` stays unreadable there ([ADR 0020](../adr/0020-claude-code-runtime-adapter.md)).
+On OpenCode, every session's rules also end with `*_* * deny`, so MCP tools are refused unless a preset's `services` grant them (below). On Claude Code, chargehand translates the rules into `--tools`, `--allowedTools` and `--disallowedTools`. Claude Code's rules are deny-wins, so an allow inside an earlier deny stays denied: `*.env.example` stays unreadable there ([ADR 0020](../adr/0020-claude-code-runtime-adapter.md)).
+
+### Services
+
+A node kind may list `services`, an optional `preset/v1` field (ADR 0034): each entry is a `server` from the profile's `mcp_servers` and a `tools` list of names the node's workers may call. A name is exact or a glob with `*`; a lone `*` is refused, so a preset never grants a whole server. At the start of a run chargehand connects, lists the server's tools and grants the ones named; a server, secret or tool that does not resolve drops that service and is recorded on the run. No shipped preset lists services. [Memory and services](memory-and-services.md#services) has an example and what each runtime does with a grant.
 
 ### Budgets and stops
 
 - A node whose prompt tokens, summed over its calls, pass `max_input_tokens` gets interrupted, then gets one turn to answer from what it has read. The result says so in `open_questions`.
-- A node stops at its USD cap: the smallest of the preset's `max_usd`, the profile's `run_cap_usd` (default 1.00) and the request's `budget_usd`, where the last two are divided evenly across a split's nodes. A USD cap cannot fire on a model with no price (on main, not yet released).
+- A node stops at its USD cap: the smallest of the preset's `max_usd`, the profile's `run_cap_usd` (default 1.00) and the request's `budget_usd`, where the last two are divided evenly across a split's nodes. A USD cap cannot fire on a model with no price.
 - Every node has a 15-minute deadline.
 - Above `trigger_tokens` of context in a call, the orchestrator compacts the session; on Claude Code it compacts between turns. `auto`, `keep_tokens` and `buffer` describe the OpenCode server's own settings.
 - The critic reviews writing nodes only, and no writing node runs yet.
@@ -93,7 +102,7 @@ On Claude Code, chargehand translates the rules into `--tools`, `--allowedTools`
 | `preset/v1` | a preset file | [preset.schema.json](../../schemas/preset/v1/preset.schema.json) |
 | `profile/v1` | the profile | [profile.schema.json](../../profiles/profile.schema.json) |
 
-Each schema under `schemas/` sits in `schemas/<name>/v<major>/`, next to valid and invalid examples. A published major takes additive changes only: `SchemaCompatTests` fails the build on a breaking change since the latest `v*` tag. `Chargehand.Contracts` packs the five schemas under `schemas/` with C# types and a validator. It versions by schema major (1.2.0-alpha on main) and is not on nuget.org yet. `samples/ContentEngineCall` is a program caller built from it alone.
+Each schema under `schemas/` sits in `schemas/<name>/v<major>/`, next to valid and invalid examples. A published major takes additive changes only: `SchemaCompatTests` fails the build on a breaking change since the latest `v*` tag. `Chargehand.Contracts` packs the five schemas under `schemas/` with C# types and a validator. It versions by schema major (1.4.0-alpha) and is on nuget.org. `samples/ContentEngineCall` is a program caller built from it alone.
 
 ## Error codes
 
@@ -103,7 +112,7 @@ A failed `result/v1` carries `error`: a fixed `code`, the `message`, `retryable`
 |---|---|---|
 | `runtime_unavailable` | the OpenCode server refuses the connection or cannot start; the Claude Code binary cannot start or `--version` fails; `claude` is signed out and no credential is set; no agent CLI is on `PATH` | yes |
 | `runtime_version_mismatch` | the runtime's version differs from the pin | no |
-| `runtime_ambiguous` | more than one agent CLI is on `PATH` and nothing names one (on main, not yet released) | no |
+| `runtime_ambiguous` | more than one agent CLI is on `PATH` and nothing names one | no |
 | `provider_unavailable` | OpenCode answers 502, 503 or 504 | yes |
 | `rate_limited` | OpenCode answers 429, or an error's text is a rate limit | yes |
 | `repository_not_allowed` | the repository is outside `repository_roots`, or a worker checkout would sit under the home directory | no |
@@ -111,16 +120,26 @@ A failed `result/v1` carries `error`: a fixed `code`, the `message`, `retryable`
 | `checkout_has_secrets` | the clone tracks files the preset denies reading | no |
 | `cost_cap_reached` | the watcher interrupted a node above its USD cap or its input-token budget | no |
 | `deadline_exceeded` | a node's turn was interrupted for any other reason; the deadline is the only other interrupt | yes |
-| `invalid_result` | a node's turns succeeded but left no valid result contract after the repair turn | no |
+| `invalid_result` | a node's turns succeeded but left no valid result contract after the repair turn, or a writing node changed no files | no |
 | `intake_failed` | intake returned no valid Task Spec after one retry | no |
 | `invalid_request` | an unknown preset, a caller block whose sha256 does not match its text, an unknown runtime name, or both Claude Code credentials set | no |
+| `sandbox_unavailable` | a writing preset ran on a machine with no `sandbox-exec` or `bwrap` and `sandbox.kind` is not `none` | no |
+| `verification_failed` | a writing node's test command still failed after the last fix round; the branch is in the result's artifacts. For a driven task: chargehand's own run of the tests in a fresh container failed, or there is no test command | no |
+| `container_unavailable` | a driven session needs a container engine and none answers (no Docker, or the runner is down), or a task's output volume cannot be moved | yes |
+| `credential_unavailable` | a driven batch has no model credential or no push credential in the profile's secret sources | no |
+| `session_failed` | a driven session made no usable branch, or chargehand refused it: nothing changed, a secret-shaped diff, a change to CI configuration | no |
+| `session_stalled` | a driven session ended on no progress, a repeated tool call, too many turns or its wall clock | yes |
+| `push_rejected` | the remote refused `chargehand/<run>`, or the remote is not an https or ssh URL | no |
+| `pr_failed` | the branch was pushed but the draft pull request did not open; the result names the branch | yes |
+| `cancelled` | a run was cancelled (`POST /v1/runs/{id}/cancel` or `POST /v1/halt`); nothing is pushed | no |
+| `tasks_incomplete` | a driven batch ended with at least one task that has no draft pull request; the result names them | no |
 | `internal` | anything else | no |
 
 Over HTTP, a request the server refuses before a run exists stays a `400` with `errors` ([ADR 0022](../adr/0022-error-codes-in-result-v1.md)).
 
 ## Profile fields
 
-The profile is `profile/v1` JSON; `profiles/example.json` fills in most fields with placeholders. The defaults for `worker_root`, `default_preset`, `intake_model`, `prices` and `secrets` are on main, not yet released ([ADR 0026](../adr/0026-extension-model.md)).
+The profile is `profile/v1` JSON; `profiles/example.json` fills in most fields with placeholders. The defaults for `worker_root`, `default_preset`, `intake_model`, `prices` and `secrets` come from [ADR 0026](../adr/0026-extension-model.md).
 
 | field | default | what it does |
 |---|---|---|
@@ -131,6 +150,9 @@ The profile is `profile/v1` JSON; `profiles/example.json` fills in most fields w
 | `claude_code` | unset | `version` (required), `binary` (default `claude`), at most one of `api_key_secret` and `oauth_token_secret`, and `base_url` for an Anthropic-compatible gateway |
 | `worker_root` | `/var/tmp/chargehand/work` | where worker clones live; must be outside the home directory |
 | `repository_roots` | `worker_root` alone; `run` and `mcp` add their launch directory | the directories a request's repository may sit under; `"/"` allows any |
+| `support_check` | `true` | after each node, one call on the intake model judges whether the text each claim cites supports it ([ADR 0036](../adr/0036-support-checking-and-signed-results.md)); `false` removes the check and its call |
+| `signing` | unset | `{key_file}`: a P-256 private key in PEM; every result of a run is then signed with ES256. `CHARGEHAND_SIGNING_KEY_FILE` overrides it. Chargehand never creates a key ([Signed results](support-and-signing.md#signed-results)) |
+| `sandbox` | `{kind: auto, network: false}` | Where a writing preset's tests run ([ADR 0035](../adr/0035-sandboxed-writing-workers.md)). `kind`: `auto` (`sandbox-exec` on macOS, `bwrap` on Linux; a writing run is refused with `sandbox_unavailable` when neither exists), `seatbelt`, `bubblewrap`, or `none` (unconfined, an explicit opt-in). `network` allows the command network access (a build that restores packages needs it). `env` lists variable names passed in besides `PATH`, `LANG`, `LC_ALL` and `TERM`. The command may write only in the run's clone and a private temp directory, and may not read `~/.ssh`, `~/.aws`, `~/.gnupg`, `~/.config/gh`, `~/.docker`, `~/.kube`, `~/.claude`, `~/.netrc`, `~/.npmrc`, `~/.git-credentials` or `~/Library/Keychains`. |
 | `default_preset` | `cheap` | `request/v1` requires `context.preset`, so each request names its own |
 | `intake_model` | unset: the runtime's default model | the model intake runs on |
 | `run_cap_usd` | 1.00 | hard cap per run in USD, divided evenly across a split's nodes |
@@ -139,9 +161,12 @@ The profile is `profile/v1` JSON; `profiles/example.json` fills in most fields w
 | `prices` | empty: cost unknown | USD per 1M tokens per `provider/model`: `input`, `output`, `cache_read`, `cache_write` (with the provider's cache-write surcharge) |
 | `models` | empty | maps the presets' placeholder models to real `provider/model` ids |
 | `http` | unset | `api_key_secret` (required), `port` (4300), `listen` (`127.0.0.1`), `allowed_hosts`; `serve` needs it |
-| `memory` | unset | `backend` (`hindsight`), `url` and `namespace` (required), `api_key_secret`, `max_tokens` (1024), `retain` (false) |
+| `driven` | `{enabled: false}` | Driven writing sessions ([ADR 0039](../adr/0039-driven-writing-sessions.md), [guide](driven.md#configure-it)): `enabled`, `max_parallel` (2, at most 4), `max_parallel_total` (4, at most 8), `images` (session image by digest), `network` (`allow`, `outside`, `mcp_forward`), `runner` (`url`, `api_key_secret`), `push_secret` and `task_source`. Leave `enabled` false in a shared profile |
+| `mcp_servers` | unset | MCP servers by name, which `memory` entries and presets' `services` refer to; one connection per server, opened on first use and shared by both. Each has `url` (Streamable HTTP or SSE; optional `headers` and `transport`: `auto`, `streamable-http` or `sse`, default `auto`) or `command` (a stdio argv; optional `env`). `{secret:item}` is allowed in header and `env` values only and resolves through `secrets` when the connection opens; a server whose secret nothing resolves is not connected. A command secret source that runs longer than 15 s is killed and the next source tried. [Memory and services](memory-and-services.md#name-your-servers-mcp_servers) covers transports and a Keychain item stored with an account |
+| `prompt_enhancer` | unset | a prompt enhancer (ADR 0040): `server` (an `mcp_servers` key whose server lists the tools `enhance` and `feedback`) and `deadline_ms` (1500; 50 to 30000). A run sends its request text and the repository (folder name), commit, task kind (the preset) and client name before intake, always goes on with the original (a rewrite is reported as not accepted, ADR 0041), then reports cost and model with `feedback`. Late, failing or unreachable: the original is sent. An unknown server fails at load; `chargehand extensions check` lists the two tools |
+| `memory` | unset | a list of providers (ADR 0034), in priority order, each: `name` and `server` (an `mcp_servers` key) and `tools` (required); `namespace` (default `name`); `max_facts` (10), `max_chars` (4000), `max_fact_chars` (600), `timeout_seconds` (10); `retain` (false) and `retain_tags` (`["chargehand"]`). `tools.recall` is required, `tools.retain` when `retain` is true, `tools.invalidate` is optional. A tool is `{ "tool": <name>, "arguments": {...} }`; in the arguments, a string that is exactly one placeholder keeps the value's type. Recall may use `{query}`, `{namespace}` and `{max_facts}`; retain `{namespace}`, `{text}`, `{context}`, `{document_id}`, `{timestamp}`, `{tags}`, `{repository}`, `{commit}` and `{locators}`; invalidate `{namespace}`, `{id}` and `{reason}`. Recall's `results` says how to read the answer: `path` (dotted, to the array; without a `results` block it is `results`, with one and no `path` it is the root), `id` (default `id`), `text` (default `text`; a field, a template over fields such as `{date}: {summary}`, or an ordered list of these, the first whose fields are all present and non-empty winning) and `format` (`json`, or `text` for one fact from the whole answer). A mapping with an unknown server or placeholder fails at load; `chargehand extensions check` connects and checks the tools. [Memory and services](memory-and-services.md) has the Hindsight and Chronicle entries. The old single object (`backend`, `url`, `namespace`, `api_key_secret`, `max_tokens`, `retain`) was removed and fails at load with a migration message ([changelog](../../CHANGELOG.md)) |
 
-A profile still carrying `"secret_store": "keychain"` needs a one-line migration to `"secrets": [{"env": true}, {"command": ["security", "find-generic-password", "-s", "{item}", "-w"]}]` ([changelog, Unreleased](../../CHANGELOG.md#unreleased)).
+A profile still carrying `"secret_store": "keychain"` needs a one-line migration to `"secrets": [{"env": true}, {"command": ["security", "find-generic-password", "-s", "{item}", "-w"]}]` ([changelog 0.4.0](../../CHANGELOG.md#040---2026-09-29)).
 
 ## Environment variables
 
@@ -165,6 +190,8 @@ Scripts and CI read a few more:
 | `PROMPT_CI_RUNTIME`, `PROMPT_CI_PROFILE_<RUNTIME>` | the eval runner | its default runtime, and one eval profile per runtime |
 | `SELF_REVIEW_PROFILE` | the eval runner, `.github/workflows/self-review.yml` | the profile for reviews of this repository's own pull requests |
 | `CLAUDE_CODE_VERSION` | Docker build argument | the Claude Code version in the image, default 2.1.283 |
+| `CHARGEHAND_E2E_MODEL_KEY`, `CHARGEHAND_E2E_IMAGE` | `scripts/driven-e2e.sh` | a capped Anthropic API key and the session image by digest; the script's other variables are listed at its top |
+| `CHARGEHAND_E2E_GITHUB_API`, `CHARGEHAND_E2E_LOCAL_REMOTE` | the CLI, for `scripts/driven-e2e.sh` only | the draft-pull-request client's base URL, and `1` to accept a `file://` remote; never set in a deployment |
 
 ## Run log
 
