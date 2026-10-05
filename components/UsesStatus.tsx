@@ -28,13 +28,6 @@ export default function UsesStatus() {
         <li className={status.unhealthy ? "text-destructive" : undefined}>
           {status.unhealthy ? `${status.unhealthy} unhealthy` : "all healthy"}
         </li>
-        {status.coding && status.coding.hours > 0 && (
-          <li>
-            {status.coding.hours} h coding in 30 days
-            {status.coding.language && <>, {status.coding.language} {status.coding.languagePercent}%</>}
-            {status.coding.language && status.coding.editor && <>, {status.coding.editor} {status.coding.editorPercent}%</>}
-          </li>
-        )}
       </ul>
     </div>
   );

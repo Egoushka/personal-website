@@ -6,9 +6,9 @@ import { useStatus } from "@/lib/status";
  * The instrument panel: what is true about this work tonight.
  *
  * This is the part of the site nobody else can copy. Anyone can write "I care
- * about observability"; this says how many containers are up, how many hours
- * went into an editor in the last month and what share of them were C#, and it
- * is wrong within a day if the box stops publishing.
+ * about observability"; this says how many containers are up and how long the
+ * box has stayed up, and it is wrong within a day if the box stops publishing.
+ * Editor hours stay off it: a month's total reads as output, which it is not.
  *
  * Hover or focus a figure and it says where the number came from. That is the
  * site's one rule — counted, never typed — turned from a footnote into the
@@ -46,7 +46,6 @@ function Fig({
 
 export default function Panel() {
   const status = useStatus();
-  const coding = status?.coding;
   const pkg = status?.package;
 
   /**
@@ -55,7 +54,6 @@ export default function Panel() {
    * reading rather than a missing one.
    */
   const absent = [
-    !(coding && coding.hours > 0) && "the editor hours",
     !pkg?.downloads && "the package count",
   ].filter((x): x is string => typeof x === "string");
 
@@ -90,22 +88,6 @@ export default function Panel() {
             />
             {status.unhealthy > 0 && (
               <Fig value={status.unhealthy} label="unhealthy" source="containers not in a running state" />
-            )}
-            {coding && coding.hours > 0 && (
-              <Fig
-                value={coding.hours}
-                unit="h"
-                label="coded, 30 days"
-                source="a Wakapi I host myself"
-              />
-            )}
-            {coding?.language && (
-              <Fig
-                value={coding.languagePercent}
-                unit="%"
-                label={`of that was ${coding.language}`}
-                source="Wakapi, per-language share"
-              />
             )}
             {pkg?.downloads ? (
               <Fig

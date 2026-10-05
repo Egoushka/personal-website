@@ -115,6 +115,9 @@ export default function Home() {
           <Link className={buttonVariants({ variant: "outline", size: "lg" })} href="/writing/">
             Read the writing <ArrowRight />
           </Link>
+          <Link className={buttonVariants({ variant: "ghost", size: "lg" })} href="/cv/">
+            CV
+          </Link>
         </div>
       </header>
 
