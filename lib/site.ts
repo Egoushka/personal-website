@@ -292,7 +292,7 @@ export const projects: Project[] = [
     visibility: "public",
     tech: ["C#", ".NET 10", "ASP.NET Core", "MCP", "Claude Code", "OpenCode", "OpenTelemetry", "Langfuse", "xUnit", "Docker"],
     phase:
-      "0.4.0, before 1.0. It runs from the CLI, over HTTP and over MCP; workers only read, and the writing nodes that would let it change code do not exist.",
+      "0.8.4, before 1.0. It runs from the CLI, over HTTP and over MCP, and the code preset edits a clone, runs the repository's tests in a sandbox and returns a branch. Driven sessions, one draft pull request each, are built but off by default, and the usage bars for 0.5 and 0.7 are not met.",
     status: "running",
     name: "chargehand",
     lang: "C#", shape: "orchestrator",
@@ -300,15 +300,15 @@ export const projects: Project[] = [
     summary:
       "Runs a question about a codebase on coding agents and returns an answer whose every citation is checked against a pinned commit.",
     description:
-      "An orchestrator for coding agents. A program that calls an agent gets prose back and has nothing to check it against; chargehand turns the request into a typed task, runs it on Claude Code or OpenCode sessions reading the repository at a pinned commit, and returns a result contract in which every claim carries its evidence — a file at that commit, a diff, a session message or an input the caller sent. A resolver checks that each citation resolves at that commit, and a claim whose evidence does not resolve is moved to open questions instead of being reported. Whether a cited line actually supports its claim is not checked yet; that is on the roadmap for 0.8. Budgets, retries and the task graph live in code rather than in a prompt. It is measured before it is believed, and the measurements are not flattering: the first version lost a blind comparison to a plain agent session, 0.333 to 0.667. A prompt fix won it back at 28% more cost, until an ablation moved that cost onto how much the preset told it to read, and the gap closed. Splitting a question across parallel agents cost 1.53× for a score of 0.967 against 0.950, so the decision record now limits splits to questions one session cannot cover; the intake prompt does not do that yet. Prompt CI, which gates prompt changes on paired evals, let both deliberately planted regressions through; once its score learned to count missing claims it caught one of them, and the other still passes.",
+      "An orchestrator for coding agents. A program that calls an agent gets prose back and has nothing to check it against; chargehand turns the request into a typed task, runs it on Claude Code or OpenCode sessions reading the repository at a pinned commit, and returns a result contract in which every claim carries its evidence — a file at that commit, a diff, a session message or an input the caller sent. A resolver checks that each citation resolves at that commit, and a claim whose evidence does not resolve is moved to open questions instead of being reported. Since 0.8.0 each claim is also judged for support against the text it cites, and a result can be signed and verified offline. Budgets, retries and the task graph live in code rather than in a prompt. It is measured before it is believed, and the measurements are not flattering: the first version lost a blind comparison to a plain agent session, 0.333 to 0.667. A prompt fix won it back at 28% more cost, until an ablation moved that cost onto how much the preset told it to read, and the gap closed. Splitting a question across parallel agents cost 1.53× for a score of 0.967 against 0.950, so the decision record now limits splits to questions one session cannot cover; the intake prompt does not do that yet. Prompt CI, which gates prompt changes on paired evals, let both deliberately planted regressions through; once its score learned to count missing claims it caught one of them, and the other still passes.",
     resumeLine:
       "Orchestrator for coding agents in .NET 10: typed tasks run on Claude Code or OpenCode at a pinned commit, every citation checked against the commit before it is returned; CLI, HTTP and MCP; benchmarked blind against a plain agent session.",
     topics: ["dotnet", "architecture", "mcp"],
     readings: [
-      { label: "Releases", value: "6 tagged, 0.1.0 → 0.4.0", source: "git tags and CHANGELOG.md, 2026-09-27 to 09-29" },
+      { label: "Releases", value: "14 tagged, 0.1.0 → 0.8.4", source: "git tags and CHANGELOG.md, 2026-09-27 to 10-05" },
       { label: "Against a plain session", value: "0.333 → 0.556 blind", source: "phase 3 exit and its rerun, model-judged blind; docs/benchmarks.md", ref: "Egoushka/chargehand@b566890:docs/benchmarks.md#L104-130" },
       { label: "Splitting", value: "1.53× the cost for 0.967 vs 0.950", source: "phase 4 exit; ADR 0017 limits splits because of it", ref: "Egoushka/chargehand@b566890:docs/adr/0017-split-runs-forked-siblings-and-merge.md#L48" },
-      { label: "Decisions", value: "33 ADRs", source: "docs/adr, 0001 to 0033" },
+      { label: "Decisions", value: "40 ADRs", source: "docs/adr, 0001 to 0041; there is no 0038" },
       { label: "Users", value: "1 — me", source: "counted" },
     ],
   },
@@ -374,7 +374,7 @@ export const projects: Project[] = [
     visibility: "private",
     tech: ["Flutter", "Dart", "Drift", "SQLite", "SQLCipher", "AES-GCM", "ASP.NET Core"],
     phase:
-      "Encryption at rest, multi-device sync over an op-log the relay cannot read, and an Android home-screen widget all ship. Nothing has been committed since 28 July: it is in use, not in development.",
+      "Encryption at rest, multi-device sync over an op-log the relay cannot read, and an Android home-screen widget all ship.",
     name: "Baseline",
     status: "running",
     lang: "Flutter", shape: "instrument",
@@ -463,7 +463,7 @@ export const projects: Project[] = [
     readings: [
       { label: "Host", value: "one cx53, 32 GB", source: "the repo's own README; tailnet address, not a public one" },
       { label: "Secrets", value: "encrypted in git", source: "*.enc committed, plaintext gitignored — checkable in the tree" },
-      { label: "Stacks", value: "61, one directory each", source: "FACTS.md, regenerated by CI so the count cannot drift from the tree" },
+      { label: "Stacks", value: "62, one directory each", source: "FACTS.md, regenerated by CI so the count cannot drift from the tree" },
     ],
   },
   {
@@ -551,6 +551,138 @@ export const projects: Project[] = [
       { label: "Skills", value: "36", source: "the catalog the README generates from the skills themselves", ref: "Egoushka/agent-skills@84211d1:README.md#L68" },
       { label: "Always loaded", value: "≈3.7k tokens", source: "names and descriptions, estimated at characters ÷ 4", ref: "Egoushka/agent-skills@84211d1:README.md#L68" },
       { label: "Vendored skills", value: "byte-identical to a pinned commit", source: "make verify, which CI runs" },
+    ],
+  },
+  {
+    slug: "whetstone",
+    side: true,
+    visibility: "public",
+    tech: ["C#", ".NET 10", "ASP.NET Core", "MCP", "SQLite", "xUnit"],
+    phase:
+      "0.1.0 is tagged; the store that remembers is merged and untagged. Nothing is learned yet: no retrieval, no templates, no model rewrite, and no held-out share to tell whether a rewrite would help.",
+    status: "building",
+    name: "whetstone",
+    lang: "C#", shape: "prompt enhancer",
+    href: "https://github.com/Egoushka/whetstone",
+    summary:
+      "A prompt enhancer meant to learn from my own past prompts; today it returns the prompt unchanged and remembers each call with the secrets taken out.",
+    description:
+      "A personal service behind two MCP tools, enhance and feedback. The idea is that a client sends a prompt before running it, gets back a better one built from my own earlier prompts that went well, and reports afterwards what happened, so the outcome is what it learns from. That is the plan, not the state. Today enhance answers with the same prompt every time, and says so in its reason field. What exists is the contract, a server over stdio and HTTP that returns the original prompt if the enhancer is late or fails, and a SQLite store, one file per user. Each call is stored with secret-shaped text replaced before anything is written, and export and forget are terminal commands rather than tools, so an agent with whetstone in its tool list cannot read or delete the store. The redactor matches patterns, so a secret written in words survives it, and so does an unlabelled 40-character hex string that reads as a git sha. The bar for the store is a week of my own use with a clean gitleaks pass over the export; that week is not recorded yet.",
+    resumeLine:
+      "Prompt enhancer behind two MCP tools in .NET 10: per-user SQLite store with secrets redacted before the write, export and delete as terminal-only commands; pass-through so far, no learning yet.",
+    topics: ["dotnet", "mcp"],
+    readings: [
+      { label: "Releases", value: "0.1.0, the only tag", source: "git tags and CHANGELOG.md; the memory store is listed under Unreleased", ref: "Egoushka/whetstone@d25757f:CHANGELOG.md#L16" },
+      { label: "Redactor corpus", value: "31 secret shapes, 20 look-alikes", source: "CHANGELOG.md; the look-alikes must be kept, not redacted", ref: "Egoushka/whetstone@d25757f:CHANGELOG.md#L11" },
+      { label: "Decisions", value: "3 ADRs", source: "docs/adr, 0001 to 0003" },
+    ],
+  },
+  {
+    slug: "senses",
+    side: true,
+    visibility: "private",
+    tech: ["C#", ".NET 10", "ASP.NET Core", "MCP", "PostgreSQL", "Dapper", "Loki", "ntfy", "Testcontainers", "xUnit", "Docker", "GitHub Actions"],
+    phase:
+      "v1, merged 2026-10-05 and not deployed. Nothing has run against the real router, NetFlow or Wakapi output, and the week of spot checks that decides whether it works has not started. Away-from-home context does not exist, so leaving the house at night with the phone reads as dozing off.",
+    status: "building",
+    name: "senses",
+    lang: "C#", shape: "perception layer",
+    href: "",
+    summary:
+      "Turns the router, network flow records, coding heartbeats and a sleep ring into four named states, each with the evidence it was decided on.",
+    description:
+      "A perception layer for my AI. The AI never sees a raw signal, only a state: home, on a call, in deep work or asleep, with a confidence and the short facts it rests on. Home is one of my devices in the router’s Wi-Fi registration table. A call is a two-way UDP flow of at least 30 kbit/s each way for a one-minute NetFlow bucket, which a download or a stream does not produce. Deep work is Wakapi heartbeats in 20 of the last 25 minutes with no call. Asleep is a night-time guess — home, the phone under 5 kB a minute for twenty minutes, no coding, no call — which the Oura ring replaces with its own bounds once it syncs. A sense that goes down makes its states unknown rather than closing them, because a missing signal is not evidence that I left. Any MCP client can ask what is true now or what happened over a range, and every change is published to ntfy. It has not been deployed. Every fixture is synthetic, written from documentation, and I have not yet checked whether NetFlow carries my LAN addresses or post-NAT ones; if it is the latter, calls will read as inactive.",
+    resumeLine:
+      "Perception layer in .NET 10: router, NetFlow, Wakapi and Oura signals reduced to four evidenced states, served over MCP and ntfy; 65 tests, not yet deployed.",
+    topics: ["dotnet", "mcp", "postgres", "self-hosting"],
+    readings: [
+      { label: "States", value: "4", source: "home, on_call, deep_work, asleep; the States table in README.md" },
+      { label: "Tests", value: "65 passing", source: "docs/HANDOFF.md, written after the review fixes; the suite needs Docker for a Postgres container, so it was not rerun for this entry" },
+      { label: "Review", value: "6 important findings, all fixed", source: "docs/HANDOFF.md: a model review of the whole branch, no critical findings; each fix written test-first" },
+      { label: "Success bar", value: "9 of 10 spot checks over a week", source: "docs/specs/2026-10-05-senses-design.md; not measured yet" },
+      { label: "Deployed", value: "no", source: "docs/HANDOFF.md, and no stack for it in the deploy repository on 2026-10-05" },
+      { label: "Users", value: "1 — me", source: "counted" },
+    ],
+  },
+  {
+    slug: "jarvis",
+    side: true,
+    visibility: "private",
+    tech: ["TypeScript", "Node.js 26", "AG-UI", "MCP", "Biome", "node:test", "Docker", "GitHub Actions"],
+    phase:
+      "0.7.0 of a roadmap to 1.0. Corrections become rules and a request can become a brief for a draft pull request, but no real dev run has happened and the month-6 blind test has no result. Exporting rules to my other agents, Telegram, approvals and grants, and anything proactive do not exist; the Python 0.1 bot still runs until Telegram is rebuilt.",
+    status: "building",
+    name: "JARVIS",
+    lang: "TypeScript", shape: "assistant",
+    href: "",
+    summary:
+      "A personal assistant that turns my corrections into rules, built to fail a pre-registered blind test at month 6 if it is no better than a plain one.",
+    description:
+      "A personal assistant built to test one claim: that an assistant shaped by how its owner corrects it beats a plain one with the same memory tools. The claim has a kill test written down before the code — a blind A/B of 60 trials against a control arm, 37 wins to pass, at month 6 — so the project can fail on a date it cannot move. What exists is the harness around that claim. Its own agent loop runs any model behind an OpenAI-compatible proxy, with my MCP tools loaded on demand. Every run has a cost read from the proxy, a budget that stops the loop, and a hash-chained audit log, and every reply can say why it said what it said. Memory is recalled at the start of a run and written only through a reviewed path. A mark or veto on any reply is stored as evidence and a model distils it into a rule, a step I measured before trusting: 20 of 20 outputs accepted on 20 corrections against a bar of 16, where the cheaper model scored 19 and its one miss turned a one-off request into a standing rule. 0.7 lets it write a task brief and hand it to chargehand, which opens a draft pull request. JARVIS holds no write tool and never merges. That path is not proven: the sessions that would run a brief are switched off, so no real dev run exists, and no A/B result does either.",
+    resumeLine:
+      "Personal AI harness in TypeScript: cost-capped, hash-chain-audited runs, reviewed memory, corrections distilled into rules; 310 tests, with a pre-registered month-6 blind test as the kill criterion.",
+    topics: ["typescript", "mcp", "architecture"],
+    readings: [
+      { label: "Releases", value: "8 tagged, v0.1.0 → v0.7.0", source: "git tags: one on 2026-09-28, seven on 4 and 5 October" },
+      { label: "Tests", value: "310 passing", source: "node --test on origin/main at v0.7.0, rerun 2026-10-05" },
+      { label: "Rule extractor", value: "20 of 20 accepted, bar 16", source: "docs/research/2026-10-05-rule-extractor.md: first prompt, run once; 10 of the 20 corrections invented, 4 meant to be rejected. The cheaper model scored 19" },
+      { label: "Recall", value: "10 of 10, bar 8", source: "CHANGELOG.md 0.5.0, scored on the deploy; the questions were drafted from the stored facts, so this shows recall works, not how it does on new wording" },
+      { label: "Blind test", value: "60 trials, 37 wins to pass", source: "docs/JARVIS_Context.md, kill criteria; no result exists" },
+      { label: "Real dev runs", value: "0", source: "CHANGELOG.md 0.7.0: “Not checked: a real dev run”" },
+      { label: "Users", value: "1 — me", source: "counted" },
+    ],
+  },
+  {
+    slug: "plainsight",
+    side: true,
+    visibility: "private",
+    tech: ["C#", ".NET 10", "ASP.NET Core", "Razor Pages", "htmx", "SQLite", "JSON Schema", "chargehand", "GitHub API", "Docker", "xUnit"],
+    phase:
+      "Phase 3 (v0) of a roadmap that runs to phase 5, and its exit is not met: generate, review and publish are built, but no proposal has been approved or applied as a pull request. The website, signal collectors and LinkedIn do not exist, and the claim check is a word-overlap heuristic whose false rejects I have not measured.",
+    status: "building",
+    name: "Plainsight",
+    lang: "C#", shape: "content engine",
+    href: "",
+    summary:
+      "Drafts my public profile from facts I can cite, and rejects any sentence whose claim it cannot trace to one.",
+    description:
+      "A self-hosted service that keeps my public presence consistent and turns real work into drafts, with nothing reaching a platform without my approval. It reads a versioned identity file in which each fact carries its evidence, a visibility level and a last-verified date; private facts are dropped before a prompt is built and refused again at the model port. The model returns claims, each citing a fact id, and the engine assembles the text itself. A deterministic lint and a claim check then run: a number has to appear in the cited fact, and so do enough of the claim’s words. Failing drafts are queued anyway, with the findings shown. The first real run showed the check working and the prompt failing: the model merged eleven facts into three claims citing one id each, all three were rejected at 18% to 31% word overlap, and after a prompt rule of one fact per claim four of four were supported. The result is a diff in a review queue, a CLI or a web page, that I approve, edit or reject; approval opens a pull request on the profile README between marker comments, or sets the bio. Platforms whose terms forbid automation are never driven by a browser bot. They get a copy-paste checklist instead. It has published nothing yet.",
+    resumeLine:
+      "Self-hosted content engine in .NET 10: drafts from a visibility-filtered identity file, a deterministic claim check against cited facts, a review queue, GitHub publishers; 169 tests, nothing published yet.",
+    topics: ["dotnet", "architecture", "aspnet"],
+    readings: [
+      { label: "Tests", value: "169 passing", source: "dotnet test across six test projects, 2026-10-05" },
+      { label: "First real run", value: "3 of 3 claims rejected, then 4 of 4 supported", source: "CHANGELOG.md, Unreleased: README intro from 11 facts, before and after the one-fact-per-claim prompt rule" },
+      { label: "Spend cap", value: "USD 0.05 per draft", source: "docs/demo-v0.md; generate announces it before any model call" },
+      { label: "Decisions", value: "15 ADRs, 3 still proposed", source: "docs/adr, 0000 to 0014, counted by status line" },
+      { label: "Proposals published", value: "0", source: "the run log in docs/demo-v0.md is empty" },
+      { label: "Users", value: "1 — me", source: "counted" },
+    ],
+  },
+  {
+    slug: "nytka",
+    side: true,
+    visibility: "public",
+    tech: ["C#", ".NET 10", "ASP.NET Core", "Postgres", "Dapper", "DbUp", "ONNX Runtime", "Silero VAD", "MCP", "Docker", "Kotlin", "xUnit", "Testcontainers"],
+    phase:
+      "Server 0.19.0 and app 0.15.0, before 1.0. Capture, transcription, summaries, search, webhooks and MCP run. The week of wear with the official app uninstalled has not been verified, there are no live transcripts, and the app installs from a GitHub APK, not from F-Droid.",
+    status: "building",
+    name: "Nytka",
+    lang: "C#", shape: "audio warehouse",
+    href: "https://github.com/nytka-app/server",
+    summary:
+      "Keeps an Omi pendant's recordings, transcripts and summaries on a server I run, instead of in the vendor's cloud.",
+    description:
+      "A self-hosted server and an Android app for the Omi AI necklace. The app takes the pendant's audio over Bluetooth, queues it on the phone and uploads it; the server drops silence, sends the speech to a transcription endpoint I choose, groups it into conversations by capture time and, with a language model I choose, writes titles, summaries, tasks and memories. Search, webhooks and a read-only MCP endpoint sit on top, so an assistant can read the conversations directly. The choice that shaped it is that times are capture times: the pendant stops sending in silence and Bluetooth drops frames, so a sample index never converts to a time by dividing by the sample rate. What is missing is the proof. A week of wear with the official app uninstalled and no lost audio is the milestone, the server has a coverage report to measure it, and the Bluetooth and sync fixes behind it are not yet verified. Live transcripts, F-Droid and a 1.0 release do not exist.",
+    resumeLine:
+      "Self-hosted server for the Omi AI necklace in .NET 10 and Postgres: audio to transcripts, summaries and search on my own box, with a read-only MCP endpoint; Android app in Kotlin.",
+    topics: ["dotnet", "aspnet", "postgres", "self-hosting", "mcp", "docker"],
+    readings: [
+      { label: "Releases", value: "0.1.0 → 0.19.0 server, 0.15.0 app", source: "git tags and CHANGELOG.md of each repository, 2026-09-29 to 10-05" },
+      { label: "Audio kept", value: "14 days", source: "default of Nytka__Audio__RetentionDays; silence is dropped at once", ref: "nytka-app/server@8984e36:.env.example#L46" },
+      { label: "MCP tools", value: "11, all read-only", source: "the tools under src/Nytka.Server/Mcp and the README table" },
+      { label: "Tests", value: "1,074 Fact and Theory methods", source: "counted with git grep over tests/ at 8984e36" },
+      { label: "Users", value: "1 — me", source: "counted" },
     ],
   },
   {

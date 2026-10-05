@@ -17,15 +17,15 @@
     "repo": "Egoushka/chargehand",
     "path": "docs/guide",
     "ref": "main",
-    "commit": "b5668901da66b01d828a4263fa8f7d7c03f78191",
-    "pulled": "2026-09-29"
+    "commit": "e6329d3c12e873246d2f192633cd5deddd1dcdea",
+    "pulled": "2026-10-05"
   },
   "chronicle": {
     "repo": "Egoushka/chronicle",
     "path": "docs/guide",
     "ref": "main",
-    "commit": "6e0f771fa1499076740518b29a2fdb9b0019c02a",
-    "pulled": "2026-09-29"
+    "commit": "37ea771b01df9296be475e4050a352070e21de58",
+    "pulled": "2026-10-05"
   },
   "devbox-mcp": {
     "repo": "Egoushka/devbox-mcp",
@@ -33,6 +33,13 @@
     "ref": "main",
     "commit": "b686f171f1a18c813e129f76d3efe3f0097f3095",
     "pulled": "2026-09-29"
+  },
+  "nytka": {
+    "repo": "nytka-app/server",
+    "path": "docs/guide",
+    "ref": "main",
+    "commit": "08c205b9ccb25dfcf425a1e2584ad20201c1e9b3",
+    "pulled": "2026-10-05"
   },
   "oura-mcp-app": {
     "repo": "Egoushka/oura-mcp-app",
@@ -54,5 +61,12 @@
     "ref": "main",
     "commit": "36fb48816e662f01175867cb8c203e3777a1cb82",
     "pulled": "2026-09-29"
+  },
+  "whetstone": {
+    "repo": "Egoushka/whetstone",
+    "path": "docs/guide",
+    "ref": "main",
+    "commit": "38d04cbdf6e0c44c9cbabd2ab5cd266d1677c2e0",
+    "pulled": "2026-10-05"
   }
 }

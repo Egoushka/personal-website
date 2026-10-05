@@ -7,7 +7,8 @@
 export const chip =
   "filter-chip inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-input bg-background px-3 text-sm whitespace-nowrap text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground";
 
-export const chipCount = "text-xs tabular-nums opacity-70";
+/** No opacity: muted at 70% is 4.1:1 on the background, under AA (axe skips one-digit counts). */
+export const chipCount = "text-xs tabular-nums";
 
 export const segment = "inline-flex items-center gap-0.5 rounded-lg border border-input p-0.5";
 
