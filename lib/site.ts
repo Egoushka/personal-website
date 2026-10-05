@@ -51,7 +51,8 @@ export const site = {
    * What I can be hired for, in one line: scope, never rates or capacity.
    * Empty renders nothing. Only I write this; it is never inferred.
    */
-  engagement: "",
+  engagement:
+    "If you are building something and want a backend person on it — integrations, parsers, data pipelines or CLI tools on .NET — email me what it is.",
   email: "egorgrabovskij@gmail.com",
   github: "https://github.com/Egoushka",
   githubHandle: "Egoushka",
@@ -758,8 +759,6 @@ export const eras: Era[] = [
       "A .NET 9 backend from nothing: Clean Architecture, vertical-slice CQRS, a management module with Specification filters and FluentValidation, and on the front end a generic NgRx store factory and a DataTable that took dynamic templates. It is the work I would point at to show I can start something rather than only maintain it.",
       "It is also where I stopped taking whatever was offered. When it ended I wrote down — for myself, in a message to a friend — exactly which work suits me and which does not: integrations, parsers, CLI tools and data processing on .NET, yes; complex business logic in Python, no; anything without clear business rules, no. I have not deviated from that list since, and this site exists partly to say it out loud.",
     ],
-    obstacle:
-      "It ended in June and the next one did not start until August. Day five of that search is in my own messages, and so is the rejection on the thirteenth.",
   },
   {
     slug: "umbraco",
@@ -771,8 +770,6 @@ export const eras: Era[] = [
       "When it ended I worked for myself for most of a year. A WordPress estate rescued while it was half down, Telegram bots, Python scrapers and parsers, sites in .NET, PHP and JS frameworks. None of it is on GitHub and none of it has a public URL I can show you — it was other people's businesses — but it is where the scraping and automation work in my side projects actually comes from.",
       `Then two months selling logistics over the phone to US clients, which I took deliberately rather than sit still. It is on this page for the same reason the ${inWords(silentDays)} days are: a record with the awkward parts removed is worth less than one without.`,
     ],
-    obstacle:
-      "One rejection that year was for being too young — the manager wanted candidates aged 27 and over. It was in writing, which at least made it quick.",
   },
   {
     slug: "first-jobs",
