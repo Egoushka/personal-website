@@ -65,6 +65,23 @@ export default function DocsIndex() {
               <ArrowRight className="ml-auto text-muted-foreground transition-transform group-hover:translate-x-0.5" />
             </div>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{project.summary}</p>
+            {/*
+              The card's own link opens the overview; this list names what is behind
+              it. `relative` lifts each link above the card's stretched link.
+            */}
+            <ol className="mt-4 space-y-0.5 border-l pl-3 text-sm" aria-label={`${project.name} docs pages`}>
+              {pages.slice(1).map((page) => (
+                <li key={page.page}>
+                  <Link
+                    prefetch={false}
+                    href={page.href}
+                    className="relative inline-flex min-h-6 items-center text-muted-foreground hover:text-foreground"
+                  >
+                    {page.title}
+                  </Link>
+                </li>
+              ))}
+            </ol>
             <div className="mt-auto flex flex-wrap gap-2 pt-5">
               <Badge variant="outline">{pages.length} pages</Badge>
               <Badge variant="outline" className="font-mono">{docVersion(source)}</Badge>
