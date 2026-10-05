@@ -24,8 +24,8 @@
     "repo": "Egoushka/chronicle",
     "path": "docs/guide",
     "ref": "main",
-    "commit": "6e0f771fa1499076740518b29a2fdb9b0019c02a",
-    "pulled": "2026-09-29"
+    "commit": "37ea771b01df9296be475e4050a352070e21de58",
+    "pulled": "2026-10-05"
   },
   "devbox-mcp": {
     "repo": "Egoushka/devbox-mcp",
