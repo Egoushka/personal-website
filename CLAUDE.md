@@ -56,13 +56,14 @@ internal links carry the slash (`/writing/foo/`). Every dynamic segment has
 
 ## Client components — justify each one
 
-Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app`):
+Fourteen files carry `"use client"` (`grep -rl '"use client"' components lib app`):
 
 | File | Why it needs the browser |
 |---|---|
 | [Search.tsx](components/Search.tsx) | Pagefind's JS API, `<dialog>.showModal()`, ⌘K/Ctrl+K, one Umami `search` event per finished search |
 | [ThemeToggle.tsx](components/ThemeToggle.tsx) | theme choice in `localStorage`; follows the OS while none is stored |
 | [PostEnhancements.tsx](components/PostEnhancements.tsx) | code Copy button, contents current-section mark; renders nothing |
+| [FigureEnhancements.tsx](components/FigureEnhancements.tsx) | the shim for the figures' draw-in, hover/focus values and legend toggles (ADR 0010): `import()`s [figure-island.ts](components/figure-island.ts), a lazy chunk, and renders nothing; the post page passes it to `Prose`, which mounts it only when the post has a figure |
 | [Comments.tsx](components/Comments.tsx) | loads Remark42 from `/c/` as the section nears the viewport |
 | [PostFilter.tsx](components/PostFilter.tsx) | multi-select topic and project filter and sort over `/writing/` |
 | [ProjectFilter.tsx](components/ProjectFilter.tsx) | topic and public-repository filters over `/projects/`; grouping is `lib/project-rows.ts` |
@@ -83,6 +84,14 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
   payload: pass server-built rows (`PostRow`, `ProjectRow`, `JourneyRow`, `BoardData`).
 - No `Date.now()`, `Math.random()`, `localStorage` or `matchMedia` during render.
   Platform detection is in `lib/platform.ts`.
+- **Figures are the one interactivity ADR 0001 allows in a post** (ADR 0010), and only
+  through that island: it reads the `data-*` attributes and classes `components/Figure.tsx`
+  writes and imports nothing of `lib/figures.mjs`. A route's client components are in its
+  first-load JS whether or not they render, so only the shim is static; never import a
+  figure client file into `Prose`, which docs and methods share (the post page passes it
+  in as `island`). The figure is complete without it
+  (final-state SVG, data table, edge list); draw-in is armed only below the fold and
+  never under `prefers-reduced-motion`; no storage, no analytics event, no request.
 - **Pagefind loads by native `import()`** with the URL in a variable and
   `webpackIgnore`/`turbopackIgnore` comments. Never `new Function` or eval: the CSP has
   no `'unsafe-eval'` and never gets one. The dialog stays outside `<nav>`.
@@ -112,6 +121,15 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
   term for project text, and `npm run check` fails on unmarked Cyrillic. [lib/markdown.mjs](lib/markdown.mjs)
   parses for both `lib/posts.ts` and the validator, so word counts and heading ids
   (`rehype-slug`, `github-slugger`) cannot disagree. Code blocks: Shiki ([lib/highlight.ts](lib/highlight.ts)).
+- **Figures in posts** (ADR 0010): a ` ```chart ` or ` ```diagram ` fence with one JSON object, and
+  `![alt](/img/<name>.png "caption")`. The contract and limits are in [lib/figures.mjs](lib/figures.mjs),
+  read by the validator, `Prose` and the feeds alike (docs/writing/README.md has the fields).
+  `Prose` is async and takes `figures` (the post page only; docs keep those fences as code):
+  charts are laid out in [lib/figure-layout.ts](lib/figure-layout.ts), diagrams by elkjs at
+  build time, and [components/Figure.tsx](components/Figure.tsx) draws both as SVG on the
+  server. The feeds carry the caption and the data table or edge list, no SVG. A chart's
+  numbers are claims for `npm run evidence`. Images must be sources in `assets/images/`
+  (the CSP serves nothing else) and render through `Picture`, with their size reserved.
 - **Methods**: `content/methods/<slug>.md` ([ADR 0008](docs/adr/0008-methods-are-earned-by-two-projects.md)),
   read by [lib/methods.ts](lib/methods.ts), at `/methods/` (linked from About as "How I work")
   and `/methods/<slug>/`. `projects` (two or more) is what a project page's "Methods it
@@ -149,7 +167,8 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
 - **Component CSS** stays in globals.css only for what utilities would do worse:
   `.markdown` (posts and docs, over `@tailwindcss/typography`), code blocks and Shiki,
   tables, `.toc`, the docs and post grids, search results, the panel's figures, the
-  skills board, the journey chart, and the CV print sheet. The typography plugin's rules
+  skills board, the journey chart, the figures in a post (`.fig`, series colours are the
+  status tokens in order, plus a marker shape per series), and the CV print sheet. The typography plugin's rules
   land in a later cascade layer than `components`, so the markdown, code and table
   overrides are unlayered. The only inline style sets a custom property for
   data-driven geometry (`style={{ "--x": `${pct}%` } as React.CSSProperties}`).
@@ -166,10 +185,14 @@ Thirteen files carry `"use client"` (`grep -rl '"use client"' components lib app
   `<footer>` inside it; targets ≥ 24×24 px; `border-input` on a control's only border;
   `prefers-reduced-motion` escapes; animate SVG `<g>` with `translate`, never `transform`.
 - **Hooks the gates read**: `site-header`, `toc`, `figure.code`, `copy-btn`,
-  `search-trigger`, `theme-toggle`, `filter-chip`, `sort-btn`, `jr-bar`. Keep them.
+  `search-trigger`, `theme-toggle`, `filter-chip`, `sort-btn`, `jr-bar`, and for figures
+  `figure[data-fig]`, `fig-plot`, `fig-mark`, `fig-key`, `fig-tip`. Keep them.
 - **Rendered twice**: the docs sidebar and every "On this page" list exist as a rail for
   wide screens and a `<details>` for narrow ones, one displayed at a time — forcing a
   closed `<details>` open works in one engine and not the next.
+- **JS budget** (`JS_BUDGET` in `scripts/smoke.mjs`): first-load gzip bytes per route at a
+  baseline, +1 KB slack. A route without a figure never grows; a post with one has the
+  island's cost added on purpose, as a separate entry with the reason beside it.
 - **CLS**: smoke holds < 0.01 at 375 px on `/`, `/writing/`, a post and `/about/`, < 0.1
   elsewhere. The panel's reserved height (`.panel-body`) is measured; re-measure when
   its content changes.

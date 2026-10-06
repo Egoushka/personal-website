@@ -120,6 +120,20 @@ Against a fair grep, Chronicle leads by 16.9 points: 71.1% against 54.2%, and
 lookups, grep's for 4.3%. An assistant that reads the first hit feels that
 gap most.
 
+```chart
+{
+  "type": "bar",
+  "title": "Evidence recall on the 71 questions",
+  "x": { "label": "Question group" },
+  "y": { "label": "Evidence recall", "unit": "%" },
+  "series": [
+    { "name": "Chronicle", "points": [["Overall", 71.1], ["Lookups", 67.0]] },
+    { "name": "grep, the question's own words", "points": [["Overall", 54.2], ["Lookups", 41.8]] }
+  ],
+  "caption": "Both systems get the same budget of 200 event ids per question. Grep is held to the question's own words."
+}
+```
+
 On the 37 questions, the retrieval fixes moved Chronicle 15.3 points, from
 48.2% to 63.5%. On the 71, the keyword rule moved grep 14.2 points, from 68.4%
 to 54.2%, and touched no retrieval code. Different question sets, so these are

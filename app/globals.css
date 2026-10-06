@@ -1526,6 +1526,310 @@ pre code {
 }
 
 /* ============================================================================
+   FIGURES IN A POST (ADR 0010) — components/Figure.tsx draws charts and
+   diagrams as finished SVG, final state; components/FigureEnhancements.tsx adds
+   the draw-in (.is-armed, then .is-drawn), hover and focus (.is-on), and the
+   legend toggles (.is-off). Series colours are the status tokens, in order, and
+   every series also has its own marker shape. Only marks move; text never does.
+   ========================================================================= */
+
+.fig,
+.post-figure {
+  margin: 1.8em 0;
+}
+.fig-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+.fig-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 1.75rem;
+  padding: 0 0.625rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--foreground);
+  font-size: 0.8125rem;
+  line-height: 1.2;
+}
+.fig-key[role="button"] {
+  border-color: var(--input);
+  cursor: pointer;
+  user-select: none;
+}
+.fig-key[role="button"]:hover {
+  background: var(--accent);
+}
+.fig-key[aria-pressed="false"] {
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+}
+.fig-key[aria-pressed="false"] .fig-swatch {
+  opacity: 0.35;
+}
+.fig-key:focus-visible,
+.fig-plot:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.fig-swatch {
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  fill: var(--c);
+  stroke: var(--c);
+}
+.fig-c0 { --c: var(--brand); }
+.fig-c1 { --c: var(--info); }
+.fig-c2 { --c: var(--tip); }
+.fig-c3 { --c: var(--important); }
+
+.fig-plot {
+  position: relative;
+  /* Drawn at its own size, up to a third larger: a small chart is not stretched to the column. */
+  max-width: min(100%, calc(var(--fig-w) * 1.35px));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--card);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+.fig-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Below this the text would shrink past reading; the region scrolls instead. */
+  min-width: min(calc(var(--fig-w) * 0.9px), 34rem);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.fig-svg text {
+  fill: var(--muted-foreground);
+}
+.fig-grid line {
+  stroke: var(--border);
+}
+.fig-axis-title {
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+}
+.fig-svg .fig-val {
+  fill: var(--foreground);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.fig-mark rect,
+.fig-grow rect {
+  fill: var(--c);
+}
+.fig-grow {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.fig-line {
+  fill: none;
+  stroke: var(--c);
+  stroke-width: 2.25;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.fig-pt path,
+.fig-pt circle:not(.fig-hit),
+.fig-pt rect {
+  fill: var(--c);
+  stroke: var(--card);
+  stroke-width: 1.5;
+}
+.fig-hit {
+  fill: transparent;
+  stroke: none;
+}
+.fig-mark {
+  cursor: default;
+}
+.fig-mark.is-on rect {
+  stroke: var(--foreground);
+  stroke-width: 2;
+}
+.fig-pt.is-on path,
+.fig-pt.is-on circle:not(.fig-hit),
+.fig-pt.is-on rect {
+  stroke: var(--foreground);
+  stroke-width: 2.5;
+}
+.fig-svg .is-off {
+  display: none;
+}
+
+.fig-tip {
+  position: absolute;
+  z-index: 1;
+  max-width: 16rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-sm);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.fig-tip[hidden] {
+  display: none;
+}
+
+/* Diagrams: the outline is the kind, in a shape and a colour. */
+.fig-node {
+  --c: var(--input);
+  cursor: default;
+}
+.fig-k-service { --c: var(--info); }
+.fig-k-store { --c: var(--tip); }
+.fig-k-user { --c: var(--brand); }
+.fig-k-step { --c: var(--important); }
+.fig-k-external { --c: var(--muted-foreground); }
+.fig-node rect,
+.fig-node path {
+  fill: color-mix(in oklab, var(--c) 9%, var(--card));
+  stroke: var(--c);
+  stroke-width: 1.5;
+}
+.fig-node .fig-rim {
+  fill: none;
+}
+.fig-k-external rect {
+  stroke-dasharray: 5 4;
+}
+.fig-svg .fig-node text {
+  fill: var(--foreground);
+  font-size: 13px;
+  font-weight: 500;
+}
+.fig-route {
+  fill: none;
+  stroke: var(--muted-foreground);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.fig-head {
+  fill: var(--muted-foreground);
+}
+.fig-svg .fig-elabel {
+  paint-order: stroke;
+  stroke: var(--card);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+  font-size: 11px;
+}
+.fig-edge.is-on .fig-route {
+  stroke: var(--foreground);
+  stroke-width: 2;
+}
+.fig-edge.is-on .fig-head {
+  fill: var(--foreground);
+}
+.fig.is-focus .fig-edge:not(.is-on),
+.fig.is-focus .fig-node:not(.is-on):not(.is-near) {
+  opacity: 0.35;
+}
+.fig-node.is-on rect,
+.fig-node.is-on path {
+  stroke-width: 2.5;
+}
+
+.fig-cap,
+.post-figure figcaption {
+  margin-top: 0.625rem;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+.fig-title {
+  color: var(--foreground);
+  font-weight: 600;
+}
+.fig-source {
+  overflow-wrap: anywhere;
+}
+.fig-data {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+}
+.fig-data summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+.fig-data summary:hover {
+  color: var(--foreground);
+}
+.fig-data .table-scroll {
+  margin: 0.5rem 0 0;
+}
+.fig-data ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+  color: var(--muted-foreground);
+}
+.post-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+}
+
+/* The draw-in. Armed only below the fold, after mount, and not under reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .fig.is-armed .fig-grow { scale: 1 0; }
+  .fig.is-armed .fig-line,
+  .fig.is-armed .fig-route { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .fig.is-armed .fig-pt,
+  .fig.is-armed .fig-head,
+  .fig.is-armed .fig-elabel,
+  .fig.is-armed .fig-val { opacity: 0; }
+  .fig.is-armed .fig-node { opacity: 0; translate: 0 8px; }
+
+  .fig.is-armed.is-drawn .fig-grow {
+    scale: 1;
+    transition: scale 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) calc(var(--d, 0) * 50ms);
+  }
+  .fig.is-armed.is-drawn .fig-line {
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 0.9s ease-out calc(var(--d, 0) * 150ms);
+  }
+  .fig.is-armed.is-drawn .fig-pt,
+  .fig.is-armed.is-drawn .fig-val {
+    opacity: 1;
+    transition: opacity 0.3s ease-out calc(0.5s + var(--d, 0) * 40ms);
+  }
+  .fig.is-armed.is-drawn .fig-node {
+    opacity: 1;
+    translate: 0 0;
+    transition: opacity 0.35s ease-out calc(var(--d, 0) * 60ms), translate 0.35s ease-out calc(var(--d, 0) * 60ms);
+  }
+  .fig.is-armed.is-drawn .fig-route {
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 0.6s ease-out calc(0.2s + var(--d, 0) * 80ms);
+  }
+  .fig.is-armed.is-drawn .fig-head,
+  .fig.is-armed.is-drawn .fig-elabel {
+    opacity: 1;
+    transition: opacity 0.25s ease-out calc(0.7s + var(--d, 0) * 80ms);
+  }
+}
+
+/* ============================================================================
    COMMENTS — Remark42, first-party at /c/, rendered into #remark42
    ========================================================================= */
 

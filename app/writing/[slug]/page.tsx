@@ -7,6 +7,7 @@ import Byline from "@/components/Byline";
 import KindLabel from "@/components/KindLabel";
 import PostEnhancements from "@/components/PostEnhancements";
 import Lang from "@/components/Lang";
+import FigureEnhancements from "@/components/FigureEnhancements";
 import Prose from "@/components/Prose";
 import StatusBadge from "@/components/StatusBadge";
 import { TocDisclosure, TocRail } from "@/components/Toc";
@@ -135,7 +136,7 @@ export default async function PostPage(
                 <span className="font-semibold text-foreground">Correction.</span> {post.correction}
               </p>
             )}
-            <Prose markdown={post.content} cyrillic={post.cyrillic} />
+            <Prose key={slug} markdown={post.content} cyrillic={post.cyrillic} figures island={<FigureEnhancements />} />
           </article>
 
           {toc.length > 1 && <TocRail entries={toc} className="post-aside" />}

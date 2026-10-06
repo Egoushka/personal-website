@@ -25,6 +25,28 @@ Connectivity runs over **Tailscale**, but with a **self-hosted Headscale** contr
 
 Caddy is still here, one layer in, serving this site as plain files behind Traefik. When I first wrote this page one Caddy did both jobs. Splitting the edge from the origin is what let the tailnet-only services stop having a public hostname at all — and the separate Caddy machine that used to hold the other half no longer exists.
 
+```diagram
+{
+  "title": "Who reaches what",
+  "direction": "right",
+  "nodes": [
+    { "id": "visitor", "label": "Visitor", "kind": "user" },
+    { "id": "traefik", "label": "Traefik", "kind": "service" },
+    { "id": "caddy", "label": "Caddy", "kind": "service" },
+    { "id": "site", "label": "This site's files", "kind": "store" },
+    { "id": "device", "label": "Tailnet device", "kind": "user" },
+    { "id": "internal", "label": "Internal services", "kind": "service" }
+  ],
+  "edges": [
+    { "from": "visitor", "to": "traefik", "label": "HTTPS" },
+    { "from": "traefik", "to": "caddy" },
+    { "from": "caddy", "to": "site", "label": "plain files" },
+    { "from": "device", "to": "internal", "label": "tailnet address" }
+  ],
+  "caption": "Traefik publishes only what the internet may reach. Internal services are bound to the tailnet address and have no public route."
+}
+```
+
 ## Secrets & config
 
 Application secrets live in **Vaultwarden** — a lightweight, Bitwarden-compatible vault I host myself. Infrastructure config is a **GitOps** repo encrypted with **SOPS + age**, so the repository can be public-shaped without leaking anything. The one rule I had to learn the hard way: *back up the age key offline*, or an encrypted repo becomes an encrypted brick.

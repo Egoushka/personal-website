@@ -32,6 +32,20 @@ test("evidence: the claims are the title, the description and the prose — not 
   assert.deepEqual(stated.map((f) => [f.where, f.value]), [["title", "51"], ["description", "2"], ["body", "48.2"]]);
 });
 
+test("evidence: a chart's values and a diagram's labels are claims; its wiring is not", () => {
+  const chart = JSON.stringify({
+    type: "bar", title: "Recall", y: { unit: "%" }, caption: "On 71 questions.",
+    series: [{ name: "grep", points: [["lookups", 41.8]] }], source: "a/b@1234567:c.md#L9",
+  });
+  const diagram = JSON.stringify({
+    title: "Path", direction: "right", caption: "Three hops.",
+    nodes: [{ id: "n1", label: "Edge", kind: "service" }], edges: [{ from: "n1", to: "n1", label: "TLS 1.3" }],
+  });
+  const stated = statedFigures({ title: "t", description: "d", body: `\`\`\`chart\n${chart}\n\`\`\`\n\n\`\`\`diagram\n${diagram}\n\`\`\`` });
+  assert.deepEqual(stated.map((f) => f.value), ["71", "41.8", "1.3"]);
+  assert.ok(stated.every((f) => f.where === "body"));
+});
+
 const PACK = [
   "# Evidence: a",
   "",

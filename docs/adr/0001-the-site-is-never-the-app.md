@@ -1,6 +1,6 @@
 # The site is never the app
 
-Status: accepted
+Status: accepted. Partly superseded by [ADR 0010](./0010-posts-may-carry-interactive-figures.md): post figures may be interactive; everything else here stands.
 
 The long-term intention is several products — dashboards, a knowledge base, a personal
 CRM, possibly SaaS — reachable from one place, eventually with shared sign-in and
