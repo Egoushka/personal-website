@@ -123,13 +123,18 @@ test("figures: the text alternative is the data table and the list of edges", ()
   const c = chart({ series: [{ name: "a", points: [["x", 1.5], ["y", 2]] }, { name: "b", points: [["y", 3]] }], y: { unit: "ms" } });
   assert.deepEqual(chartTable(asChart(c)), {
     head: ["Events per segment", "a", "b"],
-    rows: [["x", "1.5 ms", "–"], ["y", "2 ms", "3 ms"]],
+    rows: [["x", "1.5 ms", "–"], ["y", "2.0 ms", "3.0 ms"]],
   });
   assert.deepEqual(edgeList(asDiagram(diagram())), ["Worker → Support judge: claims", "Support judge → Run log"]);
   assert.equal(formatValue(71.1, "%"), "71.1%");
   assert.equal(formatValue(1234.567, "$"), "$1,234.57");
   assert.equal(formatValue(-2, "x"), "−2×");
   assert.equal(formatValue(3, undefined), "3");
+  assert.equal(formatValue(67, "%", 1), "67.0%");
+  const mixed = chart({ series: [{ name: "a", points: [["x", 67.0], ["y", 71.1]] }] });
+  assert.equal(chartTable(asChart(mixed)).rows[0][1], "67.0%", "a value keeps the decimals its neighbours are written with");
+  assert.equal(chartGeometry(asChart(mixed)).marks[0].tip, "a, x: 67.0%");
+  assert.deepEqual(chartGeometry(asChart(mixed)).ticks.map((t) => t.label), ["0%", "20%", "40%", "60%", "80%"], "the axis does not");
 });
 
 test("figures: axes use round steps and the baseline is zero for data above it", () => {
@@ -241,9 +246,10 @@ test("figures on the page: docs keep a chart fence as code", async () => {
 
 test("figures on the page: the island is mounted only when the body has a figure", async () => {
   // The island is a client reference, so markup cannot show it: the first child of what Prose returns is it, or false.
-  const island = async (markdown: string) => ((await Prose({ figures: true, markdown })) as { props: { children: unknown[] } }).props.children[0];
+  const island = async (markdown: string) =>
+    ((await Prose({ figures: true, island: "island", markdown })) as { props: { children: unknown[] } }).props.children[0];
   assert.equal(await island("Just text, and `code`."), false);
-  assert.ok(await island(fence("chart", chart())));
+  assert.equal(await island(fence("chart", chart())), "island");
 });
 
 test("figures in a feed: the caption and the data, no drawing and no script", () => {

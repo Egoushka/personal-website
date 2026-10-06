@@ -1,4 +1,3 @@
-import dynamic from "next/dynamic";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeShikiFromHighlighter from "@shikijs/rehype/core";
@@ -14,9 +13,6 @@ import { rehypeTables } from "@/lib/tables";
 import type { CyrillicLang } from "@/lib/lang";
 import { ChartFigure, DiagramFigure } from "@/components/Figure";
 import Picture from "@/components/Picture";
-
-// Dynamic, so the island's code is a chunk of its own that a post without a figure never loads.
-const FigureEnhancements = dynamic(() => import("@/components/FigureEnhancements"));
 
 /**
  * Markdown as the site renders it: a post's body and a project's docs, through
@@ -39,11 +35,14 @@ export default async function Prose({
   cyrillic,
   resolveHref,
   figures: withFigures = false,
+  island,
 }: {
   markdown: string;
   cyrillic?: CyrillicLang;
   resolveHref?: (href: string) => string;
   figures?: boolean;
+  /** Mounted when the body has a figure. Passed in, not imported: a client component imported here would sit in every route that renders Prose, docs included. */
+  island?: React.ReactNode;
 }) {
   const figures = withFigures ? await prepareFigures(markdown) : [];
   /*
@@ -140,7 +139,7 @@ export default async function Prose({
 
   return (
     <>
-      {figures.length > 0 && <FigureEnhancements />}
+      {figures.length > 0 && island}
       <ReactMarkdown
         remarkPlugins={[
           remarkGfm,

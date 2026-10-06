@@ -1,6 +1,6 @@
 import ELK from "elkjs/lib/elk.bundled.js";
 import type { ElkNode } from "elkjs/lib/elk-api";
-import { categories, formatValue } from "./figures.mjs";
+import { categories, decimals, formatValue } from "./figures.mjs";
 import type { Chart, Diagram } from "./figures.mjs";
 
 /**
@@ -14,7 +14,8 @@ export const textWidth = (s: string, size = 12) => Math.ceil([...s].length * siz
 
 // ── charts ───────────────────────────────────────────────────────────────────
 
-export const CHART_W = 560;
+export const CHART_MAX_W = 560;
+export const CHART_MIN_W = 360;
 export const CHART_H = 320;
 const PAD = { top: 30, right: 16, bottom: 30, left: 52 };
 /** Room under the plot for the x axis title, when there is one. */
@@ -64,13 +65,17 @@ const round = (n: number) => Math.round(n * 100) / 100;
 export function chartGeometry(chart: Chart): ChartGeometry {
   const unit = chart.y?.unit;
   const xs = categories(chart);
+  const dp = decimals(chart);
   const values = chart.series.flatMap((s) => s.points.map((p) => p[1]));
   const lo = Math.min(...values);
   // The baseline is zero whenever the data is not below it: a bar from a cut axis lies.
   const scale = niceScale(lo >= 0 ? 0 : lo, Math.max(...values, 0));
   const widest = Math.max(...[scale.min, scale.max].map((t) => textWidth(formatValue(t, unit))));
   const left = Math.max(PAD.left, widest + 14);
-  const plotW = CHART_W - left - PAD.right;
+  // A chart with few marks is drawn narrower, not stretched: the text keeps its size.
+  const perBand = Math.max(54, chart.series.length * 34 + 22);
+  const width = Math.min(CHART_MAX_W, Math.max(CHART_MIN_W, Math.round(left + PAD.right + xs.length * perBand)));
+  const plotW = width - left - PAD.right;
   const plotH = CHART_H - PAD.top - PAD.bottom - (chart.x?.label ? TITLE_ROOM : 0);
   const y = (v: number) => round(PAD.top + plotH - ((v - scale.min) / (scale.max - scale.min)) * plotH);
   const band = plotW / xs.length;
@@ -95,7 +100,7 @@ export function chartGeometry(chart: Chart): ChartGeometry {
     chart.series.forEach((s, si) => {
       const p = s.points.find(([label]) => label === x);
       if (!p) return;
-      const value = formatValue(p[1], unit);
+      const value = formatValue(p[1], unit, dp);
       const tip = `${s.name}, ${x}: ${value}`;
       if (chart.type === "bar") {
         const top = y(p[1]);
@@ -120,10 +125,10 @@ export function chartGeometry(chart: Chart): ChartGeometry {
   );
 
   return {
-    width: CHART_W,
+    width,
     height: CHART_H,
     left,
-    right: CHART_W - PAD.right,
+    right: width - PAD.right,
     top: PAD.top,
     bottom: PAD.top + plotH,
     ticks,

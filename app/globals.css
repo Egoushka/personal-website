@@ -1591,7 +1591,8 @@ pre code {
 
 .fig-plot {
   position: relative;
-  max-width: 100%;
+  /* Drawn at its own size, up to a third larger: a small chart is not stretched to the column. */
+  max-width: min(100%, calc(var(--fig-w) * 1.35px));
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   background: var(--card);
@@ -1604,7 +1605,7 @@ pre code {
   width: 100%;
   height: auto;
   /* Below this the text would shrink past reading; the region scrolls instead. */
-  min-width: min(calc(var(--fig-w) * 1px), 34rem);
+  min-width: min(calc(var(--fig-w) * 0.9px), 34rem);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
@@ -1754,6 +1755,9 @@ pre code {
 .fig-title {
   color: var(--foreground);
   font-weight: 600;
+}
+.fig-source {
+  overflow-wrap: anywhere;
 }
 .fig-data {
   margin-top: 0.5rem;

@@ -94,11 +94,10 @@ export function ChartFigure({ chart, geo, n }: { chart: Chart; geo: ChartGeometr
         </ul>
       )}
 
-      <div className="fig-plot" role="group" tabIndex={0} aria-label={`${chart.title}: chart`}>
+      <div className="fig-plot" role="group" tabIndex={0} aria-label={`${chart.title}: chart`} style={at({ "--fig-w": geo.width })}>
         <svg
           className="fig-svg"
           viewBox={`0 0 ${geo.width} ${geo.height}`}
-          style={at({ "--fig-w": geo.width })}
           role="img"
           aria-labelledby={`${id}-t`}
           aria-describedby={`${id}-c`}
@@ -206,11 +205,10 @@ export function DiagramFigure({ diagram, geo, n }: { diagram: Diagram; geo: Diag
   const lone = loneNodes(diagram);
   return (
     <figure className="fig fig--diagram not-prose" data-fig="diagram">
-      <div className="fig-plot" role="group" tabIndex={0} aria-label={`${diagram.title}: diagram`}>
+      <div className="fig-plot" role="group" tabIndex={0} aria-label={`${diagram.title}: diagram`} style={at({ "--fig-w": geo.width })}>
         <svg
           className="fig-svg"
           viewBox={`0 0 ${geo.width} ${geo.height}`}
-          style={at({ "--fig-w": geo.width })}
           role="img"
           aria-labelledby={`${id}-t`}
           aria-describedby={`${id}-c`}
