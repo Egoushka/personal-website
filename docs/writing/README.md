@@ -143,8 +143,87 @@ sits behind it.
 - **Only what happened.** A scene, feeling or motive comes from the evidence pack
   or from what Yehor said when `/post` interviewed him; a gap stays a `TODO:`.
 
-Length is 700–1,100 words, receipts included, and one table at most. The
+Length is 700–1,100 words, receipts included, and one table at most. A figure is not
+a table and is not counted as one, and its JSON is not counted as words. The
 validator warns under 300 words, and past 800 for a note.
+
+## Figures
+
+A post may carry a chart, a diagram and images, drawn and animated by the site
+([ADR 0010](../adr/0010-posts-may-carry-interactive-figures.md)). A figure is one
+fenced block with one JSON object in it, so in any other markdown renderer it is
+code and the post still reads. The validator checks every block before a build;
+`npm run validate` names the body line and the field.
+
+**When to use one.** When the reader should compare or follow, and prose makes them
+hold it in their head: four scores against four, a request that crosses three
+services. Not to decorate, and not for a table of one row. A figure repeats what the
+text says and adds the shape; it never carries a claim the text does not. Every
+number in a chart is a figure the post states, so it needs a source in the evidence
+pack like any other (`npm run evidence` reads the blocks too). Numbers come from a
+cited source, never from memory or a model.
+
+**A chart.**
+
+````md
+```chart
+{
+  "type": "bar",
+  "title": "Recall by segment size",
+  "x": { "label": "Events per segment" },
+  "y": { "label": "Recall", "unit": "%" },
+  "series": [
+    { "name": "chronicle", "points": [["15", 73.2], ["20", 71.6], ["30", 71.1]] }
+  ],
+  "caption": "Swept on 46 eval threads.",
+  "source": "Egoushka/chronicle@3f2a1b9:docs/eval.md#L10-L18"
+}
+```
+````
+
+`type` is `bar` or `line`. `title` (at most 80 characters) and `caption` (at most
+200) are plain text and required; the caption says what the reader should take from
+it. `y.unit` is `%`, `ms`, `s`, `$`, `x` or left out. `series` holds 1 to 4 series
+of 2 to 24 `[x label, value]` points: x labels are strings of at most 24
+characters, unique within a series, and values are finite numbers (a bar chart
+cannot go below zero, and its axis starts there). `source` is optional and takes the
+form of an evidence source, `owner/repo@sha:path#L1-L9`; the page links it. More
+than one series gets a legend that toggles them.
+
+**A diagram.**
+
+````md
+```diagram
+{
+  "title": "How a run is checked",
+  "direction": "right",
+  "nodes": [
+    { "id": "worker", "label": "Worker", "kind": "service" },
+    { "id": "judge", "label": "Support judge", "kind": "step" }
+  ],
+  "edges": [ { "from": "worker", "to": "judge", "label": "claims" } ],
+  "caption": "Each claim is judged against the text it cites."
+}
+```
+````
+
+`direction` is `right` or `down`. 2 to 24 nodes, each with a unique `id` of
+lowercase letters, digits and hyphens, a `label` (at most 32 characters) and a
+`kind`: `service`, `store`, `external`, `user` or `step`, each drawn as its own shape.
+An edge joins two ids (never a node to itself) and may carry a `label` of at most 30
+characters. The site lays the diagram out; it takes no coordinates.
+
+**An image.** Standard markdown, `![alt text](/img/<name>.png "Caption")`. The alt
+text is required and says what the image shows or proves. The title becomes the
+caption. `/img/<name>.png` is the name of a file in `assets/images/` (`.png`, `.jpg`
+or `.jpeg`), which `npm run images` optimizes and sizes so the page does not shift;
+an address anywhere else would be blocked by the CSP.
+
+**Rules for all of them.** JSON only: no comments, and an unknown key is an error.
+Every figure has a text alternative the site writes itself, a chart's data table and a
+diagram's list of connections, under the figure and in the feeds. Feeds carry that
+and the caption, never a script. Figures are for posts; a project's docs are copied
+from its repository and keep to code, tables and callouts.
 
 ## The evidence pack
 

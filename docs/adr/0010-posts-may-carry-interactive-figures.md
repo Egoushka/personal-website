@@ -27,9 +27,13 @@ the block cannot carry anything but numbers, labels and a source.
 
 ## What the exception allows
 
-- **One client island**, `components/FigureEnhancements.tsx`: draw-in on scroll, values
-  on hover and focus, series toggles in a legend. `Prose` mounts it only when the post
-  has a figure, so no other route loads a byte of it.
+- **One client island**, `components/figure-island.ts`: draw-in on scroll, values on hover
+  and focus, series toggles in a legend. A 116-byte client component
+  (`FigureEnhancements`) imports it with a native `import()` and `Prose` mounts that only
+  when the post has a figure, so the island is a chunk of its own that only a page with a
+  figure fetches. Next puts every client component a route imports into that route's
+  first-load JS, rendered or not: the shim is what a post without a figure carries, and no
+  other route changes by a byte.
 - **Hand-written SVG**, drawn on the server at build time. No chart library. Diagrams are
   laid out by elkjs at build time and drawn by the site; elkjs never reaches the browser.
 - **Nothing new in the CSP.** No eval, no third-party script, font or image, no request

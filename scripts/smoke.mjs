@@ -33,7 +33,10 @@ const WIDTHS = (process.env.SMOKE_WIDTHS ?? "375").split(",").map(Number);
 const HEIGHT = { 360: 800, 375: 812, 390: 844, 414: 896 }; // the phones behind each width
 
 const POST = "/writing/silent-deploys/";
-const SMOKE_SET = ["/", "/writing/", POST, "/projects/", "/projects/attest/", "/about/", "/cv/", "/404.html"];
+// A chart and a diagram (ADR 0010): axe runs over both, in both widths and both themes.
+const CHART_POST = "/writing/chronicle-vs-grep/";
+const DIAGRAM_POST = "/writing/homelab/";
+const SMOKE_SET = ["/", "/writing/", POST, "/projects/", "/projects/attest/", "/about/", "/cv/", "/404.html", CHART_POST, DIAGRAM_POST];
 // CLS below 0.01 on the pages people land on, below 0.1 everywhere else (BRIEF §16).
 const STRICT_CLS = new Set(["/", "/writing/", POST, "/about/"]);
 // Local servers have no Umami, no status cron and no Remark42; their 404s are expected.
@@ -86,6 +89,18 @@ const JS_BUDGET = {
   "/writing/homelab/": 153435,
 };
 const JS_SLACK = 1024;
+// A post with a figure also fetches the island (components/figure-island.ts): a
+// chunk of its own, after hydration, so it is not in the HTML's script tags and
+// is measured in the browser instead. Each such route has an entry here, with its
+// reason: the posts' first-load JS on main (145,539 B gz) + the 116 B shim every
+// post carries (components/FigureEnhancements.tsx) + the island, 1,480 B gz, which
+// is all of draw-in, hover and focus values and the legend toggles (ADR 0010).
+// A figure route with no entry fails, so adding a figure means adding a line.
+const FIGURE_BUDGET = {
+  "/writing/chronicle-vs-grep/": 147135,
+  "/writing/homelab/": 147135,
+};
+const FIGURE_MARK = "figure[data-fig]";
 
 const failures = [];
 const fail = (req, route, problem) => {
@@ -245,13 +260,28 @@ console.log("\n1. first-load JS, gzip bytes (the route's own /_next/static scrip
   const gz = async (src) => {
     if (!sizes.has(src)) {
       const body = Buffer.from(await (await fetch(`${BASE}${src}`, { headers: { "accept-encoding": "identity" } })).arrayBuffer());
-      sizes.set(src, zlib.gzipSync(body).length);
+      sizes.set(src, { bytes: zlib.gzipSync(body).length, island: body.includes(FIGURE_MARK) });
     }
     return sizes.get(src);
+  };
+  /** Every /_next/static script the browser fetches while the page loads and settles: the lazy chunks the HTML does not list. */
+  const loaded = async (route) => {
+    const ctx = await context({ status: false });
+    const page = await ctx.newPage();
+    const srcs = new Set();
+    page.on("response", (r) => {
+      const { pathname } = new URL(r.url());
+      if (/^\/_next\/static\/.+\.js$/.test(pathname)) srcs.add(pathname);
+    });
+    await page.goto(`${BASE}${route}`);
+    await settle(page, 300);
+    await ctx.close();
+    return srcs;
   };
   const rows = [["route", "gzip bytes", "budget"]];
   for (const route of ROUTES) {
     const html = await (await fetch(`${BASE}${route}`)).text();
+    const figure = html.includes('data-fig="');
     const srcs = new Set(
       [...html.matchAll(/<script\b[^>]*>/gi)]
         .map((m) => m[0])
@@ -259,12 +289,22 @@ console.log("\n1. first-load JS, gzip bytes (the route's own /_next/static scrip
         .map((t) => t.match(/\bsrc="(\/_next\/static\/[^"]+\.js)"/)?.[1])
         .filter(Boolean),
     );
+    // The island is the one chunk counted that is not in the HTML.
+    if (figure) for (const src of await loaded(route)) if (!srcs.has(src) && (await gz(src)).island) srcs.add(src);
     let bytes = 0;
-    for (const src of srcs) bytes += await gz(src);
-    const budget = JS_BUDGET[route];
-    rows.push([route, bytes, budget ?? "-"]);
+    let island = false;
+    for (const src of srcs) {
+      const g = await gz(src);
+      bytes += g.bytes;
+      island ||= g.island;
+    }
+    if (island && !figure) fail("R-24", route, "loads the figure island, and has no figure");
+    if (figure && !island) fail("R-24", route, "has a figure and never loaded the figure island");
+    const budget = figure ? FIGURE_BUDGET[route] : JS_BUDGET[route];
+    if (figure && budget === undefined) fail("R-24", route, "has a figure and no entry in FIGURE_BUDGET");
+    rows.push([route + (figure ? " (figure)" : ""), bytes, budget ?? "-"]);
     if (budget !== undefined && bytes > budget + JS_SLACK) {
-      fail("R-24", route, `first-load JS is ${bytes} B gz, budget ${budget} B (baseline) + ${JS_SLACK}`);
+      fail("R-24", route, `first-load JS is ${bytes} B gz, budget ${budget} B (${figure ? "posts + the figure island" : "baseline"}) + ${JS_SLACK}`);
     }
   }
   table(rows);
@@ -508,6 +548,77 @@ console.log("\n10. home, scrolled to the end at 1440 px: bytes on the wire");
   const total = Object.values(bytes).reduce((a, b) => a + b, 0);
   console.log(`  total ${total} B — ${Object.entries(bytes).map(([k, v]) => `${k} ${v}`).join(", ")}`);
   await ctx.close();
+}
+
+// ── 11. figures in a post (ADR 0010) ─────────────────────────────────────────
+console.log(`\n11. figures: ${CHART_POST} (chart), ${DIAGRAM_POST} (diagram)`);
+{
+  // Hover and focus values, the legend, the draw-in: with JavaScript.
+  const ctx = await context({ permissions: [] });
+  const page = await ctx.newPage();
+  await page.goto(`${BASE}${CHART_POST}`);
+  await settle(page, 400);
+  const chart = page.locator("figure[data-fig=chart]").first();
+  if (!(await chart.evaluate((el) => el.classList.contains("is-armed")))) {
+    fail("R-22", CHART_POST, "a chart below the fold was not armed for its draw-in");
+  }
+  await chart.scrollIntoViewIfNeeded();
+  await page.waitForFunction(() => document.querySelector("figure[data-fig=chart]").classList.contains("is-drawn"), null, { timeout: 4000 }).catch(() => fail("R-22", CHART_POST, "scrolling the chart into view did not draw it"));
+  await page.waitForTimeout(1200);
+  const tall = await chart.locator(".fig-mark rect").first().evaluate((el) => el.getBoundingClientRect().height);
+  if (tall < 2) fail("R-22", CHART_POST, `the first bar is ${tall}px tall after the draw-in`);
+
+  const mark = chart.locator(".fig-mark").first();
+  await mark.hover();
+  const tip = chart.locator(".fig-tip");
+  if (!(await tip.isVisible()) || !/%/.test(await tip.innerText())) fail("R-22", CHART_POST, "hovering a bar shows no value");
+  const keys = chart.locator(".fig-key");
+  await keys.nth(1).click();
+  const off = await chart.locator(".fig-mark.is-off").count();
+  if (off === 0) fail("R-22", CHART_POST, "the legend did not hide a series");
+  if ((await keys.nth(1).getAttribute("aria-pressed")) !== "false") fail("R-22", CHART_POST, "a hidden series is not aria-pressed=false");
+  await keys.nth(1).click();
+  await chart.locator(".fig-plot").focus();
+  await page.keyboard.press("ArrowRight");
+  if (!(await chart.locator(".fig-read").innerText()).trim()) fail("R-22", CHART_POST, "arrow keys on the plot read no value");
+  await page.keyboard.press("Escape");
+  if (await chart.locator(".is-on").count()) fail("R-22", CHART_POST, "Escape did not clear the selection");
+  for (const v of await page.evaluate(() => window.__csp)) fail("R-26", CHART_POST, `securitypolicyviolation: ${v}`);
+  await ctx.close();
+
+  // Diagram: focus walks the nodes and lights their edges.
+  const dctx = await context();
+  const dpage = await dctx.newPage();
+  await dpage.goto(`${BASE}${DIAGRAM_POST}`);
+  await settle(dpage, 400);
+  const diagram = dpage.locator("figure[data-fig=diagram]").first();
+  await diagram.locator(".fig-plot").focus();
+  await dpage.keyboard.press("ArrowRight");
+  if ((await diagram.locator(".fig-edge.is-on").count()) === 0) fail("R-22", DIAGRAM_POST, "focusing a node lit none of its edges");
+  await dctx.close();
+
+  // Reduced motion: nothing is armed, so nothing moves.
+  const rctx = await context({ reducedMotion: "reduce" });
+  const rpage = await rctx.newPage();
+  await rpage.goto(`${BASE}${CHART_POST}`);
+  await settle(rpage, 400);
+  if (await rpage.locator("figure.is-armed").count()) fail("R-22", CHART_POST, "a figure is armed for a draw-in under prefers-reduced-motion");
+  await rctx.close();
+
+  // No JavaScript: the figure is whole, with its data beside it.
+  const jctx = await context({ javaScriptEnabled: false, status: false });
+  const jpage = await jctx.newPage();
+  await jpage.goto(`${BASE}${CHART_POST}`);
+  const bars = await jpage.locator("figure[data-fig=chart] .fig-mark rect").evaluateAll((els) =>
+    els.map((el) => el.getBoundingClientRect().height >= 2 && getComputedStyle(el.parentElement).scale === "none"),
+  );
+  if (!bars.length || bars.some((v) => !v)) fail("R-22", CHART_POST, "a bar is collapsed with JavaScript off");
+  if (await jpage.locator('.fig-key[role="button"]').count()) fail("R-22", CHART_POST, "a legend entry claims to be a button with JavaScript off");
+  const cells = await jpage.locator("figure[data-fig=chart] details.fig-data td").count();
+  if (cells < 4) fail("R-22", CHART_POST, `the data table has ${cells} cells`);
+  await jpage.goto(`${BASE}${DIAGRAM_POST}`);
+  if ((await jpage.locator("figure[data-fig=diagram] details.fig-data li").count()) < 3) fail("R-22", DIAGRAM_POST, "the connections list is missing");
+  await jctx.close();
 }
 
 await browser.close();
