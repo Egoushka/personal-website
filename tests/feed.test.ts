@@ -29,7 +29,9 @@ test("RSS parses, carries every post in full, with absolute links", () => {
     assert.ok(item.link._text.startsWith(`${site.url}/writing/`), item.link._text);
     assert.match(item.author._text, /^\S+@\S+ \(.+\)$/);
     const body: string = item["content:encoded"]._cdata;
-    assert.ok(body.includes("<h2"), item.link._text);
+    // A note has no headings (ADR 0009); every other kind does.
+    const post = posts.find((p) => item.link._text.startsWith(`${site.url}/writing/${p.slug}/`));
+    if (post?.kind !== "note") assert.ok(body.includes("<h2"), item.link._text);
     assert.deepEqual(relativeLinks(body), [], item.link._text);
   }
 });
@@ -70,7 +72,7 @@ const note = (date: string) =>
   `---\ntitle: "A note"\ndate: "${date}"\ndescription: "One finding."\nkind: note\ntopics: ["dotnet"]\n---\n\nThe number, then its output.\n`;
 
 /**
- * The site's posts plus these, as /notes/, the sitemap and the feeds see them.
+ * The site's posts other than its notes, plus these, as /notes/, the sitemap and the feeds see them.
  * lib/posts.ts reads content/posts under the working directory once, at import,
  * so a child process moves into a temporary tree before it loads anything. The
  * real posts come along: lib/site.ts reads one of them at import.
@@ -80,7 +82,11 @@ function withPosts(extra: Record<string, string>) {
   try {
     const into = path.join(dir, "content", "posts");
     fs.mkdirSync(into, { recursive: true });
-    for (const file of fs.readdirSync("content/posts")) fs.copyFileSync(path.join("content/posts", file), path.join(into, file));
+    // Real notes stay out, so the fixture notes are the only ones these tests count.
+    for (const file of fs.readdirSync("content/posts")) {
+      const text = fs.readFileSync(path.join("content/posts", file), "utf8");
+      if (!/^kind:\s*note\s*$/m.test(text)) fs.writeFileSync(path.join(into, file), text);
+    }
     for (const [slug, text] of Object.entries(extra)) fs.writeFileSync(path.join(into, `${slug}.md`), text);
     const load = (file: string) => `require(${JSON.stringify(path.resolve(file))})`;
     const run = spawnSync(
