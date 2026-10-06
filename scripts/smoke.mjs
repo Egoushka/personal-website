@@ -95,11 +95,12 @@ const JS_SLACK = 1024;
 // reason: the posts' first-load JS on main (145,539 B gz) + the 116 B shim every
 // post carries (components/FigureEnhancements.tsx) + the island, 1,480 B gz, which
 // is all of draw-in, hover and focus values and the legend toggles (ADR 0010).
-// A figure route with no entry fails, so adding a figure means adding a line.
-const FIGURE_BUDGET = {
-  "/writing/chronicle-vs-grep/": 147135,
-  "/writing/homelab/": 147135,
-};
+// Every post shares that cost, so one budget covers any post with a figure and a
+// new post never needs a line here (ADR 0010; the content engine opens pull
+// requests that add only the post file). Any other route with a figure needs an
+// entry in FIGURE_BUDGET, and fails without one.
+const FIGURE_POST_BUDGET = 147135;
+const FIGURE_BUDGET = {};
 const FIGURE_MARK = "figure[data-fig]";
 
 const failures = [];
@@ -300,7 +301,7 @@ console.log("\n1. first-load JS, gzip bytes (the route's own /_next/static scrip
     }
     if (island && !figure) fail("R-24", route, "loads the figure island, and has no figure");
     if (figure && !island) fail("R-24", route, "has a figure and never loaded the figure island");
-    const budget = figure ? FIGURE_BUDGET[route] : JS_BUDGET[route];
+    const budget = figure ? (route.startsWith("/writing/") ? FIGURE_POST_BUDGET : FIGURE_BUDGET[route]) : JS_BUDGET[route];
     if (figure && budget === undefined) fail("R-24", route, "has a figure and no entry in FIGURE_BUDGET");
     rows.push([route + (figure ? " (figure)" : ""), bytes, budget ?? "-"]);
     if (budget !== undefined && bytes > budget + JS_SLACK) {

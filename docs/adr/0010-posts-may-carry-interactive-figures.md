@@ -51,7 +51,8 @@ the block cannot carry anything but numbers, labels and a source.
   keys read its values, the legend toggles are buttons, and axe passes with a figure on
   the page at both widths in both themes.
 - **The cost is counted.** Routes with a figure have their own first-load JS budget in
-  `scripts/smoke.mjs`; every route without one keeps its old budget.
+  `scripts/smoke.mjs`: one for every post, so a post with a figure needs no other file,
+  and a line per route for anything else; every route without one keeps its old budget.
 
 ## The cost accepted
 

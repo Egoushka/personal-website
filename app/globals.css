@@ -1609,6 +1609,11 @@ pre code {
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
+/* A diagram is drawn at its natural size at most: scaled up, a tall one runs on for screens. */
+.fig--diagram .fig-svg {
+  max-width: calc(var(--fig-w) * 1px);
+  margin-inline: auto;
+}
 .fig-svg text {
   fill: var(--muted-foreground);
 }
