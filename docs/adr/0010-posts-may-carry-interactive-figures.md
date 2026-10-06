@@ -61,3 +61,12 @@ geometry under test. elkjs adds a build-time
 dependency licensed EPL-2.0 or GPL-3.0-or-later, and 1.5 MB to `node_modules` that
 production never sees. Interactivity stays limited to figures: the first request to
 put a form, a filter or a calculator in a post goes through ADR 0001 again.
+
+Measured on 2026-10-06 against a build of `main` without figures, gzip, first load. Pages
+without a figure other than posts (home, docs, methods, projects) did not change.
+
+| Page | Before (bytes) | After (bytes) |
+|---|---|---|
+| Post without a figure | 145539 | 145655 |
+| Post with a figure | 145539 | 147118 |
+| Stylesheet, every page | 16594 | 17783 |
