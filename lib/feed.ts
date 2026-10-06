@@ -8,6 +8,10 @@ import rehypeStringify from "rehype-stringify";
 import { site } from "./site";
 import { getAllPosts, getPost } from "./posts";
 import { kindLabel } from "./post-kinds.mjs";
+import { chartTable, edgeList, loneNodes, parseFigure, pictureName, sourceLink } from "./figures.mjs";
+import type { Chart, Diagram } from "./figures.mjs";
+import { remarkFigures } from "./figure-remark.mjs";
+import { hasPicture, pictureMeta } from "./pictures";
 import { topicName } from "./topics";
 import { rehypeCyrillic, type CyrillicLang } from "./lang";
 
@@ -32,17 +36,71 @@ function absoluteLinks(postUrl: string) {
   };
 }
 
+type Hast = { type: "element"; tagName: string; properties: Record<string, unknown>; children: unknown[] };
+const el = (tagName: string, properties: Record<string, unknown>, ...children: unknown[]): Hast => ({
+  type: "element",
+  tagName,
+  properties,
+  children: children.map((c) => (typeof c === "string" ? { type: "text", value: c } : c)),
+});
+
+/**
+ * A figure fence in a feed: its caption and its text alternative, a data table
+ * or a list of connections. A reader runs no script and draws no SVG.
+ */
+function figureChildren(lang: string, value: string): Hast[] {
+  const parsed = parseFigure(lang, value);
+  if ("problems" in parsed) throw new Error(`${lang} block: ${parsed.problems.join("; ")}`);
+  if (lang === "chart") {
+    const chart = parsed.figure as Chart;
+    const { head, rows } = chartTable(chart);
+    const link = chart.source ? sourceLink(chart.source) : null;
+    return [
+      el("figcaption", {}, el("strong", {}, chart.title), " ", chart.caption, ...(link ? [" Source: ", el("a", { href: link.href }, link.label)] : [])),
+      el(
+        "table",
+        {},
+        el("thead", {}, el("tr", {}, ...head.map((h) => el("th", {}, h)))),
+        el("tbody", {}, ...rows.map((r) => el("tr", {}, ...r.map((c) => el("td", {}, c))))),
+      ),
+    ];
+  }
+  const diagram = parsed.figure as Diagram;
+  return [
+    el("figcaption", {}, el("strong", {}, diagram.title), " ", diagram.caption),
+    el("ul", {}, ...edgeList(diagram).map((l) => el("li", {}, l)), ...loneNodes(diagram).map((l) => el("li", {}, `${l} (not connected)`))),
+  ];
+}
+
+/** `/img/x.png` is the source file's name; the build writes `x-960.jpg` and friends. */
+function pictureSources() {
+  return (tree: HastNode) => {
+    const visit = (node: HastNode) => {
+      const src = node.properties?.src;
+      const name = typeof src === "string" ? pictureName(src) : null;
+      if (node.properties && name && hasPicture(name)) {
+        const { width, height, fallback } = pictureMeta(name);
+        Object.assign(node.properties, { src: `/img/${name}-${fallback}.jpg`, width, height });
+      }
+      node.children?.forEach(visit);
+    };
+    visit(tree);
+  };
+}
+
 /**
  * The post body as HTML for a feed reader: the page's own markdown pipeline
  * minus the highlighter, whose inline colours a reader would restyle anyway.
  */
-function bodyHtml(markdown: string, postUrl: string, lang?: CyrillicLang): string {
+export function bodyHtml(markdown: string, postUrl: string, lang?: CyrillicLang): string {
   return String(
     unified()
       .use(remarkParse)
       .use(remarkGfm)
+      .use(remarkFigures({ block: ({ lang, value }) => ({ hName: "figure", hChildren: figureChildren(lang, value) }) }))
       .use(remarkRehype)
       .use(rehypeSlug)
+      .use(pictureSources)
       .use(absoluteLinks(postUrl))
       .use(rehypeCyrillic(lang))
       .use(rehypeStringify)

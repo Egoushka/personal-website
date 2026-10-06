@@ -135,7 +135,7 @@ export default async function PostPage(
                 <span className="font-semibold text-foreground">Correction.</span> {post.correction}
               </p>
             )}
-            <Prose markdown={post.content} cyrillic={post.cyrillic} />
+            <Prose markdown={post.content} cyrillic={post.cyrillic} figures />
           </article>
 
           {toc.length > 1 && <TocRail entries={toc} className="post-aside" />}

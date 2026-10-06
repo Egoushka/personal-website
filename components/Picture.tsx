@@ -1,13 +1,6 @@
-import fs from "node:fs";
-import path from "node:path";
+import { hasPicture, pictureMeta, PICTURE_WIDTHS as WIDTHS } from "@/lib/pictures";
 
-const WIDTHS = [480, 960, 1440];
-
-/** True once `npm run images` has produced output for `name`. Lets a page render
- *  an image only if it exists, instead of the build failing on a missing file. */
-export function hasPicture(name: string): boolean {
-  return fs.existsSync(path.join(process.cwd(), "public", "img", `${name}.json`));
-}
+export { hasPicture };
 
 /**
  * Build-time-optimized image. Pairs with scripts/optimize-images.mjs.
@@ -35,25 +28,23 @@ export default function Picture({
   priority?: boolean;
   className?: string;
 }) {
-  const metaPath = path.join(process.cwd(), "public", "img", `${name}.json`);
-  if (!fs.existsSync(metaPath)) {
+  if (!hasPicture(name)) {
     throw new Error(
       `Picture: no optimized output for "${name}". Add assets/images/${name}.{jpg,png} and run \`npm run images\`.`,
     );
   }
-  const { width, height } = JSON.parse(fs.readFileSync(metaPath, "utf8"));
+  const { width, height, fallback } = pictureMeta(name);
 
   const available = WIDTHS.filter((w) => w <= width);
   const srcset = (ext: string) =>
     available.map((w) => `/img/${name}-${w}.${ext} ${w}w`).join(", ");
-  const fallbackWidth = available[available.length - 1] ?? WIDTHS[0];
 
   return (
     <picture>
       <source type="image/avif" srcSet={srcset("avif")} sizes={sizes} />
       <source type="image/webp" srcSet={srcset("webp")} sizes={sizes} />
       <img
-        src={`/img/${name}-${fallbackWidth}.jpg`}
+        src={`/img/${name}-${fallback}.jpg`}
         alt={alt}
         width={width}
         height={height}

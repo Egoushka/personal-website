@@ -16,6 +16,7 @@ import { POST_KINDS } from "../lib/post-kinds.mjs";
 import { checkDocPages, highlightLangs, readDocDir } from "../lib/doc-check.mjs";
 import { draftsDir } from "../lib/drafts.mjs";
 import { readingRefs, refProblem } from "../lib/evidence.mjs";
+import { figureBlocks, images, parseFigure, pictureName } from "../lib/figures.mjs";
 
 const ROOT = process.cwd();
 const POSTS_DIR = path.join(ROOT, "content", "posts");
@@ -259,6 +260,23 @@ for (const { where, slug, data, content, tree } of [...posts, ...drafts]) {
   const internal = urls(tree).filter((u) => u.startsWith("/") || u.startsWith("#"));
   const selfIds = new Set(headings(tree).map((h) => h.id));
   for (const href of internal) for (const p of hrefProblems(href, selfIds)) fail(p);
+
+  // Figures (ADR 0010, docs/writing/README.md): a block that breaks the contract
+  // would fail the build; an image has a name for a screen reader and a source
+  // the pipeline optimizes, because the CSP serves nothing from elsewhere.
+  for (const b of figureBlocks(tree)) {
+    const parsed = parseFigure(b.lang, b.value);
+    for (const problem of parsed.problems ?? []) fail(`body line ${b.line}: ${b.lang} block: ${problem}`);
+  }
+  for (const img of images(tree)) {
+    const at = `body line ${img.line}: image ${JSON.stringify(img.url)}`;
+    if (img.alt.trim() === "") fail(`${at} has no alt text — say what it shows, or what it proves`);
+    const name = pictureName(img.url);
+    if (!name) fail(`${at} must be /img/<name>.png (or .jpg), the name of a file in assets/images/`);
+    else if (!["png", "jpg", "jpeg"].some((ext) => fs.existsSync(path.join(ROOT, "assets", "images", `${name}.${ext}`)))) {
+      fail(`${at} has no source: add assets/images/${name}.png or .jpg`);
+    }
+  }
 
   const words = countWords(tree);
   if (words < 300) warn(`only ${words} words — thin for search`);

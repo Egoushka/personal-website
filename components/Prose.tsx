@@ -1,12 +1,22 @@
+import dynamic from "next/dynamic";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeShikiFromHighlighter from "@shikijs/rehype/core";
 import rehypeSlug from "rehype-slug";
 import remarkCallouts from "@/lib/callouts.mjs";
+import { remarkFigures } from "@/lib/figure-remark.mjs";
+import { pictureName } from "@/lib/figures.mjs";
+import { prepareFigures } from "@/lib/figure-prepare";
+import { hasPicture } from "@/lib/pictures";
 import { highlighter, shikiOptions } from "@/lib/highlight";
 import { rehypeCyrillic } from "@/lib/lang";
 import { rehypeTables } from "@/lib/tables";
 import type { CyrillicLang } from "@/lib/lang";
+import { ChartFigure, DiagramFigure } from "@/components/Figure";
+import Picture from "@/components/Picture";
+
+// Dynamic, so the island's code is a chunk of its own that a post without a figure never loads.
+const FigureEnhancements = dynamic(() => import("@/components/FigureEnhancements"));
 
 /**
  * Markdown as the site renders it: a post's body and a project's docs, through
@@ -17,16 +27,25 @@ import type { CyrillicLang } from "@/lib/lang";
  * `resolveHref` rewrites link targets and is only for docs, whose relative links
  * were written for the tool's repository (lib/doc-links.mjs). A post's links are
  * already site routes and pass through untouched.
+ *
+ * With `figures` (a post's body), ```chart and ```diagram fences and an image
+ * with a title are figures (ADR 0010). A project's docs are copied from another
+ * repository and may use those words for code, so there they stay code. Async
+ * because diagram layout is: the figures are laid out first, and the island that
+ * animates them is mounted only when the body has any.
  */
-export default function Prose({
+export default async function Prose({
   markdown,
   cyrillic,
   resolveHref,
+  figures: withFigures = false,
 }: {
   markdown: string;
   cyrillic?: CyrillicLang;
   resolveHref?: (href: string) => string;
+  figures?: boolean;
 }) {
+  const figures = withFigures ? await prepareFigures(markdown) : [];
   /*
     A heading and its permalink, as siblings: the link inside the heading would
     join the heading's accessible name ("Status, link"). The wrapper carries the
@@ -94,6 +113,25 @@ export default function Prose({
       );
     },
   };
+  if (withFigures) {
+    /*
+      A figure fence arrives as an empty <figure data-block="i">, the i-th block
+      prepared above; an image with a caption as <figure class="post-figure">.
+    */
+    components.figure = ({ node: _node, children, ...props }) => {
+      const block = (props as Record<string, unknown>)["data-block"];
+      const fig = block === undefined ? undefined : figures[Number(block)];
+      if (fig?.lang === "chart") return <ChartFigure chart={fig.chart} geo={fig.geo} n={Number(block)} />;
+      if (fig?.lang === "diagram") return <DiagramFigure diagram={fig.diagram} geo={fig.geo} n={Number(block)} />;
+      return <figure {...props} className="post-figure not-prose">{children}</figure>;
+    };
+    components.img = ({ node: _node, src, alt }) => {
+      const name = typeof src === "string" ? pictureName(src) : null;
+      return name && hasPicture(name)
+        ? <Picture name={name} alt={alt ?? ""} className="post-image" />
+        : <img src={typeof src === "string" ? src : undefined} alt={alt ?? ""} loading="lazy" decoding="async" className="post-image" />;
+    };
+  }
   if (resolveHref) {
     components.a = ({ node: _node, href, ...props }) => (
       <a href={href === undefined ? undefined : resolveHref(href)} {...props} />
@@ -101,18 +139,25 @@ export default function Prose({
   }
 
   return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm, remarkCallouts]}
-      rehypePlugins={[
-        rehypeSlug,
-        rehypeTables,
-        [rehypeShikiFromHighlighter, highlighter, shikiOptions],
-        rehypeCyrillic(cyrillic),
-      ]}
-      components={components}
-    >
-      {markdown}
-    </ReactMarkdown>
+    <>
+      {figures.length > 0 && <FigureEnhancements />}
+      <ReactMarkdown
+        remarkPlugins={[
+          remarkGfm,
+          remarkCallouts,
+          ...(withFigures ? [remarkFigures({ block: (_b, i) => ({ hName: "figure", hProperties: { "data-block": i } }) })] : []),
+        ]}
+        rehypePlugins={[
+          rehypeSlug,
+          rehypeTables,
+          [rehypeShikiFromHighlighter, highlighter, shikiOptions],
+          rehypeCyrillic(cyrillic),
+        ]}
+        components={components}
+      >
+        {markdown}
+      </ReactMarkdown>
+    </>
   );
 }
 
