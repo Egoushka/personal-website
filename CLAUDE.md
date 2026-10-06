@@ -192,7 +192,8 @@ Fourteen files carry `"use client"` (`grep -rl '"use client"' components lib app
   closed `<details>` open works in one engine and not the next.
 - **JS budget** (`JS_BUDGET` in `scripts/smoke.mjs`): first-load gzip bytes per route at a
   baseline, +1 KB slack. A route without a figure never grows; a post with one has the
-  island's cost added on purpose, as a separate entry with the reason beside it.
+  island's cost added on purpose, through one shared post budget (`FIGURE_POST_BUDGET`)
+  with the reason beside it, so a new post needs no line here.
 - **CLS**: smoke holds < 0.01 at 375 px on `/`, `/writing/`, a post and `/about/`, < 0.1
   elsewhere. The panel's reserved height (`.panel-body`) is measured; re-measure when
   its content changes.
