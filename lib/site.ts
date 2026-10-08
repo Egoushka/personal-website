@@ -876,8 +876,8 @@ export const eras: Era[] = [
     jobs: ["Boerse Stuttgart Digital"],
     body: [
       "A white-label crypto trading platform, in .NET: trade and payment flows, reconciliation, the integrations either side of them, and the background jobs that hold it together. The estate is large enough that I onboarded by reading its tests rather than its code, which turned out to be the fastest map anyone had.",
-      "The year taught me the parts that do not appear in a demo. A read cache invalidated across services, and two days lost to a consumer I had never registered — the message was published and nothing was listening. A month on the rotation, which is the quickest way to learn what a system does when nobody is watching it. A release run end to end. By 2026 I was on the other side of the interview table.",
-      "Alongside it, the homelab moved into git and became the busiest repository I own. That is also where Attest came from: work needed a validation library, the one that existed had been abandoned, so I forked it, fixed 197 of its defects in six days and published it. It is the only thing I have built that fails in public when I get it wrong.",
+      "The year taught me the parts that do not appear in a demo. A month on the rotation, which is the quickest way to learn what a system does when nobody is watching it. A release run end to end. By 2026 I was on the other side of the interview table.",
+      "Alongside it, the homelab moved into git and became the busiest repository I own. That is also where Attest came from: I needed a validation library, the one that existed had been abandoned, so I forked it, fixed 197 of its defects in six days and published it. It is the only thing I have built that fails in public when I get it wrong.",
     ],
     obstacle:
       `My own migration moved the box, and the deploy kept reporting success for ${inWords(silentDays)} days while shipping nothing. I found it by accident, while adding a header.`,
