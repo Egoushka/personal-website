@@ -554,6 +554,29 @@ export const projects: Project[] = [
     ],
   },
   {
+    slug: "x402-mcp-dotnet",
+    side: true,
+    visibility: "public",
+    tech: ["C#", ".NET 10", "ASP.NET Core", "MCP", "x402", "USDC", "xUnit"],
+    phase:
+      "Runs end to end against a mock facilitator. No real payment has settled yet, not even on the test network, and only a fixed price per call exists.",
+    status: "building",
+    name: "x402-mcp-dotnet",
+    lang: "C#", shape: "MCP library",
+    href: "https://github.com/Egoushka/x402-mcp-dotnet",
+    writeup: "paid-mcp-tools",
+    summary:
+      "Lets a .NET MCP tool charge an AI agent per call in USDC over HTTP 402, and never charges for a call that failed.",
+    description:
+      "The x402 MCP transport for the official MCP C# SDK. A tool marked [PaidTool] answers an unpaid call with a price; the agent signs a USDC transfer authorization and calls again with it in the call's metadata. The server checks that the payment is for this tool, at this price, to this address and inside its time window, has a facilitator verify it, runs the tool, and settles only after the tool succeeds: a tool that fails is never charged, and a settlement that fails withholds the output. The server never holds a key. It builds on michielpost/x402-dotnet for the wire types, the facilitator client and the wallet; other .NET x402 libraries charge for HTTP endpoints, and this one charges for tool calls. Tested against the public x402.org testnet facilitator up to verification.",
+    topics: ["dotnet", "mcp"],
+    readings: [
+      { label: "Price of the sample tool", value: "0.001 USDC a call", source: "README.md, in atomic units", ref: "Egoushka/x402-mcp-dotnet@6e758e4:README.md#L42" },
+      { label: "Tests", value: "12, in process, real signatures", source: "CI run 38043282435; the facilitator is a fake" },
+      { label: "Real payments settled", value: "none yet", source: "the README's Limits section" },
+    ],
+  },
+  {
     slug: "whetstone",
     side: true,
     visibility: "public",
