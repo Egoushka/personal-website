@@ -6,6 +6,8 @@ kind: incident
 project: "homelab-gitops"
 topics: ["infrastructure", "debugging", "ci-cd"]
 spanDays: 51
+updated: "2026-09-29"
+correction: "The terminal output shows 203.0.113.10, a reserved documentation address, as if it were the real one; it is a placeholder swapped in for the real address, and the post now says so. An on-box path and container name were also replaced with generic terms."
 ---
 
 I went to add a security header to this site and found that the last successful deploy had been fifty-one days earlier. Not a failed deploy. Not a red X in the Actions tab. Nothing at all — the pipeline had simply stopped being invoked, and no one, including me, had noticed.
@@ -20,6 +22,8 @@ The deploy workflow pushed to a hardcoded IP:
 env:
   VPS_HOST: 203.0.113.10
 ```
+
+The address in this post, `203.0.113.10`, is a placeholder swapped in for the real one; the output below is shown with it.
 
 The box had since moved to a different address. The workflow still pointed at the old one — and here is the part that made it invisible: **that IP still answered.**
 
@@ -62,9 +66,9 @@ That looks harmless. It isn't, and the reason is that **a bind mount of a file b
 So the host has the new config. The container has the old config. Both are real files. Neither tool is wrong. And nothing anywhere reports an error:
 
 ```
-$ grep -c "Content-Security-Policy" /opt/stacks/website/Caddyfile
+$ grep -c "Content-Security-Policy" <stack-dir>/Caddyfile
 1
-$ docker exec website-caddy grep -c "Content-Security-Policy" /etc/caddy/Caddyfile
+$ docker exec <container> grep -c "Content-Security-Policy" /etc/caddy/Caddyfile
 0
 ```
 
@@ -89,14 +93,14 @@ Which is the incantation everyone reaches for, and which does nothing here. `up 
 The command exits 0. It even prints something reassuring:
 
 ```
-Container website-caddy  Running
+Container <container>  Running
 ```
 
 "Running" is not "restarted". So the deploy step succeeded, the container was healthy, and the config was still the old one. Three green signals, zero effect.
 
 ```bash
 docker compose up -d && \
-  docker exec website-caddy caddy reload --config /etc/caddy/Caddyfile
+  docker exec <container> caddy reload --config /etc/caddy/Caddyfile
 ```
 
 The explicit reload has a second benefit: `caddy reload` validates the config and exits non-zero if it's broken. It converts a silent no-op into a loud failure — which is the whole point.
