@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      indexnow_all:
+        description: "Submit every sitemap URL to IndexNow, not only the changed pages"
+        type: boolean
+        default: false
 
 # One deploy at a time, and a running one is never cancelled: a cancelled run
 # can leave a published build unverified. A push during a deploy waits; a newer
@@ -158,3 +163,23 @@ jobs:
       - name: Verify the live site
         if: ${{ !cancelled() && steps.landed.outcome == 'success' }}
         run: BASE_URL="$SITE" EXPECT_REV="$GITHUB_SHA" bash scripts/caddy-test.sh
+
+      # Tells Bing, Yandex, Seznam and Naver which pages this push changed, once
+      # they are live (lib/indexnow.mjs). Google reads the sitemap instead. A
+      # failed ping never fails a deploy that has already landed.
+      - name: Submit changed pages to IndexNow
+        if: ${{ !cancelled() && steps.landed.outcome == 'success' }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BEFORE: ${{ github.event.before }}
+          ALL: ${{ inputs.indexnow_all }}
+        run: |
+          if [ "$ALL" = "true" ]; then
+            node scripts/indexnow.mjs --all
+          elif [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
+            mapfile -t files < <(gh api "repos/$GITHUB_REPOSITORY/compare/$BEFORE...$GITHUB_SHA" --jq '.files[].filename')
+            node scripts/indexnow.mjs "${files[@]}"
+          else
+            echo "no previous commit to compare against; run the workflow with indexnow_all to submit everything"
+          fi
