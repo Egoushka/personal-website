@@ -37,7 +37,7 @@ export async function generateMetadata(
   const { slug } = await params;
   const post = getPost(slug);
   const base = pageMetadata({
-    title: post.title,
+    title: post.searchTitle ?? post.title,
     description: post.description,
     path: `/writing/${slug}/`,
     type: "article",
@@ -55,6 +55,7 @@ export async function generateMetadata(
       authors: [site.name],
       tags: post.topics.map(topicName),
     },
+    twitter: { ...base.twitter, title: post.title },
   };
 }
 

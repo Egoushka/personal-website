@@ -5,6 +5,7 @@ description: "A count of my agent's memory found 5,357 stored facts, not one eve
 kind: finding
 project: "synapse"
 topics: ["architecture", "retrieval", "postgres"]
+searchTitle: "AI agent memory: 5,357 facts, none ever marked wrong"
 ---
 
 My assistant has a memory. Facts about my work, my infrastructure, my

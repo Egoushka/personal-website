@@ -402,6 +402,8 @@ topics: ["retrieval"]    # lib/topics.ts only; a new topic is added there, on pu
 
 Optional, and only when true: `spanDays` (how many days the piece is about),
 `updated` with an optional `correction` (a factual change to a published post,
-never a rewording), and `cyrillic: "uk"` or `"ru"` when the title or prose has
-Cyrillic words. The slug is the filename, lowercase kebab-case; it becomes the URL
+never a rewording), `cyrillic: "uk"` or `"ru"` when the title or prose has
+Cyrillic words, and `searchTitle` (at most 60 characters: the `<title>` worded as
+someone would search for the post; the heading, cards and feeds keep `title`, so
+adding one to a published post is not a correction). The slug is the filename, lowercase kebab-case; it becomes the URL
 and never changes once published.

@@ -24,6 +24,7 @@ const DRAFTS_DIR = draftsDir(ROOT);
 const ONE_DRAFT = process.argv.includes("--draft") ? process.argv[process.argv.indexOf("--draft") + 1] ?? "" : null;
 const WITH_DRAFTS = process.argv.includes("--drafts") || ONE_DRAFT !== null;
 const MAX_DESCRIPTION = 160; // Google truncates around here.
+const MAX_SEARCH_TITLE = 60; // Google cuts a title around here, before the " — name" suffix.
 
 /**
  * The closed vocabulary, read out of lib/topics.ts.
@@ -220,6 +221,14 @@ for (const { where, slug, data, content, tree } of [...posts, ...drafts]) {
 
   if (data.spanDays !== undefined && !(Number.isInteger(data.spanDays) && data.spanDays > 0)) {
     fail(`frontmatter: spanDays must be a positive whole number of days, got ${JSON.stringify(data.spanDays)}`);
+  }
+
+  if (data.searchTitle !== undefined) {
+    if (typeof data.searchTitle !== "string" || !data.searchTitle.trim()) {
+      fail("frontmatter: searchTitle must be a non-empty string — the <title> search engines show");
+    } else if (data.searchTitle.length > MAX_SEARCH_TITLE) {
+      fail(`frontmatter: searchTitle is ${data.searchTitle.length} chars, max ${MAX_SEARCH_TITLE}`);
+    }
   }
 
   if (!data.description || typeof data.description !== "string") {

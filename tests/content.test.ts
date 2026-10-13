@@ -199,6 +199,12 @@ test("validator: topics and spanDays", () => {
   passes({ a: post({ ...BASE, spanDays: "51" }, "") });
 });
 
+test("validator: searchTitle", () => {
+  passes({ a: post({ ...BASE, searchTitle: '"Docker bind-mounted file not updating after rsync"' }, "") });
+  fails({ a: post({ ...BASE, searchTitle: '""' }, "") }, /searchTitle must be a non-empty string/);
+  fails({ a: post({ ...BASE, searchTitle: `"${"x".repeat(61)}"` }, "") }, /searchTitle is 61 chars, max 60/);
+});
+
 test("validator: Cyrillic text declares its language", () => {
   passes({ a: post({ ...BASE, cyrillic: '"ru"' }, "Mostly `ок`.") });
   fails({ a: post(BASE, "Mostly `ок`.") }, /has Cyrillic text, so it needs `cyrillic/);

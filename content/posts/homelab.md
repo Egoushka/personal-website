@@ -5,6 +5,7 @@ description: "Tailscale, Traefik, Vaultwarden and GitOps on a single Hetzner box
 kind: build
 project: "homelab-gitops"
 topics: ["infrastructure", "self-hosting"]
+searchTitle: "Homelab on one VPS: Headscale, Traefik, SOPS and GitOps"
 ---
 
 My homelab is one Hetzner VPS in Nuremberg. No rack, no Raspberry Pi cluster — just a single Ubuntu box I run like a tiny production environment. The goal was never to save money. It was to learn infrastructure the way you only learn it when you're the one who gets paged.

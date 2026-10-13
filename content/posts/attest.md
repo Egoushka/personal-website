@@ -5,6 +5,7 @@ description: "I needed to check whether an ID number was well formed. The packag
 kind: finding
 project: "attest"
 topics: ["dotnet"]
+searchTitle: "Tax ID and VAT number validation in .NET: 197 bugs found"
 ---
 
 Most countries give people and companies an identification number — a tax ID,
