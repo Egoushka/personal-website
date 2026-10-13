@@ -197,6 +197,14 @@
 	handle /links* {
 		redir * /about/ permanent
 	}
+	# Two posts retired on 2026-10-14, each to the page that holds what it said:
+	# a release note to the chargehand docs, a post about this site to its ADR.
+	handle /writing/chargehand-0-8-0* {
+		redir * /projects/chargehand/docs/support-and-signing/ permanent
+	}
+	handle /writing/charts-diagrams-and-captioned-images-in-posts-adr-0010* {
+		redir * https://github.com/Egoushka/personal-website/blob/main/docs/adr/0010-posts-may-carry-interactive-figures.md permanent
+	}
 
 	handle {
 		# Next static export uses trailingSlash: dir/index.html
