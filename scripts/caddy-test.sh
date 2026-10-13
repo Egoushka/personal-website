@@ -109,6 +109,10 @@ moved /resume/ /cv/
 moved /now/ /about/
 moved /uses/ /about/
 moved /links/ /about/
+moved /writing/chargehand-0-8-0/ /projects/chargehand/docs/support-and-signing/
+get /writing/charts-diagrams-and-captioned-images-in-posts-adr-0010/
+same "the retired charts post redirects to ADR 0010" \
+  "301 https://github.com/Egoushka/personal-website/blob/main/docs/adr/0010-posts-may-carry-interactive-figures.md" "$code $loc"
 
 # next/og writes cards without an extension; only the Caddyfile makes them PNGs.
 for path in /opengraph-image /writing/silent-deploys/opengraph-image /projects/attest/opengraph-image; do
