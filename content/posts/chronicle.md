@@ -6,6 +6,7 @@ kind: finding
 project: "chronicle"
 topics: ["python", "retrieval"]
 cyrillic: "ru"
+searchTitle: "RAG chunking for chat history: what not to index"
 ---
 
 Chronicle is a search index over my own life. Seven years of Telegram

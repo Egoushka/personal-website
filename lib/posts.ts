@@ -36,6 +36,12 @@ export type PostMeta = {
    * is not printed; there is no default and nothing is estimated.
    */
   spanDays?: number;
+  /**
+   * Optional. The `<title>` search engines show, worded as someone would search
+   * for the post. The page heading, cards and feeds keep `title`, so adding one
+   * is not a change to the post.
+   */
+  searchTitle?: string;
   /** Optional frontmatter, read as-is. Validated by validate-content, rendered by the post page. */
   updated?: string;
   /** Optional frontmatter: a note describing what a later edit corrected. */
@@ -64,6 +70,7 @@ function readPostFile(slug: string): Post {
     spanDays: Number.isFinite(Number(data.spanDays)) && data.spanDays != null
       ? Number(data.spanDays)
       : undefined,
+    searchTitle: typeof data.searchTitle === "string" && data.searchTitle ? data.searchTitle : undefined,
     updated: typeof data.updated === "string" ? data.updated : undefined,
     correction: typeof data.correction === "string" ? data.correction : undefined,
     cyrillic: data.cyrillic === "uk" || data.cyrillic === "ru" ? data.cyrillic : undefined,

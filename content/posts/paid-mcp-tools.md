@@ -5,6 +5,7 @@ description: "Paid MCP tool calls in .NET over x402: an AI agent pays per call i
 kind: build
 project: "x402-mcp-dotnet"
 topics: ["mcp", "dotnet"]
+searchTitle: "x402 in .NET: paid MCP tool calls in USDC"
 ---
 
 I was scrolling Reels when a video explained HTTP status 402, and I started looking it up right away.

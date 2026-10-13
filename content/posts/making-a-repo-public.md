@@ -4,6 +4,7 @@ date: "2026-09-29"
 description: "Flipping a private repo to public publishes its history, not just its head. Mine held my server's address in 203 of 219 commits. The fix was a new repository."
 kind: incident
 topics: ["ci-cd", "infrastructure"]
+searchTitle: "Before making a GitHub repo public, check its history"
 ---
 
 This site's private repository held my server's real address in 203 of its 219 commits. The count is one loop over the history: for every commit, does its tree contain the address? The files at the head did not. The loop prints a count, not the matches, so the address never reaches a terminal or a log.

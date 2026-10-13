@@ -5,6 +5,7 @@ description: "Every internal service on my homelab answered 200 to the open inte
 kind: incident
 project: "homelab-gitops"
 topics: ["infrastructure", "self-hosting", "debugging"]
+searchTitle: "Traefik and Tailscale: DNS is not access control"
 ---
 
 I was tidying up a blog post that had a server IP in it — a stale one, no longer mine, but still not something worth publishing. While I was there I decided to check the obvious follow-up question: is the *current* address exposed anywhere?

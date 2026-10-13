@@ -6,6 +6,7 @@ kind: incident
 project: "homelab-gitops"
 topics: ["infrastructure", "debugging", "ci-cd"]
 spanDays: 51
+searchTitle: "Docker bind-mounted file not updating after rsync"
 ---
 
 I went to add a security header to this site and found that the last successful deploy had been fifty-one days earlier. Not a failed deploy. Not a red X in the Actions tab. Nothing at all — the pipeline had simply stopped being invoked, and no one, including me, had noticed.

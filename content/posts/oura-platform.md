@@ -5,6 +5,7 @@ description: "Pulling my own Oura data into a database I control, so it can be j
 kind: build
 project: "oura-platform"
 topics: ["dotnet", "postgres", "self-hosting"]
+searchTitle: "Oura API to Postgres: a self-hosted health warehouse"
 ---
 
 I wear an Oura ring. It measures sleep, heart rate and temperature, and gives

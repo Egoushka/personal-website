@@ -5,6 +5,7 @@ description: "Chronicle scored 48.2% on its first eval and tied grep after the f
 kind: finding
 project: "chronicle"
 topics: ["retrieval", "python"]
+searchTitle: "Hybrid search vs ripgrep: evaluating a personal RAG"
 ---
 
 The first time I scored Chronicle against `ripgrep`, it found 48.2% of the

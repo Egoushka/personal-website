@@ -5,6 +5,7 @@ description: "A plain agent session beat my orchestrator in a blind test. The fi
 kind: finding
 project: "chargehand"
 topics: ["architecture", "mcp"]
+searchTitle: "Coding agent orchestrator vs one session: a blind test"
 ---
 
 [chargehand](/projects/chargehand/) is my orchestrator for coding agents. It takes a question about a codebase, turns it into a typed task, runs it on agent sessions that can only read, and returns an answer, over the CLI, HTTP or MCP, in which every claim cites a file at a pinned commit. The first time I measured it against a plain single OpenCode session on the same model, the plain session won, 0.667 to 0.333, judged blind.
