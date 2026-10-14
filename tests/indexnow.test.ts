@@ -20,6 +20,14 @@ test("indexnow: code changes ping the listings; tests, workflows and drafts noth
   assert.deepEqual(changedPaths(["tests/a.test.ts", ".github/workflows/ci.yml", "README.md"]), []);
 });
 
+test("indexnow: lib/site.ts also pings every project page in the sitemap, not its docs", () => {
+  const sitemap = ["/", "/projects/", "/projects/attest/", "/projects/chargehand/", "/projects/chargehand/docs/", "/writing/x/"];
+  assert.deepEqual(changedPaths(["lib/site.ts"], sitemap).sort(), [
+    "/", "/projects/", "/projects/attest/", "/projects/chargehand/", "/writing/",
+  ]);
+  assert.deepEqual(changedPaths(["lib/feed.ts"], sitemap).sort(), ["/", "/projects/", "/writing/"]);
+});
+
 test("indexnow: sitemap locs are read in order", () => {
   const xml = "<urlset><url><loc>https://x/</loc></url><url><loc>https://x/a/</loc></url></urlset>";
   assert.deepEqual(sitemapUrls(xml), ["https://x/", "https://x/a/"]);

@@ -11,9 +11,10 @@ const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
 const files = args.filter((a) => !a.startsWith("--"));
 
+const sitemap = fs.existsSync("out/sitemap.xml") ? sitemapUrls(fs.readFileSync("out/sitemap.xml", "utf8")) : [];
 const urls = args.includes("--all")
-  ? sitemapUrls(fs.readFileSync("out/sitemap.xml", "utf8"))
-  : changedPaths(files).map((p) => SITE + p);
+  ? sitemap
+  : changedPaths(files, sitemap.map((u) => new URL(u).pathname)).map((p) => SITE + p);
 
 if (urls.length === 0) {
   console.log("indexnow: no page changed, nothing to submit");
