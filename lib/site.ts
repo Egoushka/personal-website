@@ -200,6 +200,12 @@ export type Project = {
    */
   visibility: "public" | "private";
   /**
+   * Its published packages, linked from the project page. This site is the one
+   * place Google crawls that can point at them; nuget.org pages with no inbound
+   * link were not indexed.
+   */
+  packages?: { name: string; href: string }[];
+  /**
    * What it is actually built with, read out of the repository rather than
    * remembered. Free strings on purpose: this is not the closed topic
    * vocabulary, because "Dapper" and "Testcontainers" are facts about one
@@ -272,6 +278,10 @@ export const projects: Project[] = [
     lang: "C#", shape: "library",
     href: "https://github.com/Egoushka/attest",
     visibility: "public",
+    packages: [
+      { name: "Attest", href: "https://www.nuget.org/packages/Attest" },
+      { name: "Attest.DataAnnotations", href: "https://www.nuget.org/packages/Attest.DataAnnotations" },
+    ],
     tech: ["C#", ".NET Standard", "xUnit", "GitHub Actions", "NuGet"],
     summary:
       "Validates national ID, tax ID, VAT and postal codes for 87 countries, against the rule each country publishes rather than a regex someone guessed.",
@@ -297,6 +307,10 @@ export const projects: Project[] = [
     name: "chargehand",
     lang: "C#", shape: "orchestrator",
     href: "https://github.com/Egoushka/chargehand",
+    packages: [
+      { name: "Chargehand", href: "https://www.nuget.org/packages/Chargehand" },
+      { name: "Chargehand.Contracts", href: "https://www.nuget.org/packages/Chargehand.Contracts" },
+    ],
     summary:
       "Runs a question about a codebase on coding agents and returns an answer whose every citation is checked against a pinned commit.",
     description:

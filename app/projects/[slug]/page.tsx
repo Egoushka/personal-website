@@ -150,6 +150,16 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
                 <span className="text-muted-foreground">private</span>
               )}
             </Fact>
+            {project.packages && project.packages.length > 0 && (
+              <Fact label={project.packages.length === 1 ? "Package" : "Packages"}>
+                {project.packages.map((p, i) => (
+                  <span key={p.href}>
+                    {i > 0 && ", "}
+                    <a className="link break-all" href={p.href} rel="noopener">{p.name}</a>
+                  </span>
+                ))}
+              </Fact>
+            )}
             {docSource && docs.length > 0 && (
               <Fact label="Docs">
                 <Link className="link" prefetch={false} href={docs[0].href}>
