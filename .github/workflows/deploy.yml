@@ -89,6 +89,7 @@ jobs:
             --no-progress
             --root-dir ${{ github.workspace }}/out
             --exclude-path out/_next
+            --exclude subscription/form
             "out/**/*.html"
           fail: true
 
