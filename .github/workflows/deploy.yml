@@ -89,8 +89,7 @@ jobs:
             --no-progress
             --root-dir ${{ github.workspace }}/out
             --exclude-path out/_next
-            # /subscription/form is listmonk, routed at the edge; it is not in out/
-            --exclude '/subscription/form$'
+            --exclude subscription/form
             "out/**/*.html"
           fail: true
 

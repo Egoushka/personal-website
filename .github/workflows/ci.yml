@@ -88,6 +88,7 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
         with:
+          # /subscription/form is listmonk, served by the edge, so it is not in out/.
           # --root-dir (absolute) is what resolves root-relative hrefs like "/blog/"
           # against the build output. --base-url only accepts a full URL and rejects
           # a relative path outright. --include-fragments also resolves #anchors, and
@@ -100,8 +101,7 @@ jobs:
             --index-files index.html
             --root-dir ${{ github.workspace }}/out
             --exclude-path out/_next
-            # /subscription/form is listmonk, routed at the edge; it is not in out/
-            --exclude '/subscription/form$'
+            --exclude subscription/form
             "out/**/*.html"
           fail: true
 
