@@ -100,6 +100,8 @@ jobs:
             --index-files index.html
             --root-dir ${{ github.workspace }}/out
             --exclude-path out/_next
+            # /subscription/form is listmonk, routed at the edge; it is not in out/
+            --exclude '/subscription/form$'
             "out/**/*.html"
           fail: true
 
