@@ -56,7 +56,7 @@ internal links carry the slash (`/writing/foo/`). Every dynamic segment has
 
 ## Client components — justify each one
 
-Fourteen files carry `"use client"` (`grep -rl '"use client"' components lib app`):
+Fifteen files carry `"use client"` (`grep -rl '"use client"' components lib app`):
 
 | File | Why it needs the browser |
 |---|---|
@@ -72,6 +72,7 @@ Fourteen files carry `"use client"` (`grep -rl '"use client"' components lib app
 | [Measured.tsx](components/Measured.tsx) | measured editor-time share beside a skill |
 | [SkillsBoard.tsx](components/SkillsBoard.tsx) | skills search box, measured shares |
 | [Journey.tsx](components/Journey.tsx) | hover/focus selection, below-the-fold draw-in |
+| [MiraForm.tsx](components/MiraForm.tsx) | `/mira/` signup: `fetch` to the listmonk form endpoint so the download links replace the form |
 | [PrintCv.tsx](components/PrintCv.tsx) | print button named for the platform's shortcut |
 | [lib/status.ts](lib/status.ts) | `useStatus()`, the shared `/status.json` fetch |
 

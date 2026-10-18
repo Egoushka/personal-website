@@ -1,0 +1,215 @@
+{
+  "id": "b2ce9da629b5f5fb",
+  "name": "00 Inbox triage (free): label, route, draft (never send)",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": true,
+        "filters": {
+          "readStatus": "unread"
+        },
+        "options": {}
+      },
+      "id": "5d1c0a10-0b1e-4d1a-9a10-000000000001",
+      "name": "New email",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Read the email below.\nReturn exactly one label from: invoice, meeting, newsletter, support, other.\nReturn only the label.\n\nSubject: {{ $json.Subject }}\nBody: {{ $json.snippet }}",
+        "batching": {}
+      },
+      "id": "5d1c0a10-0b1e-4d1a-9a10-000000000002",
+      "name": "Pick a label",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "claude-haiku-5-5"
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "5d1c0a10-0b1e-4d1a-9a10-000000000003",
+      "name": "Anthropic Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.4,
+      "position": [
+        240,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c1",
+                    "leftValue": "={{ $json.text.trim().toLowerCase() }}",
+                    "rightValue": "invoice",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "id": "c2",
+                    "leftValue": "={{ $json.text.trim().toLowerCase() }}",
+                    "rightValue": "meeting",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "id": "c3",
+                    "leftValue": "={{ $json.text.trim().toLowerCase() }}",
+                    "rightValue": "support",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "Draft a reply"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Label only"
+        }
+      },
+      "id": "5d1c0a10-0b1e-4d1a-9a10-000000000004",
+      "name": "Route by label",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        520,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ 'Re: ' + $('New email').item.json.Subject }}",
+        "emailType": "text",
+        "message": "=Hi,\n\nThanks for your email. I have received it and will reply properly soon.\n\nBest,\nYOUR NAME (CHANGE ME)",
+        "options": {
+          "threadId": "={{ $('New email').item.json.threadId }}",
+          "sendTo": "={{ $('New email').item.json.From.match(/<([^>]+)>/)?.[1] ?? $('New email').item.json.From }}"
+        }
+      },
+      "id": "5d1c0a10-0b1e-4d1a-9a10-000000000005",
+      "name": "Save draft (not sent)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        800,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Inbox triage (free)\nEvery minute it reads new unread Gmail, asks the model for one label (invoice, meeting, newsletter, support, other) and, for invoice / meeting / support, saves a short holding reply as a **draft in the same thread**. Nothing is ever sent or deleted; newsletters and other mail are left alone.\n\n**1. Credentials** (Credentials > Add): [Gmail OAuth2](https://docs.n8n.io/integrations/builtin/credentials/google/oauth-single-service/) on \"New email\" and \"Save draft\", and an [Anthropic](https://docs.n8n.io/integrations/builtin/credentials/anthropic/) key on the chat model. Prefer OpenAI? Replace \"Anthropic Chat Model\" with \"OpenAI Chat Model\" and connect it the same way.\n\n**2. CHANGE ME**: the signature in \"Save draft (not sent)\".\n\n**3. Test**: send yourself an email that looks like an invoice, open Executions, then check Gmail Drafts.\n\n**Cost**: one short model call per email, a fraction of a cent on a small model (Claude Haiku / GPT-4.1 mini).\nTested 2026-10-18 on n8n 2.42.3 with a test Gmail mailbox.",
+        "height": 420,
+        "width": 520,
+        "color": 5
+      },
+      "id": "a3959dd1-65e4-455e-aad6-9b227b4c28b6",
+      "name": "Setup notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -520
+      ]
+    }
+  ],
+  "connections": {
+    "New email": {
+      "main": [
+        [
+          {
+            "node": "Pick a label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Pick a label",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick a label": {
+      "main": [
+        [
+          {
+            "node": "Route by label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by label": {
+      "main": [
+        [
+          {
+            "node": "Save draft (not sent)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "active": false
+}
