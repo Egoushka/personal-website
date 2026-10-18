@@ -86,8 +86,9 @@
 	# once when deploy.yml purges the Cloudflare cache.
 	# The one matcher deliberately left keyed on path alone. It matches directories,
 	# so pinning it to a file would mean restating the try_files list from the handle
-	# block below inside the matcher, where the two would drift. What it costs is a
-	# 404 page edge-cached for ten minutes, and /404.html is a real page.
+	# block below inside the matcher, where the two would drift. It matches a miss
+	# too, so handle_errors overrides Cache-Control with no-store: a page requested
+	# just before its deploy must not stay a cached 404 at the edge.
 	@html path / *.html */
 	header @html Cache-Control "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
 
@@ -214,6 +215,7 @@
 
 	handle_errors {
 		rewrite * /404.html
+		header Cache-Control "no-store"
 		file_server
 	}
 }

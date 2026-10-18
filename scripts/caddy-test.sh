@@ -120,21 +120,23 @@ for path in /opengraph-image /writing/silent-deploys/opengraph-image /projects/a
   same "$path is a PNG" "200 image/png" "$code $(hdr content-type)"
 done
 
-# A miss stays a miss: a 404 that is neither typed as a card nor cached as
-# immutable.
+# A miss stays a miss: a 404 that is neither typed as a card, cached as
+# immutable, nor kept by the edge (a page requested just before its deploy
+# would otherwise stay "not found" until the copy expires).
 miss() {
   get "$1"
   if [ "$code" = 404 ] && ! grep -qi '^content-type: *image/png' "$tmp/h" &&
-    ! grep -qi '^cache-control:.*immutable' "$tmp/h"; then
+    ! grep -qi '^cache-control:.*\(immutable\|s-maxage\|stale-while-revalidate\)' "$tmp/h"; then
     ok "$1 is a plain 404"
   else
-    fail "$1 is a plain 404" "404, not image/png, not immutable" \
+    fail "$1 is a plain 404" "404, not image/png, not immutable, not edge-cacheable" \
       "$code, $(hdr content-type | head -1), $(hdr cache-control | head -1)"
   fi
 }
 miss /writing/no-such-post/opengraph-image
 miss /_next/static/chunks/no-such-chunk.js
 miss /no-such-page/
+miss /no-such-page/index.txt
 
 # One CSP header, exactly as deploy/Caddyfile writes it, and the properties it
 # must keep whatever else changes in it.
@@ -170,6 +172,8 @@ if [ -z "$live" ]; then
     get "$asset"
     same "a hashed asset is immutable ($asset)" "200 public, max-age=31536000, immutable" "$code $(hdr cache-control)"
   fi
+  get /no-such-page/
+  same "a 404 is not cached" "404 no-store" "$code $(hdr cache-control)"
   get /index.txt
   same "an RSC payload caches like HTML" "200 $html" "$code $(hdr cache-control)"
   get /robots.txt
