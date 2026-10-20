@@ -1,8 +1,8 @@
 # CLAUDE.md
 
 Portfolio + blog for hrabovskyi.online: Next.js 16 App Router, React 19, TypeScript,
-**statically exported**, served by Caddy on a Hetzner VPS behind Cloudflare. README.md
-covers setup, deploy and DNS; this file covers what breaks if ignored. Code comments
+**statically exported**, served by Caddy on a Hetzner VPS behind Cloudflare. [docs/how-to/develop.md](docs/how-to/develop.md)
+covers setup and [docs/explanation/deploy.md](docs/explanation/deploy.md) deploy and DNS; this file covers what breaks if ignored. Code comments
 state the current constraint and why; history belongs in commits and [ADRs](docs/adr/).
 
 ## Commands
