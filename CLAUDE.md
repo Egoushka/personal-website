@@ -30,8 +30,8 @@ npm run smoke        # Playwright + axe against BASE_URL (default http://localho
 
 Before pushing: `npm run validate && npm run typecheck && npm test && npm run build && npm run check`.
 
-**The repo is public.** Enable the hooks once per clone: `git config core.hooksPath
-.githooks`, and copy `.private-terms.example` to `.private-terms` (gitignored). They block
+**The repo is public.** Enable the hooks once per clone: `lefthook install` (it runs
+agent-checks and the scripts in `.githooks/`), and copy `.private-terms.example` to `.private-terms` (gitignored). They block
 private terms in files and commit messages, run gitleaks, and require a GitHub noreply
 address; CI's `secrets` job checks the same. The origin IP, employer internals and local
 paths never go in a file, a commit message or a PR.
