@@ -32,7 +32,7 @@ Before pushing: `npm run validate && npm run typecheck && npm test && npm run bu
 
 **The repo is public.** Enable the hooks once per clone: `lefthook install` (it runs
 agent-checks and the scripts in `.githooks/`), and copy `.private-terms.example` to `.private-terms` (gitignored). They block
-private terms in files and commit messages, run gitleaks, and require a GitHub noreply
+private terms in files and commit messages, run betterleaks, and require a GitHub noreply
 address; CI's `secrets` job checks the same. The origin IP, employer internals and local
 paths never go in a file, a commit message or a PR.
 No ESLint. **Test the build the way production serves it**: `serve:prod` (`SITE_PORT`,
