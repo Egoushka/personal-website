@@ -11,3 +11,8 @@ export const MIRA_DOWNLOADS = [
   { href: "/mira/00-inbox-triage.md", label: "Setup notes for the workflow" },
   { href: "/mira/free-5.md", label: "5 prompts" },
 ] as const;
+
+/** Payment link for the starter pack at /mira/pack/. While null the page shows "Checkout opens soon"; set it to enable the buy button. */
+export const MIRA_CHECKOUT_URL: string | null = null;
+
+export const MIRA_CONTACT = "mira@hrabovskyi.online";
