@@ -138,6 +138,16 @@ miss /_next/static/chunks/no-such-chunk.js
 miss /no-such-page/
 miss /no-such-page/index.txt
 
+# The owner's opt-out from Umami: a redirect that leaves the cookie
+# umamiBeforeSend reads, and nothing the edge may cache.
+get /umami-off/
+same "/umami-off/ redirects home" "302 $base/" "$code $loc"
+same "/umami-off/ sets the cookie umamiBeforeSend reads" \
+  "umami-off=1; Max-Age=34560000; Path=/; Secure; SameSite=Lax" "$(hdr set-cookie)"
+same "/umami-off/ is not cached" "no-store" "$(hdr cache-control)"
+get /
+same "no other page sets a cookie" "" "$(hdr set-cookie)"
+
 # One CSP header, exactly as deploy/Caddyfile writes it, and the properties it
 # must keep whatever else changes in it.
 want=$(sed -n 's/^[[:space:]]*Content-Security-Policy "\(.*\)"$/\1/p' deploy/Caddyfile)

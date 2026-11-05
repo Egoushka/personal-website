@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Bricolage_Grotesque } from "next/font/google";
 import { site, feedTypes, isPrelive } from "@/lib/site";
+import { UMAMI_BEFORE_SEND } from "@/lib/umami";
 import "./globals.css";
 
 // Downloaded and self-hosted at build time — no request to Google from the
@@ -127,13 +128,14 @@ export default function RootLayout({
           tracker is blocked or still loading, and then nothing is sent.
           umamiBeforeSend drops everything sent from inside a frame: the Umami
           heatmap view loads each page in an iframe, and those loads are not
-          visits. With no tracker response there is no session, so the recorder
-          sends nothing either.
+          visits, and neither are the visits of a browser that opened /umami-off/
+          (the site owner's). With no tracker response there is no session, so the
+          recorder sends nothing either.
         */}
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "window.umamiBeforeSend=function(t,p){return window.top===window?p:null};" +
+              UMAMI_BEFORE_SEND +
               "(function(){function t(n,d){if(window.umami)window.umami.track(n,d)}" +
               "document.addEventListener('click',function(e){var a=e.target&&e.target.closest&&e.target.closest('a[href]');if(!a)return;" +
               "if(a.origin!==location.origin)t('outbound',{url:a.href});" +
