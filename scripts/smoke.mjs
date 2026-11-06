@@ -92,14 +92,16 @@ const JS_SLACK = 1024;
 // A post with a figure also fetches the island (components/figure-island.ts): a
 // chunk of its own, after hydration, so it is not in the HTML's script tags and
 // is measured in the browser instead. Each such route has an entry here, with its
-// reason: the posts' first-load JS on main (145,539 B gz) + the 116 B shim every
-// post carries (components/FigureEnhancements.tsx) + the island, 1,480 B gz, which
-// is all of draw-in, hover and focus values and the legend toggles (ADR 0010).
+// reason: the posts' first-load JS with Next 16.4.3 (147,279 B gz; Next 16.3.6 had
+// 145,745 B, so the bump alone adds 1,534 B) + the 116 B shim every post carries
+// (components/FigureEnhancements.tsx) + the island, which is all of draw-in, hover
+// and focus values and the legend toggles (ADR 0010); shim and island together are
+// 1,460 B gz.
 // Every post shares that cost, so one budget covers any post with a figure and a
 // new post never needs a line here (ADR 0010; the content engine opens pull
 // requests that add only the post file). Any other route with a figure needs an
 // entry in FIGURE_BUDGET, and fails without one.
-const FIGURE_POST_BUDGET = 147135;
+const FIGURE_POST_BUDGET = 148739;
 const FIGURE_BUDGET = {};
 const FIGURE_MARK = "figure[data-fig]";
 
