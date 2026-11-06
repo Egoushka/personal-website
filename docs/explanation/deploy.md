@@ -75,6 +75,10 @@ Umami is routed from the same file (`/s/script.js` and `/api/send` to `umami:300
 the tracker is first-party. The tracker derives its endpoint from its script's path, so
 it may post to `/s/api/send` instead; check in DevTools that pageviews reach Umami.
 
+The owner's own visits are kept out by a cookie: opening `/umami-off/` once in a browser sets it
+(deploy/Caddyfile), and `umamiBeforeSend` ([lib/umami.ts](../../lib/umami.ts)) then sends nothing.
+It is per browser; the phone needs one visit too.
+
 **Cloudflare is in front** (`server: cloudflare` on every live response), so the browser
 terminates TLS at Cloudflare. Before debugging anything header- or crawler-related:
 

@@ -207,6 +207,17 @@
 		redir * https://github.com/Egoushka/personal-website/blob/main/docs/adr/0010-posts-may-carry-interactive-figures.md permanent
 	}
 
+	# Keeps the owner's own visits out of Umami without a line of client JS: a
+	# visit here leaves a cookie that umamiBeforeSend (lib/umami.ts) reads, and
+	# the browser then sends nothing. Per browser, so open it once on each device.
+	# Not a secret: anyone may opt themselves out. Not HttpOnly, because the page
+	# has to read it. 400 days is the longest Chrome keeps a cookie.
+	handle /umami-off* {
+		header Set-Cookie "umami-off=1; Max-Age=34560000; Path=/; Secure; SameSite=Lax"
+		header Cache-Control "no-store"
+		redir * / temporary
+	}
+
 	handle {
 		# Next static export uses trailingSlash: dir/index.html
 		try_files {path} {path}/index.html {path}.html
