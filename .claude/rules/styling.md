@@ -12,6 +12,8 @@ paths:
 
 ## Styling
 
+- **[DESIGN.md](../../DESIGN.md)** is the design contract the `ui-design` skill reads first: tokens, roles and
+  "Kept on purpose", the look decisions Yehor approved. A change that alters the look keeps it in step.
 - **shadcn/ui on Tailwind CSS v4** ([ADR 0007](docs/adr/0007-the-site-is-built-on-shadcn-ui-and-tailwind.md)).
   Compose pages from Tailwind utilities and the components in `components/ui/`
   (shadcn/ui's button, badge, card, breadcrumb, kbd, copied in, no Radix) — not new
