@@ -9,22 +9,22 @@ import { cn } from "@/lib/utils";
  * `:focus-visible` outline in globals.css, not a second ring.
  */
 export const buttonVariants = cva(
-  "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
-        brand: "bg-brand text-brand-foreground shadow-xs hover:bg-brand/90",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        outline: "border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground",
-        ghost: "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-        link: "text-foreground underline decoration-brand/50 underline-offset-4 hover:decoration-brand",
+        default: "key key-primary",
+        brand: "key key-primary",
+        secondary: "key",
+        outline: "key",
+        ghost: "key key-ghost",
+        link: "inline-flex items-center text-foreground underline decoration-brand/50 underline-offset-4 hover:decoration-brand",
       },
       size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        sm: "h-8 gap-1.5 px-3 has-[>svg]:px-2.5",
-        lg: "h-10 px-6 has-[>svg]:px-4",
-        icon: "size-9",
+        default: "",
+        sm: "key-sm",
+        lg: "key-lg",
+        icon: "key-icon",
       },
     },
     defaultVariants: { variant: "default", size: "default" },

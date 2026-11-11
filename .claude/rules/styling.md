@@ -23,13 +23,13 @@ paths:
 - **Tokens** are CSS variables in `app/globals.css`, mapped by `@theme inline`:
   `background`, `foreground`, `card`, `muted`/`muted-foreground`, `accent` (a hover
   surface, not a colour), `border` (decorative), `input` (every control edge, ≥ 3:1),
-  `ring`, and `brand` (the amber: links, current item, focus). Status and callouts:
-  `success`, `warning`, `info`, `tip`, `important`, `caution`. Dark is the default
-  (`#0A0B0D`), light is `#FFFFFF`; a stored `data-theme` wins, else the OS decides, and
+  `ring`, and `brand` (the green-teal: links, current item, focus). Status and callouts:
+  `success`, `warning`, `info`, `tip`, `important`, `caution`. Values are OKLCH (twelve neutral steps and an accent ramp, same names in light and
+  dark). Dark is the default; a stored `data-theme` wins, else the OS decides, and
   the `dark:` variant follows the same rule. The contrast ratios in `:root` are floors.
 - **Component CSS** stays in globals.css only for what utilities would do worse:
   `.markdown` (posts and docs, over `@tailwindcss/typography`), code blocks and Shiki,
-  tables, `.toc`, the docs and post grids, search results, the panel's figures, the
+  tables, `.toc`, the docs and post grids, search results, the mission-control panels (`.pn`, `.kpi`, `.key`, `.chip`, `.prow`), the
   skills board, the journey chart, the figures in a post (`.fig`, series colours are the
   status tokens in order, plus a marker shape per series), and the CV print sheet. The typography plugin's rules
   land in a later cascade layer than `components`, so the markdown, code and table
@@ -58,5 +58,5 @@ paths:
   island's cost added on purpose, through one shared post budget (`FIGURE_POST_BUDGET`)
   with the reason beside it, so a new post needs no line here.
 - **CLS**: smoke holds < 0.01 at 375 px on `/`, `/writing/`, a post and `/about/`, < 0.1
-  elsewhere. The panel's reserved height (`.panel-body`) is measured; re-measure when
-  its content changes.
+  elsewhere. The home islands reserve their size (the box matrix's 133 cells, the coding bars'
+  `min-h`); re-measure when their content changes.

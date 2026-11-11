@@ -10,7 +10,9 @@ import { cn } from "@/lib/utils";
  */
 const LINKS = [
   { href: "/journey/", label: "Journey", internal: true },
+  { href: "/writing/", label: "Writing", internal: true },
   { href: "/about/#contact", label: "Contact", internal: true },
+  { href: `mailto:${site.email}`, label: "Email" },
   { href: "/feed.xml", label: "RSS" },
   { href: site.github, label: "GitHub", external: true },
 ];
