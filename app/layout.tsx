@@ -96,6 +96,17 @@ export default function RootLayout({
         <a className="skip-link" href="#main" data-pagefind-ignore>Skip to content</a>
         {children}
         {/*
+          WebMCP: loads the tool registrar only where the browser exposes
+          `modelContext` (document is canonical, navigator the older entry), after
+          the page has loaded. Nothing renders; without it the site is complete.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){if(document.modelContext||navigator.modelContext)addEventListener('load',function(){import('/webmcp.js')})})()",
+          }}
+        />
+        {/*
           Umami, self-hosted. Served first-party via the edge Traefik router, NOT from
           umami.lab.hrabovskyi.online — that name resolves to 100.64.0.2 and is reachable
           only on the tailnet, so visitors would get nothing. Going through /s/script.js

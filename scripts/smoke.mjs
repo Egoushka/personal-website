@@ -624,6 +624,42 @@ console.log(`\n11. figures: ${CHART_POST} (chart), ${DIAGRAM_POST} (diagram)`);
   await jctx.close();
 }
 
+
+// ── 12. WebMCP: tools register where modelContext exists, nothing happens where it does not ─
+console.log("\n12. WebMCP: stubbed document.modelContext");
+{
+  const EXPECT = ["search_site", "list_posts", "get_post", "get_status", "contact"];
+  const ctx = await context();
+  await ctx.addInitScript(() => {
+    window.__tools = [];
+    Object.defineProperty(document, "modelContext", { configurable: true, value: { registerTool: async (t) => void window.__tools.push(t) } });
+  });
+  const page = await ctx.newPage();
+  await page.goto(`${BASE}/`);
+  await settle(page);
+  const names = await page.evaluate(() => window.__tools.map((t) => t.name));
+  if (JSON.stringify(names) !== JSON.stringify(EXPECT)) fail("R-41", "/", `registered ${JSON.stringify(names)}, expected ${JSON.stringify(EXPECT)}`);
+  const run = (name, args) => page.evaluate(([n, a]) => window.__tools.find((t) => t.name === n).execute(a).then(JSON.parse), [name, args]);
+  const posts = await run("list_posts", {});
+  if (!posts.length) fail("R-41", "/", "list_posts returned nothing");
+  else if (!(await run("get_post", { slug: posts[0].slug })).body) fail("R-41", "/", "get_post returned no body");
+  if ((await run("contact", { subject: "x" })).sent !== false) fail("R-41", "/", "contact did not say it sent nothing");
+  const hits = await run("search_site", { query: "Attest" });
+  if (!Array.isArray(hits) || !hits.length) fail("R-41", "/", `search_site found nothing for "Attest": ${JSON.stringify(hits).slice(0, 100)}`);
+  for (const v of await page.evaluate(() => window.__csp)) fail("R-41", "/", `securitypolicyviolation: ${v}`);
+  await ctx.close();
+
+  // Without modelContext the registrar is never requested.
+  const plainCtx = await context();
+  const p2 = await plainCtx.newPage();
+  const asked = [];
+  p2.on("request", (r) => /webmcp/.test(r.url()) && asked.push(r.url()));
+  await p2.goto(`${BASE}/`);
+  await settle(p2);
+  if (asked.length) fail("R-41", "/", `requested ${asked.join(", ")} with no modelContext`);
+  await plainCtx.close();
+}
+
 await browser.close();
 local?.close();
 
