@@ -49,7 +49,7 @@ export default function Nav({ current, width = "default" }: { current?: Section;
 
         <nav
           aria-label="Primary"
-          className="order-3 -mx-2 flex w-[calc(100%+1rem)] flex-wrap items-center gap-0.5 pb-2 md:order-2 md:mx-0 md:ml-4 md:w-auto md:flex-nowrap md:pb-0"
+          className="order-3 -mx-2 flex w-[calc(100%+1rem)] items-center gap-0.5 overflow-x-auto pb-2 [mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)] md:order-2 md:mx-0 md:ml-4 md:w-auto md:overflow-visible md:pb-0 md:[mask-image:none]"
         >
           {SECTIONS.map((s) => (
             <Link
