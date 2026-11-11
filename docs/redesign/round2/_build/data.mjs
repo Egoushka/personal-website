@@ -99,7 +99,7 @@ export const posts = [
 export const selfCheck = [
   ["llms.txt", "/llms.txt", "404", false, "No llms.txt. An agent gets the HTML and has to guess."],
   ["MCP discovery", "/.well-known/mcp.json", "404", false, "No MCP server is advertised."],
-  ["WebMCP tools", "navigator.modelContext", "none", false, "The page registers no tools for a browser agent."],
+  ["WebMCP tools", "document.modelContext", "none", false, "The page registers no tools for a browser agent (navigator.modelContext only as fallback)."],
   ["x402", "HTTP 402 on a paid route", "none", false, "Nothing is for sale here, so nothing answers 402. Correct for this site."],
   ["robots.txt", "/robots.txt", "200", true, "Present, with rules per crawler."],
   ["sitemap", "/sitemap.xml", "200", true, "Present."],

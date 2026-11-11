@@ -32,7 +32,7 @@ const checkerBlock = (w, h) => blk("checker", w, h, "try it", `
 const boxBlock = (w, h) => blk("box", w, h, "my box, live", `
 <div class="boxb"><div class="bx">${fig("containers", "big")}<span>containers</span></div><div class="bx good">${fig("unhealthy", "big")}<span>unhealthy</span></div><div class="bx">${fig("uptime", "big")}<span>uptime</span></div></div>
 <div class="mtx" role="img" aria-label="133 containers, all healthy">${Array.from({ length: status.containers }, (_, i) => `<i style="--i:${i}"></i>`).join("")}</div>
-<p class="small mut mono">status.json · read <span data-ago="${READ_AT}">${fmtDate(READ_AT)}</span> · Nuremberg</p>`, "box");
+<p class="small mut mono">status.json · read <span data-ago="${READ_AT}">${fmtDate(READ_AT)}</span></p>`, "box");
 
 const nowBlock = (w, h) => blk("now", w, h, "being built now", `<ol class="feed">${commits.map(c => `<li><a href="${c.href}"><span class="mono mut small"><span data-ago="${c.at}">${fmtDate(c.at)}</span> · ${c.repo}</span><span class="fm">${esc(c.msg)}</span></a></li>`).join("")}</ol>`);
 const postsBlock = (w, h) => blk("posts", w, h, "writing", `<p class="small mut mono">${fig("posts")} posts · ${fig("words")} words</p><ol class="posts">${posts.map(p => `<li><a href="${p.href}"><span class="mono mut small">${fmtDate(p.date)}</span><b>${esc(p.title)}</b></a></li>`).join("")}</ol>`);

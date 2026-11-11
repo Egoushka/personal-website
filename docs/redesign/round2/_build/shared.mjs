@@ -62,7 +62,7 @@ ${extraHead}</head>
 <div class="knob"><span>Density</span><div class="seg"><button data-knob="density" data-v="comfortable">Comfortable</button><button data-knob="density" data-v="compact">Compact</button></div></div>
 <div class="knob"><span>Accent</span><div class="hues">${[[hue, "default"], ["152", "green"], ["255", "blue"], ["295", "violet"], ["60", "amber"]].filter((v, i, a) => a.findIndex(x => x[0] === v[0]) === i).map(([h, n]) => `<button data-knob="hue" data-v="${h}" style="--h:${h}" aria-label="${n} accent"></button>`).join("")}</div></div>
 <div class="knob"><span>Motion</span><div class="seg"><button data-knob="motion" data-v="on">On</button><button data-knob="motion" data-v="off">Off</button></div></div>
-<p class="derive">grid 4 · target 44 · stroke 1.75 · type 15 × 1.2<br>radius = grid × 1.5 / 2.5 / 4 / 6<br>saved on this device only</p>
+<p class="derive">grid 4 · target 44 · stroke 1.75 · type 15<br>sizes 12 · 13 · 15 · 17 · 20 · 28 · lines on the grid<br>radius = grid × 1.5 / 2 (controls) / 2.5 / 4 / 6<br>saved on this device only</p>
 </div>
 <main id="main">
 ${body}
