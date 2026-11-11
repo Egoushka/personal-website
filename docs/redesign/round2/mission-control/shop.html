@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en" data-hue-default="165" style="--hue:165">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Shop · Yehor Hrabovskyi (round 2: mission-control)</title>
+<meta name="color-scheme" content="dark light">
+<link rel="stylesheet" href="../shared/tokens.css"><link rel="stylesheet" href="mc.css">
+<script>window.R2={"figs":{"containers":{"v":"133","l":"containers running","src":"status.json → containers","how":"Counted on the box by docker, written to status.json by a timer. Container names are not published.","href":"https://hrabovskyi.online/status.json"},"unhealthy":{"v":"0","l":"unhealthy","src":"status.json → unhealthy","how":"Containers whose Docker healthcheck reports unhealthy at the time of writing.","href":"https://hrabovskyi.online/status.json"},"uptime":{"v":"0 d","l":"uptime","src":"status.json → uptimeDays","how":"Days since the box last booted. It restarted today, so this reads 0.","href":"https://hrabovskyi.online/status.json"},"hours":{"v":"160 h","l":"coding time","src":"status.json → coding.hours","how":"Hours my editor tracker counted. The period it covers is not stated in the file, so none is claimed here.","href":"https://hrabovskyi.online/status.json"},"editor":{"v":"87%","l":"of it in Claude","src":"status.json → coding.editorPercent","how":"Share of tracked time by editor.","href":"https://hrabovskyi.online/status.json"},"attestDl":{"v":"660","l":"Attest downloads","src":"status.json → package.downloads","how":"NuGet's total download count for the Attest package, read by the box.","href":"https://www.nuget.org/packages/Attest"},"attestVer":{"v":"1.2.1","l":"Attest on NuGet","src":"status.json → package.version","how":"The latest published version.","href":"https://www.nuget.org/packages/Attest"},"countries":{"v":"87","l":"countries","src":"lib/site.ts → attest.readings","how":"One validator per country in the repo, each with its own test file.","href":"https://github.com/Egoushka/attest"},"defects":{"v":"197","l":"defects fixed","src":"lib/site.ts → attest.readings","how":"Counted against the upstream CountryValidator project.","href":"https://github.com/Egoushka/attest"},"chVer":{"v":"0.19.19","l":"chargehand release","src":"GitHub tags, read 2026-11-11","how":"Latest tag on Egoushka/chargehand.","href":"https://github.com/Egoushka/chargehand/tags"},"chPrs":{"v":"857","l":"pull requests","src":"GitHub API, read 2026-11-11","how":"Highest pull request number on Egoushka/chargehand, open and closed.","href":"https://github.com/Egoushka/chargehand/pulls?q=is%3Apr"},"chUsers":{"v":"1","l":"chargehand user: me","src":"lib/site.ts → chargehand.readings","how":"Counted by hand. Nobody else runs it yet.","href":"https://hrabovskyi.online/projects/chargehand/"},"chBlind":{"v":"0.333 → 0.667","l":"first blind test, lost","src":"post, 29 Sep 2026","how":"Model-judged blind comparison against a plain agent session; my orchestrator scored 0.333.","href":"https://hrabovskyi.online/writing/chargehand-blind-test/"},"posts":{"v":"12","l":"posts","src":"the live site, built 6 Nov 2026","how":"Published posts; drafts are not counted.","href":"https://hrabovskyi.online/writing/"},"words":{"v":"12,006","l":"words","src":"counted at build","how":"The build counts the words of every published post.","href":"https://hrabovskyi.online/writing/"},"ouraStage":{"v":"3 of 8","l":"Oura stages done","src":"oura-platform README","how":"Stages 1, 2 and 4 run. 3 is skipped on purpose; 5 to 8 are not built.","href":"https://github.com/Egoushka/oura-platform"},"paying":{"v":"0","l":"paying users","src":"counted by hand","how":"No product takes money yet. This stays 0 until one does.","href":"https://hrabovskyi.online"},"checks":{"v":"0","l":"checks run","src":"not deployed","how":"check.hrabovskyi.online has no DNS record yet, so nobody has run a check.","href":"#checker"}},"readAt":"2026-11-11T01:58:08Z","now":"2026-11-11T02:20:00Z","email":"egorgrabovskij@gmail.com"}</script>
+<script src="../shared/ui.js"></script>
+</head>
+<body class="c-mission-control">
+<a class="skip" href="#main">Skip to content</a>
+<header class="bar"><div class="bar-in">
+<a class="brand" href="index.html"><span class="mark" aria-hidden="true">YH</span><span class="who">Yehor Hrabovskyi</span></a>
+<nav class="nav" aria-label="Main"><a href="index.html">Home</a><a href="shop.html" aria-current="page">Shop</a><a href="partner.html">Partner</a><a class="ext" href="https://hrabovskyi.online/writing/">Writing <svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a></nav>
+<span class="gap"></span>
+<a class="pulse" href="https://hrabovskyi.online/status.json" data-fig="containers" title="Read from my box"><i></i><span>box ok · read <span data-ago="2026-11-11T01:58:08Z">11 Nov 2026</span></span></a>
+<button class="key ghost icon" data-open-knobs aria-expanded="false" aria-label="Tune this page"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg></button>
+</div></header>
+<div class="knobs" role="dialog" aria-label="Tune this page">
+<h2>Tune this page</h2>
+<div class="knob"><span>Theme</span><div class="seg"><button data-knob="theme" data-v="system">System</button><button data-knob="theme" data-v="light">Light</button><button data-knob="theme" data-v="dark">Dark</button></div></div>
+<div class="knob"><span>Density</span><div class="seg"><button data-knob="density" data-v="comfortable">Comfortable</button><button data-knob="density" data-v="compact">Compact</button></div></div>
+<div class="knob"><span>Accent</span><div class="hues"><button data-knob="hue" data-v="165" style="--h:165" aria-label="default accent"></button><button data-knob="hue" data-v="152" style="--h:152" aria-label="green accent"></button><button data-knob="hue" data-v="255" style="--h:255" aria-label="blue accent"></button><button data-knob="hue" data-v="295" style="--h:295" aria-label="violet accent"></button><button data-knob="hue" data-v="60" style="--h:60" aria-label="amber accent"></button></div></div>
+<div class="knob"><span>Motion</span><div class="seg"><button data-knob="motion" data-v="on">On</button><button data-knob="motion" data-v="off">Off</button></div></div>
+<p class="derive">grid 4 · target 44 · stroke 1.75 · type 15 × 1.2<br>radius = grid × 1.5 / 2.5 / 4 / 6<br>saved on this device only</p>
+</div>
+<main id="main">
+
+<section class="hero wrap slim">
+<div class="hero-l">
+<p class="eyebrow mono"><i class="dot"></i>products live on their own addresses, never on this site</p>
+<h1>Shop</h1>
+<p class="lede">Tools for running agents calmly. The essentials of each one are free. What is paid is stated before you click, and no price is set yet, so none is shown.</p>
+</div>
+<div class="hero-r pn">
+<div class="kpis three">
+<div class="kpi"><span>products</span><b class="num">7</b><em>1 rebuilding · 2 building · 4 coming</em></div>
+<div class="kpi"><span>paying users</span><a class="num " data-fig="paying" href="https://hrabovskyi.online">0</a><em>across all of them</em></div>
+<div class="kpi"><span>prices set</span><b class="num">0</b><em>"price not set" until one is</em></div>
+</div></div>
+</section>
+<section class="wrap">
+<div class="pn board">
+<div class="ph"><h2>Product board</h2><div class="seg mini" role="group" aria-label="Filter by state" id="stateFilter">
+<button aria-pressed="true" data-s="all">All <span class="num">7</span></button><button aria-pressed="false" data-s="rebuilding">rebuilding <span class="num">1</span></button><button aria-pressed="false" data-s="building">building <span class="num">2</span></button><button aria-pressed="false" data-s="coming">coming <span class="num">4</span></button></div></div>
+<div class="thead mono" aria-hidden="true"><span>Product</span><span>State</span><span>Usage</span><span>Free</span><span>Paid</span><span></span></div>
+<div class="plist full">
+<details class="prow" data-state="coming" id="checker" open>
+<summary><span class="pn-name"><b>Agent-ready checker</b><span class="mono mut host">check.hrabovskyi.online</span></span><span class="chip coming">coming</span>
+<span class="pu"><b class="num">0</b> <span class="mut">checks run · not deployed</span></span><span class="pf">Web check, GitHub Action</span><span class="pp">API, pay per call over x402 <span class="mut">· price not set</span></span><span class="tw" aria-hidden="true"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></span></summary>
+<div class="pbody"><p>Paste an address and see which agent doors the site has open, which are missing, and what each one would take. Runs as a web page, as a GitHub Action on every deploy, and as an API an agent can call and pay for per check.</p>
+<dl class="fp"><div><dt>Free</dt><dd>Web check · GitHub Action</dd></div><div><dt>Paid</dt><dd>API, pay per call over x402 <span class="mut">· price not set</span></dd></div></dl>
+<p class="mut small">No public repository yet.</p>
+<a class="key" href="https://check.hrabovskyi.online">Where it will live <svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a><span class="mut small">Not deployed: the link does not answer yet.</span>
+</div></details>
+<details class="prow" data-state="coming" id="webmcp">
+<summary><span class="pn-name"><b>WebMCP for ASP.NET and Blazor</b><span class="mono mut host">NuGet library</span></span><span class="chip coming">coming</span>
+<span class="pu"><span class="mut">0 installs · not published</span></span><span class="pf">The whole library</span><span class="pp"><span class="mut">nothing paid planned</span></span><span class="tw" aria-hidden="true"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></span></summary>
+<div class="pbody"><p>Mark a page action or a minimal-API endpoint and it shows up as a WebMCP tool the visitor's agent can call, with the schema generated from your C# types.</p>
+<dl class="fp"><div><dt>Free</dt><dd>The whole library</dd></div><div><dt>Paid</dt><dd><span class="mut">nothing paid planned</span></dd></div></dl>
+<p class="mut small">No public repository yet.</p>
+<a class="key" href="shop.html#webmcp">Where it will live <svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a><span class="mut small">Not deployed: the link does not answer yet.</span>
+</div></details>
+<details class="prow" data-state="coming" id="chargehand">
+<summary><span class="pn-name"><b>chargehand hosted</b><span class="mono mut host">chargehand.hrabovskyi.online</span></span><span class="chip coming">coming</span>
+<span class="pu"><b class="num">1</b> <span class="mut">user (me) · v0.19.19 self-hosted</span></span><span class="pf">Self-hosted, source available</span><span class="pp">Hosted runs <span class="mut">· price not set</span></span><span class="tw" aria-hidden="true"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></span></summary>
+<div class="pbody"><p>The orchestrator runs today from the CLI, over HTTP and over MCP. Hosted means the runners, sandboxes and model routing run on my box instead of yours.</p>
+<dl class="fp"><div><dt>Free</dt><dd>Self-hosted, source available</dd></div><div><dt>Paid</dt><dd>Hosted runs <span class="mut">· price not set</span></dd></div></dl>
+<a class="lastc" href="https://github.com/Egoushka/chargehand/commit/a167640"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><line x1="3" x2="9" y1="12" y2="12"/><line x1="15" x2="21" y1="12" y2="12"/></svg><span class="mono">a167640</span><span>chore: relicense versions after v0.19.19 to FSL-1.1-ALv2</span><span class="mut" data-ago="2026-11-11T02:02:03Z">11 Nov 2026</span></a>
+<a class="key" href="https://chargehand.hrabovskyi.online">Where it will live <svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a><span class="mut small">Not deployed: the link does not answer yet.</span>
+</div></details>
+<details class="prow" data-state="building" id="x402">
+<summary><span class="pn-name"><b>x402 .NET kit</b><span class="mono mut host">github.com/Egoushka/x402-mcp-dotnet</span></span><span class="chip building">building</span>
+<span class="pu"><span class="mut">0 paying agents · not released</span></span><span class="pf">Library, Sample server</span><span class="pp"><span class="mut">nothing paid planned</span></span><span class="tw" aria-hidden="true"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></span></summary>
+<div class="pbody"><p>Middleware for paid MCP tool calls over HTTP 402. Settlement happens only after the tool succeeds. Conformance runs in CI against x402-conformance-svm 1.6.0.</p>
+<dl class="fp"><div><dt>Free</dt><dd>Library · Sample server</dd></div><div><dt>Paid</dt><dd><span class="mut">nothing paid planned</span></dd></div></dl>
+<a class="lastc" href="https://github.com/Egoushka/x402-mcp-dotnet/commit/6a0731a"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><line x1="3" x2="9" y1="12" y2="12"/><line x1="15" x2="21" y1="12" y2="12"/></svg><span class="mono">6a0731a</span><span>ci: run x402-conformance-svm 1.6.0 against the sample server</span><span class="mut" data-ago="2026-11-02T11:09:24Z">2 Nov 2026</span></a>
+<a class="key" href="https://github.com/Egoushka/x402-mcp-dotnet">Open <svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a>
+</div></details>
+<details class="prow" data-state="coming" id="touchstone">
+<summary><span class="pn-name"><b>touchstone</b><span class="mono mut host">touchstone.hrabovskyi.online</span></span><span class="chip coming">coming</span>
+<span class="pu"><span class="mut">0 users · no public repo yet</span></span><span class="pf">Core checks, locally</span><span class="pp">Large schemas, CI reports <span class="mut">· price not set</span></span><span class="tw" aria-hidden="true"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></span></summary>
+<div class="pbody"><p>A migration that compiles can still answer differently: trailing spaces, collation, rounding, NULL ordering. touchstone replays your queries on both and lists every row that changed.</p>
+<dl class="fp"><div><dt>Free</dt><dd>Core checks, locally</dd></div><div><dt>Paid</dt><dd>Large schemas · CI reports <span class="mut">· price not set</span></dd></div></dl>
+<p class="mut small">No public repository yet.</p>
+<a class="key" href="https://touchstone.hrabovskyi.online">Where it will live <svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a><span class="mut small">Not deployed: the link does not answer yet.</span>
+</div></details>
+<details class="prow" data-state="rebuilding" id="attest">
+<summary><span class="pn-name"><b>Attest</b><span class="mono mut host">nuget.org/packages/Attest</span></span><span class="chip rebuilding">rebuilding</span>
+<span class="pu"><b class="num">660</b> <span class="mut">NuGet downloads · v1.2.1</span></span><span class="pf">The whole library</span><span class="pp"><span class="mut">free, by design</span></span><span class="tw" aria-hidden="true"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></span></summary>
+<div class="pbody"><p>A fork of CountryValidator with 197 of its defects fixed. 1.2.1 is on NuGet and works; the next version is being rebuilt from the rules up.</p>
+<dl class="fp"><div><dt>Free</dt><dd>The whole library</dd></div><div><dt>Paid</dt><dd><span class="mut">free, by design</span></dd></div></dl>
+<a class="lastc" href="https://github.com/Egoushka/attest/commit/6bbffbe"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><line x1="3" x2="9" y1="12" y2="12"/><line x1="15" x2="21" y1="12" y2="12"/></svg><span class="mono">6bbffbe</span><span>ci: fix zizmor findings, add zizmor config</span><span class="mut" data-ago="2026-10-29T14:16:06Z">29 Oct 2026</span></a>
+<a class="key" href="https://nuget.org/packages/Attest">Open <svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a>
+</div></details>
+<details class="prow" data-state="building" id="oura">
+<summary><span class="pn-name"><b>oura-platform</b><span class="mono mut host">github.com/Egoushka/oura-platform</span></span><span class="chip building">building</span>
+<span class="pu"><b class="num">3 of 8</b> <span class="mut">stages done · 1 user (me)</span></span><span class="pf">Self-hosted, open source</span><span class="pp"><span class="mut">nothing paid planned</span></span><span class="tw" aria-hidden="true"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></span></summary>
+<div class="pbody"><p>Self-hosted: OAuth ingestion into Postgres with TimescaleDB, three Grafana dashboards the Oura app cannot draw, and an MCP server over the warehouse.</p>
+<dl class="fp"><div><dt>Free</dt><dd>Self-hosted, open source</dd></div><div><dt>Paid</dt><dd><span class="mut">nothing paid planned</span></dd></div></dl>
+<a class="lastc" href="https://github.com/Egoushka/oura-platform/commit/1c08844"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><line x1="3" x2="9" y1="12" y2="12"/><line x1="15" x2="21" y1="12" y2="12"/></svg><span class="mono">1c08844</span><span>docs(publish): describe the tag@digest pin the homelab uses</span><span class="mut" data-ago="2026-11-06T14:10:48Z">6 Nov 2026</span></a>
+<a class="key" href="https://github.com/Egoushka/oura-platform">Open <svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a>
+</div></details></div>
+<p class="pfoot mono"><span>usage comes from each product's own counter once it exists</span><span>"coming" = not deployed</span></p>
+</div>
+</section>
+
+</main>
+<footer class="foot"><div class="foot-in">
+<a href="mailto:egorgrabovskij@gmail.com">egorgrabovskij@gmail.com</a><a href="https://github.com/Egoushka">GitHub</a><a href="https://hrabovskyi.online/feed.xml">RSS</a><a href="https://hrabovskyi.online/writing/">Writing</a><span style="display:inline-flex;align-items:center">Kyiv · UTC+2</span>
+<span class="stamp" style="display:inline-flex;align-items:center">Prototype · mission-control · figures read 2026-11-11 01:58 UTC</span>
+</div></footer>
+<script src="mc.js"></script>
+</body></html>

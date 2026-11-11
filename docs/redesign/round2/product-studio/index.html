@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en" data-hue-default="235" style="--hue:235">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Home · Yehor Hrabovskyi (round 2: product-studio)</title>
+<meta name="color-scheme" content="dark light">
+<link rel="stylesheet" href="../shared/tokens.css"><link rel="stylesheet" href="studio.css">
+<script>window.R2={"figs":{"containers":{"v":"133","l":"containers running","src":"status.json → containers","how":"Counted on the box by docker, written to status.json by a timer. Container names are not published.","href":"https://hrabovskyi.online/status.json"},"unhealthy":{"v":"0","l":"unhealthy","src":"status.json → unhealthy","how":"Containers whose Docker healthcheck reports unhealthy at the time of writing.","href":"https://hrabovskyi.online/status.json"},"uptime":{"v":"0 d","l":"uptime","src":"status.json → uptimeDays","how":"Days since the box last booted. It restarted today, so this reads 0.","href":"https://hrabovskyi.online/status.json"},"hours":{"v":"160 h","l":"coding time","src":"status.json → coding.hours","how":"Hours my editor tracker counted. The period it covers is not stated in the file, so none is claimed here.","href":"https://hrabovskyi.online/status.json"},"editor":{"v":"87%","l":"of it in Claude","src":"status.json → coding.editorPercent","how":"Share of tracked time by editor.","href":"https://hrabovskyi.online/status.json"},"attestDl":{"v":"660","l":"Attest downloads","src":"status.json → package.downloads","how":"NuGet's total download count for the Attest package, read by the box.","href":"https://www.nuget.org/packages/Attest"},"attestVer":{"v":"1.2.1","l":"Attest on NuGet","src":"status.json → package.version","how":"The latest published version.","href":"https://www.nuget.org/packages/Attest"},"countries":{"v":"87","l":"countries","src":"lib/site.ts → attest.readings","how":"One validator per country in the repo, each with its own test file.","href":"https://github.com/Egoushka/attest"},"defects":{"v":"197","l":"defects fixed","src":"lib/site.ts → attest.readings","how":"Counted against the upstream CountryValidator project.","href":"https://github.com/Egoushka/attest"},"chVer":{"v":"0.19.19","l":"chargehand release","src":"GitHub tags, read 2026-11-11","how":"Latest tag on Egoushka/chargehand.","href":"https://github.com/Egoushka/chargehand/tags"},"chPrs":{"v":"857","l":"pull requests","src":"GitHub API, read 2026-11-11","how":"Highest pull request number on Egoushka/chargehand, open and closed.","href":"https://github.com/Egoushka/chargehand/pulls?q=is%3Apr"},"chUsers":{"v":"1","l":"chargehand user: me","src":"lib/site.ts → chargehand.readings","how":"Counted by hand. Nobody else runs it yet.","href":"https://hrabovskyi.online/projects/chargehand/"},"chBlind":{"v":"0.333 → 0.667","l":"first blind test, lost","src":"post, 29 Sep 2026","how":"Model-judged blind comparison against a plain agent session; my orchestrator scored 0.333.","href":"https://hrabovskyi.online/writing/chargehand-blind-test/"},"posts":{"v":"12","l":"posts","src":"the live site, built 6 Nov 2026","how":"Published posts; drafts are not counted.","href":"https://hrabovskyi.online/writing/"},"words":{"v":"12,006","l":"words","src":"counted at build","how":"The build counts the words of every published post.","href":"https://hrabovskyi.online/writing/"},"ouraStage":{"v":"3 of 8","l":"Oura stages done","src":"oura-platform README","how":"Stages 1, 2 and 4 run. 3 is skipped on purpose; 5 to 8 are not built.","href":"https://github.com/Egoushka/oura-platform"},"paying":{"v":"0","l":"paying users","src":"counted by hand","how":"No product takes money yet. This stays 0 until one does.","href":"https://hrabovskyi.online"},"checks":{"v":"0","l":"checks run","src":"not deployed","how":"check.hrabovskyi.online has no DNS record yet, so nobody has run a check.","href":"#checker"}},"readAt":"2026-11-11T01:58:08Z","now":"2026-11-11T02:20:00Z","email":"egorgrabovskij@gmail.com","selfCheck":[["llms.txt","/llms.txt","404",false,"No llms.txt. An agent gets the HTML and has to guess."],["MCP discovery","/.well-known/mcp.json","404",false,"No MCP server is advertised."],["WebMCP tools","navigator.modelContext","none",false,"The page registers no tools for a browser agent."],["x402","HTTP 402 on a paid route","none",false,"Nothing is for sale here, so nothing answers 402. Correct for this site."],["robots.txt","/robots.txt","200",true,"Present, with rules per crawler."],["sitemap","/sitemap.xml","200",true,"Present."],["feed","/feed.xml","200",true,"Present."]]}</script>
+<script src="../shared/ui.js"></script>
+<script src="../shared/checker.js" defer></script></head>
+<body class="c-product-studio">
+<a class="skip" href="#main">Skip to content</a>
+<header class="bar"><div class="bar-in">
+<a class="brand" href="index.html"><span class="mark" aria-hidden="true">YH</span><span class="who">Yehor Hrabovskyi</span></a>
+<nav class="nav" aria-label="Main"><a href="index.html" aria-current="page">Home</a><a href="shop.html">Shop</a><a href="partner.html">Partner</a><a class="ext" href="https://hrabovskyi.online/writing/">Writing <svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a></nav>
+<span class="gap"></span>
+<a class="pulse" href="https://hrabovskyi.online/status.json" data-fig="containers" title="Read from my box"><i></i><span>box ok · read <span data-ago="2026-11-11T01:58:08Z">11 Nov 2026</span></span></a>
+<button class="key ghost icon" data-open-knobs aria-expanded="false" aria-label="Tune this page"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg></button>
+</div></header>
+<div class="knobs" role="dialog" aria-label="Tune this page">
+<h2>Tune this page</h2>
+<div class="knob"><span>Theme</span><div class="seg"><button data-knob="theme" data-v="system">System</button><button data-knob="theme" data-v="light">Light</button><button data-knob="theme" data-v="dark">Dark</button></div></div>
+<div class="knob"><span>Density</span><div class="seg"><button data-knob="density" data-v="comfortable">Comfortable</button><button data-knob="density" data-v="compact">Compact</button></div></div>
+<div class="knob"><span>Accent</span><div class="hues"><button data-knob="hue" data-v="235" style="--h:235" aria-label="default accent"></button><button data-knob="hue" data-v="152" style="--h:152" aria-label="green accent"></button><button data-knob="hue" data-v="255" style="--h:255" aria-label="blue accent"></button><button data-knob="hue" data-v="295" style="--h:295" aria-label="violet accent"></button><button data-knob="hue" data-v="60" style="--h:60" aria-label="amber accent"></button></div></div>
+<div class="knob"><span>Motion</span><div class="seg"><button data-knob="motion" data-v="on">On</button><button data-knob="motion" data-v="off">Off</button></div></div>
+<p class="derive">grid 4 · target 44 · stroke 1.75 · type 15 × 1.2<br>radius = grid × 1.5 / 2.5 / 4 / 6<br>saved on this device only</p>
+</div>
+<main id="main">
+
+<section class="hero wrap">
+<p class="eyebrow"><span class="chip coming">coming</span><span>Agent-ready checker · the first of seven tools</span></p>
+<h1>Is your site ready for AI agents? <span class="dim">Type its address.</span></h1>
+<p class="lede">A free check for WebMCP, MCP, x402 and llms.txt, in the browser or on every deploy. I build small tools like this for people who run agents. Essentials free; only the truly advanced parts paid.</p>
+
+<div class="console" id="checker">
+<div class="ctabs" role="tablist" aria-label="Ways to run the checker">
+<button role="tab" aria-selected="true" aria-controls="t-web" id="tb-web">Web</button><button role="tab" aria-selected="false" aria-controls="t-ci" id="tb-ci" tabindex="-1">GitHub Action</button><button role="tab" aria-selected="false" aria-controls="t-api" id="tb-api" tabindex="-1">API · pay per call</button>
+<span class="cstate"><span class="chip coming">coming</span><span class="mono mut small">check.hrabovskyi.online</span></span>
+</div>
+<div class="cpanel" role="tabpanel" id="t-web" aria-labelledby="tb-web">
+<form class="cform" action="https://check.hrabovskyi.online/" method="get">
+<label class="sr" for="url">Address to check</label>
+<span class="cin"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input id="url" name="url" value="hrabovskyi.online" autocomplete="off" spellcheck="false" inputmode="url"></span>
+<button class="key primary" type="submit">Check <svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+</form>
+<div class="presets"><span class="mut small">Try</span><button class="key ghost" data-url="hrabovskyi.online">hrabovskyi.online <span class="mut">recorded</span></button><button class="key ghost" data-url="example.com">example.com</button><button class="key ghost" data-url="github.com">github.com</button></div>
+<div class="result" aria-live="polite">
+<div class="rhead"><div class="score"><b class="num" id="score">3</b><span class="mut">/7 agent doors open</span></div><span id="rhost" class="mono">hrabovskyi.online</span><span id="rkind"><span class="chip real">recorded by hand, 2026-11-11</span></span></div>
+<div class="meter" aria-hidden="true"><i class="no"></i><i class="no"></i><i class="no"></i><i class="no"></i><i class="ok"></i><i class="ok"></i><i class="ok"></i></div>
+<ol class="rows"><li class="no"><span class="ri"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span><span class="rn">llms.txt</span><span class="rp mono">/llms.txt</span><span class="rc mono">404</span><span class="rt">No llms.txt. An agent gets the HTML and has to guess.</span></li><li class="no"><span class="ri"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span><span class="rn">MCP discovery</span><span class="rp mono">/.well-known/mcp.json</span><span class="rc mono">404</span><span class="rt">No MCP server is advertised.</span></li><li class="no"><span class="ri"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span><span class="rn">WebMCP tools</span><span class="rp mono">navigator.modelContext</span><span class="rc mono">none</span><span class="rt">The page registers no tools for a browser agent.</span></li><li class="no"><span class="ri"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span><span class="rn">x402</span><span class="rp mono">HTTP 402 on a paid route</span><span class="rc mono">none</span><span class="rt">Nothing is for sale here, so nothing answers 402. Correct for this site.</span></li><li class="ok"><span class="ri"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span class="rn">robots.txt</span><span class="rp mono">/robots.txt</span><span class="rc mono">200</span><span class="rt">Present, with rules per crawler.</span></li><li class="ok"><span class="ri"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span class="rn">sitemap</span><span class="rp mono">/sitemap.xml</span><span class="rc mono">200</span><span class="rt">Present.</span></li><li class="ok"><span class="ri"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span class="rn">feed</span><span class="rp mono">/feed.xml</span><span class="rc mono">200</span><span class="rt">Present.</span></li></ol>
+<p class="rnote mut small" id="rnote">This is my own site, checked by hand with the same requests the checker will make. It fails 4 of 7; the checker exists so the next site does not have to find out this way.</p>
+</div></div>
+<div class="cpanel" role="tabpanel" id="t-ci" aria-labelledby="tb-ci" hidden>
+<div class="code"><div class="code-h"><span class="mono small">.github/workflows/agent-ready.yml</span><span class="chip sim">planned</span><button class="key ghost copy" data-copy="ci"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy</button></div>
+<pre class="mono" id="ci"><span class="k">name</span>: agent-ready
+<span class="k">on</span>: [deployment_status]
+<span class="k">jobs</span>:
+  <span class="k">check</span>:
+    <span class="k">runs-on</span>: ubuntu-latest
+    <span class="k">steps</span>:
+      - <span class="k">uses</span>: egoushka/agent-ready-action@v1   <span class="c"># free, no key</span>
+        <span class="k">with</span>:
+          <span class="k">url</span>: ${{ github.event.deployment_status.environment_url }}
+          <span class="k">fail-on</span>: llms-txt, mcp-discovery</pre></div>
+<p class="mut small">Runs after every deploy and fails the job when a door you care about closes. Free. The action name is a plan, not a published package.</p>
+</div>
+<div class="cpanel" role="tabpanel" id="t-api" aria-labelledby="tb-api" hidden>
+<div class="code"><div class="code-h"><span class="mono small">an agent calling the API</span><span class="chip sim">planned</span><button class="key ghost copy" data-copy="api"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy</button></div>
+<pre class="mono" id="api"><span class="c">$ curl -i https://check.hrabovskyi.online/api/check?url=example.com</span>
+HTTP/1.1 <span class="w">402 Payment Required</span>
+<span class="k">X-PAYMENT-REQUIRED</span>: { "scheme": "exact", "asset": "USDC", "amount": <span class="c">"price not set"</span> }
+
+<span class="c">$ curl -i -H "X-PAYMENT: &lt;signed payload&gt;" https://check.hrabovskyi.online/api/check?url=example.com</span>
+HTTP/1.1 <span class="g">200 OK</span>
+{ "url": "example.com", "open": 2, "of": 7, "checks": [ … ] }</pre></div>
+<p class="mut small">For agents and pipelines that check many sites. Paid per call over x402, charged only when the check succeeds. The web check and the action stay free.</p>
+</div>
+</div>
+</section>
+
+<section class="wrap tools" aria-labelledby="tools-h">
+<div class="sec-h"><h2 id="tools-h">Six more, each one you can try right here</h2><p class="mut">Every demo below says whether it is real behaviour or an illustration. None of these is hosted on this site; each will live at its own address.</p></div>
+<div class="bento">
+<article class="card w4" id="chargehand">
+<div class="card-h"><div><h3>chargehand hosted</h3><span class="mono mut small">chargehand.hrabovskyi.online</span></div><span class="chip coming">coming</span></div>
+<p class="card-l">Ask a question about your code; every claim in the answer cites a file at a pinned commit, checked before you see it.</p>
+<div class="demo ch-demo" data-demo="chargehand">
+<div class="demo-h"><span class="mono small">result.json · 3 claims</span><span class="chip sim">illustrative</span><button class="key ghost run"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg> Verify</button></div>
+<ol class="claims">
+<li data-ok="1"><span class="cs"></span><span>Handover refuses junk branches</span><span class="mono mut">4fafc13</span></li>
+<li data-ok="1"><span class="cs"></span><span>Sessions are preflighted against an allowlist</span><span class="mono mut">036b34f</span></li>
+<li data-ok="0"><span class="cs"></span><span>Retries are capped at three</span><span class="mono mut">no file</span></li>
+</ol>
+<p class="small mut ch-out">Every citation is resolved at commit <span class="mono">a167640</span> before you see it. A claim whose evidence does not resolve moves to open questions.</p></div>
+<div class="card-f"><span><b>Free</b> Self-hosted, source available</span><span><b>Paid</b> Hosted runs <span class="mut">(price not set)</span></span><span class="use"><a class="num " data-fig="chUsers" href="https://hrabovskyi.online/projects/chargehand/">1</a> user (me) · v0.19.19 self-hosted</span></div>
+</article><article class="card w2" id="attest">
+<div class="card-h"><div><h3>Attest</h3><span class="mono mut small">nuget.org/packages/Attest</span></div><span class="chip rebuilding">rebuilding</span></div>
+<p class="card-l">Validates national ID, tax ID, VAT and postal codes for 87 countries against each country's published rule.</p>
+<div class="demo" data-demo="attest"><div class="demo-h"><label class="mono small" for="nip">Polish NIP · type one</label><span class="chip real">runs here, same rule</span></div>
+<div class="nip big"><input id="nip" class="mono" data-nip value="1234563218" inputmode="numeric" maxlength="13"><output class="mono ok">valid checksum</output></div>
+<p class="small mut">Weights 6 5 7 2 3 4 5 6 7, sum mod 11 against the last digit. Attest has one of these, with tests, for each of 87 countries.</p></div>
+<div class="card-f"><span><b>Free</b> The whole library</span><span><b>Paid</b> <span class="mut">free, by design</span></span><span class="use"><a class="num " data-fig="attestDl" href="https://www.nuget.org/packages/Attest">660</a> NuGet downloads · v1.2.1</span></div>
+</article>
+<article class="card w3" id="x402">
+<div class="card-h"><div><h3>x402 .NET kit</h3><span class="mono mut small">github.com/Egoushka/x402-mcp-dotnet</span></div><span class="chip building">building</span></div>
+<p class="card-l">Lets a .NET MCP tool charge an AI agent per call in USDC, and never for a call that failed.</p>
+<div class="demo x-demo" data-demo="x402">
+<div class="demo-h"><span class="mono small">one tool call</span><span class="chip sim">simulation</span><label class="fail"><input type="checkbox" id="xfail"> tool fails</label><button class="key ghost run"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg> Call</button></div>
+<ol class="flow"><li><span class="mono">agent → tool</span><b class="mono">call</b></li><li><span class="mono">tool → agent</span><b class="mono w">402</b></li><li><span class="mono">agent → tool</span><b class="mono">pays</b></li><li><span class="mono">tool → agent</span><b class="mono g" id="xres">200 · settled</b></li></ol></div>
+<div class="card-f"><span><b>Free</b> Library · Sample server</span><span><b>Paid</b> <span class="mut">nothing paid planned</span></span><span class="use">0 paying agents · not released</span></div>
+</article><article class="card w3" id="touchstone">
+<div class="card-h"><div><h3>touchstone</h3><span class="mono mut small">touchstone.hrabovskyi.online</span></div><span class="chip coming">coming</span></div>
+<p class="card-l">Runs the same queries on SQL Server and on PostgreSQL and shows where the answers differ.</p>
+<div class="demo t-demo" data-demo="touchstone">
+<div class="demo-h"><div class="seg mini" role="group" aria-label="Example query"><button aria-pressed="true" data-q="0">spaces</button><button aria-pressed="false" data-q="1">case</button><button aria-pressed="false" data-q="2">NULL order</button></div><span class="chip real">real behaviour</span></div>
+<pre class="mono tq">SELECT CASE WHEN 'a ' = 'a' THEN 1 ELSE 0 END;</pre>
+<div class="tgrid"><div><span class="mono small mut">SQL Server</span><b class="mono g" id="tss">1</b><span class="small mut" id="tssn">pads trailing spaces before comparing</span></div><div><span class="mono small mut">PostgreSQL</span><b class="mono r" id="tpg">0</b><span class="small mut" id="tpgn">text compares exactly</span></div></div></div>
+<div class="card-f"><span><b>Free</b> Core checks, locally</span><span><b>Paid</b> Large schemas · CI reports <span class="mut">(price not set)</span></span><span class="use">0 users · no public repo yet</span></div>
+</article>
+<article class="card w3" id="webmcp">
+<div class="card-h"><div><h3>WebMCP for ASP.NET and Blazor</h3><span class="mono mut small">NuGet library</span></div><span class="chip coming">coming</span></div>
+<p class="card-l">Lets a .NET web app expose its actions to an agent in the browser, from attributes on code you already have.</p>
+<div class="demo w-demo" data-demo="webmcp"><div class="demo-h"><div class="seg mini" role="group" aria-label="View"><button aria-pressed="true" data-v="cs">You write</button><button aria-pressed="false" data-v="json">The agent sees</button></div><span class="chip sim">planned API</span></div>
+<pre class="mono wv" data-v="cs" tabindex="0"><span class="c">// Pages/Orders.razor.cs</span>
+[<span class="k">WebMcpTool</span>("find_order", Description = "Find an order by number")]
+<span class="k">public</span> Order? Find(<span class="k">string</span> number) =&gt; _orders.Find(number);</pre>
+<pre class="mono wv" data-v="json" tabindex="0" hidden>{ "name": "find_order",
+  "description": "Find an order by number",
+  "inputSchema": { "type": "object",
+    "properties": { "number": { "type": "string" } },
+    "required": ["number"] } }</pre></div>
+<div class="card-f"><span><b>Free</b> The whole library</span><span><b>Paid</b> <span class="mut">nothing paid planned</span></span><span class="use">0 installs · not published</span></div>
+</article><article class="card w3" id="oura">
+<div class="card-h"><div><h3>oura-platform</h3><span class="mono mut small">github.com/Egoushka/oura-platform</span></div><span class="chip building">building</span></div>
+<p class="card-l">Pulls your Oura Ring data into a Postgres you own, so sleep can be joined against your calendar.</p>
+<div class="demo" data-demo="oura"><div class="demo-h"><span class="mono small">8 stages, as built</span><span class="chip real">from the README</span></div>
+<ol class="stages"><li class="done" title="ingest"><span>1</span></li><li class="done" title="dashboards"><span>2</span></li><li class="skipped" title="webhooks"><span>3</span></li><li class="done" title="calendar + MCP"><span>4</span></li><li class="" title="room sensors"><span>5</span></li><li class="" title="chest strap"><span>6</span></li><li class="" title="glucose"><span>7</span></li><li class="" title="joins"><span>8</span></li></ol>
+<p class="small mut">1, 2 and 4 run on my box: ingestion, three Grafana dashboards the Oura app cannot draw, calendar import and an MCP server. 3 is skipped on purpose. 5 to 8 need hardware I do not have yet.</p></div>
+<div class="card-f"><span><b>Free</b> Self-hosted, open source</span><span><b>Paid</b> <span class="mut">nothing paid planned</span></span><span class="use"><a class="num " data-fig="ouraStage" href="https://github.com/Egoushka/oura-platform">3 of 8</a> stages done · 1 user (me)</span></div>
+</article>
+</div>
+</section>
+<section class="proof wrap" aria-labelledby="proof-h">
+<div class="sec-h"><h2 id="proof-h">Numbers, each with its source</h2><p class="mut">Click any of them to see where it is read and how it is counted.</p></div>
+<div class="pgrid">
+<div><a class="num " data-fig="containers" href="https://hrabovskyi.online/status.json">133</a><span>containers on my box, <a class="num " data-fig="unhealthy" href="https://hrabovskyi.online/status.json">0</a> unhealthy</span></div>
+<div><a class="num " data-fig="chPrs" href="https://github.com/Egoushka/chargehand/pulls?q=is%3Apr">857</a><span>pull requests into chargehand, now v0.19.19</span></div>
+<div><a class="num " data-fig="attestDl" href="https://www.nuget.org/packages/Attest">660</a><span>Attest downloads on NuGet</span></div>
+<div><a class="num " data-fig="paying" href="https://hrabovskyi.online">0</a><span>paying users, across everything</span></div>
+</div>
+<div class="latest"><span class="mono small mut">Latest commit</span><a href="https://github.com/Egoushka/chargehand/commit/a167640"><span class="mono">a167640</span> chore: relicense versions after v0.19.19 to FSL-1.1-ALv2 <span class="mut" data-ago="2026-11-11T02:02:03Z">11 Nov 2026</span></a></div>
+</section>
+<section class="wrap band">
+<div><h2>Build the next one with me.</h2><p class="mut">Co-build, integrate, distribute. One written page of terms before code.</p></div>
+<div class="acts"><a class="key primary" href="partner.html">How partnering works <svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a><a class="key" href="https://hrabovskyi.online/writing/">Read the writing <svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a></div>
+</section>
+
+</main>
+<footer class="foot"><div class="foot-in">
+<a href="mailto:egorgrabovskij@gmail.com">egorgrabovskij@gmail.com</a><a href="https://github.com/Egoushka">GitHub</a><a href="https://hrabovskyi.online/feed.xml">RSS</a><a href="https://hrabovskyi.online/writing/">Writing</a><span style="display:inline-flex;align-items:center">Kyiv · UTC+2</span>
+<span class="stamp" style="display:inline-flex;align-items:center">Prototype · product-studio · figures read 2026-11-11 01:58 UTC</span>
+</div></footer>
+<script src="studio.js"></script>
+</body></html>

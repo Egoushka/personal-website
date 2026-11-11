@@ -1,0 +1,33 @@
+# Redesign, round 2: product-led, alive, yours to rearrange
+
+Round 1's verdict: window was the most adequate, still generic, static, CV-first. Round 2 puts the products first. Each concept is a working prototype with real interactions. Window's level of polish is the floor; none of the three reuses its look.
+
+Open `<concept>/index.html` (then `shop.html`, `partner.html`). Each folder has `-desktop.png` (1440), `-mobile.png` (390), `-dark-desktop.png` and `index-dark-mobile.png`, full page, plus `demo.gif` showing the interactions. Pages are generated from one data file: `node docs/redesign/round2/_build/build.mjs`.
+
+**Data.** Everything is real, read 2026-11-11 from `/status.json` (133 containers, 0 unhealthy, Attest 1.2.1 with 660 downloads, 160 h coding), the live site (12 posts, 12,006 words), the GitHub API (chargehand v0.19.19, 857 PRs, recent commits) and `lib/site.ts`. No prices exist, so every paid tier says "price not set". hrabovskyi.online was checked by hand for the checker demo: robots, sitemap and feed answer 200; llms.txt, MCP discovery, WebMCP and x402 are absent (3 of 7). Any other address gives a result marked **simulated**.
+
+| | `mission-control/` | `blocks/` | `product-studio/` |
+|---|---|---|---|
+| Idea | Home is a calm, live dashboard: the box, the seven products, what is being built now. Every number is clickable to its source | The site as a desk of movable, resizable blocks. Visitors rearrange it; the layout is saved on their device and can be shared as a link | Linear/Vercel-grade product sections. Each product has a working demo inline; the hero is the checker |
+| Moment to share | Press **S**: every figure on the page shows where it is read from | **Share layout** copies a link that opens your arrangement for anyone | Type a URL and watch the check stream in; this site honestly scores 3/7 |
+| Interactions | Sources mode, receipts on every figure, re-read status.json, commit filter, product rows that expand, a hover on each container, mail composer | Drag by the handle, resize from the corner (3/4/6/8/12 columns), hide into a tray, share, reset, full keyboard control, content that adapts to block size | Tabbed console (web, GitHub Action, API with 402), streamed check, chargehand citations resolving, x402 call with "tool fails = no charge", SQL Server vs PostgreSQL differences, Attest NIP check that really runs, one-page partner terms filled from your choices |
+| Accent | green, hue 165 | violet, hue 290 | blue, hue 235 |
+| Risk | Dense for non-engineers; a dashboard with zero paying users is honest but stark | The biggest JS cost, and a moving layout can feel like a toy if the blocks are thin | The checker demo is the hook, and it is the only thing not yet real |
+
+## Headlines (two per concept, used one first)
+
+- mission-control: "I build small tools that make AI agents checkable. Here is what they are doing right now." / "Seven tools for people who run AI agents, and the box they run on, read live."
+- blocks: "Small tools for people who run AI agents. Arrange them however you think." / "Tools that keep agent work calm. Free at the core, paid only where it is truly advanced."
+- product-studio: "Is your site ready for AI agents? Type its address." / "Tools that let AI agents check, pay and prove their work."
+
+## Cost on the real site (static export, per-route JS budget of about 152 KB gz + 1 KB slack, readable without JS)
+
+- **mission-control.** One island of roughly 3 to 4 KB gz on `/` (receipts, sources mode, refresh, filters). Figures render at build from the same data as today, and the island re-reads `/status.json` same-origin. The commit feed needs a source that is fresher than a deploy: extend the box's status.json timer to write the last commits, or accept build-time staleness. No JS: the full dashboard renders, figures are plain links to their sources, rows are `<details>`, filters disappear. Numbers swap in place in tabular figures, so CLS stays under 0.01.
+- **blocks.** The costliest: about 6 to 8 KB gz on each of `/`, `/shop/`, `/partner/` (drag, resize, FLIP, tray, share). A saved layout applied after paint moves the page, which would break the 0.01 CLS gate at 375 px; it needs a tiny inline script in `<head>` that applies the saved order before paint, and so a CSP hash in the Caddyfile. Mobile is one column, arrangement only. No JS: the default arrangement as a plain CSS grid, dock hidden; container queries need no JS.
+- **product-studio.** About 4 to 5 KB gz on `/` and `/shop/` for the console and five demos. No JS: the console shows the recorded result for this site, the API and Action panels stack as plain sections, each demo shows its first state. ADR 0001 says the Site never hosts a Product, so the real page must not run checks: the input links out to `check.hrabovskyi.online` once it exists, and until then only the recorded result ships. The simulation is for this prototype only.
+
+## The system and what it encodes (correct me)
+
+Tokens in `shared/tokens.css`: six constants (grid 4, target 44, curve, stroke 1.75, type 15 × 1.2, light from the top), OKLCH 12-step neutral and accent ramps with Radix roles, dark and light as the same names, contrast ratios written beside them (all text pairs pass 4.5:1). Controls are key caps with a lit top edge and a 1 px press, never flat pills. Icons are Lucide at one stroke. The **knobs** button in the top bar tunes theme, density, accent and motion live and shows the derivation. Values encoded: a number without a source is not shown; zero is printed, not hidden; what is illustrative says so; nothing nags to buy; the free part of each tool is listed before the paid part.
+
+Checked: axe-core on every page at 1440 light, 1440 dark and 390 light: 0 violations. 0 console errors. No horizontal scroll at 390. Not done: the ~12-tile style board from the ui-design skill. These three directions come from the brief, so this round tests structure and behaviour more than surface.
