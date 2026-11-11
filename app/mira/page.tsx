@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import MiraForm from "@/components/MiraForm";
@@ -37,6 +38,13 @@ export default function Mira() {
             or deletes anything. Enter your email to get the files.
           </p>
           <MiraForm />
+        </section>
+        <section aria-labelledby="mira-pack" className="space-y-4">
+          <h2 id="mira-pack" className="text-sm font-medium text-muted-foreground">Paid: the AI Automation Starter Pack</h2>
+          <p className="text-lg leading-relaxed">
+            Ten n8n workflows, 50 prompts and a setup guide.{" "}
+            <Link prefetch={false} className="link" href="/mira/pack/">See what is inside</Link>.
+          </p>
         </section>
       </div>
     </Shell>
