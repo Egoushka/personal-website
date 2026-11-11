@@ -193,6 +193,14 @@ for (const { where, slug, data, content, tree } of [...posts, ...drafts]) {
     fail(`frontmatter: project ${JSON.stringify(data.project)} is not a project slug in lib/site.ts`);
   }
 
+  // The end-of-post "next" block (lib/next-step.ts) reads these two.
+  if (data.related !== undefined && (typeof data.related !== "string" || data.related === slug || !fs.existsSync(path.join(POSTS_DIR, `${data.related}.md`)))) {
+    fail(`frontmatter: related ${JSON.stringify(data.related)} must be the slug of another post`);
+  }
+  if (data.try !== undefined && !(typeof data.try === "string" && /^(\/[^/]|https:\/\/)/.test(data.try))) {
+    fail(`frontmatter: try ${JSON.stringify(data.try)} must be a site path starting with / or an https URL`);
+  }
+
   const dateBad = data.date === undefined ? "is required" : dateProblem(data.date);
   if (dateBad) fail(`frontmatter: date ${dateBad}`);
 

@@ -3,12 +3,14 @@ import Link from "next/link";
 import Shell from "@/components/Shell";
 import PostList from "@/components/PostList";
 import { PersonAndSiteLd } from "@/components/JsonLd";
+import NextStep from "@/components/NextStep";
 import Panel from "@/components/Panel";
 import ProjectCard, { type ProjectCardData } from "@/components/ProjectCard";
 import { buttonVariants } from "@/components/ui/button";
 import { ArrowRight, Mail } from "@/components/ui/icons";
 import { site, proof, projects, type Project } from "@/lib/site";
 import { getDocPages } from "@/lib/docs";
+import { pickNext } from "@/lib/next-step";
 import { pageMetadata } from "@/lib/metadata";
 import { formatDate, getAllPosts, type PostMeta } from "@/lib/posts";
 import { getReadings, getTopicUsage, n } from "@/lib/readings";
@@ -73,6 +75,8 @@ function spanOf(posts: PostMeta[], slug: string): PostMeta & { spanDays: number 
 export default function Home() {
   const r = getReadings();
   const posts = getAllPosts();
+  const newest = posts[0];
+  const start = { read: newest, tryIt: newest ? pickNext(newest, posts, undefined).tryIt : undefined };
   /*
     Every topic anything references, not just the ones posts use: a section
     headed "things I keep coming back to" should not be silent about the ones I
@@ -120,6 +124,11 @@ export default function Home() {
           </Link>
         </div>
       </header>
+
+      {/* One thing to read and one to try, from the newest post. A click is the home-read or home-try event. */}
+      <div className="-mt-8 mb-14">
+        <NextStep step={start} from="home" event="home" heading="Start here" />
+      </div>
 
       {/* Three things a stranger can check in under a minute. */}
       <ul className="grid gap-4 md:grid-cols-3">

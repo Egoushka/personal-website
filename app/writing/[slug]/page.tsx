@@ -7,11 +7,12 @@ import Byline from "@/components/Byline";
 import KindLabel from "@/components/KindLabel";
 import PostEnhancements from "@/components/PostEnhancements";
 import Lang from "@/components/Lang";
+import NextStep from "@/components/NextStep";
 import FigureEnhancements from "@/components/FigureEnhancements";
 import Prose from "@/components/Prose";
 import StatusBadge from "@/components/StatusBadge";
 import { TocDisclosure, TocRail } from "@/components/Toc";
-import { ArrowLeft, ArrowRight, Calendar, Clock, Folder } from "@/components/ui/icons";
+import { ArrowLeft, Calendar, Clock, Folder } from "@/components/ui/icons";
 import { projects, site } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
 import {
@@ -19,8 +20,8 @@ import {
   getPost,
   formatDate,
   tableOfContents,
-  getRelatedPosts,
 } from "@/lib/posts";
+import { nextStep } from "@/lib/next-step";
 import { getPostMethods } from "@/lib/methods";
 import { getTopicUsage, n } from "@/lib/readings";
 import { TOPICS, isTopic, topicName } from "@/lib/topics";
@@ -65,7 +66,7 @@ export default async function PostPage(
   const { slug } = await params;
   const post = getPost(slug);
   const toc = tableOfContents(post.content);
-  const related = getRelatedPosts(slug, 1)[0];
+  const step = nextStep(post);
   const usage = getTopicUsage();
   const project = projects.find((p) => p.slug === post.project);
   const methods = getPostMethods(slug);
@@ -222,27 +223,7 @@ export default async function PostPage(
             </section>
           )}
 
-          {/* One link, not a grid of cards. */}
-          {related && (
-            <section className="mt-14" aria-labelledby="read-next" data-pagefind-ignore>
-              <h2 id="read-next" className="text-sm font-medium text-muted-foreground">
-                Read next
-              </h2>
-              <div className="group relative mt-3 flex items-center gap-4 rounded-xl border p-5 transition-colors hover:border-input hover:bg-accent/40">
-                <div className="min-w-0">
-                  <p className="text-lg font-semibold tracking-tight">
-                    <Link prefetch={false} href={`/writing/${related.slug}/`} className="after:absolute after:inset-0 after:rounded-xl">
-                      <Lang text={related.title} lang={related.cyrillic} />
-                    </Link>
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {formatDate(related.date)} · {related.readingTime} min read
-                  </p>
-                </div>
-                <ArrowRight className="ml-auto text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-              </div>
-            </section>
-          )}
+          <NextStep step={step} from={`post:${slug}`} />
 
           <Comments key={slug} url={`${site.url}/writing/${post.slug}/`} />
         </div>
