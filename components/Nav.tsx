@@ -49,14 +49,14 @@ export default function Nav({ current, width = "default" }: { current?: Section;
 
         <nav
           aria-label="Primary"
-          className="order-3 -mx-2 flex w-[calc(100%+1rem)] items-center gap-0.5 overflow-x-auto pb-2 md:order-2 md:mx-0 md:ml-4 md:w-auto md:overflow-visible md:pb-0"
+          className="order-3 -mx-2 flex w-[calc(100%+1rem)] flex-wrap items-center gap-0.5 pb-2 md:order-2 md:mx-0 md:ml-4 md:w-auto md:flex-nowrap md:pb-0"
         >
           {SECTIONS.map((s) => (
             <Link
               key={s.key}
               href={s.href}
               aria-current={current === s.key ? "page" : undefined}
-              className="inline-flex h-9 shrink-0 items-center rounded-lg px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-[current=page]:bg-accent aria-[current=page]:text-foreground"
+              className="inline-flex h-9 shrink-0 items-center rounded-lg px-1.5 text-[0.8125rem] font-medium md:px-3 md:text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-[current=page]:bg-accent aria-[current=page]:text-foreground"
             >
               {s.label}
             </Link>

@@ -61,7 +61,7 @@ export default function BoxPanel() {
           <li>unhealthy {b.unhealthy}</li>
           <li>one square per container</li>
         </ul>
-        <pre className="raw">
+        <pre className="raw" tabIndex={0}>
           <code>
             {"// status.json, the lines this panel reads\n"}
             {raw}

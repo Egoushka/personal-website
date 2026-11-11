@@ -182,14 +182,14 @@ export function shortDate(iso: string): string {
   return `${d.getUTCDate()} ${m}`;
 }
 
-export type CheckRow = { name: string; target: string; code: string; ok: boolean; note: string };
+export type CheckRow = { name: string; target: string; code: string; ok: boolean; na?: boolean; note: string };
 
 /** This site, fetched by hand against the built site on READ_DATE. */
 export const SELF_CHECK: CheckRow[] = [
   { name: "llms.txt", target: "/llms.txt", code: "404", ok: false, note: "No llms.txt. An agent gets the HTML and has to guess." },
   { name: "MCP discovery", target: "/.well-known/mcp.json", code: "404", ok: false, note: "No MCP server is advertised." },
   { name: "WebMCP tools", target: "document.modelContext", code: "5 tools", ok: true, note: "search_site, list_posts, get_post, get_status and contact, registered for a browser agent." },
-  { name: "x402", target: "HTTP 402 on a paid route", code: "none", ok: false, note: "Nothing is for sale here, so nothing answers 402. Correct for this site." },
+  { name: "x402", target: "HTTP 402 on a paid route", code: "none", ok: false, na: true, note: "Nothing is for sale here, so nothing answers 402. Not applicable to this site." },
   { name: "robots.txt", target: "/robots.txt", code: "200", ok: true, note: "Present." },
   { name: "sitemap", target: "/sitemap.xml", code: "200", ok: true, note: "Present." },
   { name: "feed", target: "/feed.xml", code: "200", ok: true, note: "Present." },

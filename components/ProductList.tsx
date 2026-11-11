@@ -69,7 +69,11 @@ export default function ProductList({ full = false }: { full?: boolean }) {
                   <span className="host">{p.host}</span>
                 </span>
                 <span className={CHIP[p.state]}>{p.state}</span>
-                <span className="pu num">{usage}</span>
+                <span className="pu num">
+                  {usage.split(" · ").map((u) => (
+                    <span key={u}>{u}</span>
+                  ))}
+                </span>
                 {full && <span className="pf">{p.free}</span>}
                 {full && <span className="pp">{p.paid}</span>}
                 <Plus className="tw" aria-hidden="true" />
