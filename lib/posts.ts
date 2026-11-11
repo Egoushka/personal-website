@@ -22,6 +22,10 @@ export type PostMeta = {
   kind?: PostKind;
   /** Slug of the project in lib/site.ts the post is about, when it is about one. */
   project?: string;
+  /** Optional. Slug of the post to offer at the end of this one; the default is getRelatedPosts. */
+  related?: string;
+  /** Optional. Where the "try it" link goes: a site path or an https URL; the default is the project's repo. */
+  try?: string;
   /** Slugs from lib/topics.ts, the one vocabulary posts, projects and jobs share. */
   topics: TopicSlug[];
   /** Whole minutes at 200 wpm, floored to 1. */
@@ -64,6 +68,8 @@ function readPostFile(slug: string): Post {
     description: String(data.description ?? ""),
     kind: (POST_KINDS as readonly unknown[]).includes(data.kind) ? (data.kind as PostKind) : undefined,
     project: typeof data.project === "string" ? data.project : undefined,
+    related: typeof data.related === "string" ? data.related : undefined,
+    try: typeof data.try === "string" ? data.try : undefined,
     topics: Array.isArray(data.topics) ? (data.topics.map(String) as TopicSlug[]) : [],
     readingTime: Math.max(1, Math.round(words / 200)),
     wordCount: words,
