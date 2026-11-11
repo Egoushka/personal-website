@@ -36,7 +36,7 @@ const POST = "/writing/silent-deploys/";
 // A chart and a diagram (ADR 0010): axe runs over both, in both widths and both themes.
 const CHART_POST = "/writing/chronicle-vs-grep/";
 const DIAGRAM_POST = "/writing/homelab/";
-const SMOKE_SET = ["/", "/writing/", POST, "/projects/", "/projects/attest/", "/about/", "/cv/", "/404.html", CHART_POST, DIAGRAM_POST];
+const SMOKE_SET = ["/", "/writing/", POST, "/projects/", "/projects/attest/", "/about/", "/shop/", "/partner/", "/cv/", "/404.html", CHART_POST, DIAGRAM_POST];
 // CLS below 0.01 on the pages people land on, below 0.1 everywhere else (BRIEF §16).
 const STRICT_CLS = new Set(["/", "/writing/", POST, "/about/"]);
 // Local servers have no Umami, no status cron and no Remark42; their 404s are expected.

@@ -4,10 +4,13 @@ import Shell from "@/components/Shell";
 import PostList from "@/components/PostList";
 import { PersonAndSiteLd } from "@/components/JsonLd";
 import NextStep from "@/components/NextStep";
-import Panel from "@/components/Panel";
+import BoxPanel from "@/components/BoxPanel";
+import CodingPanel from "@/components/CodingPanel";
+import FeedPanel from "@/components/FeedPanel";
+import ProductList from "@/components/ProductList";
+import StatusFig from "@/components/StatusFig";
 import ProjectCard, { type ProjectCardData } from "@/components/ProjectCard";
-import { buttonVariants } from "@/components/ui/button";
-import { ArrowRight, Mail } from "@/components/ui/icons";
+import { ArrowRight, Check, X, Users, Plug, Megaphone, MessageSquare } from "@/components/ui/icons";
 import { site, proof, projects, type Project } from "@/lib/site";
 import { getDocPages } from "@/lib/docs";
 import { pickNext } from "@/lib/next-step";
@@ -15,6 +18,9 @@ import { pageMetadata } from "@/lib/metadata";
 import { formatDate, getAllPosts, type PostMeta } from "@/lib/posts";
 import { getReadings, getTopicUsage, n } from "@/lib/readings";
 import { topicName } from "@/lib/topics";
+import { ATTEST_FALLBACK, CHANNELS, CHARGEHAND, PRODUCTS, READ_DATE, SELF_CHECK, STATE_NOTE } from "@/lib/shop";
+
+const ICON = { users: Users, plug: Plug, megaphone: Megaphone, message: MessageSquare };
 
 export const metadata: Metadata = pageMetadata({
   title: { absolute: `${site.name} — ${site.role}` },
@@ -98,44 +104,180 @@ export default function Home() {
     <Shell current="home">
       <PersonAndSiteLd />
 
-      {/*
-        The sentence is the h1, not the greeting. The line above it carries a
-        name's worth of context: where I am and whether I am available. The
-        address is the button's own text, so a desktop with no mail handler
-        still shows something to copy.
-      */}
-      <header className="pt-14 pb-12 md:pt-20 md:pb-16">
-        <p className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1 text-sm text-muted-foreground">
-          {site.location}
-        </p>
-        <h1 className="mt-6 max-w-4xl font-display text-5xl font-semibold tracking-tight text-balance md:text-6xl lg:text-7xl">
-          {site.intro}
-        </h1>
-        <p className="mt-6 max-w-2xl text-xl leading-relaxed text-muted-foreground text-pretty">{site.description}</p>
-        <div className="mt-9 flex flex-wrap gap-3">
-          <a className={buttonVariants({ size: "lg" })} href={`mailto:${site.email}`}>
-            <Mail /> {site.email}
-          </a>
-          <Link className={buttonVariants({ variant: "outline", size: "lg" })} href="/writing/">
-            Read the writing <ArrowRight />
-          </Link>
-          <Link className={buttonVariants({ variant: "ghost", size: "lg" })} href="/cv/">
-            CV
-          </Link>
+      <header className="hero">
+        <div>
+          <h1>{site.intro}</h1>
+          <p className="lede">
+            Read from my own box, not typed. Seven products, one live box, every number with a source. Essentials are
+            free. Only the truly advanced parts cost money, and none has a price yet.
+          </p>
+          <div className="acts">
+            <Link className="key key-primary key-lg" href="/shop/">
+              See the products <ArrowRight />
+            </Link>
+            <Link className="key key-lg" href="/partner/">
+              Build one with me
+            </Link>
+            <Link className="key key-ghost key-lg" href="/writing/">
+              Read the writing
+            </Link>
+          </div>
         </div>
+        <section aria-labelledby="now-h">
+          <h2 id="now-h" className="mb-3 text-sm font-semibold text-muted-foreground">
+            Right now
+          </h2>
+          <div className="kpis">
+            <div className="kpi">
+              <span>products</span>
+              <span className="figv">{PRODUCTS.length}</span>
+              <em>{STATE_NOTE}</em>
+            </div>
+            <div className="kpi">
+              <span>paying users</span>
+              <span className="figv">0</span>
+              <em>none takes money yet</em>
+            </div>
+            <div className="kpi">
+              <span>pull requests, chargehand</span>
+              <a
+                className="figv"
+                href="https://github.com/Egoushka/chargehand/pulls?q=is%3Apr"
+                rel="noopener"
+              >
+                {CHARGEHAND.prs}
+              </a>
+              <em>
+                to v{CHARGEHAND.version}, read {READ_DATE}
+              </em>
+            </div>
+            <div className="kpi">
+              <span>Attest downloads</span>
+              <a className="figv" href="https://www.nuget.org/packages/Attest" rel="noopener">
+                <StatusFig pick="downloads" fallback={String(ATTEST_FALLBACK.downloads)} />
+              </a>
+              <em>NuGet, v{ATTEST_FALLBACK.version}</em>
+            </div>
+          </div>
+        </section>
       </header>
 
       {/* One thing to read and one to try, from the newest post. A click is the home-read or home-try event. */}
-      <div className="-mt-8 mb-14">
+      <div className="-mt-4 mb-10">
         <NextStep step={start} from="home" event="home" heading="Start here" />
       </div>
 
+      <div className="mc-grid">
+        <div style={{ "--c": 5 } as React.CSSProperties} className="mc-col">
+          <BoxPanel />
+          <CodingPanel />
+        </div>
+        <div style={{ "--c": 7 } as React.CSSProperties} className="mc-col">
+          <FeedPanel />
+          <section className="pn" aria-labelledby="prod-h">
+            <div className="pn-head">
+              <h2 id="prod-h">Products</h2>
+              <Link className="key key-ghost key-sm" href="/shop/">
+                Shop
+              </Link>
+            </div>
+            <ProductList />
+            <div className="pn-foot">
+              <span>{STATE_NOTE}</span>
+              <span>free part listed before the paid part</span>
+            </div>
+          </section>
+        </div>
+
+        <section className="pn wide" style={{ "--c": 12 } as React.CSSProperties} aria-labelledby="check-h">
+          <div className="pn-head">
+            <h2 id="check-h">This site, checked the way the checker will check yours</h2>
+            <span className="chip">recorded by hand</span>
+          </div>
+          <div className="score">
+            <b>
+              {SELF_CHECK.filter((c) => c.ok).length}/{SELF_CHECK.length}
+            </b>
+            <span className="text-sm text-muted-foreground">checks pass, fetched against the built site</span>
+            <span className="text-xs text-muted-foreground">2026-11-11 02:10 UTC</span>
+          </div>
+          <ul className="sc">
+            {SELF_CHECK.map((c) => (
+              <li key={c.name}>
+                <span className={c.ok ? "sci sci-ok" : "sci sci-no"}>
+                  {c.ok ? <Check aria-hidden="true" /> : <X aria-hidden="true" />}
+                  <span className="visually-hidden">{c.ok ? "passes" : "fails"}</span>
+                </span>
+                <b>{c.name}</b>
+                <code className="num truncate text-xs">{c.target}</code>
+                <span className="num text-xs">{c.code}</span>
+                <span className="col-span-4 text-xs text-muted-foreground">{c.note}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="pn-foot">
+            <span>checker: 0 runs, not deployed</span>
+            <span>hand-recorded, not live</span>
+          </div>
+        </section>
+
+        <section className="pn" style={{ "--c": 6 } as React.CSSProperties} aria-labelledby="posts-h">
+          <div className="pn-head">
+            <h2 id="posts-h">Writing</h2>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {r.posts} {r.posts === 1 ? "post" : "posts"} · {n(r.words)} words
+            </span>
+          </div>
+          <ul className="posts">
+            {posts.slice(0, 4).map((p) => (
+              <li key={p.slug}>
+                <Link prefetch={false} href={`/writing/${p.slug}/`}>
+                  <span className="meta">
+                    {formatDate(p.date)}
+                    {p.readingTime ? ` · ${p.readingTime} min read` : ""}
+                  </span>
+                  <b>{p.title}</b>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <div className="pn-foot">
+            <Link prefetch={false} href="/writing/">
+              all {r.posts} posts
+            </Link>
+            <a href="/feed.xml">RSS</a>
+          </div>
+        </section>
+
+        <section className="pn" style={{ "--c": 6 } as React.CSSProperties} aria-labelledby="open-h">
+          <div className="pn-head">
+            <h2 id="open-h">Open to partners</h2>
+            <span className="chip chip-good">{CHANNELS.length} open</span>
+          </div>
+          <ul className="chan">
+            {CHANNELS.map((c) => {
+              const Icon = ICON[c.icon];
+              return (
+                <li key={c.id}>
+                  <Icon aria-hidden="true" />
+                  <b>{c.name}</b>
+                  <p>{c.text}</p>
+                </li>
+              );
+            })}
+          </ul>
+          <Link className="key" href="/partner/">
+            How partnering works
+          </Link>
+        </section>
+      </div>
+
       {/* Three things a stranger can check in under a minute. */}
-      <ul className="grid gap-4 md:grid-cols-3">
+      <ul className="mt-16 grid gap-4 md:grid-cols-3">
         {proof.map((p) => {
           const post = p.post ? spanOf(posts, p.post) : undefined;
           return (
-            <li key={p.post ?? p.label} className="flex flex-col rounded-xl border bg-card p-5">
+            <li key={p.post ?? p.label} className="pn">
               <p className="text-sm font-medium text-muted-foreground">{post ? `${n(post.spanDays)} days` : p.label}</p>
               <p className="mt-2 leading-relaxed">{p.text}</p>
               {(p.links.length > 0 || post) && (
@@ -156,11 +298,6 @@ export default function Home() {
           );
         })}
       </ul>
-
-      {/* Live figures, below the claims a stranger can check without them. */}
-      <div className="mt-4">
-        <Panel />
-      </div>
 
       <section className="mt-24" aria-labelledby="home-writing">
         <SectionHead id="home-writing" title="Things I've written down" href="/writing/" more="All posts" />
