@@ -152,6 +152,25 @@ else {
   }
 }
 
+// WebMCP: the tool data is built from the posts, and the registrar is shipped.
+{
+  const f = at("webmcp.json");
+  const bodies = at("webmcp-posts.json");
+  if (!fs.existsSync(f) || !fs.existsSync(bodies) || !fs.existsSync(at("webmcp.js"))) {
+    fail("R-41", "webmcp", "webmcp.json, webmcp-posts.json or webmcp.js missing");
+  } else {
+    try {
+      const m = JSON.parse(read(f));
+      const b = JSON.parse(read(bodies));
+      const feedCount = JSON.parse(read(feedJson)).items?.length;
+      if (m.posts.length !== feedCount) fail("R-41", f, `${m.posts.length} posts, the feed has ${feedCount}`);
+      for (const p of m.posts) if (!b[p.slug]) fail("R-41", bodies, `no body for ${p.slug}`);
+    } catch (e) {
+      fail("R-41", f, `does not parse: ${e.message}`);
+    }
+  }
+}
+
 for (const [name, itemTag, linkRe] of [
   ["feed.xml", "item", /<link>([^<]*)<\/link>/g],
   ["atom.xml", "entry", /<link\b[^>]*\bhref="([^"]*)"/g],

@@ -104,14 +104,14 @@
 	header @rsc Cache-Control "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
 
 	@feeds {
-		path /feed.xml /atom.xml /feed.json /sitemap.xml /robots.txt
+		path /feed.xml /atom.xml /feed.json /sitemap.xml /robots.txt /webmcp.json /webmcp-posts.json
 		file
 	}
 	header @feeds Cache-Control "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400"
 
 	# Not content-hashed, so it must not be immutable — it gets replaced in place.
 	@downloads {
-		path /icon.svg /apple-icon.png /manifest.webmanifest
+		path /icon.svg /apple-icon.png /manifest.webmanifest /webmcp.js
 		file
 	}
 	header @downloads Cache-Control "public, max-age=3600, s-maxage=86400"
