@@ -1,6 +1,6 @@
 /* Round-2 system. Six named constants; every size, radius and stroke below is derived from them.
-   grid 4px · target 44px · curve (.2,.8,.2,1) · stroke 1.75 · type 15px · one soft shadow, no lit edges.
-   Faces: the ones hrabovskyi.online ships. Inter (variable, OFL, fonts/) reads everything at 400/500/600;
+   grid 4px · target 44px · curve (.2,.8,.2,1) · stroke 1.75 · type 15px · one soft shadow, key-cap edges on controls.
+   Faces: the ones hrabovskyi.online ships. Inter (variable, OFL, fonts/) reads everything at 400/500/600, and figures and names carry --w-fig;
    Bricolage Grotesque (variable, OFL) sets page titles only, never below ~26px; mono is the system stack and
    carries meaning only: figures, paths, hashes, code.
    Type scale (size/line-height, line-heights on the 4px grid): 12/16 · 13/20 · 15/24 · 17/28 · 20/28 · 28/32 · display 36-52/1.04.
@@ -25,7 +25,7 @@
   --t3: calc(var(--type)*1.3333); --t4: calc(var(--type)*1.8667);
   --t5: clamp(calc(var(--type)*2.4), 3.6vw, calc(var(--type)*3.4667));
   --lh-1: calc(var(--grid)*4); --lh0: calc(var(--grid)*5); --lh1: calc(var(--grid)*6); --lh2: calc(var(--grid)*7); --lh4: calc(var(--grid)*8);
-  --w-body: 400; --w-ui: 500; --w-head: 600;
+  --w-body: 400; --w-ui: 500; --w-head: 600; --w-fig: 650; --w-display: 700;
   --dur: 220ms; --dur-fast: 140ms; --dur-slow: 520ms;
   --sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --display: "Bricolage Grotesque", "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -41,10 +41,9 @@
   --bad: oklch(.74 .15 25); --bad-bg: oklch(.28 .06 25);
   --edge-hi: oklch(1 0 0 / .07); --edge-lo: oklch(0 0 0 / .5); --shadow: 0 1px 0 var(--edge-lo), 0 8px 24px -12px oklch(0 0 0 / .6);
   --scrim: oklch(.1 .01 255 / .6);
-  /* controls: a hairline on a surface one step off the page; one soft drop, no lit edge */
+  /* controls: a key-cap, a hairline on a surface one step off the page with a lit top edge and a 1px press */
   --ctl-bg: var(--n2); --ctl-bg-hover: var(--n3); --ctl-bg-press: var(--n4); --ctl-bd: var(--n7); --ctl-bd-hover: var(--n8);
-  --ctl-drop: 0 1px 2px oklch(0 0 0 / .35); --seg-on: var(--n5);
-  --pri-bg: color-mix(in oklch, var(--a9) 14%, var(--n1)); --pri-bg-hover: color-mix(in oklch, var(--a9) 22%, var(--n1)); --pri-bd: color-mix(in oklch, var(--a9) 55%, var(--n6)); --pri-fg: var(--a11);
+  --ctl-drop: inset 0 1px 0 var(--edge-hi), 0 1px 0 var(--edge-lo), 0 1px 2px oklch(0 0 0 / .35); --seg-on: var(--n5);
 }
 :root[data-theme="light"] {
   color-scheme: light;
@@ -58,12 +57,12 @@
   --edge-hi: oklch(1 0 0 / .9); --edge-lo: oklch(.3 .02 255 / .12); --shadow: 0 1px 0 var(--edge-lo), 0 8px 24px -14px oklch(.3 .03 255 / .28);
   --scrim: oklch(.3 .02 255 / .3);
   --ctl-bg: var(--n1); --ctl-bg-hover: var(--n2); --ctl-bg-press: var(--n3); --ctl-bd: var(--n7); --ctl-bd-hover: var(--n8);
-  --ctl-drop: 0 1px 2px oklch(.3 .02 255 / .07); --seg-on: var(--n1);
-  --pri-bg: color-mix(in oklch, var(--a9) 7%, var(--n1)); --pri-bg-hover: color-mix(in oklch, var(--a9) 12%, var(--n1)); --pri-bd: color-mix(in oklch, var(--a9) 50%, var(--n7)); --pri-fg: var(--a10);
+  --ctl-drop: inset 0 1px 0 var(--edge-hi), 0 1px 0 var(--edge-lo), 0 1px 2px oklch(.3 .02 255 / .07); --seg-on: var(--n1);
 }
 :root[data-density="compact"] { --grid: 3.5px; --type: 14px; }
 :root[data-motion="off"] { --dur: 0ms; --dur-fast: 0ms; --dur-slow: 0ms; }
-@media (prefers-reduced-motion: reduce) { :root { --dur: 0ms; --dur-fast: 0ms; --dur-slow: 0ms; } }
+@media (prefers-reduced-motion: reduce) { :root { --dur: 0ms; --dur-fast: 0ms; --dur-slow: 0ms; } .pulse i, .feed li:first-child .ft::before { animation: none !important; } }
+:root[data-motion="off"] .pulse i, :root[data-motion="off"] .feed li:first-child .ft::before { animation: none !important; }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; }
 html { -webkit-text-size-adjust: 100%; }
@@ -82,9 +81,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .skip:focus { top: var(--s2); background: var(--n12); color: var(--n1); padding: var(--s2) var(--s3); border-radius: var(--r2); }
 .ico { width: 1.15em; height: 1.15em; fill: none; stroke: currentColor; stroke-width: var(--stroke); stroke-linecap: round; stroke-linejoin: round; flex: none; }
 
-/* Controls. Quiet weight: a hairline border on a surface one step off the page, one soft drop, medium text.
+/* Controls are key-caps: a hairline border on a surface one step off the page, a lit top edge, medium text.
    Hover lifts the border one step; press sinks the fill one step and nudges 1px; focus is the 2px accent ring.
-   Primary is the same shape with a restrained accent tint, never a solid slab. */
+   Primary is a solid accent key-cap, one per region, on the action the region exists for. */
 .key { --k-bg: var(--ctl-bg); --k-fg: var(--n12); --k-bd: var(--ctl-bd); --k-drop: var(--ctl-drop);
   display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); min-height: var(--target); min-width: var(--target);
   padding: 0 var(--s4); border-radius: var(--r-ctl); border: 1px solid var(--k-bd); background: var(--k-bg); color: var(--k-fg); box-shadow: var(--k-drop);
@@ -96,9 +95,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .key:active { --k-bg: var(--ctl-bg-press); --k-drop: none; transform: translateY(1px); }
 .key[aria-pressed="true"] { --k-bg: var(--ctl-bg-press); --k-bd: var(--ctl-bd-hover); --k-drop: inset 0 1px 2px oklch(0 0 0 / .12); }
 .key[aria-pressed="true"] kbd { color: var(--a11); border-color: var(--a7); }
-.key.primary { --k-bg: var(--pri-bg); --k-fg: var(--pri-fg); --k-bd: var(--pri-bd); font-weight: var(--w-head); }
-.key.primary:hover { --k-bg: var(--pri-bg-hover); --k-bd: var(--a9); }
-.key.primary:active { --k-bg: var(--pri-bg-hover); }
+.key.primary { --k-bg: var(--a9); --k-fg: var(--on-a9); --k-bd: var(--a10); font-weight: var(--w-head); }
+.key.primary:hover { --k-bg: var(--a10); --k-bd: var(--a10); }
+.key.primary:active { --k-bg: var(--a10); }
 .key.ghost { --k-bg: transparent; --k-bd: transparent; --k-drop: none; --k-fg: var(--n11); }
 .key.ghost:hover { --k-bg: var(--n3); --k-fg: var(--n12); }
 .key.ghost[aria-pressed="true"] { --k-bg: var(--n3); --k-bd: var(--ctl-bd); --k-fg: var(--n12); }
@@ -108,8 +107,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .key[disabled] { opacity: .5; cursor: not-allowed; transform: none; }
 
 /* State chips: icon + word, never colour alone. */
-.chip { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 var(--s2); border-radius: var(--r1);
-  font: var(--w-ui) var(--t-1)/1 var(--sans); letter-spacing: 0; text-transform: lowercase; border: 1px solid var(--n6); color: var(--n11); white-space: nowrap; }
+.chip { display: inline-flex; align-items: center; gap: 6px; min-height: 26px; padding: 4px 10px; border-radius: var(--r1);
+  font: var(--w-head) var(--t-1)/16px var(--sans); letter-spacing: 0; text-transform: lowercase; border: 1px solid var(--n6); color: var(--n11); white-space: nowrap; }
 .chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .chip.available { color: var(--good); border-color: color-mix(in oklch, var(--good) 40%, transparent); background: var(--good-bg); }
 .chip.rebuilding { color: var(--warn); border-color: color-mix(in oklch, var(--warn) 40%, transparent); background: var(--warn-bg); }
@@ -179,13 +178,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .foot .stamp { margin-left: 0; }
 }
 
-/* Figures with receipts: a dotted rule says "click me for the source". */
-[data-fig] { cursor: pointer; text-decoration: underline dotted color-mix(in oklch, currentColor 45%, transparent); text-underline-offset: .22em; text-decoration-thickness: 1px; }
-[data-fig]:hover { text-decoration-color: var(--a9); }
+/* Figures with receipts: a faint dotted rule says "click me for the source"; big figures show it on hover and focus only. */
+[data-fig] { cursor: pointer; text-decoration: underline dotted var(--n7); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+[data-fig]:hover, [data-fig]:focus-visible { text-decoration: underline solid var(--a9); text-decoration-thickness: 1px; }
 .receipt { position: absolute; z-index: 80; background: var(--n2); border: 1px solid var(--n7); border-radius: var(--r3); box-shadow: var(--shadow); padding: var(--s4);
   animation: drop var(--dur) var(--curve); font-size: var(--t0); }
 .receipt .rc-top { display: flex; align-items: baseline; gap: var(--s2); padding-bottom: var(--s3); margin-bottom: var(--s3); border-bottom: 1px dashed var(--n6); }
-.receipt .rc-top b { font-size: var(--t3); font-weight: var(--w-ui); }
+.receipt .rc-top b { font-size: var(--t3); font-weight: var(--w-fig); }
 .receipt dl { display: grid; grid-template-columns: 76px 1fr; gap: var(--s2) var(--s3); margin-bottom: var(--s4); }
 .receipt dt { color: var(--n11); font: var(--w-ui) var(--t-1)/var(--lh0) var(--sans); }
 .receipt dd { line-height: 1.45; }
