@@ -16,7 +16,7 @@ export function pickNext(post: PostMeta, all: PostMeta[], related: PostMeta | un
   const project = projects.find((p) => p.slug === post.project);
   let tryIt: NextStep["tryIt"];
   if (post.try) {
-    tryIt = { label: project ? `Try ${project.name}` : "Try it", href: post.try, external: post.try.startsWith("https://") };
+    tryIt = { label: "Try it", href: post.try, external: post.try.startsWith("https://") };
   } else if (project) {
     const repo = project.visibility === "public" && project.href ? project.href : undefined;
     tryIt = repo

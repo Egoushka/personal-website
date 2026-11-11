@@ -24,7 +24,7 @@ test("next: try goes to the public repo, else the project page, else the overrid
   const t = (over: Partial<PostMeta>) => pickNext(post("x", "2026-01-01", over), all, undefined).tryIt;
   assert.deepEqual(t({ project: pub.slug }), { label: `Try ${pub.name}`, href: pub.href, external: true });
   assert.deepEqual(t({ project: priv.slug }), { label: `About ${priv.name}`, href: `/projects/${priv.slug}/`, external: false });
-  assert.deepEqual(t({ project: pub.slug, try: "/mira/" }), { label: `Try ${pub.name}`, href: "/mira/", external: false });
+  assert.deepEqual(t({ project: pub.slug, try: "/mira/" }), { label: "Try it", href: "/mira/", external: false });
   assert.deepEqual(t({ try: "https://example.com/x" }), { label: "Try it", href: "https://example.com/x", external: true });
   assert.equal(t({}), undefined);
 });

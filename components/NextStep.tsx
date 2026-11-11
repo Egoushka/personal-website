@@ -34,6 +34,7 @@ export default function NextStep(
                 {tryIt.external ? (
                   <a
                     href={tryIt.href}
+                    rel="noopener"
                     className={STRETCH}
                     data-umami-event={`${event}-try`}
                     data-umami-event-from={from}
