@@ -105,11 +105,12 @@ commit to the live site.
 
 ## License
 
-The code is Apache-2.0 ([LICENSE](LICENSE)). The posts, the personal content in `lib/site.ts` and the images are
-not: all rights reserved, see [NOTICE](NOTICE).
+The code is Apache-2.0 ([LICENSE](LICENSE)). The written content (`content/posts/`, `content/methods/`) is CC BY 4.0
+([LICENSE-CC-BY-4.0](LICENSE-CC-BY-4.0)). The personal content in `lib/site.ts` and the images are all rights
+reserved; the tool docs keep their repositories' licenses. Details: [NOTICE](NOTICE).
 
 <!-- readme:footer:start -->
 ---
 
-<sub>Made by [Yehor Hrabovskyi](https://hrabovskyi.online) · [Apache licence](LICENSE).</sub>
+<sub>Made by [Yehor Hrabovskyi](https://hrabovskyi.online) · Code [Apache-2.0](LICENSE), writing [CC BY 4.0](LICENSE-CC-BY-4.0).</sub>
 <!-- readme:footer:end -->
