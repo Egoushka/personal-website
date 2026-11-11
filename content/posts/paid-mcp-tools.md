@@ -78,8 +78,8 @@ More on agent tooling under [MCP](/topics/mcp/).
 ## Receipts
 
 - 402 "reserved for future use": [RFC 2068](https://www.rfc-editor.org/rfc/rfc2068) §10.4.3, January 1997; [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110) §15.5.3, June 2022.
-- The MCP transport (`_meta["x402/payment"]`, `_meta["x402/payment-response"]`): [coinbase/x402 specs/transports-v2/mcp.md](https://github.com/coinbase/x402/blob/main/specs/transports-v2/mcp.md).
-- The library at its first commit: [Egoushka/x402-mcp-dotnet@6e758e4](https://github.com/Egoushka/x402-mcp-dotnet/tree/6e758e4); the payment order is `src/X402.Mcp/Server/X402ToolPaymentProcessor.cs`, the refusals are `tests/X402.Mcp.Tests/PaidToolTests.cs`.
+- The MCP transport (`_meta["x402/payment"]`, `_meta["x402/payment-response"]`): [coinbase/x402 specs/transports-v2/mcp.md](https://github.com/coinbase/x402/blob/0e6e8c55d86b4f14234fb6e49a4052074fb93e57/specs/transports-v2/mcp.md).
+- The library at its first commit: [Egoushka/x402-mcp-dotnet@6e758e4](https://github.com/Egoushka/x402-mcp-dotnet/tree/6e758e466b2292b8f43ade28c09c067a088d11ca); the payment order is `src/X402.Mcp/Server/X402ToolPaymentProcessor.cs`, the refusals are `tests/X402.Mcp.Tests/PaidToolTests.cs`.
 - The race: the README's Limits, `Egoushka/x402-mcp-dotnet@6e758e4:README.md#L99`; a settlement that fails withholds the output in the test `Failed_settlement_withholds_tool_output`.
 - 12 tests, 0 failed: [the CI run at that commit](https://github.com/Egoushka/x402-mcp-dotnet/actions/runs/38043282435).
 - The trailing slash: `Egoushka/x402-mcp-dotnet@6e758e4:samples/PaidMcpServer/Program.cs#L8`.
