@@ -25,9 +25,7 @@ export default function LabPage() {
           <>
             What my server measures about itself, refreshed every ten minutes. A figure without a source yet
             says so instead of guessing. The raw file is{" "}
-            <a className="link" href="/status.json">
-              /status.json
-            </a>
+<code>/status.json</code>
             .
           </>
         }

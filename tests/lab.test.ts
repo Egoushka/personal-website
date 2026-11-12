@@ -20,7 +20,7 @@ test("each tile formats its own block", () => {
     nytka: { uptimePercent: 100, days: 1 },
     agentChecks: { findings: 0, asOf: "2026-11-12T06:00:00Z" },
   });
-  assert.deepEqual(liveLab("chargehand", s?.lab), { value: "8/30", note: "0.27, as of 2026-11-01" });
+  assert.deepEqual(liveLab("chargehand", s?.lab), { value: "8/30", note: "0.27 on 2026-11-01" });
   assert.deepEqual(liveLab("rebuildDrill", s?.lab), { value: "42 min", note: "last drill 2026-11-02" });
   assert.deepEqual(liveLab("nytka", s?.lab), { value: "100.00%", note: "last day" });
   assert.deepEqual(liveLab("agentChecks", s?.lab), { value: "0", note: "as of 2026-11-12" });

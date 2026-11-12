@@ -13,7 +13,8 @@ export default function LabBoard({ metrics }: { metrics: LabMetric[] }) {
   const s = useStatus();
   const shown = metrics.map((m) => ({ m, l: liveLab(m.key, s?.lab) }));
   const nLive = shown.filter((x) => x.l).length;
-  const chip = nLive === 0 ? "dated readings" : nLive === shown.length ? "live" : `${nLive} of ${shown.length} live`;
+  // One shape in every state: a wider "dated readings" wrapped the head at 375 px and shifted the panel.
+  const chip = `${nLive} of ${shown.length} live`;
 
   return (
     <section className="pn" aria-labelledby="lab-h">
@@ -34,7 +35,8 @@ export default function LabBoard({ metrics }: { metrics: LabMetric[] }) {
                   <span className="visually-hidden">none yet</span>
                 </span>
               )}
-              <em>
+              {/* Two lines reserved below sm, so the live note replacing the dated one moves nothing. */}
+              <em className="min-h-8 sm:min-h-0">
                 {l ? l.note : m.fallback ? `read ${m.fallback.read}` : "not published yet"}
                 {m.goal && `, ${m.goal}`}
               </em>

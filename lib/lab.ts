@@ -53,7 +53,7 @@ export function liveLab(key: LabKey, lab: Lab | null | undefined): { value: stri
   if (!lab) return undefined;
   if (key === "chargehand" && lab.chargehand) {
     const c = lab.chargehand;
-    return { value: `${c.merged}/${c.batches}`, note: `${(c.merged / c.batches).toFixed(2)}, as of ${day(c.asOf)}` };
+    return { value: `${c.merged}/${c.batches}`, note: `${(c.merged / c.batches).toFixed(2)} on ${day(c.asOf)}` };
   }
   if (key === "rebuildDrill" && lab.rebuildDrill)
     return { value: `${lab.rebuildDrill.minutes} min`, note: `last drill ${day(lab.rebuildDrill.asOf)}` };
