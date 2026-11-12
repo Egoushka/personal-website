@@ -77,19 +77,22 @@ function parsePackage(p: unknown): Status["package"] {
   return { id, version, downloads };
 }
 
-const dated = (x: unknown): x is string => typeof x === "string" && !Number.isNaN(Date.parse(x));
+/** An ISO 8601 date or timestamp; the tiles print its first ten characters. */
+const dated = (x: unknown): x is string =>
+  typeof x === "string" && /^\d{4}-\d{2}-\d{2}/.test(x) && !Number.isNaN(Date.parse(x));
+const count = (x: unknown): x is number => Number.isInteger(x) && (x as number) >= 0;
 
 /** Each block stands alone: one that fails is left out, the others stay. */
 function parseLab(l: unknown): Status["lab"] {
   if (!isObj(l)) return null;
   const out: Lab = {};
   const { chargehand: c, rebuildDrill: r, nytka: n, agentChecks: a } = l;
-  if (isObj(c) && num(c.merged) && num(c.batches) && c.batches > 0 && c.merged >= 0 && c.merged <= c.batches && dated(c.asOf))
+  if (isObj(c) && count(c.merged) && count(c.batches) && c.batches > 0 && c.merged <= c.batches && dated(c.asOf))
     out.chargehand = { merged: c.merged, batches: c.batches, asOf: c.asOf };
   if (isObj(r) && num(r.minutes) && r.minutes > 0 && dated(r.asOf)) out.rebuildDrill = { minutes: r.minutes, asOf: r.asOf };
-  if (isObj(n) && num(n.uptimePercent) && n.uptimePercent >= 0 && n.uptimePercent <= 100 && num(n.days) && n.days > 0)
+  if (isObj(n) && num(n.uptimePercent) && n.uptimePercent >= 0 && n.uptimePercent <= 100 && count(n.days) && n.days > 0)
     out.nytka = { uptimePercent: n.uptimePercent, days: n.days };
-  if (isObj(a) && num(a.findings) && a.findings >= 0 && dated(a.asOf)) out.agentChecks = { findings: a.findings, asOf: a.asOf };
+  if (isObj(a) && count(a.findings) && dated(a.asOf)) out.agentChecks = { findings: a.findings, asOf: a.asOf };
   return Object.keys(out).length ? out : null;
 }
 

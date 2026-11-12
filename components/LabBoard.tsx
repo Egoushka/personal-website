@@ -1,39 +1,25 @@
 "use client";
 
-import { useStatus, type Lab } from "@/lib/status";
-import type { LabMetric } from "@/lib/lab";
-
-const day = (iso: string) => iso.slice(0, 10);
-
-function live(m: LabMetric, lab: Lab): { value: string; note: string } | undefined {
-  if (m.key === "chargehand" && lab.chargehand) {
-    const c = lab.chargehand;
-    return { value: `${c.merged}/${c.batches}`, note: `${(c.merged / c.batches).toFixed(2)}, as of ${day(c.asOf)}` };
-  }
-  if (m.key === "rebuildDrill" && lab.rebuildDrill)
-    return { value: `${lab.rebuildDrill.minutes} min`, note: `last drill ${day(lab.rebuildDrill.asOf)}` };
-  if (m.key === "nytka" && lab.nytka) return { value: `${lab.nytka.uptimePercent}%`, note: `last ${lab.nytka.days} days` };
-  if (m.key === "agentChecks" && lab.agentChecks)
-    return { value: String(lab.agentChecks.findings), note: `as of ${day(lab.agentChecks.asOf)}` };
-  return undefined;
-}
+import { useStatus } from "@/lib/status";
+import { liveLab, type LabMetric } from "@/lib/lab";
 
 /**
  * The four lab figures. Static HTML carries the dated reading, or says the
  * figure is not published yet; the live block replaces each tile it covers,
  * one at a time, so a source that stops answering only greys its own tile.
+ * The chip counts live tiles, so a hand reading never sits under "live".
  */
 export default function LabBoard({ metrics }: { metrics: LabMetric[] }) {
   const s = useStatus();
-  const lab = s?.lab ?? undefined;
-  const shown = metrics.map((m) => ({ m, l: lab ? live(m, lab) : undefined }));
-  const anyLive = shown.some((x) => x.l);
+  const shown = metrics.map((m) => ({ m, l: liveLab(m.key, s?.lab) }));
+  const nLive = shown.filter((x) => x.l).length;
+  const chip = nLive === 0 ? "dated readings" : nLive === shown.length ? "live" : `${nLive} of ${shown.length} live`;
 
   return (
     <section className="pn" aria-labelledby="lab-h">
       <div className="pn-head">
         <h2 id="lab-h">Measured on the box</h2>
-        <span className={anyLive ? "chip chip-good" : "chip"}>{anyLive ? "live" : "dated readings"}</span>
+        <span className={nLive ? "chip chip-good" : "chip"}>{chip}</span>
       </div>
       <div className="pn-body">
         <div className="kpis">
@@ -54,7 +40,7 @@ export default function LabBoard({ metrics }: { metrics: LabMetric[] }) {
       </div>
       <div className="pn-foot">
         <span>status.json, lab block</span>
-        <span>{anyLive ? "live from status.json" : "static until the box publishes"}</span>
+        <span>{nLive ? "live tiles from status.json" : "static until the box publishes"}</span>
       </div>
     </section>
   );

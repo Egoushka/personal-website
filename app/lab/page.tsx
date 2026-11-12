@@ -8,7 +8,7 @@ import { LAB_METRICS } from "@/lib/lab";
 import { pageMetadata } from "@/lib/metadata";
 
 const description =
-  "Numbers my own box publishes every ten minutes: how often unattended agent work merges, how long a rebuild takes, uptime and open findings.";
+  "What my own box measures about itself: uptime from its health checks, live every ten minutes, and the agent merge rate, rebuild time and open findings, each dated until the box publishes it.";
 
 export const metadata: Metadata = pageMetadata({ title: "Lab", description, path: "/lab/" });
 

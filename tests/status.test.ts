@@ -76,6 +76,35 @@ test("a lab sub-block that fails is dropped on its own", () => {
   assert.equal(lab({ nytka: { uptimePercent: 101, days: 30 } })?.nytka, undefined);
   assert.equal(lab({ agentChecks: { findings: 3, asOf: "yesterday" } })?.agentChecks, undefined);
 
+  const at = "2026-11-01T00:00:00Z";
+  const bad: [string, object][] = [
+    ["chargehand", { merged: -1, batches: 30, asOf: at }],
+    ["chargehand", { merged: 7.5, batches: 30, asOf: at }],
+    ["chargehand", { merged: 8, batches: 30, asOf: "1" }],
+    ["chargehand", { merged: 8, batches: 30, asOf: "Sun Nov 01 2026" }],
+    ["rebuildDrill", { minutes: 0, asOf: at }],
+    ["rebuildDrill", { minutes: 42, asOf: 20261101 }],
+    ["nytka", { uptimePercent: -0.1, days: 30 }],
+    ["nytka", { uptimePercent: 99.9, days: 0 }],
+    ["nytka", { uptimePercent: 99.9, days: 0.5 }],
+    ["nytka", { uptimePercent: 99.9, days: "13" }],
+    ["agentChecks", { findings: -1, asOf: at }],
+    ["agentChecks", { findings: null, asOf: at }],
+    ["agentChecks", { findings: 2.5, asOf: at }],
+  ];
+  for (const [key, block] of bad) {
+    const l = lab({ [key]: block }) as Record<string, unknown> | null | undefined;
+    assert.equal(l?.[key], undefined, `${key} ${JSON.stringify(block)} should be dropped`);
+    assert.ok(l && Object.keys(l).length === 3, `${key}: the other three stay`);
+  }
+
+  const allBad = parseStatus(
+    { ...f, lab: { chargehand: { merged: "8" }, rebuildDrill: null, nytka: {}, agentChecks: [] } },
+    NOW,
+  );
+  assert.ok(allBad);
+  assert.equal(allBad.lab, null, "a lab block with nothing valid is null, not {}");
+
   const doc = parseStatus({ ...f, lab: "everything is fine" }, NOW);
   assert.ok(doc, "a malformed lab block never rejects the document");
   assert.equal(doc.lab, null);
