@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import LabBoard from "@/components/LabBoard";
@@ -25,10 +24,10 @@ export default function LabPage() {
         lede={
           <>
             What my server measures about itself, refreshed every ten minutes. A figure without a source yet
-            says so instead of guessing. How it is built is in{" "}
-            <Link className="link" prefetch={false} href="/writing/">
-              the writing
-            </Link>
+            says so instead of guessing. The raw file is{" "}
+            <a className="link" href="/status.json">
+              /status.json
+            </a>
             .
           </>
         }

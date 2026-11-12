@@ -26,9 +26,14 @@ export default function LabBoard({ metrics }: { metrics: LabMetric[] }) {
           {shown.map(({ m, l }) => (
             <div className="kpi" key={m.key}>
               <span>{m.label}</span>
-              <span className={l || m.fallback ? "figv" : "figv text-muted-foreground"}>
-                {l?.value ?? m.fallback?.value ?? "none yet"}
-              </span>
+              {l || m.fallback ? (
+                <span className="figv">{l?.value ?? m.fallback?.value}</span>
+              ) : (
+                <span className="figv text-muted-foreground">
+                  <span aria-hidden="true">–</span>
+                  <span className="visually-hidden">none yet</span>
+                </span>
+              )}
               <em>
                 {l ? l.note : m.fallback ? `read ${m.fallback.read}` : "not published yet"}
                 {m.goal && `, ${m.goal}`}

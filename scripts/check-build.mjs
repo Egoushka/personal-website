@@ -259,7 +259,15 @@ if (/not reporting/i.test(text(read(at("index.html"))))) {
 }
 
 // ── Removed routes (R-02, R-08, R-19, R-20) ──────────────────────────────────
-for (const [req, dir] of [["R-02", "admin"], ["R-08", "links"], ["R-19", "search"], ["R-20", "lab"]]) {
+// R-20 is the three /lab/ prototypes deleted in 6dd83e9; /lab/ itself is the live lab page (#77).
+for (const [req, dir] of [
+  ["R-02", "admin"],
+  ["R-08", "links"],
+  ["R-19", "search"],
+  ["R-20", "lab/monitor"],
+  ["R-20", "lab/shell"],
+  ["R-20", "lab/strata"],
+]) {
   if (fs.existsSync(at(dir))) fail(req, at(dir), "still built");
 }
 
