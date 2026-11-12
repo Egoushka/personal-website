@@ -35,6 +35,18 @@ export type Status = {
     languages?: { name: string; percent: number; hours: number }[];
   } | null;
   package?: { id: string; version: string; downloads: number } | null;
+  /** The /lab/ figures. Each block is absent until its source exists on the box. */
+  lab?: Lab | null;
+};
+
+export type Lab = {
+  /** Unattended issue-to-PR batches, and how many of them merged. */
+  chargehand?: { merged: number; batches: number; asOf: string };
+  /** The last timed rebuild of the box from its repository. */
+  rebuildDrill?: { minutes: number; asOf: string };
+  nytka?: { uptimePercent: number; days: number };
+  /** Open agent-checks findings across my repositories. */
+  agentChecks?: { findings: number; asOf: string };
 };
 
 /** A document older than this means the generator stopped; show nothing. */
@@ -65,6 +77,22 @@ function parsePackage(p: unknown): Status["package"] {
   return { id, version, downloads };
 }
 
+const dated = (x: unknown): x is string => typeof x === "string" && !Number.isNaN(Date.parse(x));
+
+/** Each block stands alone: one that fails is left out, the others stay. */
+function parseLab(l: unknown): Status["lab"] {
+  if (!isObj(l)) return null;
+  const out: Lab = {};
+  const { chargehand: c, rebuildDrill: r, nytka: n, agentChecks: a } = l;
+  if (isObj(c) && num(c.merged) && num(c.batches) && c.batches > 0 && c.merged >= 0 && c.merged <= c.batches && dated(c.asOf))
+    out.chargehand = { merged: c.merged, batches: c.batches, asOf: c.asOf };
+  if (isObj(r) && num(r.minutes) && r.minutes > 0 && dated(r.asOf)) out.rebuildDrill = { minutes: r.minutes, asOf: r.asOf };
+  if (isObj(n) && num(n.uptimePercent) && n.uptimePercent >= 0 && n.uptimePercent <= 100 && num(n.days) && n.days > 0)
+    out.nytka = { uptimePercent: n.uptimePercent, days: n.days };
+  if (isObj(a) && num(a.findings) && a.findings >= 0 && dated(a.asOf)) out.agentChecks = { findings: a.findings, asOf: a.asOf };
+  return Object.keys(out).length ? out : null;
+}
+
 /**
  * The document as the pages may trust it, or `null`.
  *
@@ -87,6 +115,7 @@ export function parseStatus(d: unknown, now: number = Date.now()): Status | null
     unhealthy,
     coding: parseCoding(d.coding),
     package: parsePackage(d.package),
+    lab: parseLab(d.lab),
   };
 }
 

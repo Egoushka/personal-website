@@ -54,3 +54,29 @@ test("anything that is not a document is null, never a throw", () => {
     assert.equal(parseStatus(d, NOW), null);
   }
 });
+
+test("the lab block passes whole, and is absent from a document without one", () => {
+  const s = parseStatus(fixture(), NOW);
+  assert.deepEqual(s?.lab?.chargehand, { merged: 8, batches: 30, asOf: "2026-11-01T00:00:00Z" });
+  assert.equal(s?.lab?.nytka?.uptimePercent, 99.95);
+  const { lab: _, ...without } = fixture();
+  assert.equal(parseStatus(without, NOW)?.lab, null);
+});
+
+test("a lab sub-block that fails is dropped on its own", () => {
+  const f = fixture();
+  const lab = (patch: object) => parseStatus({ ...f, lab: { ...f.lab, ...patch } }, NOW)?.lab;
+
+  const moreMergedThanRun = lab({ chargehand: { merged: 31, batches: 30, asOf: "2026-11-01T00:00:00Z" } });
+  assert.equal(moreMergedThanRun?.chargehand, undefined);
+  assert.equal(moreMergedThanRun?.nytka?.days, 30);
+
+  assert.equal(lab({ chargehand: { merged: 0, batches: 0, asOf: "2026-11-01T00:00:00Z" } })?.chargehand, undefined);
+  assert.equal(lab({ rebuildDrill: { minutes: "42", asOf: "2026-11-01T00:00:00Z" } })?.rebuildDrill, undefined);
+  assert.equal(lab({ nytka: { uptimePercent: 101, days: 30 } })?.nytka, undefined);
+  assert.equal(lab({ agentChecks: { findings: 3, asOf: "yesterday" } })?.agentChecks, undefined);
+
+  const doc = parseStatus({ ...f, lab: "everything is fine" }, NOW);
+  assert.ok(doc, "a malformed lab block never rejects the document");
+  assert.equal(doc.lab, null);
+});

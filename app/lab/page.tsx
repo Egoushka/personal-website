@@ -1,0 +1,42 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import Shell from "@/components/Shell";
+import PageHead from "@/components/PageHead";
+import LabBoard from "@/components/LabBoard";
+import BoxPanel from "@/components/BoxPanel";
+import { LAB_METRICS } from "@/lib/lab";
+import { pageMetadata } from "@/lib/metadata";
+
+const description =
+  "Numbers my own box publishes every ten minutes: how often unattended agent work merges, how long a rebuild takes, uptime and open findings.";
+
+export const metadata: Metadata = pageMetadata({ title: "Lab", description, path: "/lab/" });
+
+/**
+ * The lab, as numbers the box checks for itself rather than claims on a CV.
+ * Every figure is read from /status.json in the browser; the static page holds
+ * the dated readings, so it is complete without JS or without the box.
+ */
+export default function LabPage() {
+  return (
+    <Shell>
+      <PageHead
+        title="Lab"
+        lede={
+          <>
+            What my server measures about itself, refreshed every ten minutes. A figure without a source yet
+            says so instead of guessing. How it is built is in{" "}
+            <Link className="link" prefetch={false} href="/writing/">
+              the writing
+            </Link>
+            .
+          </>
+        }
+      />
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+        <LabBoard metrics={LAB_METRICS} />
+        <BoxPanel />
+      </div>
+    </Shell>
+  );
+}
