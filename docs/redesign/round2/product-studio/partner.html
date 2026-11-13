@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en" data-hue-default="235" style="--hue:235">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Partner · Yehor Hrabovskyi (round 2: product-studio)</title>
+<meta name="color-scheme" content="dark light">
+<link rel="stylesheet" href="../shared/tokens.css"><link rel="stylesheet" href="studio.css">
+<script>window.R2={"figs":{"containers":{"v":"133","l":"containers running","src":"status.json → containers","how":"Counted on the box by docker, written to status.json by a timer. Container names are not published.","href":"https://hrabovskyi.online/status.json"},"unhealthy":{"v":"0","l":"unhealthy","src":"status.json → unhealthy","how":"Containers whose Docker healthcheck reports unhealthy at the time of writing.","href":"https://hrabovskyi.online/status.json"},"uptime":{"v":"0 d","l":"uptime","src":"status.json → uptimeDays","how":"Days since the box last booted. It restarted today, so this reads 0.","href":"https://hrabovskyi.online/status.json"},"hours":{"v":"160 h","l":"coding time","src":"status.json → coding.hours","how":"Hours my editor tracker counted. The period it covers is not stated in the file, so none is claimed here.","href":"https://hrabovskyi.online/status.json"},"editor":{"v":"87%","l":"of it in Claude","src":"status.json → coding.editorPercent","how":"Share of tracked time by editor.","href":"https://hrabovskyi.online/status.json"},"attestDl":{"v":"660","l":"Attest downloads","src":"status.json → package.downloads","how":"NuGet's total download count for the Attest package, read by the box.","href":"https://www.nuget.org/packages/Attest"},"attestVer":{"v":"1.2.1","l":"Attest on NuGet","src":"status.json → package.version","how":"The latest published version.","href":"https://www.nuget.org/packages/Attest"},"countries":{"v":"87","l":"countries","src":"lib/site.ts → attest.readings","how":"One validator per country in the repo, each with its own test file.","href":"https://github.com/Egoushka/attest"},"defects":{"v":"197","l":"defects fixed","src":"lib/site.ts → attest.readings","how":"Counted against the upstream CountryValidator project.","href":"https://github.com/Egoushka/attest"},"chVer":{"v":"0.19.19","l":"chargehand release","src":"GitHub tags, read 2026-11-11","how":"Latest tag on Egoushka/chargehand.","href":"https://github.com/Egoushka/chargehand/tags"},"chPrs":{"v":"857","l":"pull requests","src":"GitHub API, read 2026-11-11","how":"Highest pull request number on Egoushka/chargehand, open and closed.","href":"https://github.com/Egoushka/chargehand/pulls?q=is%3Apr"},"chUsers":{"v":"1","l":"chargehand user: me","src":"lib/site.ts → chargehand.readings","how":"Counted by hand. Nobody else runs it yet.","href":"https://hrabovskyi.online/projects/chargehand/"},"chBlind":{"v":"0.333 → 0.667","l":"first blind test, lost","src":"post, 29 Sep 2026","how":"Model-judged blind comparison against a plain agent session; my orchestrator scored 0.333.","href":"https://hrabovskyi.online/writing/chargehand-blind-test/"},"posts":{"v":"12","l":"posts","src":"the live site, built 6 Nov 2026","how":"Published posts; drafts are not counted.","href":"https://hrabovskyi.online/writing/"},"words":{"v":"12,006","l":"words","src":"counted at build","how":"The build counts the words of every published post.","href":"https://hrabovskyi.online/writing/"},"ouraStage":{"v":"3 of 8","l":"Oura stages done","src":"oura-platform README","how":"Stages 1, 2 and 4 run. 3 is skipped on purpose; 5 to 8 are not built.","href":"https://github.com/Egoushka/oura-platform"},"paying":{"v":"0","l":"paying users","src":"counted by hand","how":"No product takes money yet. This stays 0 until one does.","href":"https://hrabovskyi.online"},"checks":{"v":"0","l":"checks run","src":"not deployed","how":"check.hrabovskyi.online has no DNS record yet, so nobody has run a check.","href":"#checker"}},"readAt":"2026-11-11T01:58:08Z","now":"2026-11-11T02:20:00Z","email":"egorgrabovskij@gmail.com","selfCheck":[["llms.txt","/llms.txt","404",false,"No llms.txt. An agent gets the HTML and has to guess."],["MCP discovery","/.well-known/mcp.json","404",false,"No MCP server is advertised."],["WebMCP tools","document.modelContext","none",false,"The page registers no tools for a browser agent (navigator.modelContext only as fallback)."],["x402","HTTP 402 on a paid route","none",false,"Nothing is for sale here, so nothing answers 402. Correct for this site."],["robots.txt","/robots.txt","200",true,"Present, with rules per crawler."],["sitemap","/sitemap.xml","200",true,"Present."],["feed","/feed.xml","200",true,"Present."]]}</script>
+<script src="../shared/ui.js"></script>
+<script src="../shared/checker.js" defer></script></head>
+<body class="c-product-studio">
+<a class="skip" href="#main">Skip to content</a>
+<header class="bar"><div class="bar-in">
+<a class="brand" href="index.html"><span class="mark" aria-hidden="true">YH</span><span class="who">Yehor Hrabovskyi</span></a>
+<nav class="nav" aria-label="Main"><a href="index.html">Home</a><a href="shop.html">Shop</a><a href="partner.html" aria-current="page">Partner</a><a class="ext" href="https://hrabovskyi.online/writing/">Writing <svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a></nav>
+<span class="gap"></span>
+<a class="pulse" href="https://hrabovskyi.online/status.json" data-fig="containers" title="Read from my box"><i></i><span>box ok · read <span data-ago="2026-11-11T01:58:08Z">11 Nov 2026</span></span></a>
+<button class="key ghost icon" data-open-knobs aria-expanded="false" aria-label="Tune this page"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg></button>
+</div></header>
+<div class="knobs" role="dialog" aria-label="Tune this page">
+<h2>Tune this page</h2>
+<div class="knob"><span>Theme</span><div class="seg"><button data-knob="theme" data-v="system">System</button><button data-knob="theme" data-v="light">Light</button><button data-knob="theme" data-v="dark">Dark</button></div></div>
+<div class="knob"><span>Density</span><div class="seg"><button data-knob="density" data-v="comfortable">Comfortable</button><button data-knob="density" data-v="compact">Compact</button></div></div>
+<div class="knob"><span>Accent</span><div class="hues"><button data-knob="hue" data-v="235" style="--h:235" aria-label="default accent"></button><button data-knob="hue" data-v="152" style="--h:152" aria-label="green accent"></button><button data-knob="hue" data-v="255" style="--h:255" aria-label="blue accent"></button><button data-knob="hue" data-v="295" style="--h:295" aria-label="violet accent"></button><button data-knob="hue" data-v="60" style="--h:60" aria-label="amber accent"></button></div></div>
+<div class="knob"><span>Motion</span><div class="seg"><button data-knob="motion" data-v="on">On</button><button data-knob="motion" data-v="off">Off</button></div></div>
+<p class="derive">grid 4 · target 44 · stroke 1.75 · type 15<br>sizes 12 · 13 · 15 · 17 · 20 · 28 · lines on the grid<br>radius = grid × 1.5 / 2 (controls) / 2.5 / 4 / 6<br>saved on this device only</p>
+</div>
+<main id="main">
+
+<section class="hero wrap slim">
+<p class="eyebrow"><span>Partner</span></p>
+<h1>Build the next tool with me. <span class="dim">Terms on one page, before code.</span></h1>
+<p class="lede">I am looking for people to build products with, not clients to sell to. No product has earned a cent yet, so no split is listed here; it is agreed per product.</p>
+</section>
+<section class="wrap shapes" aria-label="Ways to partner">
+<button class="shape" aria-pressed="true" data-k="Co-build"><span class="mono mut small">01</span><b>Co-build</b><span class="mut">A co-builder for the checker's GitHub Action or the WebMCP library. Shared repo, shared credit, a written split.</span></button><button class="shape" aria-pressed="false" data-k="Integrate"><span class="mono mut small">02</span><b>Integrate</b><span class="mut">A team with an API that agents should be able to call and pay for. I wire x402 and MCP into it.</span></button><button class="shape" aria-pressed="false" data-k="Distribute"><span class="mono mut small">03</span><b>Distribute</b><span class="mut">Someone who already reaches .NET shops or agent builders. Revenue share per product, agreed first.</span></button><button class="shape" aria-pressed="false" data-k="Use it honestly"><span class="mono mut small">04</span><b>Use it honestly</b><span class="mut">Early users of the free tiers who tell me what is wrong. No payment, no contract.</span></button>
+</section>
+<section class="wrap termsw">
+<div class="terms" aria-live="polite">
+<div class="terms-h"><span class="mono small">one-page terms · draft</span><span class="chip real">filled from your choices</span></div>
+<h2 id="tTitle">Co-build: Agent-ready checker</h2>
+<dl>
+<dt>What</dt><dd id="tWhat">Agent-ready checker, together, in a shared repository.</dd>
+<dt>Who builds what</dt><dd id="tWho">I build the .NET and agent side. You bring what you named below.</dd>
+<dt>Costs</dt><dd>Each side carries its own time. Shared costs are listed by name before they are spent.</dd>
+<dt>Split</dt><dd>Agreed in writing for this product before code. Nothing earned so far: 0 to split.</dd>
+<dt>Ends</dt><dd>Either side can end it with notice; what was built stays usable by both as agreed.</dd>
+</dl>
+<div class="tctl"><label class="sr" for="tProd">Product</label><select id="tProd"><option>Agent-ready checker</option><option>WebMCP for ASP.NET and Blazor</option><option>chargehand hosted</option><option>x402 .NET kit</option><option>touchstone</option><option>Attest</option><option>oura-platform</option><option>Something new</option></select>
+<label class="sr" for="tHave">What you bring</label><input id="tHave" placeholder="What you bring: a team, an API, an audience…"></div>
+<div class="acts"><a class="key primary" id="tSend" href="mailto:egorgrabovskij@gmail.com"><svg class="ico " viewBox="0 0 24 24" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg> Send this page to me</a><span class="mut small">Opens your mail app. Nothing is sent from here.</span></div>
+</div>
+<aside class="bringw"><h2>What I bring</h2><ul class="bring"><li><a class="num " data-fig="attestDl" href="https://www.nuget.org/packages/Attest">660</a><div><b>A .NET backend that holds up</b><p class="mut small">Attest validates 87 countries with 197 upstream defects fixed; 660 downloads.</p></div></li><li><a class="num " data-fig="chPrs" href="https://github.com/Egoushka/chargehand/pulls?q=is%3Apr">857</a><div><b>Agent tooling, measured</b><p class="mut small">chargehand: 857 pull requests to v0.19.19, and the blind test it lost is published.</p></div></li><li><span class="num">x402</span><div><b>Paid calls for agents</b><p class="mut small">x402 in .NET: an agent pays per call and never for a call that failed.</p></div></li><li><a class="num " data-fig="containers" href="https://hrabovskyi.online/status.json">133</a><div><b>A box that is boring on purpose</b><p class="mut small">133 containers, 0 unhealthy, every stack defined in git.</p></div></li></ul>
+<h2>How it goes</h2><ol class="steps"><li><span class="num">1</span><div><b>Talk</b><p class="mut small">Email what it is, what you have, what you want from it.</p></div></li><li><span class="num">2</span><div><b>One page</b><p class="mut small">Who builds what, who pays which cost, how the split is paid, when it ends. Written before code.</p></div></li><li><span class="num">3</span><div><b>Build</b><p class="mut small">In the open where possible. Every claim gets a link.</p></div></li><li><span class="num">4</span><div><b>Split</b><p class="mut small">Paid as agreed. No product has earned a cent yet, so no split is listed here.</p></div></li></ol></aside>
+</section>
+
+</main>
+<footer class="foot"><div class="foot-in">
+<a href="mailto:egorgrabovskij@gmail.com">egorgrabovskij@gmail.com</a><a href="https://github.com/Egoushka">GitHub</a><a href="https://hrabovskyi.online/feed.xml">RSS</a><a href="https://hrabovskyi.online/writing/">Writing</a><span style="display:inline-flex;align-items:center">Kyiv · UTC+2</span>
+<span class="stamp" style="display:inline-flex;align-items:center">Prototype · product-studio · figures read 2026-11-11 01:58 UTC</span>
+</div></footer>
+<script src="studio.js"></script>
+</body></html>
