@@ -20,6 +20,7 @@ Fifteen files carry `"use client"` (`grep -rl '"use client"' components lib app`
 | [PostFilter.tsx](components/PostFilter.tsx) | multi-select topic and project filter and sort over `/writing/` |
 | [ProjectFilter.tsx](components/ProjectFilter.tsx) | topic and public-repository filters over `/projects/`; grouping is `lib/project-rows.ts` |
 | [Panel.tsx](components/Panel.tsx) | home instrument panel from `/status.json` |
+| [LabBoard.tsx](components/LabBoard.tsx) | `/lab/` figures from the `lab` block of `/status.json` |
 | [UsesStatus.tsx](components/UsesStatus.tsx) | live box state on `/about/` from `/status.json` |
 | [Measured.tsx](components/Measured.tsx) | measured editor-time share beside a skill |
 | [SkillsBoard.tsx](components/SkillsBoard.tsx) | skills search box, measured shares |

@@ -18,5 +18,11 @@
       { "name": "Markdown", "percent": 2, "hours": 2.2 }
     ]
   },
-  "package": { "id": "Attest", "version": "1.4.0", "downloads": 1873 }
+  "package": { "id": "Attest", "version": "1.4.0", "downloads": 1873 },
+  "lab": {
+    "chargehand": { "merged": 8, "batches": 30, "asOf": "2026-11-01T00:00:00Z" },
+    "rebuildDrill": { "minutes": 42, "asOf": "2026-11-01T00:00:00Z" },
+    "nytka": { "uptimePercent": 99.95, "days": 30 },
+    "agentChecks": { "findings": 3, "asOf": "2026-09-27T00:00:00Z" }
+  }
 }

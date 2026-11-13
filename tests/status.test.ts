@@ -54,3 +54,58 @@ test("anything that is not a document is null, never a throw", () => {
     assert.equal(parseStatus(d, NOW), null);
   }
 });
+
+test("the lab block passes whole, and is absent from a document without one", () => {
+  const s = parseStatus(fixture(), NOW);
+  assert.deepEqual(s?.lab?.chargehand, { merged: 8, batches: 30, asOf: "2026-11-01T00:00:00Z" });
+  assert.equal(s?.lab?.nytka?.uptimePercent, 99.95);
+  const { lab: _, ...without } = fixture();
+  assert.equal(parseStatus(without, NOW)?.lab, null);
+});
+
+test("a lab sub-block that fails is dropped on its own", () => {
+  const f = fixture();
+  const lab = (patch: object) => parseStatus({ ...f, lab: { ...f.lab, ...patch } }, NOW)?.lab;
+
+  const moreMergedThanRun = lab({ chargehand: { merged: 31, batches: 30, asOf: "2026-11-01T00:00:00Z" } });
+  assert.equal(moreMergedThanRun?.chargehand, undefined);
+  assert.equal(moreMergedThanRun?.nytka?.days, 30);
+
+  assert.equal(lab({ chargehand: { merged: 0, batches: 0, asOf: "2026-11-01T00:00:00Z" } })?.chargehand, undefined);
+  assert.equal(lab({ rebuildDrill: { minutes: "42", asOf: "2026-11-01T00:00:00Z" } })?.rebuildDrill, undefined);
+  assert.equal(lab({ nytka: { uptimePercent: 101, days: 30 } })?.nytka, undefined);
+  assert.equal(lab({ agentChecks: { findings: 3, asOf: "yesterday" } })?.agentChecks, undefined);
+
+  const at = "2026-11-01T00:00:00Z";
+  const bad: [string, object][] = [
+    ["chargehand", { merged: -1, batches: 30, asOf: at }],
+    ["chargehand", { merged: 7.5, batches: 30, asOf: at }],
+    ["chargehand", { merged: 8, batches: 30, asOf: "1" }],
+    ["chargehand", { merged: 8, batches: 30, asOf: "Sun Nov 01 2026" }],
+    ["rebuildDrill", { minutes: 0, asOf: at }],
+    ["rebuildDrill", { minutes: 42, asOf: 20261101 }],
+    ["nytka", { uptimePercent: -0.1, days: 30 }],
+    ["nytka", { uptimePercent: 99.9, days: 0 }],
+    ["nytka", { uptimePercent: 99.9, days: 0.5 }],
+    ["nytka", { uptimePercent: 99.9, days: "13" }],
+    ["agentChecks", { findings: -1, asOf: at }],
+    ["agentChecks", { findings: null, asOf: at }],
+    ["agentChecks", { findings: 2.5, asOf: at }],
+  ];
+  for (const [key, block] of bad) {
+    const l = lab({ [key]: block }) as Record<string, unknown> | null | undefined;
+    assert.equal(l?.[key], undefined, `${key} ${JSON.stringify(block)} should be dropped`);
+    assert.ok(l && Object.keys(l).length === 3, `${key}: the other three stay`);
+  }
+
+  const allBad = parseStatus(
+    { ...f, lab: { chargehand: { merged: "8" }, rebuildDrill: null, nytka: {}, agentChecks: [] } },
+    NOW,
+  );
+  assert.ok(allBad);
+  assert.equal(allBad.lab, null, "a lab block with nothing valid is null, not {}");
+
+  const doc = parseStatus({ ...f, lab: "everything is fine" }, NOW);
+  assert.ok(doc, "a malformed lab block never rejects the document");
+  assert.equal(doc.lab, null);
+});

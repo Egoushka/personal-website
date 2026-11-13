@@ -30,6 +30,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/writing/`, lastModified: newest, changeFrequency: "weekly", priority: 0.8 },
     { url: `${base}/shop/`, lastModified: "2026-11-11", changeFrequency: "monthly", priority: 0.7 },
     { url: `${base}/partner/`, lastModified: "2026-11-11", changeFrequency: "monthly", priority: 0.7 },
+    { url: `${base}/lab/`, lastModified: "2026-11-12", changeFrequency: "monthly", priority: 0.6 },
     ...(notes.length >= 2
       ? [
           {
