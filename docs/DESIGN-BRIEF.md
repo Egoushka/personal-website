@@ -24,14 +24,18 @@ The personal site of a backend-first .NET developer in Kyiv. Its job, in order:
 2. Get the posts read to the end.
 3. Stay out of the way.
 
-It is **not** a shop, a SaaS landing page, a product hub, or a portfolio for visual
-work. There is nothing to convert. The only calls to action are *read the post*,
-*read the CV*, *email me*.
+Since 2026-11-15 ([ADR 0011](adr/0011-the-site-may-be-an-app.md)) it may also be a hub
+that hosts offers, and an application: a server for `/api` and `/admin`, sessions, a
+database. Public pages stay static; the server side lives in the private repo
+`Egoushka/personal-website-app`, an ASP.NET Core API behind Pocket ID.
 
-**It is also never going to become an application.** No auth, no accounts, no
-billing, no database. Products get their own subdomains and their own runtimes; this
-site links to them. That is a decision, not an omission — see
-[ADR 0001](adr/0001-the-site-is-never-the-app.md).
+**Audience.** The primary visitor for now is a client or a buyer; the goal is income.
+Second, and as important: the tech world, where the owner's voice is to become a guide
+and the site is the leverage for it, so it has to be really great. Hiring managers
+remain a secondary audience.
+
+Each page gets a job and a success metric, kept private (owner-only) and never shown
+publicly.
 
 The glossary for everything below — Post, Project, Topic, Reading, Product — is
 [CONTEXT.md](../CONTEXT.md). Use those words.
@@ -59,9 +63,10 @@ Rules:
 - Short sentences are fine. Fragments are fine. A shrug at the end of a paragraph is fine.
 - "I broke it" comes before "here's how I fixed it".
 - No emoji, no stacked exclamation marks, no "let's build something amazing".
-- No swearing. The audience includes hiring managers at financial institutions.
+- No swearing. The audience includes clients, buyers and hiring managers at financial institutions.
 - **English is the author's second language.** Copy gets a grammar pass; it does not
-  get a personality pass. Fix the tense, keep the shrug.
+  get a personality pass. Fix the tense, keep the shrug. English is no longer the only
+  language: a post may be in another, per post.
 - Every figure stays computed (below). Warmth is the job of the words, precision is
   the job of the numbers, and neither one covers for the other. This is what keeps an
   informal voice from reading as an unserious one.
@@ -93,16 +98,16 @@ who has declined to commit to a cadence, only ever advertises abandonment.
 ## Hard constraints — these break the build or the deploy
 
 The site is **statically exported** (`output: "export"`) and served as flat files by
-Caddy behind Traefik behind Cloudflare. There is no Node runtime in production.
+Caddy behind Traefik behind Cloudflare. Public pages have no Node runtime in production; `/api` and `/admin` may (ADR 0011).
 
 | Constraint | Consequence for design |
 |---|---|
-| **No server.** No server actions, middleware, ISR, `revalidate`, rewrites, redirects or `headers` in `next.config`. | Redirects for moved routes live in [deploy/Caddyfile](../deploy/Caddyfile). There are seven of them and they are load-bearing. |
+| **No server for public pages.** No server actions, middleware, ISR, `revalidate`, rewrites, redirects or `headers` in `next.config`. | Redirects for moved routes live in [deploy/Caddyfile](../deploy/Caddyfile). There are seven of them and they are load-bearing. |
 | **Client components are allowed, sparingly** — each one justified; the current list and reasons are in [CLAUDE.md](../CLAUDE.md). | Each must render something true before JS runs, or nothing. The filters server-render the full list and only ever remove or reorder rows; with scripting off their controls are hidden. No relative dates, no `Date.now()` or `Math.random()` in render. |
 | **shadcn/ui on Tailwind CSS v4** ([ADR 0007](adr/0007-the-site-is-built-on-shadcn-ui-and-tailwind.md)), compiled into one static stylesheet, [app/globals.css](../app/globals.css). No CSS modules, no CSS-in-JS, no Radix primitives. The only inline style sets a custom property for data-driven geometry, read by a class. | Deliver pages as Tailwind utilities and the components in `components/ui/`; hand-written CSS only for the component classes listed in globals.css. |
 | **Self-hosted fonts only**, via `next/font/google`. | You may change the typefaces, but they must load through `next/font`. Never add a `<link>` to fonts.googleapis.com — it puts a render-blocking cross-origin request on the critical path and loses the `size-adjust` fallback metric that keeps CLS at 0. |
 | **`next/image` optimization is off.** | Plain `<img>`, or `next/image` with `unoptimized`. |
-| **A strict CSP** — `script-src 'self'`, no `'unsafe-eval'`. | No CDN scripts, no external stylesheets, no remote fonts, no third-party embeds, no eval. The one embed, comments, is first-party at `/c/` ([ADR 0005](adr/0005-comments-are-a-bounded-exception.md)). |
+| **A strict CSP** — `script-src 'self'`, no `'unsafe-eval'`; when payments ship, the payment provider's origin is the one exception. | No CDN scripts, no external stylesheets, no remote fonts, no third-party embeds, no eval. The one embed, comments, is first-party at `/c/` ([ADR 0005](adr/0005-comments-are-a-bounded-exception.md)). |
 | **`trailingSlash: true`.** | Every internal link carries the slash. A link to `/writing` costs a redirect. |
 | **OG images via `next/og`.** | Satori supports **flexbox only — no CSS grid** — and caps the bundle at 500 KB. Its colours are hard-coded in [lib/og.tsx](../lib/og.tsx); keep them in step with the tokens by hand. |
 
@@ -121,7 +126,7 @@ Non-negotiable. Each was a real failure that got repaired.
 - **Animating an SVG `<g>` uses the `translate` property, never `transform`.** A node's position is a `transform` *attribute*; animating that property replaces the position and collapses every node onto the origin.
 
 Lighthouse on mobile was **Perf 99 · A11y 100 · Best Practices 100 · SEO 100** before
-this rewrite. That is the bar; a redesign shipping at 92 accessibility is a regression.
+this rewrite. That is the bar for public pages; `/admin` is exempt. A redesign shipping at 92 accessibility is a regression.
 
 ---
 

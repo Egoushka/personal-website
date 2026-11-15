@@ -1,24 +1,24 @@
 # hrabovskyi.online
 
 The personal site of one engineer. It exists to make a technical stranger trust the
-engineering and reach the writing. It is not a product, and it never hosts one.
+engineering and reach the writing. It may also be an application and host offers ([ADR 0011](docs/adr/0011-the-site-may-be-an-app.md)).
 
 ## Language
 
 ### The site and what is outside it
 
 **Site**:
-The single statically-exported thing at the apex domain. One repo, one deploy.
-_Avoid_: platform, hub, ecosystem
+The single thing at the apex domain. One repo, one deploy. Public pages are statically exported; `/api` and `/admin` may run on a server.
+It may be the hub that links Products and hosts offers.
+_Avoid_: platform
 
 **Product**:
 Something with its own users, its own repo, its own runtime and its own subdomain.
-Chronicle and Baseline are Products. The Site links to a Product and never contains one.
+Chronicle and Baseline are Products. The Site links to a Product; it may also host an offer.
 _Avoid_: app, project (a Product that the Site describes is described *as* a Project)
 
 **Ecosystem**:
-Not a thing that exists. Reserved for the day two Products share one real user.
-Until then the word names an intention, not a system.
+The Site and the Products around it, taken together. Lifted by ADR 0011: it is a word like any other now.
 
 ### Content
 
