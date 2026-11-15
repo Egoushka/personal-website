@@ -84,6 +84,26 @@ jobs:
           BASE_URL: http://127.0.0.1:8080
         run: npm run smoke
 
+      # The site scores itself with levelset against the Caddy that caddy-test left on :8080.
+      # The floor is a starting value below the first reading; lib/readiness.json holds the
+      # reading the Lab page shows, copied from a green run. The PR comment is off: this
+      # workflow has no pull-requests write.
+      - name: Agent readiness (levelset)
+        id: levelset
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        uses: Egoushka/levelset@7a6dec6e9485e0995778c983744e5c697959e9c6 # main
+        with:
+          url: http://127.0.0.1:8080
+          fail-below: "85"
+          comment: "false"
+
+      - name: Readiness in the job summary
+        if: ${{ !cancelled() && steps.levelset.outcome != 'skipped' }}
+        env:
+          SCORE: ${{ steps.levelset.outputs.score }}
+          GRADE: ${{ steps.levelset.outputs.grade }}
+        run: echo "Agent readiness (levelset) $SCORE/100, grade $GRADE" >> "$GITHUB_STEP_SUMMARY"
+
       # --offline checks that internal hrefs resolve to real files and skips the
       # network entirely, so external link rot can never make this gate flaky.
       - name: Check internal links in the built site

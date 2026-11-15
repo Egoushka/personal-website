@@ -6,8 +6,9 @@
  * number nobody measured.
  */
 import type { Lab } from "@/lib/status";
+import readiness from "@/lib/readiness.json";
 
-export type LabKey = "chargehand" | "rebuildDrill" | "nytka" | "agentChecks";
+export type LabKey = "chargehand" | "rebuildDrill" | "nytka" | "agentChecks" | "readiness";
 
 export type LabMetric = {
   key: LabKey;
@@ -43,6 +44,14 @@ export const LAB_METRICS: LabMetric[] = [
     key: "agentChecks",
     label: "Findings, agent-checks",
     what: "open findings across my repositories",
+  },
+  {
+    key: "readiness",
+    label: "Agent readiness, levelset",
+    what: "this site's score from levelset in CI, out of 100",
+    // CI gates on the floor in ci.yml; the reading is copied here from a green run.
+    fallback: readiness.score === null ? undefined : { value: `${readiness.score}`, read: readiness.read },
+    goal: "floor 85",
   },
 ];
 
