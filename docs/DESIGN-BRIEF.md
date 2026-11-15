@@ -26,7 +26,8 @@ The personal site of a backend-first .NET developer in Kyiv. Its job, in order:
 
 Since 2026-11-15 ([ADR 0011](adr/0011-the-site-may-be-an-app.md)) it may also be a hub
 that hosts offers, and an application: a server for `/api` and `/admin`, sessions, a
-database. Public pages stay static. The architecture is for ADR 0012.
+database. Public pages stay static; the server side lives in the private repo
+`Egoushka/personal-website-app`, an ASP.NET Core API behind Pocket ID.
 
 **Audience.** The primary visitor for now is a client or a buyer; the goal is income.
 Second, and as important: the tech world, where the owner's voice is to become a guide

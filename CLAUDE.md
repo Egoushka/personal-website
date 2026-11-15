@@ -46,7 +46,7 @@ Post-build steps run even after one fails, so one red run lists every failing ga
 
 ## Hard constraint: `output: "export"`
 
-Public pages are static; `/api` and `/admin` may run on a server ([ADR 0011](docs/adr/0011-the-site-may-be-an-app.md), architecture in ADR 0012, not yet written). Until that lands, this section holds as written: no Node runtime in production. No server actions, middleware, ISR, `revalidate`, or
+This repo stays a static export; `/api` and `/admin` are served by the private app `Egoushka/personal-website-app`, which Caddy routes to ([ADR 0011](docs/adr/0011-the-site-may-be-an-app.md)). So this section holds as written for this repo: no Node runtime in production. No server actions, middleware, ISR, `revalidate`, or
 rewrites/redirects/`headers` in `next.config` — those go in [deploy/Caddyfile](deploy/Caddyfile).
 Route handlers (the feeds) and `opengraph-image.tsx` need `export const dynamic =
 "force-static"`; `next/og` is flexbox only, 500 KB max. No runtime env vars: `SITE_URL`

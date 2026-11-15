@@ -10,8 +10,10 @@ to earn, and to make the owner's voice a guide in the tech world. The traffic da
 and the offers are almost invisible. A static brochure cannot fix that.
 
 The owner decided on 2026-11-15 that the site may be an application: a server,
-sessions, a database, an admin. Architecture: a following ADR (0012). Nothing here
-says how.
+sessions, a database, an admin. The same day he chose how: this repo stays a static
+export served by Caddy, and an ASP.NET Core Native AOT API in the private repo
+`Egoushka/personal-website-app` serves `/api` and an owner-only `/admin`, signed in
+through Pocket ID. That repo's ADR 0001 records the architecture and why.
 
 ## What is lifted
 
@@ -51,5 +53,5 @@ credential lives in the browser, and the strict CSP stays.
 
 An application on the personal domain has to be kept correct, patched and backed up,
 which the static site never needed. The guards above, and agents behind gates, are how
-that cost is paid. Until ADR 0012 lands, CLAUDE.md's static-export constraint holds as
-written for all code.
+that cost is paid in the private app repo. This repo's code stays a static export:
+CLAUDE.md's no-server constraint holds here as written.
