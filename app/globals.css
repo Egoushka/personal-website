@@ -1330,6 +1330,7 @@ pre code {
   /* Figures: bold mono; the receipt underline shows on hover and focus only. */
   .kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; border: 1px solid var(--n5); border-radius: 0.625rem; background: var(--n5); overflow: hidden; }
   .kpis-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .kpis > .kpi:last-child:nth-child(odd) { grid-column: span 2; }
   .kpi { display: grid; align-content: start; gap: 0.25rem; padding: 0.75rem 1rem 1rem; background: var(--n2); min-width: 0; }
   .kpi > span { font: 500 0.75rem/1rem var(--font-sans); color: var(--n11); }
   .kpi .figv { font-family: var(--font-mono); font-size: 2rem; font-weight: 650; line-height: 2rem; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; text-decoration: none; color: var(--foreground); }

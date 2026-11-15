@@ -37,6 +37,16 @@ test("every tile has a dated fallback or says it is not published", () => {
   }
   assert.deepEqual(
     LAB_METRICS.map((m) => m.key),
-    ["chargehand", "rebuildDrill", "nytka", "agentChecks"],
+    ["chargehand", "rebuildDrill", "nytka", "agentChecks", "readiness"],
   );
+});
+
+test("the readiness tile is the committed levelset reading, at or above the CI floor", async () => {
+  const { default: r } = await import("../lib/readiness.json", { with: { type: "json" } });
+  const ci = await (await import("node:fs/promises")).readFile(new URL("../.github/workflows/ci.yml", import.meta.url), "utf8");
+  const floor = Number(/fail-below:\s*"?(\d+)"?/.exec(ci)?.[1]);
+  const goal = Number(/floor (\d+)/.exec(LAB_METRICS.find((m) => m.key === "readiness")?.goal ?? "")?.[1]);
+  assert.equal(goal, floor, "the tile's stated floor is the one CI enforces");
+  assert.ok(r.score === null || (r.score >= floor && r.score <= 100));
+  assert.ok(r.score === null || /^\d{4}-\d{2}-\d{2}$/.test(r.read));
 });
