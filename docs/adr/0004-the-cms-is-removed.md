@@ -1,6 +1,6 @@
 # The CMS is removed
 
-Status: accepted. Supersedes [ADR 0003](./0003-content-stays-in-git-the-cms-edits-files.md).
+Status: accepted. Supersedes [ADR 0003](./0003-content-stays-in-git-the-cms-edits-files.md). Partly superseded by [ADR 0011](./0011-the-site-may-be-an-app.md): an owner editor is allowed again, while git stays the source of truth.
 
 ADR 0003 kept content in git and added Sveltia CMS at `/admin/` to edit it. The first
 half stands; the CMS goes. It was a 2.2 MB vendored bundle served from this origin, a

@@ -1,6 +1,6 @@
 # The site is never the app
 
-Status: accepted. Partly superseded by [ADR 0010](./0010-posts-may-carry-interactive-figures.md): post figures may be interactive; everything else here stands.
+Status: superseded by [ADR 0011](./0011-the-site-may-be-an-app.md) on 2026-11-15: the site may be an application. Earlier, [ADR 0010](./0010-posts-may-carry-interactive-figures.md) lifted the interactivity rule for post figures.
 
 The long-term intention is several products — dashboards, a knowledge base, a personal
 CRM, possibly SaaS — reachable from one place, eventually with shared sign-in and

@@ -1,6 +1,6 @@
 # Comments are a bounded exception to ADR 0001
 
-Status: accepted
+Status: accepted. Its bound on credentials is generalised by [ADR 0011](./0011-the-site-may-be-an-app.md): any session on this site comes only from OIDC (Pocket ID), and no credential is stored in the browser.
 
 [ADR 0001](./0001-the-site-is-never-the-app.md) says this site has no server, no
 session and no database. Comments need all three, and they stay: Remark42, self-hosted,
