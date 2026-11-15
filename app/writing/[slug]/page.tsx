@@ -8,6 +8,7 @@ import KindLabel from "@/components/KindLabel";
 import PostEnhancements from "@/components/PostEnhancements";
 import Lang from "@/components/Lang";
 import NextStep from "@/components/NextStep";
+import SubscribeForm from "@/components/SubscribeForm";
 import FigureEnhancements from "@/components/FigureEnhancements";
 import Prose from "@/components/Prose";
 import StatusBadge from "@/components/StatusBadge";
@@ -224,6 +225,8 @@ export default async function PostPage(
           )}
 
           <NextStep step={step} from={`post:${slug}`} />
+
+          <SubscribeForm from={`post:${slug}`} />
 
           <Comments key={slug} url={`${site.url}/writing/${post.slug}/`} />
         </div>
