@@ -6,7 +6,8 @@ kind: finding
 topics: ["dotnet", "efcore", "debugging"]
 ---
 
-TODO: Yehor, the opening moment. What did you expect before you measured, what did you do when you saw the number, what surprised you? Replace this line with your answers; the post does not invent a scene.
+<!-- check this is true for you -->
+I expected a slow query to be slow in a boring, linear way. It wasn't: the time grew almost with the square of the row count, because `lower(Name)` can't use the index on `Name`. At 20,000 rows one page took 55 seconds, and the same page took 48 milliseconds after one change. The other surprise was my tooling: BenchmarkDotNet had quietly been measuring the unpatched build, so I wrote my own timing mode.
 
 The query behind Jellyfin's `/Persons` endpoint asks, for every row, whether any other row has the same name. On a generated table of 20,000 rows, one page of 100 took 55.4 seconds on my machine. I'm Yehor, a .NET dev ([about](/about/)); this is what I measured, how, and what it doesn't tell you. It's no complaint about Jellyfin's maintainers: the code is public, which is why anyone can check it.
 
