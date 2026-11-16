@@ -661,6 +661,38 @@ console.log("\n12. WebMCP: stubbed document.modelContext");
   await plainCtx.close();
 }
 
+// ── Flying website easter egg: nothing loads until five quick theme clicks; Escape lands it ──
+console.log("\nflying website");
+{
+  const ctx = await context();
+  const page = await ctx.newPage();
+  const asked = [];
+  page.on("request", (r) => /flying/.test(r.url()) && asked.push(r.url()));
+  await page.goto(`${BASE}/`);
+  await settle(page);
+  if (asked.length) fail("R-42", "/", `requested ${asked.join(", ")} before the trigger`);
+  const toggle = page.locator(".theme-toggle");
+  for (let i = 0; i < 4; i++) await toggle.click();
+  await page.waitForTimeout(300);
+  if (asked.length) fail("R-42", "/", "four clicks loaded flying.js");
+  await toggle.click();
+  await page.locator(".fly-bar").waitFor({ timeout: 5000 }).catch(() => fail("R-42", "/", "five clicks did not start it"));
+  if (!asked.length) fail("R-42", "/", "flying.js was not requested after five clicks");
+  const grips = await page.locator(".fly-grip").count();
+  if (!grips) fail("R-42", "/", "no blocks to move");
+  const first = page.locator(".fly-grip").first();
+  await first.focus();
+  const before = await first.evaluate((g) => g.parentElement.style.transform);
+  await page.keyboard.press("ArrowRight");
+  const after = await first.evaluate((g) => g.parentElement.style.transform);
+  if (before === after) fail("R-42", "/", "arrow key did not move the block");
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(900);
+  const left = await page.evaluate(() => document.querySelectorAll(".fly-bar,.fly-block,.fly-grip").length + document.documentElement.classList.contains("fly-on"));
+  if (left) fail("R-42", "/", "Escape left flying markup behind");
+  await ctx.close();
+}
+
 await browser.close();
 local?.close();
 

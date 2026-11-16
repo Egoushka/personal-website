@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Bricolage_Grotesque } from "next/font/google";
 import { site, feedTypes, isPrelive } from "@/lib/site";
 import { UMAMI_BEFORE_SEND } from "@/lib/umami";
+import { FLYING_LOADER } from "@/lib/flying";
 import "./globals.css";
 
 // Downloaded and self-hosted at build time — no request to Google from the
@@ -106,6 +107,12 @@ export default function RootLayout({
               "(function(){if(document.modelContext||navigator.modelContext)addEventListener('load',function(){import('/webmcp.js')})})()",
           }}
         />
+        {/*
+          A hidden toy: five quick theme-toggle clicks load /flying.js, which lets
+          the page's blocks be dragged around. Until then this is one click
+          listener and nothing is fetched. See lib/flying.ts.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: FLYING_LOADER }} />
         {/*
           Umami, self-hosted. Served first-party via the edge Traefik router, NOT from
           umami.lab.hrabovskyi.online — that name resolves to 100.64.0.2 and is reachable

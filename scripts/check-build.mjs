@@ -152,6 +152,12 @@ else {
   }
 }
 
+// The flying-website easter egg: its module is shipped, and the loader that fetches it is in the home page.
+{
+  if (!fs.existsSync(at("flying.js"))) fail("R-42", "flying.js", "missing");
+  else if (!read(at("index.html")).includes("/flying.js")) fail("R-42", "index.html", "no loader for /flying.js");
+}
+
 // WebMCP: the tool data is built from the posts, and the registrar is shipped.
 {
   const f = at("webmcp.json");

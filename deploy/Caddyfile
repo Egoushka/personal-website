@@ -111,7 +111,7 @@
 
 	# Not content-hashed, so it must not be immutable — it gets replaced in place.
 	@downloads {
-		path /icon.svg /apple-icon.png /manifest.webmanifest /webmcp.js
+		path /icon.svg /apple-icon.png /manifest.webmanifest /webmcp.js /flying.js
 		file
 	}
 	header @downloads Cache-Control "public, max-age=3600, s-maxage=86400"
