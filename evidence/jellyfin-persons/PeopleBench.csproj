@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Path to a jellyfin/jellyfin checkout; override with -p:JellyfinRoot=... -->
+    <JellyfinRoot Condition="'$(JellyfinRoot)' == ''">../jellyfin</JellyfinRoot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+    <PackageReference Include="Moq" Version="4.18.4" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(JellyfinRoot)/Jellyfin.Server.Implementations/Jellyfin.Server.Implementations.csproj" />
+    <ProjectReference Include="$(JellyfinRoot)/Emby.Server.Implementations/Emby.Server.Implementations.csproj" />
+  </ItemGroup>
+
+</Project>

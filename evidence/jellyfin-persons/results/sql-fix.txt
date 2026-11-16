@@ -1,0 +1,27 @@
+      SELECT COUNT(*)
+      FROM (
+          SELECT DISTINCT lower("p"."Name") AS "c"
+          FROM "Peoples" AS "p"
+      ) AS "p0"
+----
+      SELECT "p"."Id", "p"."Name", "p"."PersonType"
+      FROM "Peoples" AS "p"
+      WHERE "p"."Id" IN (
+          SELECT MIN("p1"."Id")
+          FROM (
+              SELECT "p0"."Id", lower("p0"."Name") AS "Key"
+              FROM "Peoples" AS "p0"
+          ) AS "p1"
+          GROUP BY "p1"."Key"
+      )
+      ORDER BY lower("p"."Name")
+      LIMIT @p
+----
+      SELECT COUNT(*)
+      FROM (
+          SELECT DISTINCT lower("p"."Name") AS "c"
+          FROM "Peoples" AS "p"
+      ) AS "p0"
+rows=1000 total=510 page=100 avg_ms=12.6
+all pages: 510 rows, sha256 DD6346B2256D99C2C56DAE772BE02E4848EEF9DFDE8EE57F340D6ED5760D7B80
+checksum: B4E59262AA7C5B7BCCAFA72174E23EE8DEDEE6C4C4BCAFF26058F65F63B494AF
