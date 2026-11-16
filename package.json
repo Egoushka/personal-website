@@ -11,6 +11,7 @@
     "evidence": "node scripts/evidence.mjs",
     "readings": "node scripts/readings.mjs",
     "new": "node scripts/new-post.mjs",
+    "newsletter": "node scripts/newsletter.mjs",
     "docs:pull": "node scripts/docs.mjs pull",
     "docs:verify": "node scripts/docs.mjs verify",
     "docs:check": "node scripts/docs.mjs check",

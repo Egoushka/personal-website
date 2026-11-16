@@ -288,6 +288,21 @@ for (const { file, html } of detail) {
   if (!mailto) fail("R-08", file, `no byline with ${email} as the visible text of a mailto: link`);
 }
 
+// ── Subscribe block a plain double opt-in form on every post and on /writing/ ─
+const NEWSLETTER_UUID = read(path.join(ROOT, "lib", "newsletter.ts")).match(/NEWSLETTER_LIST_UUID = "([^"]+)"/)?.[1];
+for (const { file, html, url } of pages.filter((p) => /^\/writing\/(?:[^/]+\/)?$/.test(p.url))) {
+  const form = [...html.matchAll(/<form\b[^>]*>([\s\S]*?)<\/form>/gi)].find((m) => attrs(m[0]).action === "/subscription/form");
+  if (!form) { fail("N-01", file, "no subscribe form posting to /subscription/form"); continue; }
+  if (attrs(form[0]).method?.toLowerCase() !== "post") fail("N-01", file, "the subscribe form does not use method=post");
+  const inputs = [...form[1].matchAll(/<input\b[^>]*>/gi)].map((m) => attrs(m[0]));
+  if (!inputs.some((a) => a.name === "l" && a.value === NEWSLETTER_UUID)) fail("N-02", file, "the subscribe form does not carry the list UUID of lib/newsletter.ts");
+  if (!inputs.some((a) => a.name === "email" && a.type === "email" && "required" in a && a.id)) fail("N-03", file, "no required email input with an id");
+  const id = inputs.find((a) => a.name === "email")?.id;
+  if (id && !new RegExp(`<label\\b[^>]*for="${id}"`).test(form[1])) fail("N-03", file, "the email input has no label");
+  if (!/data-umami-event="subscribe"/.test(form[1])) fail("N-04", file, "the submit button carries no data-umami-event");
+  if (inputs.some((a) => a.type === "checkbox")) fail("N-05", file, "the form has a second field: one field is the point");
+}
+
 for (const { file, html, url } of pages.filter((p) => /^\/writing\/[^/]+\/$/.test(p.url))) {
   for (const pre of html.match(/<pre\b[^>]*>/gi) ?? []) {
     if (attrs(pre).tabindex !== "0") fail("R-17", file, `a <pre> is not keyboard-scrollable (no tabindex="0")`);

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
+import SubscribeForm from "@/components/SubscribeForm";
 import PostFilter, { type PostRow } from "@/components/PostFilter";
 import { pageMetadata } from "@/lib/metadata";
 import { getAllPosts, getNotes, getTopicCounts, formatDate } from "@/lib/posts";
@@ -94,6 +95,10 @@ export default function WritingIndex() {
       />
 
       <PostFilter posts={rows} topics={topics} projects={projectChips} />
+
+      <div className="max-w-2xl">
+        <SubscribeForm from="writing" />
+      </div>
 
     </Shell>
   );

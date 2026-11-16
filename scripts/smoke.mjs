@@ -101,7 +101,8 @@ const JS_SLACK = 1024;
 // new post never needs a line here (ADR 0010; the content engine opens pull
 // requests that add only the post file). Any other route with a figure needs an
 // entry in FIGURE_BUDGET, and fails without one.
-const FIGURE_POST_BUDGET = 148739;
+// + the subscribe form (components/SubscribeForm.tsx) every post carries, about 1 KB gz.
+const FIGURE_POST_BUDGET = 149790;
 const FIGURE_BUDGET = {};
 const FIGURE_MARK = "figure[data-fig]";
 
