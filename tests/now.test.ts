@@ -72,3 +72,8 @@ test("one busy repository and release-please PRs do not fill the page", () => {
   const items = [mk("a", "1"), mk("a", "2"), mk("a", "3"), mk("a", "4"), mk("a", "chore(main): release 1.0.0"), mk("b", "5")];
   assert.deepEqual(pickPrs(items as never).map((i) => i.title), ["1", "2", "3", "5"]);
 });
+
+test("dependency bumps are not shown", () => {
+  const mk = (title: string) => ({ kind: "merged", date: "2026-11-14", repo: "a", title, href: `https://github.com/Egoushka/a/pull/${title.length}` });
+  assert.deepEqual(pickPrs([mk("build: Bump X from 1 to 2"), mk("chore(deps): bump Y"), mk("feat: real")] as never).map((i) => i.title), ["feat: real"]);
+});
