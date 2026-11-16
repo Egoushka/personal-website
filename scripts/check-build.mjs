@@ -334,6 +334,24 @@ for (const { file, html } of pages) {
   }
 }
 
+// ── /now/ (public signals only, each row dated and sourced) ──────────────────
+{
+  const file = at("now", "index.html");
+  if (!fs.existsSync(file)) fail("NOW-1", file, "missing");
+  else {
+    const html = read(file);
+    for (const sec of html.matchAll(/<section\b[^>]*>([\s\S]*?)<\/section>/g)) {
+      if (!/<time\b[^>]*datetime="\d{4}-\d\d-\d\d"/i.test(sec[1])) fail("NOW-2", file, "a group has no dated <time>");
+    }
+    const rows = [...html.matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/g)].map((m) => m[1]).filter((r) => r.includes("data-umami-event=\"now-click\""));
+    for (const row of rows) {
+      const href = row.match(/href="([^"]+)"/)?.[1] ?? "";
+      if (!/^(\/writing\/|https:\/\/github\.com\/Egoushka\/|https:\/\/www\.nuget\.org\/packages\/)/.test(href)) fail("NOW-3", file, `a row links outside my public sources: ${href}`);
+    }
+    if (rows.length === 0 && !/No source answered/.test(html)) fail("NOW-4", file, "no rows and no empty-state wording");
+  }
+}
+
 for (const f of failures) console.log(f);
 const byReq = failures.reduce((acc, f) => ((acc[f.split(" ")[0]] = (acc[f.split(" ")[0]] ?? 0) + 1), acc), {});
 console.log(
