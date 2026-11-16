@@ -3,6 +3,13 @@ name: Deploy
 on:
   push:
     branches: [main]
+  # /now/ is counted from GitHub and NuGet at build time (scripts/now.mjs), so
+  # it only moves when a build runs. A daily run of this same gated pipeline
+  # keeps it within a day of the facts; a separate workflow would need its own
+  # copy of the gates or a token to dispatch this one. Scheduled runs use the
+  # default branch, which the `if` below also requires.
+  schedule:
+    - cron: "17 5 * * *"
   workflow_dispatch:
     inputs:
       indexnow_all:

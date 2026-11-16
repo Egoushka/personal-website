@@ -5,7 +5,7 @@
   "description": "hrabovskyi.online — personal portfolio + blog",
   "scripts": {
     "dev": "next dev",
-    "build": "npm run images && next build && npm run index",
+    "build": "npm run images && npm run now && next build && npm run index",
     "typecheck": "tsc --noEmit",
     "validate": "node scripts/validate-content.mjs",
     "evidence": "node scripts/evidence.mjs",
@@ -15,6 +15,7 @@
     "docs:verify": "node scripts/docs.mjs verify",
     "docs:check": "node scripts/docs.mjs check",
     "index": "pagefind --site out --output-subdir pagefind",
+    "now": "node scripts/now.mjs",
     "images": "node scripts/optimize-images.mjs",
     "test": "node --import tsx --test \"tests/**/*.test.ts\"",
     "check": "node scripts/check-build.mjs",

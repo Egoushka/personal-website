@@ -4,6 +4,7 @@ import { getAllPosts, getNotes } from "@/lib/posts";
 import { getTopicUsage } from "@/lib/readings";
 import { getDocPages, getDocSources } from "@/lib/docs";
 import { getAllMethods } from "@/lib/methods";
+import { getNow } from "@/lib/now";
 
 export const dynamic = "force-static";
 
@@ -30,6 +31,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/writing/`, lastModified: newest, changeFrequency: "weekly", priority: 0.8 },
     { url: `${base}/shop/`, lastModified: "2026-11-11", changeFrequency: "monthly", priority: 0.7 },
     { url: `${base}/partner/`, lastModified: "2026-11-11", changeFrequency: "monthly", priority: 0.7 },
+    { url: `${base}/now/`, lastModified: getNow().items[0]?.date, changeFrequency: "daily", priority: 0.6 },
     { url: `${base}/lab/`, lastModified: "2026-11-12", changeFrequency: "monthly", priority: 0.6 },
     ...(notes.length >= 2
       ? [

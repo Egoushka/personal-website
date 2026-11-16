@@ -1,0 +1,16 @@
+export type Item = { kind: "merged" | "release" | "nuget" | "post"; date: string; repo: string; title: string; href: string };
+export type RemoteNow = { generated: string; since: string; mergedPrs: number; items: Item[] };
+export const OWNER: string;
+export const NUGET_OWNER: string;
+export const WINDOW_DAYS: number;
+export const MAX_ITEMS: number;
+export function publicRepos(repos: unknown[]): Set<string>;
+export function prItems(search: unknown, allowed: Set<string>): Item[];
+export function releaseItems(events: unknown[], allowed: Set<string>, since: string): Item[];
+export function nugetItems(id: string, versions: { version: string; published?: string }[], since: string): Item[];
+export function postItems(posts: { date: string; slug: string; title: string }[], since: string): Item[];
+export function sinceDate(now: Date, days?: number): string;
+export function sortItems<T extends { date: string; href: string }>(items: T[]): T[];
+export function collectNow(o: { fetchJson: (url: string) => Promise<any>; now?: Date }): Promise<RemoteNow>;
+export function validNow(d: unknown): boolean;
+export function pickPrs(items: Item[]): Item[];
