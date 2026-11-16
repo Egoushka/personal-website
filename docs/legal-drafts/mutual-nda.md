@@ -2,7 +2,7 @@
 
 DRAFT, not legal advice, not yet read by a lawyer. Signed before any access to the Customer's systems. Square brackets are to be filled in.
 
-**Parties:** [Yehor Hrabovskyi, FOP, address] (the Author) and [Customer, address] (the Customer).
+**Parties:** [Author legal name] (the Author) and [Customer, address] (the Customer).
 **Date:** [date]
 
 ## 1. Purpose

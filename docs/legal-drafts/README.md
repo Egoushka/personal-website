@@ -20,5 +20,7 @@ Square brackets mark a value the author or the lawyer must fill in or confirm. I
 6. Which invoice wording does an EU VAT-registered buyer need (reverse charge)? This one is also a question for the accountant.
 7. Should the report license be "customer owns it" or a perpetual license to the customer? Who owns the patches?
 8. Is professional liability insurance advisable at this volume? UNKNOWN.
+9. What does the customer get if delivery is late or does not happen at all (refund, credit, a cap on delay)? The order form covers only a short count.
+10. Add a consent-for-case-study clause: may the author describe the engagement publicly, anonymized, only with the customer's written consent?
 
 Facts as of 2026-11-16. Not legal or tax advice.

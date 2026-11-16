@@ -33,7 +33,7 @@ const SCOPE = [
 const NOT = [
   "No fixes beyond the top three patches. No retainers, no on-call.",
   "No architecture, security, front-end, infrastructure or cloud cost review.",
-  "No production access and no production data. Read-only access to code, plus a staging copy or anonymized query statistics.",
+  "No write access, no personal data; read-only code plus a staging copy or anonymized query statistics.",
   "SQL Server only. No PostgreSQL, no Dapper-only apps.",
   "No promised speedup. The guarantee covers the count and the evidence.",
 ];
@@ -47,12 +47,12 @@ const STEPS = [
 ];
 
 const FAQ: [string, string][] = [
-  ["Do you need production data?", "No. See above."],
+  ["Do you need production data?", "No. No write access, no personal data; read-only code plus a staging copy or anonymized query statistics."],
   ["Is this a hire?", "No. It's a report with a fixed deliverable and a fixed date. I don't join your team and I don't take your tickets."],
-  ["Why this price?", "It's about 14 hours of senior work on a codebase I haven't seen, written down so anyone on your side can use it. Other sellers charge 1,500 to 5,000 USD for similar scope; I'm at the low end because I'm new at this."],
-  ["What if you find fewer than 10?", "You get all your money back."],
+  ["Why this price?", "I expect it to take about 14 hours of senior work on a codebase I haven't seen, written down so anyone on your side can use it. I price it low because I'm new at this."],
+  ["What if you find fewer than 10?", "I refund the full fee. Ask within 14 days of delivery."],
   ["Can you fix it?", "I patch the top three. Anything more is a separate quote, and you can say no to it."],
-  ["Will you always say yes?", "No. I may decline an engagement that conflicts with an obligation I already have. I'll tell you that in my reply, before anything is signed."],
+  ["Will you always say yes?", "No. I may decline an engagement that conflicts with an obligation I already have. I'll tell you that in my reply, before access is given."],
 ];
 
 export default function Review() {
@@ -61,7 +61,7 @@ export default function Review() {
       <article className="max-w-2xl">
         <PageHead
           title="A written review of how your .NET app talks to SQL Server"
-          lede="At least 10 numbered findings with evidence, the top three as patches, in 10 working days, for a fixed price. Fewer than 10 and you're refunded."
+          lede="At least 10 numbered findings with evidence, the top three as patches, in 10 working days, for a fixed price. Fewer than 10 and I refund you."
         />
         <div className="space-y-10 text-lg leading-relaxed pb-12">
           <section aria-labelledby="who-h">
@@ -120,14 +120,7 @@ export default function Review() {
             </p>
           </section>
 
-          <section aria-labelledby="free-h">
-            <h2 id="free-h" className="text-xl font-semibold tracking-tight">Free first</h2>
-            <p className="mt-3">
-              The checklist and the Query Store scripts I review against are free, so a team can start alone. The review
-              is for when you want a second pair of eyes and a report you can hand to anyone.
-            </p>
-          </section>
-
+          {/* "Free first" section returns when the checklist and Query Store scripts are published and linked. */}
           <section aria-labelledby="terms-h">
             <h2 id="terms-h" className="text-xl font-semibold tracking-tight">Terms in plain words</h2>
             <ul className="mt-3 list-disc space-y-2 pl-5">

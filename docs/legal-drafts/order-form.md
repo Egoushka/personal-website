@@ -6,7 +6,7 @@ DRAFT, not legal advice, not yet read by a lawyer. Square brackets are to be fil
 
 ## 1. Parties
 
-- **Author:** [Yehor Hrabovskyi, FOP, registration details, address, bank details]
+- **Author:** [Author legal name]
 - **Customer:** [legal name, address, VAT number, contact person]
 
 ## 2. What the Customer buys
@@ -27,7 +27,7 @@ A "finding" means a numbered item with all five of the fields above, for the app
 - Database: [one SQL Server database, version]
 - In scope: EF Core usage, SQL Server behaviour as the application sees it, reliability around the database (retries, transactions, idempotent writes, migration safety).
 - Out of scope: fixes beyond the top three patches, retainers, on-call, architecture, security, front-end, infrastructure and cloud cost review, databases other than SQL Server, any promise of a performance gain.
-- Access: read-only access to code, plus a staging copy or anonymized query statistics. No production write access. No production data containing personal data.
+- Access: No write access, no personal data; read-only code plus a staging copy or anonymized query statistics.
 
 ## 4. Timeline
 

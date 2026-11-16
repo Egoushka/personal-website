@@ -4,7 +4,7 @@ DRAFT, not legal advice, not yet read by a lawyer. Plain words first, lawyer's w
 
 ## 1. Who and what
 
-The seller is [Yehor Hrabovskyi, FOP, registration details, address, contact email]. The service is a fixed-scope written review of one application's database access, described in each order form. It is a report with a fixed deliverable and date, not employment, staffing or a team placement.
+The seller is [Author legal name]. The service is a fixed-scope written review of one application's database access, described in each order form. It is a report with a fixed deliverable and date, not employment, staffing or a team placement.
 
 ## 2. How an engagement starts
 
@@ -40,7 +40,7 @@ The Author may decline or stop an engagement before access is given if it would 
 
 ## 10. Working arrangements
 
-The Author does this work in his own time, on his own equipment, and uses no material from any other engagement or employer.
+The Author does this work in its own time, on its own equipment, and uses no material from any other engagement.
 
 ## 11. Changes, law, disputes
 
