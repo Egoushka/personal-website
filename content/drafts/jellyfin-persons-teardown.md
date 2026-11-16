@@ -50,7 +50,7 @@ dbQuery = candidates
 
 One pass: group by the lowercased name, take the smallest id in each group, keep those rows. It's the same question answered once instead of once per row.
 
-A faster query is worthless if it returns something different, so I paged through the whole result with both versions at 1,000 and at 5,000 rows and hashed every name and role, with the total count off for that comparison. The hashes match. Jellyfin's existing people tests pass with the change, plus two I added for the case-only collapse and for paging, 24 in all. The patch is in this repo, not in Jellyfin. I haven't sent it anywhere. That's for its maintainers to want.
+A faster query is worthless if it returns something different, so I paged through the whole result with both versions at 1,000 and at 5,000 rows and hashed every name and role, with the total count off for that comparison. The hashes match. Jellyfin's existing people tests pass with the change, plus two I added for the case-only collapse and for paging, 37 in all. The patch is in this repo, not in Jellyfin. I haven't sent it anywhere. That's for its maintainers to want.
 
 ## What it doesn't tell you
 
