@@ -26,6 +26,27 @@ if (args.Length > 0 && args[0] == "dump")
     return;
 }
 
+// Time mode: `dotnet run -c Release -- time <rows> <runs>` times one warm-up and <runs> calls of the page-100 query.
+// BenchmarkDotNet's default job rebuilds the project in a child process, which for a patched checkout means
+// a build of the wrong checkout; this mode measures the assembly it was started from.
+if (args.Length > 0 && args[0] == "time")
+{
+    var b = new PeopleBench { Rows = int.Parse(args[1]) };
+    b.Setup();
+    b.GetPeople_Page100();
+    var times = new List<double>();
+    for (var i = 0; i < int.Parse(args[2]); i++)
+    {
+        var sw = Stopwatch.StartNew();
+        b.GetPeople_Page100();
+        times.Add(sw.Elapsed.TotalMilliseconds);
+    }
+
+    times.Sort();
+    Console.WriteLine($"rows={args[1]} runs={times.Count} median_ms={times[times.Count / 2]:F1} min_ms={times[0]:F1} max_ms={times[^1]:F1} all_ms={string.Join(",", times.Select(t => t.ToString("F1")))}");
+    return;
+}
+
 // Plan mode: `dotnet run -c Release -- plan <rows> "<sql>"` prints SQLite's query plan; @personType is bound.
 if (args.Length > 0 && args[0] == "plan")
 {
