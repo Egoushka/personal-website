@@ -5,13 +5,14 @@ import { cn } from "@/lib/utils";
 
 /**
  * The footer carries what is not a section: the journey, how to reach me, the
- * feed and the source. /journey/ and /lab/ are here because nothing else links to them, and a
+ * feed and the source. /journey/ and /lab/ and /radar/ are here because nothing else links to them, and a
  * finished page nobody can navigate to is the same as a missing one.
  */
 const LINKS = [
   { href: "/journey/", label: "Journey", internal: true },
   { href: "/now/", label: "Now", internal: true },
   { href: "/lab/", label: "Lab", internal: true },
+  { href: "/radar/", label: "Radar", internal: true },
   { href: "/writing/", label: "Writing", internal: true },
   { href: "/about/#contact", label: "Contact", internal: true },
   { href: `mailto:${site.email}`, label: "Email" },

@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "npm run images && npm run now && next build && npm run index",
     "typecheck": "tsc --noEmit",
-    "validate": "node scripts/validate-content.mjs",
+    "validate": "node scripts/validate-content.mjs && node scripts/validate-radar.mjs",
     "evidence": "node scripts/evidence.mjs",
     "readings": "node scripts/readings.mjs",
     "new": "node scripts/new-post.mjs",

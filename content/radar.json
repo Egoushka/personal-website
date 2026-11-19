@@ -1,0 +1,50 @@
+{
+  "generated": "2026-11-19",
+  "entries": [
+    {
+      "name": "Postgres 18.7 patch",
+      "quadrant": "data",
+      "ring": "adopt",
+      "since": "2026-11-19",
+      "reason": "CVE-2026-6460 is fixed in 18.7 and 17.12, and every Postgres server I run was below the fix.",
+      "result": "13 of 13 running servers were below the fix (12 on 18.6, 1 on 17.11). Patched. Postgres 19 stays on hold: pgvector has no pg19 tag yet.",
+      "repoKind": "personal"
+    },
+    {
+      "name": "MCP tool description trimming",
+      "quadrant": "tooling",
+      "ring": "trial",
+      "since": "2026-11-19",
+      "reason": "Shorter tool descriptions cost fewer tokens in every session that loads the server.",
+      "result": "10 tools: 9122 to 7355 bytes (-19.4%, about 2280 to 1838 tokens by a chars/4 estimate). Descriptions only; the build is clean and no test asserts description text.",
+      "repoKind": "personal"
+    },
+    {
+      "name": "Tailscale netmap caching",
+      "quadrant": "infra",
+      "ring": "hold",
+      "since": "2026-11-19",
+      "reason": "It needs a control-plane node attribute that headscale 0.29.7 may not send, and it would not fix the WARP routing clash.",
+      "result": "Unknown whether headscale sends the attribute. Cheapest next test: stop the control plane for a minute and ping a peer.",
+      "repoKind": "personal"
+    },
+    {
+      "name": "gh event listen for PR waits",
+      "quadrant": "tooling",
+      "ring": "hold",
+      "since": "2026-11-19",
+      "reason": "Waiting for PR events instead of polling would save API calls, but the feature is a preview this account is not in.",
+      "result": "Needs gh 2.105 or newer. A live call returned HTTP 403: event subscriptions are not enabled for this account. Retest once enrolled.",
+      "repoKind": "personal"
+    },
+    {
+      "name": "System.ServiceModel.Syndication for feeds",
+      "quadrant": "tooling",
+      "ring": "hold",
+      "since": "2026-11-19",
+      "reason": "It replaces a hand-written RSS and Atom parser, but it rejects a whole feed over unescaped HTML the old parser reads.",
+      "result": "The swap worked and removed 7 lines. 30 of 31 parser tests passed. On a corpus of 17 feeds (about 250 entries) there were no title, link, id or date mismatches.",
+      "repoKind": "personal"
+    }
+  ]
+}
