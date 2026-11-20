@@ -1,0 +1,106 @@
+From a3397f5870f755d4f3752b6f2d2403a9c32baacd Mon Sep 17 00:00:00 2001
+From: Yehor Hrabovskyi <55855551+Egoushka@users.noreply.github.com>
+Date: Mon, 16 Nov 2026 09:52:26 +0000
+Subject: [PATCH] Collapse people by name with one grouped pass
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+GET /Persons lists one row per lowercased name, keeping the lowest id.
+The correlated NOT EXISTS compared every row with every other row,
+because lower(Name) cannot use the Name index, so the cost grew with the
+square of the Peoples table. A GROUP BY lower(Name) with MIN(Id) picks the
+same rows in one pass.
+
+Adds tests for the case-only collapse, the kept id and paging.
+
+Wheelhouse-Session: 01M7GHZGCNB4Y4WB1JFMRPHN9K
+Wheelhouse-Feature: Finish homelab gateway PR #573, the teardown po…
+Wheelhouse-Why: let's improve my website functionality, what you can suggest, be wild, i don't wanna give you specific options so you can grow into all directions of my websit…
+---
+ .../Item/PeopleRepository.cs                  |  8 ++-
+ .../Item/PeopleRepositoryNameCollapseTests.cs | 52 +++++++++++++++++++
+ 2 files changed, 59 insertions(+), 1 deletion(-)
+ create mode 100644 tests/Jellyfin.Server.Implementations.Tests/Item/PeopleRepositoryNameCollapseTests.cs
+
+diff --git a/Jellyfin.Server.Implementations/Item/PeopleRepository.cs b/Jellyfin.Server.Implementations/Item/PeopleRepository.cs
+index 802138e..d27e6d2 100644
+--- a/Jellyfin.Server.Implementations/Item/PeopleRepository.cs
++++ b/Jellyfin.Server.Implementations/Item/PeopleRepository.cs
+@@ -51,8 +51,14 @@ public class PeopleRepository(IDbContextFactory<JellyfinDbContext> dbProvider, I
+             // name so /Persons doesn't return the same BaseItem id repeatedly, keeping the
+             // lowest id per lowercased name so case-only duplicates collapse together.
+             var candidates = dbQuery;
++
++            // One grouped pass picks the lowest id per lowercased name. A correlated NOT EXISTS here
++            // compares every row with every other row, because the lower() expression can't use the Name index.
++            var firstIds = candidates
++                .GroupBy(e => e.Name.ToLower())
++                .Select(g => g.Min(e => e.Id));
+             dbQuery = candidates
+-                .Where(p => !candidates.Any(other => other.Name.ToLower() == p.Name.ToLower() && other.Id < p.Id))
++                .Where(p => firstIds.Contains(p.Id))
+                 .OrderBy(e => e.Name.ToLower());
+ 
+             if (filter.EnableTotalRecordCount)
+diff --git a/tests/Jellyfin.Server.Implementations.Tests/Item/PeopleRepositoryNameCollapseTests.cs b/tests/Jellyfin.Server.Implementations.Tests/Item/PeopleRepositoryNameCollapseTests.cs
+new file mode 100644
+index 0000000..a8fbfc9
+--- /dev/null
++++ b/tests/Jellyfin.Server.Implementations.Tests/Item/PeopleRepositoryNameCollapseTests.cs
+@@ -0,0 +1,52 @@
++using System;
++using System.Linq;
++using Emby.Server.Implementations.Data;
++using Jellyfin.Database.Implementations.Entities;
++using Jellyfin.Server.Implementations.Item;
++using MediaBrowser.Controller.Entities;
++using MediaBrowser.Controller.Persistence;
++using Moq;
++using Xunit;
++
++namespace Jellyfin.Server.Implementations.Tests.Item;
++
++/// <summary>
++/// A person credited under several roles, or under names that differ only in case, is listed once.
++/// </summary>
++public sealed class PeopleRepositoryNameCollapseTests : SqliteDbTestFixture
++{
++    private readonly PeopleRepository _repository;
++
++    public PeopleRepositoryNameCollapseTests()
++    {
++        using (var context = CreateDbContext())
++        {
++            context.Peoples.Add(new People { Id = new Guid(1, 0, 0, new byte[8]), Name = "Brad Pitt", PersonType = "Actor" });
++            context.Peoples.Add(new People { Id = new Guid(2, 0, 0, new byte[8]), Name = "BRAD PITT", PersonType = "Producer" });
++            context.Peoples.Add(new People { Id = new Guid(3, 0, 0, new byte[8]), Name = "Brad Pitt", PersonType = "Director" });
++            context.Peoples.Add(new People { Id = new Guid(4, 0, 0, new byte[8]), Name = "alpha centauri", PersonType = "Actor" });
++            context.SaveChanges();
++        }
++
++        _repository = new PeopleRepository(CreateDbContextFactory(), new ItemTypeLookup(), new Mock<IItemQueryHelpers>().Object);
++    }
++
++    [Fact]
++    public void GetPeople_CollapsesNamesThatDifferOnlyInCase_KeepingTheLowestId()
++    {
++        var result = _repository.GetPeople(new InternalPeopleQuery());
++
++        Assert.Equal(["alpha centauri", "Brad Pitt"], result.Items.Select(p => p.Name));
++        Assert.Equal("Actor", result.Items[1].Type.ToString());
++        Assert.Equal(2, result.TotalRecordCount);
++    }
++
++    [Fact]
++    public void GetPeople_PagesOverTheCollapsedList()
++    {
++        var result = _repository.GetPeople(new InternalPeopleQuery { StartIndex = 1, Limit = 1 });
++
++        Assert.Equal("Brad Pitt", Assert.Single(result.Items).Name);
++        Assert.Equal(2, result.TotalRecordCount);
++    }
++}
+-- 
+2.39.5
+
