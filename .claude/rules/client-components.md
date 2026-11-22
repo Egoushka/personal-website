@@ -8,7 +8,7 @@ paths:
 
 ## Client components — justify each one
 
-Fifteen files carry `"use client"` (`grep -rl '"use client"' components lib app`):
+Seventeen files carry `"use client"` (`grep -rl '"use client"' components lib app`):
 
 | File | Why it needs the browser |
 |---|---|
@@ -27,6 +27,7 @@ Fifteen files carry `"use client"` (`grep -rl '"use client"' components lib app`
 | [Journey.tsx](components/Journey.tsx) | hover/focus selection, below-the-fold draw-in |
 | [MiraForm.tsx](components/MiraForm.tsx) | `/mira/` signup: `fetch` to the listmonk form endpoint so the download links replace the form |
 | [SubscribeForm.tsx](components/SubscribeForm.tsx) | end of each post and `/writing/`: `fetch` to the listmonk form endpoint so the confirm-your-inbox note replaces the form; posts natively without JS |
+| [PaddleCheckout.tsx](components/PaddleCheckout.tsx) | loads Paddle.js on the first click and opens the overlay on `/mira/pack/` (ADR 0012) |
 | [PrintCv.tsx](components/PrintCv.tsx) | print button named for the platform's shortcut |
 | [lib/status.ts](lib/status.ts) | `useStatus()`, the shared `/status.json` fetch |
 

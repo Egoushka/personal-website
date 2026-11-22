@@ -1,3 +1,5 @@
+import { checkoutReady, getProduct } from "@/lib/payments";
+
 /**
  * The newsletter list behind /mira/: a public, single opt-in list in listmonk,
  * subscribed through the public form endpoint on this origin (the edge routes
@@ -12,7 +14,8 @@ export const MIRA_DOWNLOADS = [
   { href: "/mira/free-5.md", label: "5 prompts" },
 ] as const;
 
-/** Payment link for the starter pack at /mira/pack/. While null the page shows "Checkout opens soon"; set it to enable the buy button. */
-export const MIRA_CHECKOUT_URL: string | null = null;
+/** The starter pack at /mira/pack/. Its Paddle ids live in payments/config.json; until a client token and price id are set the page shows "Checkout opens soon". */
+export const MIRA_PACK = getProduct("mira-pack");
+export const MIRA_CHECKOUT_READY = checkoutReady(MIRA_PACK);
 
 export const MIRA_CONTACT = "mira@hrabovskyi.online";

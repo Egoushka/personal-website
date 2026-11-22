@@ -4,7 +4,8 @@ import Shell from "@/components/Shell";
 import PageHead from "@/components/PageHead";
 import MiraFooter from "@/components/MiraFooter";
 import { pageMetadata } from "@/lib/metadata";
-import { MIRA_CHECKOUT_URL, MIRA_CONTACT } from "@/lib/mira";
+import PaddleCheckout from "@/components/PaddleCheckout";
+import { MIRA_CONTACT, MIRA_PACK, MIRA_CHECKOUT_READY } from "@/lib/mira";
 
 const description =
   "Mira's AI Automation Starter Pack: 10 ready-made n8n workflows, 50 copy-and-paste prompts and a setup guide for non-developers.";
@@ -88,10 +89,12 @@ export default function MiraPack() {
       <div className="max-w-2xl space-y-10 border-t py-10 text-lg leading-relaxed">
         <section aria-labelledby="pack-buy" className="space-y-4">
           <h2 id="pack-buy" className={heading}>Get the pack</h2>
-          {MIRA_CHECKOUT_URL ? (
-            <a className={`${buy} bg-brand text-brand-foreground shadow-xs hover:bg-brand/90`} href={MIRA_CHECKOUT_URL}>
-              Get the pack, $19
-            </a>
+          {MIRA_CHECKOUT_READY ? (
+            <PaddleCheckout
+              product={MIRA_PACK}
+              label="Get the pack, $19"
+              className={`${buy} bg-brand text-brand-foreground shadow-xs hover:bg-brand/90`}
+            />
           ) : (
             <span aria-disabled="true" className={`${buy} cursor-not-allowed border text-muted-foreground`}>
               Checkout opens soon
@@ -177,7 +180,7 @@ export default function MiraPack() {
             subscription. You also pay your own AI provider for usage (cents per run for the default model; see each
             workflow's note) and, if you choose n8n Cloud, for n8n.
           </p>
-          {!MIRA_CHECKOUT_URL && <p className="text-base text-muted-foreground">Checkout opens soon.</p>}
+          {!MIRA_CHECKOUT_READY && <p className="text-base text-muted-foreground">Checkout opens soon.</p>}
         </section>
 
         <section aria-labelledby="pack-faq" className="space-y-4">

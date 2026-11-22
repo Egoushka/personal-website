@@ -1,0 +1,11 @@
+{
+  "environment": "sandbox",
+  "clientToken": null,
+  "products": [
+    {
+      "id": "mira-pack",
+      "name": "Mira's AI Automation Starter Pack",
+      "priceId": null
+    }
+  ]
+}

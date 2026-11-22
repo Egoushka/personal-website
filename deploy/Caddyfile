@@ -34,7 +34,7 @@
 		Cross-Origin-Opener-Policy same-origin
 		# interest-cohort is intentionally absent — FLoC was abandoned in 2022 and
 		# Chrome now logs it as an unrecognised feature.
-		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+		# Permissions-Policy is set below with the CSP, for the same reason.
 
 		# 'wasm-unsafe-eval' is for Pagefind, which loads its search index as WASM.
 		# There is no 'unsafe-eval', so the header search must load Pagefind's JS
@@ -58,7 +58,9 @@
 		# is relative, so production gains nothing from it, while on prelive's
 		# plain-HTTP tailnet origin it would rewrite every asset to https and leave
 		# the page unstyled.
-		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors https://umami.lab.hrabovskyi.online"
+		# Content-Security-Policy is set below, outside this block: a header block that
+		# deletes a field (-Server) is deferred by Caddy and would overwrite the
+		# pack page's own CSP at write time.
 
 		# The commit this file was deployed from. deploy.yml writes it over the
 		# placeholder before publishing, and caddy-test polls for it afterwards:
@@ -68,6 +70,24 @@
 
 		-Server
 	}
+
+	# The site-wide CSP, on every page but the one that opens Paddle's overlay
+	# checkout (ADR 0012). That page gets its own CSP below, which also names
+	# Paddle's origins. Two matchers keep it one header per response; neither
+	# is deferred, which is why neither lives in the block above. The lines
+	# must start `header @...` so scripts/caddy-test.sh and smoke.mjs read the
+	# site-wide policy from the first one. Sandbox and live origins are both
+	# listed so the sandbox test and go-live need no Caddyfile change; verify the
+	# list against a real sandbox checkout (docs/PAYMENTS.md).
+	@notpack {
+		not path /mira/pack /mira/pack/ /mira/pack/index.html
+	}
+	header @notpack Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors https://umami.lab.hrabovskyi.online"
+	header @notpack Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+	@pack path /mira/pack /mira/pack/ /mira/pack/index.html
+	# payment=() would also switch off Apple Pay and Google Pay in Paddle's frame.
+	header @pack Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(self \"https://buy.paddle.com\" \"https://sandbox-buy.paddle.com\"), usb=()"
+	header @pack Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.paddle.com; style-src 'self' 'unsafe-inline' https://cdn.paddle.com https://sandbox-cdn.paddle.com; img-src 'self' blob: data: https://cdn.paddle.com https://sandbox-cdn.paddle.com; font-src 'self'; connect-src 'self' https://checkout-service.paddle.com https://sandbox-checkout-service.paddle.com https://checkout-analytics.paddle.com https://sandbox-checkout-analytics.paddle.com https://create-checkout.paddle.com https://sandbox-create-checkout.paddle.com; frame-src 'self' https://buy.paddle.com https://sandbox-buy.paddle.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors https://umami.lab.hrabovskyi.online"
 
 	# Content-hashed assets never change under the same URL.
 	#
