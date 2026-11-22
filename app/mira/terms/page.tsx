@@ -25,6 +25,10 @@ export default function MiraTerms() {
           and refund handling apply as well; the provider's refund process wins on any conflict.
         </p>
         <p>
+          Our order process is conducted by our online reseller Paddle.com. Paddle.com is the Merchant of Record for
+          all our orders. Paddle provides all customer service inquiries and handles returns.
+        </p>
+        <p>
           <strong>Seller:</strong> Yehor Hrabovskyi, sole proprietor (FOP), Ukraine. Contact: {mail}.
         </p>
         <h2 id="what-you-buy" className="pt-4 text-2xl font-semibold">What you buy</h2>
