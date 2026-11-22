@@ -13,8 +13,9 @@ paths:
 - The Caddyfile is plain HTTP: `:80` production, `:81` prelive, one shared `(site)`
   snippet — never let them drift. No `tls`, hostname or www redirect (the edge is Traefik,
   `/opt/stacks/pangolin/config/traefik/dynamic_config.yml`). Each header in one place;
-  never add `'unsafe-eval'` or an origin to the CSP; the one origin it names is the Umami
-  dashboard in `frame-ancestors`, for its heatmaps.
+  never add `'unsafe-eval'`. The site-wide CSP names no origin but the Umami dashboard in
+  `frame-ancestors`, for its heatmaps; the one exception is the `@pack` CSP, which adds Paddle's
+  origins on `/mira/pack/` only (ADR 0012).
 - **Header matchers that name files carry `file`**, or a 404 inherits them (`/404.html`
   served as `image/png`; missing chunks pinned `immutable` for a year). `@html` matches
   directories and is the exception. OG cards are extensionless, so a new card route needs

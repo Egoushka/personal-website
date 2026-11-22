@@ -171,6 +171,18 @@ case $csp in
   *) ok "the CSP forbids eval" ;;
 esac
 
+# Paddle's origins are allowed on the pack page and nowhere else (ADR 0012).
+get /mira/pack/
+case $(hdr content-security-policy) in
+  *"script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.paddle.com"*"frame-src 'self' https://buy.paddle.com https://sandbox-buy.paddle.com"*) ok "the pack page may load Paddle.js and its checkout frame" ;;
+  *) fail "the pack page may load Paddle.js and its checkout frame" "paddle origins in script-src and frame-src" "$(hdr content-security-policy)" ;;
+esac
+get /mira/
+case $(hdr content-security-policy) in
+  *paddle*) fail "other pages name no Paddle origin" "no paddle in the CSP of /mira/" "$(hdr content-security-policy)" ;;
+  *) ok "other pages name no Paddle origin" ;;
+esac
+
 if [ -z "$live" ]; then
   html="public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
   get /
