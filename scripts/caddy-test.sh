@@ -150,7 +150,7 @@ same "no other page sets a cookie" "" "$(hdr set-cookie)"
 
 # One CSP header, exactly as deploy/Caddyfile writes it, and the properties it
 # must keep whatever else changes in it.
-want=$(sed -n 's/^[[:space:]]*Content-Security-Policy "\(.*\)"$/\1/p' deploy/Caddyfile)
+want=$(sed -n 's/^[[:space:]]*header @notpack Content-Security-Policy "\(.*\)"$/\1/p' deploy/Caddyfile)
 get /
 csp=$(hdr content-security-policy)
 if [ -z "$want" ]; then
@@ -177,6 +177,7 @@ case $(hdr content-security-policy) in
   *"script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.paddle.com"*"frame-src 'self' https://buy.paddle.com https://sandbox-buy.paddle.com"*) ok "the pack page may load Paddle.js and its checkout frame" ;;
   *) fail "the pack page may load Paddle.js and its checkout frame" "paddle origins in script-src and frame-src" "$(hdr content-security-policy)" ;;
 esac
+same "the pack page lets Paddle's frame use the Payment Request API" "yes" "$(hdr permissions-policy | grep -q 'payment=(self' && echo yes || echo no)"
 get /mira/
 case $(hdr content-security-policy) in
   *paddle*) fail "other pages name no Paddle origin" "no paddle in the CSP of /mira/" "$(hdr content-security-policy)" ;;

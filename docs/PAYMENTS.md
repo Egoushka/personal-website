@@ -38,9 +38,9 @@ the owner out (SWIFT, monthly, $100 minimum; fee 5% + $0.50). Why this shape: [A
 ## Add the next product
 
 1. Create the product and a one-time price in Paddle.
-2. Add an entry to `payments/config.json` `products` (id, name, `priceId`, `file`, `downloadName`) and put the file in `$DATA_DIR/files/`.
-3. On its page render `<PaddleCheckout product={getProduct("<id>")} .../>` guarded by `checkoutReady`. If the page is on another origin, give it the same `@pack`-style CSP.
-4. The service needs no change: it maps the paid price id to the product's file.
+2. Site: add an entry to `payments/config.json` `products` (id, name, `priceId`).
+3. Service: add the same price id with its `file` and `downloadName` to `paddle-fulfil/products.json`, put the file in `$DATA_DIR/files/`, then rebuild and redeploy the image (the file is baked into it). Skipping this is silent: the webhook logs "no known price, ignored", answers 200, and the buyer paid but gets no mail.
+4. On its page render `<PaddleCheckout product={getProduct("<id>")} .../>` guarded by `checkoutReady`. Link to that page with a plain `<a>`, not `next/link`: the CSP belongs to the document, so a client-side navigation keeps the previous page's policy and Paddle.js is blocked. If the page is not `/mira/pack/`, give it the same `@pack` treatment in `deploy/Caddyfile` (CSP and Permissions-Policy).
 
 Do not extract a library yet: Mira is the first consumer. Extract when a second works and a third validates it.
 
@@ -48,5 +48,5 @@ Do not extract a library yet: Mira is the first consumer. Extract when a second 
 
 - The webhook is trusted only after the `Paddle-Signature` HMAC (5 min tolerance); an unknown price id is ignored; a mail failure returns 500 so Paddle retries; a delivered transaction id is never mailed twice.
 - Download links are HMAC-signed, expire after 7 days and name only a configured file. Anyone holding the link can download: it is a bearer link sent to the buyer's own inbox.
-- Known gap: two simultaneous deliveries of the same event could both mail; Paddle sends retries only after a non-2xx, so this is not expected.
+- Duplicates: Paddle retries on a non-2xx or a response slower than 5 s, and replays on request. The service answers a retry with 'duplicate' while the first delivery is in flight, and the Paddle and mail calls time out at 4 s. If both calls succeed but the ledger write fails, a retry mails again; accepted.
 - The CSP origins in `@pack` come from Paddle's published pages and other integrators' notes; verify them in a real sandbox checkout (console shows blocked requests) and adjust.
