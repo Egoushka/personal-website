@@ -90,7 +90,7 @@ export default function MiraPack() {
           <h2 id="pack-buy" className={heading}>Get the pack</h2>
           {MIRA_CHECKOUT_URL ? (
             <a className={`${buy} bg-brand text-brand-foreground shadow-xs hover:bg-brand/90`} href={MIRA_CHECKOUT_URL}>
-              Get the pack, $19 launch price
+              Get the pack, $19
             </a>
           ) : (
             <span aria-disabled="true" className={`${buy} cursor-not-allowed border text-muted-foreground`}>
@@ -98,7 +98,7 @@ export default function MiraPack() {
             </span>
           )}
           <p className="text-base text-muted-foreground">
-            Launch price $19 for the first 7 days after launch, then $29. One payment, files you keep.
+            $19, one payment, files you keep.
           </p>
           <p className="text-base">
             Not sure yet?{" "}
@@ -173,7 +173,7 @@ export default function MiraPack() {
         <section aria-labelledby="pack-price" className="space-y-4">
           <h2 id="pack-price" className={heading}>Price</h2>
           <p>
-            <strong>$29</strong>, launch price <strong>$19</strong> for the first 7 days after launch. One payment, no
+            <strong>$19</strong>, one payment, no
             subscription. You also pay your own AI provider for usage (cents per run for the default model; see each
             workflow's note) and, if you choose n8n Cloud, for n8n.
           </p>
