@@ -68,3 +68,7 @@ internal links carry the slash (`/writing/foo/`). Every dynamic segment has
   single-file bind mount.
 
 Area rules load on demand from [.claude/rules/](.claude/rules/): client components, pages and data, posts and figures, docs, styling, Caddy and Cloudflare.
+
+## CI gate
+
+The only required status check is `fast-tier`. `ws ship` posts it after the local fast tier; a fork or Dependabot PR runs the full CI instead. The full suite also runs once on push to main.
