@@ -6,7 +6,15 @@ name: Prelive
 # nothing here can reach production.
 on:
   workflow_dispatch:
+  # A PR that touches only docs or repo plumbing changes nothing the site shows.
   pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "LICENSE"
+      - ".claude/**"
+      - ".github/dependabot.yml"
+      - ".github/workflows/probe.yml"
+      - ".github/workflows/agent-checks.yml"
 
 # contents: write publishes the build to the deploy-prelive release, which the
 # VPS pulls. A fork PR never gets here (the job's `if`).
