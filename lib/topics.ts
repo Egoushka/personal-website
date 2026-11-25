@@ -68,6 +68,11 @@ export const TOPICS = {
     kind: "technology",
     blurb: "The day job and the default. Five years of it.",
   },
+  efcore: {
+    name: "EF Core",
+    kind: "technology",
+    blurb: "The queries it writes for me, and the ones I read twice.",
+  },
   aspnet: {
     name: "ASP.NET Core",
     kind: "technology",

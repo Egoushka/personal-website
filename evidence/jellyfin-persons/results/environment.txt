@@ -1,0 +1,11 @@
+cpu: AMD Ryzen 9 5900X 12-Core Processor
+logical cores: 24
+ram: 62 GB
+kernel: Linux 7.0.0-43-generic
+dotnet sdk: 10.0.404
+Microsoft.NETCore.App 8.0.34 [/home/node/work/.devbox/dotnet/shared/Microsoft.NETCore.App]
+Microsoft.NETCore.App 9.0.23 [/home/node/work/.devbox/dotnet/shared/Microsoft.NETCore.App]
+Microsoft.NETCore.App 10.0.15 [/home/node/work/.devbox/dotnet/shared/Microsoft.NETCore.App]
+jellyfin: 2953ed632c9277351483eff04f87a8276390691c (master, 2026-11-14)
+packages: Microsoft.EntityFrameworkCore.Sqlite 10.0.14, Microsoft.Data.Sqlite 10.0.14, BenchmarkDotNet 0.15.8 (see PeopleBench.csproj)
+note: the host was shared with other jobs; load average was 2 to 8 during the timing runs
