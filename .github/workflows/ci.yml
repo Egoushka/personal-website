@@ -2,11 +2,14 @@ name: CI
 
 # Same checks the deploy runs, but on branches and PRs so failures surface before
 # anything reaches main — where a push is a live deploy.
-# Only pull_request: a branch with a PR used to run this twice (push and PR).
-# Both required checks (verify, secrets) report on the PR; main is covered by
-# deploy.yml.
+# An owner PR runs nothing here: `ws ship` runs the fast tier locally and posts the
+# required `fast-tier` status. A fork or bot PR runs the whole suite and earns that
+# status in the `fast-tier` job. A push to main runs only `secrets`: deploy.yml
+# already runs the rest before it ships.
 on:
   pull_request:
+  push:
+    branches: [main]
 
 permissions:
   contents: read
@@ -22,6 +25,7 @@ concurrency:
 
 jobs:
   verify:
+    if: github.event_name == 'pull_request' && (github.event.pull_request.head.repo.fork || github.event.pull_request.user.type == 'Bot')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -130,6 +134,7 @@ jobs:
 
   # The repo is public: no secret and no personal address reaches it.
   secrets:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork || github.event.pull_request.user.type == 'Bot'
     runs-on: ubuntu-latest
     # On pull requests gitleaks-action lists the PR's commits through the API.
     permissions:
@@ -153,3 +158,19 @@ jobs:
             echo "$bad" | cut -d' ' -f1 | sort -u
             exit 1
           fi
+
+  # An owner PR is gated by the `fast-tier` status `ws ship` posts; a Dependabot PR
+  # runs the full suite instead and earns the same status here, once it all passed.
+  bot-fast-tier:
+    if: github.event_name == 'pull_request' && github.event.pull_request.user.type == 'Bot' && !github.event.pull_request.head.repo.fork
+    needs: [verify, secrets]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      statuses: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: gh api "repos/$REPO/statuses/$SHA" -f state=success -f context=fast-tier -f description="full CI passed on a bot PR"
