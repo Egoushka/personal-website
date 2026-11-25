@@ -40,7 +40,7 @@ No ESLint. **Test the build the way production serves it**: `serve:prod` (`SITE_
 has none. Re-run it after every build — the container keeps the deleted `out/` mounted.
 `BASE_URL=https://hrabovskyi.online npm run caddy-test` tests the live site.
 
-CI ([ci.yml](.github/workflows/ci.yml)), every pull request: validate
+CI ([ci.yml](.github/workflows/ci.yml)), only for fork and bot pull requests (an owner PR is gated by the `fast-tier` status `ws ship` posts after the local fast tier): validate
 → typecheck → test → build → check → caddy validate → caddy-test → smoke → lychee.
 Post-build steps run even after one fails, so one red run lists every failing gate.
 
