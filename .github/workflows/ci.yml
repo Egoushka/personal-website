@@ -2,10 +2,11 @@ name: CI
 
 # Same checks the deploy runs, but on branches and PRs so failures surface before
 # anything reaches main — where a push is a live deploy.
+# Only pull_request: a branch with a PR used to run this twice (push and PR).
+# Both required checks (verify, secrets) report on the PR; main is covered by
+# deploy.yml.
 on:
   pull_request:
-  push:
-    branches-ignore: [main]
 
 permissions:
   contents: read
