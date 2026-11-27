@@ -59,3 +59,6 @@ export const UMAMI_REMEMBER =
   `(function(){var m=document.cookie.match(/(?:^|; )${VISITOR_COOKIE}=(${ID})(?:;|$)/);if(!m)return;` +
   "function go(){if(window.umami&&window.umami.identify)window.umami.identify(m[1])}" +
   "if(document.readyState==='complete')go();else addEventListener('load',go)})();";
+
+/** Set to "no" when a visitor declines the first-visit prompt, so it is not shown again. */
+export const CHOICE_KEY = "visitor-choice";
