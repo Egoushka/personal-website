@@ -28,7 +28,7 @@ export default function SubscribeForm({ from }: { from: string }) {
   return (
     <section className="mt-14" aria-labelledby="subscribe-heading" data-pagefind-ignore>
       <h2 id="subscribe-heading" className="text-sm font-medium text-muted-foreground">
-        New posts by email
+        Get new posts by email
       </h2>
       {state === "done" ? (
         <p role="status" className="mt-3 rounded-xl border p-5">
@@ -40,7 +40,9 @@ export default function SubscribeForm({ from }: { from: string }) {
           {/* listmonk's honeypot: real visitors leave it empty. */}
           <input type="text" name="nonce" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
           <p className="text-sm text-muted-foreground">
-            One mail when a new post ships, nothing else. I confirm the address first, and every mail has an unsubscribe link.
+            I write about .NET backends, agents and running my own server: what I built, what broke, with the code. One
+            mail when a post ships, nothing else. I confirm your address first, every mail has an unsubscribe link, and
+            the address is never sold. <a className="link" href="/privacy/">How it is handled</a>
           </p>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
             <label htmlFor="subscribe-email" className="sr-only">Email</label>
