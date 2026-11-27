@@ -3,11 +3,14 @@ import LegalPage from "@/components/LegalPage";
 import { site } from "@/lib/site";
 import { pageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = pageMetadata({
-  title: "Privacy",
-  description: "What this site's analytics record, the one optional cookie, and how to remove it.",
-  path: "/privacy/",
-});
+export const metadata: Metadata = {
+  ...pageMetadata({
+    title: "Privacy",
+    description: "What this site's analytics record, the one optional cookie, and how to remove it.",
+    path: "/privacy/",
+  }),
+  robots: { index: false },
+};
 
 const mail = <a className="link" href={`mailto:${site.email}`}>{site.email}</a>;
 
