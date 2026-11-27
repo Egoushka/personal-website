@@ -69,10 +69,10 @@ export default function PartnerComposer({ email }: { email: string }) {
           <input value={have} onChange={(e) => setHave(e.target.value)} placeholder="a team, an API, an audience…" autoComplete="off" />
         </label>
         <div className="acts !mt-0">
-          <a className="key key-primary" href={href}>
+          <a className="key key-primary" href={href} data-umami-event="partner-mail">
             <Mail aria-hidden="true" /> Open in mail
           </a>
-          <button type="button" className="key" onClick={copy}>
+          <button type="button" className="key" onClick={copy} data-umami-event="partner-copy">
             <Copy aria-hidden="true" /> {copied ? "Copied" : "Copy text"}
           </button>
         </div>

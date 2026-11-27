@@ -63,6 +63,7 @@ export default function MiraForm() {
       </div>
       <button
         type="submit"
+        data-umami-event="mira-submit"
         disabled={state === "sending"}
         className="inline-flex h-10 cursor-pointer items-center justify-center rounded-md bg-brand px-6 text-sm font-medium text-brand-foreground shadow-xs hover:bg-brand/90 disabled:opacity-50"
       >

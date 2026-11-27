@@ -61,7 +61,7 @@ export default function PaddleCheckout({ product, label, className }: { product:
 
   return (
     <>
-      <button type="button" className={className} onClick={buy} disabled={state === "loading"}>
+      <button type="button" className={className} onClick={buy} data-umami-event="checkout-open" disabled={state === "loading"}>
         {label}
       </button>
       <div role="status" className="text-base">
