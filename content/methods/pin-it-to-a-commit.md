@@ -19,7 +19,7 @@ Something that someone else can edit will change under me without a sound. So I 
 
 [Chronicle](/projects/chronicle/) pins a range, not a commit, and learned why. A rebuild without the pin pulled a new major version of the MCP library, which had removed what the server imports, and the container crash-looped. The Dockerfile and `pyproject.toml` now both say `mcp>=2.2,<3`, and a test fails if the two ever differ ([Dockerfile](https://github.com/Egoushka/chronicle/blob/741dbb1f5ec6ce64fd9d45df6d647b45f062e8ac/Dockerfile.mcp?plain=1#L6-L12), [test](https://github.com/Egoushka/chronicle/blob/741dbb1f5ec6ce64fd9d45df6d647b45f062e8ac/tests/test_mcp_server.py?plain=1#L27-L33)).
 
-This site does the same to the docs it shows for each project: a copy at a pinned commit, and `npm run docs:verify` fails when one byte differs ([the decision](https://github.com/Egoushka/personal-website/blob/dceb85b36e604118c23e12866c4f4e7178536cb3/docs/adr/0006-docs-are-written-where-the-code-is.md?plain=1#L28-L29)).
+This site does the same to the docs it shows for each project: a copy at a pinned commit, and `npm run docs:verify` fails when one byte differs.
 
 ## A pin is a chore I have to keep doing
 
