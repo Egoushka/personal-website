@@ -28,8 +28,23 @@ export default function Privacy() {
               Page views and a few actions (outbound and download clicks, how far you scroll, how long a page stays
               open, what you search for) in a self-hosted analytics tool. It sets no cookie and stores nothing in
               your browser. Visits are told apart by a hash of your network address and browser that changes every
-              month. Country and city come from the address, which is then discarded. Nothing is sold or shared, and
-              there are no advertising trackers. It also notes page speed, script errors and coarse facts about your browser (time zone, light or dark mode, screen width rounded to 100 px, connection type), and keeps anonymous recordings of how pages are used (clicks, scrolling and movement) with form fields masked, so I can see what confuses people.
+              month. Country and city come from the address, which is then discarded. Nothing is sold, and nothing is
+              shared except with the email service that delivers mail you ask for (see “The email list”). There are no
+              advertising trackers. It also notes page speed, script errors and coarse facts about your browser (time zone, light or dark mode, screen width rounded to 100 px, connection type), and keeps anonymous recordings of how pages are used (clicks, scrolling and movement) with form fields masked, so I can see what confuses people.
+            </p>
+          ),
+        },
+        {
+          heading: "The email list",
+          body: (
+            <p>
+              If you subscribe, I keep your email address on my own server, and nothing else about you: I do not record
+              your network address when you sign up. I send a confirmation first and mail you nothing until you click
+              it. The mail goes out through an email-sending service (Resend), only to deliver it. Opens and link clicks
+              in the mails are counted as totals, not per person. Every mail has an unsubscribe link, and you can
+              export or delete your record there or by writing to {mail}. I rely on your consent, which the
+              confirmation click records. The address stays until you delete it; if you only unsubscribe, I keep it marked
+              as unsubscribed so you are not mailed again. It is never sold or used for anything but these mails.
             </p>
           ),
         },

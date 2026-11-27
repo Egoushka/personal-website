@@ -13,6 +13,7 @@ import { site } from "@/lib/site";
 import { pickNext } from "@/lib/next-step";
 import { pageMetadata } from "@/lib/metadata";
 import { formatDate, getAllPosts } from "@/lib/posts";
+import SubscribeForm from "@/components/SubscribeForm";
 import { getReadings, getTopicUsage, n } from "@/lib/readings";
 import { topicName } from "@/lib/topics";
 import { ATTEST_FALLBACK, CHANNELS, CHARGEHAND, PRODUCTS, READ_DATE, SELF_CHECK, STATE_NOTE } from "@/lib/shop";
@@ -246,6 +247,8 @@ export default function Home() {
           </ul>
         </section>
       )}
+
+      <SubscribeForm from="home" />
 
       {/* Counted, and the site admitting something: the number makes the joke. */}
       <p className="mt-24 font-mono text-xs text-muted-foreground">
