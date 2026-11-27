@@ -139,3 +139,39 @@ test("the inline script introduces a remembered visitor to Umami and does nothin
   assert.deepEqual(run(`${VISITOR_COOKIE}=${GOOD}`), [GOOD]);
   assert.deepEqual(run("theme=dark"), []);
 });
+
+import { UMAMI_TRAITS, UMAMI_ERRORS } from "../lib/umami";
+
+function traits(referrer: string) {
+  const sent: unknown[] = [];
+  const win: Record<string, unknown> = {
+    umami: { identify: (d: unknown) => sent.push(d) }, innerWidth: 1283, devicePixelRatio: 2.0000001,
+    matchMedia: (q: string) => ({ matches: q.includes("dark") }),
+  };
+  const nav = { connection: { effectiveType: "4g" } };
+  new Function("window", "document", "location", "navigator", "addEventListener", "Intl", "innerWidth", "devicePixelRatio", "matchMedia", UMAMI_TRAITS)(
+    win, { referrer, readyState: "complete" }, { origin: "https://hrabovskyi.online" }, nav, () => {}, { DateTimeFormat: () => ({ resolvedOptions: () => ({ timeZone: "Europe/Kyiv" }) }) },
+    1283, 2.0000001, win.matchMedia);
+  return sent;
+}
+
+test("traits go out once, on an entry page, and are coarse", () => {
+  const [d] = traits("https://www.linkedin.com/") as Array<Record<string, unknown>>;
+  assert.deepEqual(d, { tz: "Europe/Kyiv", scheme: "dark", touch: 0, reduced: 0, vw: 1300, dpr: 2, net: "4g" });
+  assert.equal(traits("").length, 1);
+  assert.equal(traits("https://hrabovskyi.online/writing/").length, 0);
+});
+
+test("a script error becomes one trimmed event per message per page", () => {
+  const sent: Array<[string, Record<string, unknown>]> = [];
+  const listeners: Record<string, (e: unknown) => void> = {};
+  new Function("window", "location", "addEventListener", UMAMI_ERRORS)(
+    { umami: { track: (n: string, d: Record<string, unknown>) => sent.push([n, d]) } }, { pathname: "/cv/" }, (n: string, f: (e: unknown) => void) => (listeners[n] = f));
+  listeners.error({ message: "x".repeat(300) });
+  listeners.error({ message: "x".repeat(300) });
+  listeners.unhandledrejection({ reason: new Error("boom") });
+  assert.equal(sent.length, 2);
+  assert.equal(sent[0][0], "js-error");
+  assert.equal((sent[0][1].msg as string).length, 120);
+  assert.equal(sent[1][1].msg, "boom");
+});
