@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Bricolage_Grotesque } from "next/font/google";
 import { site, feedTypes, isPrelive } from "@/lib/site";
-import { UMAMI_BEFORE_SEND } from "@/lib/umami";
+import { UMAMI_BEFORE_SEND, UMAMI_EVENTS } from "@/lib/umami";
 import { FLYING_LOADER } from "@/lib/flying";
 import "./globals.css";
 
@@ -153,14 +153,7 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html:
-              UMAMI_BEFORE_SEND +
-              "(function(){function t(n,d){if(window.umami)window.umami.track(n,d)}" +
-              "document.addEventListener('click',function(e){var a=e.target&&e.target.closest&&e.target.closest('a[href]');if(!a)return;" +
-              "if(a.origin!==location.origin)t('outbound',{url:a.href});" +
-              "else if(/\\.(xml|json|pdf)$/.test(a.pathname))t('download',{file:a.pathname})},true);" +
-              "var seen={};addEventListener('scroll',function(){var d=document.documentElement,h=d.scrollHeight;if(h<innerHeight*2)return;" +
-              "var p=(scrollY+innerHeight)/h,k=location.pathname;" +
-              "[50,90].forEach(function(m){var id=k+m;if(p*100>=m&&!seen[id]){seen[id]=1;t('scroll-'+m)}})},{passive:true})})()",
+              UMAMI_BEFORE_SEND + UMAMI_EVENTS,
           }}
         />
       </body>
