@@ -72,3 +72,5 @@ Area rules load on demand from [.claude/rules/](.claude/rules/): client componen
 ## CI gate
 
 The only required status check is `fast-tier`. `ws ship` posts it after the local fast tier; a fork or Dependabot PR runs the full CI instead. The full suite also runs once on push to main.
+
+- **A private repo means metered Actions.** On 2026-11-27 making this repo private stopped every Deploy run within seconds ("recent account payments have failed or your spending limit needs to be increased"). Keep it public, or move CI to a self-hosted runner first. Deploys are a GitHub release (`deploy-site`) the box pulls, so a build made elsewhere can be uploaded there.
