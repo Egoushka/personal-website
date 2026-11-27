@@ -45,7 +45,7 @@ type Found = { query: string; hits: Hit[] };
 
 declare global {
   interface Window {
-    umami?: { track: (name: string, data?: Record<string, string | number>) => void; identify?: (id: string) => void };
+    umami?: { track: (name: string, data?: Record<string, string | number>) => void };
   }
 }
 

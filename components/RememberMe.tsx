@@ -16,7 +16,7 @@ export default function RememberMe() {
   const remember = () => {
     const next = crypto.randomUUID();
     document.cookie = visitorCookie(next);
-    window.umami?.identify?.(next);
+    (window as unknown as { umami?: { identify?: (id: string) => void } }).umami?.identify?.(next);
     setId(next);
   };
   const forget = () => {
