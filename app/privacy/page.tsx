@@ -40,7 +40,7 @@ export default function Privacy() {
               The footer has a “Remember me” button. Only if you click it, the site sets a cookie named{" "}
               <code>visitor-id</code> holding a random number, for 13 months. It lets me see that the same person came
               back, across days and networks. It holds nothing about you, and it is first-party: no other site sees
-              it. Without the click there is no cookie.
+              it. Without the click there is no cookie. A small card on your first visit asks once; “No thanks” is remembered in your browser’s local storage (a flag named <code>visitor-choice</code>) so it does not ask again.
             </p>
           ),
         },

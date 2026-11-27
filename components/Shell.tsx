@@ -1,3 +1,4 @@
+import RememberPrompt from "@/components/RememberPrompt";
 import Nav, { type Section } from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ export default function Shell({
         {children}
       </main>
       <Footer width={width} />
+      <RememberPrompt />
     </>
   );
 }
