@@ -591,6 +591,27 @@ export const projects: Project[] = [
     ],
   },
   {
+    slug: "implock",
+    visibility: "public",
+    tech: ["C#", ".NET 10", "Roslyn source generator", "xUnit"],
+    phase:
+      "Works from a clean clone. Not on NuGet yet, and the sample lock came from a scripted stand-in, not a real model, so how often a real model's body differs from a hand-written one is not measured.",
+    status: "building",
+    name: "implock",
+    lang: "C#", shape: "source generator",
+    href: "https://github.com/Egoushka/implock",
+    writeup: "implock",
+    summary:
+      "A C# method signature and doc comment are the spec; a model writes the body once and a committed lock file keeps it, so builds never call a model.",
+    description:
+      "A partial method marked [Implement] is the spec: its signature, its XML doc comment and optional named tests. `implock generate` pipes a prompt built from it to a model command you name, refuses a body that does not parse or compile, and writes the body to implement.lock, a plain-text file you review and commit. A Roslyn source generator emits the body from the lock and never reads a model. The spec is hashed with SHA-256, so an edited spec makes its entry stale and the build fails with a diagnostic (IMPL001 to IMPL004). `implock report` compares a hand-written body with a generated one and lists the input classes where the original rejects and the generated body accepts. It has no API client, no network code and no keys.",
+    topics: ["dotnet", "architecture"],
+    readings: [
+      { label: "Tests", value: "97, 0 failed", source: "dotnet test on the commit", ref: "Egoushka/implock@ae87abb:README.md#L85" },
+      { label: "On NuGet", value: "not yet", source: "the README's Why and What it does sections", ref: "Egoushka/implock@ae87abb:README.md#L44" },
+    ],
+  },
+  {
     slug: "whetstone",
     side: true,
     visibility: "public",
