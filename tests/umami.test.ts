@@ -108,3 +108,34 @@ test("nothing is sent and nothing throws while the tracker is absent", () => {
   const p = page();
   assert.doesNotThrow(() => p.copy());
 });
+
+import { VISITOR_COOKIE, readVisitorId, visitorCookie, UMAMI_REMEMBER } from "../lib/umami";
+
+const GOOD = "3f0c8a52-9b7e-4c1d-8a47-1d2e3f405162";
+
+test("the visitor cookie is read only when it holds a well-formed id", () => {
+  assert.equal(readVisitorId(`theme=dark; ${VISITOR_COOKIE}=${GOOD}; a=1`), GOOD);
+  assert.equal(readVisitorId(`${VISITOR_COOKIE}=${GOOD}`), GOOD);
+  assert.equal(readVisitorId(""), null);
+  assert.equal(readVisitorId(`${VISITOR_COOKIE}=not-an-id`), null);
+  assert.equal(readVisitorId(`x-${VISITOR_COOKIE}=${GOOD}`), null);
+});
+
+test("opting in writes a first-party, secure, 13-month cookie and opting out removes it", () => {
+  const on = visitorCookie(GOOD);
+  assert.match(on, new RegExp(`^${VISITOR_COOKIE}=${GOOD}; Max-Age=34128000; Path=/; SameSite=Lax; Secure$`));
+  assert.match(visitorCookie(null), /Max-Age=0/);
+});
+
+test("the inline script introduces a remembered visitor to Umami and does nothing otherwise", () => {
+  const run = (cookie: string) => {
+    const calls: string[] = [];
+    const win: Record<string, unknown> = { umami: { identify: (id: string) => calls.push(id) } };
+    const listeners: Array<() => void> = [];
+    new Function("window", "document", "addEventListener", UMAMI_REMEMBER)(win, { cookie, readyState: "loading" }, (_: string, f: () => void) => listeners.push(f));
+    listeners.forEach((f) => f());
+    return calls;
+  };
+  assert.deepEqual(run(`${VISITOR_COOKIE}=${GOOD}`), [GOOD]);
+  assert.deepEqual(run("theme=dark"), []);
+});

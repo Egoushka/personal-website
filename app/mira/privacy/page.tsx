@@ -35,8 +35,9 @@ export default function MiraPrivacy() {
           </li>
           <li><strong>Support:</strong> what you write to me.</li>
           <li>
-            <strong>Site analytics:</strong> aggregate page views from a self-hosted, cookie-less analytics tool; no
-            advertising trackers.
+            <strong>Site analytics:</strong> aggregate page views from a self-hosted analytics tool that sets no cookies by default;
+            no advertising trackers. One optional cookie exists only if you click “Remember me” in the footer; see the
+            <a className="link" href="/privacy/">site privacy page</a>.
           </li>
         </ul>
         <h2 id="not-collected" className="pt-4 text-2xl font-semibold">What I do not collect</h2>
