@@ -3,6 +3,7 @@ title: "Commit the answer, not the prompt: a lock file for model-written C#"
 date: "2026-11-27"
 description: "implock: a C# method signature and doc comment are the spec, a model writes the body once, and a committed lock file keeps it, so a build never calls a model."
 kind: build
+project: "implock"
 topics: ["dotnet", "architecture"]
 searchTitle: "implock: a lock file for model-written C# method bodies"
 ---
