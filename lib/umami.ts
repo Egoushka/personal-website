@@ -34,3 +34,28 @@ export const UMAMI_EVENTS =
   "setInterval(function(){if(location.pathname!==page){page=location.pathname;sec=0}" +
   "if(document.visibilityState!=='visible')return;sec++;" +
   "[15,60,180].forEach(function(m){var id=page+m;if(sec===m&&!shown[id]){shown[id]=1;t('time-'+m)}})},1000)})()";
+
+/** The opt-in cookie: a random id, set only when a visitor clicks "Remember me" in the footer. */
+export const VISITOR_COOKIE = "visitor-id";
+/** 13 months, in seconds. */
+export const VISITOR_MAX_AGE = 60 * 60 * 24 * 395;
+const ID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+
+/** The id in a `document.cookie` string, or null when the visitor has not opted in. */
+export function readVisitorId(cookie: string): string | null {
+  return cookie.match(new RegExp(`(?:^|; )${VISITOR_COOKIE}=(${ID})(?:;|$)`))?.[1] ?? null;
+}
+
+/** The cookie to write on opt-in (`id` from crypto.randomUUID) or, with no id, the one that removes it. */
+export function visitorCookie(id: string | null): string {
+  return `${VISITOR_COOKIE}=${id ?? ""}; Max-Age=${id ? VISITOR_MAX_AGE : 0}; Path=/; SameSite=Lax; Secure`;
+}
+
+/**
+ * Inlined by app/layout.tsx. A remembered visitor is introduced to Umami on every page, so their visits join
+ * up across days and networks. Nothing runs without the cookie.
+ */
+export const UMAMI_REMEMBER =
+  `(function(){var m=document.cookie.match(/(?:^|; )${VISITOR_COOKIE}=(${ID})(?:;|$)/);if(!m)return;` +
+  "function go(){if(window.umami&&window.umami.identify)window.umami.identify(m[1])}" +
+  "if(document.readyState==='complete')go();else addEventListener('load',go)})();";

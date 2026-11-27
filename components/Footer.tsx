@@ -2,6 +2,7 @@ import Link from "next/link";
 import { site } from "@/lib/site";
 import { GUTTER, WIDTHS, type Width } from "@/lib/layout";
 import { cn } from "@/lib/utils";
+import RememberMe from "@/components/RememberMe";
 
 /**
  * The footer carries what is not a section: the journey, how to reach me, the
@@ -17,6 +18,7 @@ const LINKS = [
   { href: "/about/#contact", label: "Contact", internal: true },
   { href: `mailto:${site.email}`, label: "Email" },
   { href: "/feed.xml", label: "RSS" },
+  { href: "/privacy/", label: "Privacy", internal: true },
   { href: site.github, label: "GitHub", external: true },
 ];
 
@@ -49,6 +51,9 @@ export default function Footer({ width = "default" }: { width?: Width }) {
               )}
             </li>
           ))}
+          <li>
+            <RememberMe />
+          </li>
         </ul>
       </div>
     </footer>
