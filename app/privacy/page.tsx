@@ -29,7 +29,7 @@ export default function Privacy() {
               open, what you search for) in a self-hosted analytics tool. It sets no cookie and stores nothing in
               your browser. Visits are told apart by a hash of your network address and browser that changes every
               month. Country and city come from the address, which is then discarded. Nothing is sold or shared, and
-              there are no advertising trackers.
+              there are no advertising trackers. It also notes page speed, script errors and coarse facts about your browser (time zone, light or dark mode, screen width rounded to 100 px, connection type), and keeps anonymous recordings of how pages are used (clicks, scrolling and movement) with form fields masked, so I can see what confuses people.
             </p>
           ),
         },

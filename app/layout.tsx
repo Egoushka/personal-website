@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Bricolage_Grotesque } from "next/font/google";
 import { site, feedTypes, isPrelive } from "@/lib/site";
-import { UMAMI_BEFORE_SEND, UMAMI_EVENTS, UMAMI_REMEMBER } from "@/lib/umami";
+import { UMAMI_BEFORE_SEND, UMAMI_EVENTS, UMAMI_REMEMBER, UMAMI_TRAITS, UMAMI_ERRORS } from "@/lib/umami";
 import { FLYING_LOADER } from "@/lib/flying";
 import "./globals.css";
 
@@ -153,7 +153,7 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html:
-              UMAMI_BEFORE_SEND + UMAMI_EVENTS + UMAMI_REMEMBER,
+              UMAMI_BEFORE_SEND + UMAMI_EVENTS + UMAMI_REMEMBER + UMAMI_TRAITS + UMAMI_ERRORS,
           }}
         />
       </body>

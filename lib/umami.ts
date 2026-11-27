@@ -62,3 +62,27 @@ export const UMAMI_REMEMBER =
 
 /** Set to "no" when a visitor declines the first-visit prompt, so it is not shown again. */
 export const CHOICE_KEY = "visitor-choice";
+
+/**
+ * Coarse, non-identifying facts about the browser, sent once per visit (on the entry page) as Umami session data:
+ * time zone, light or dark, touch, reduced motion, viewport width to the nearest 100 px, pixel ratio and connection
+ * type. Nothing stored in the browser; nothing that names a person.
+ */
+export const UMAMI_TRAITS =
+  "(function(){function go(){var u=window.umami;if(!u||!u.identify)return;" +
+  "var r=document.referrer;try{if(r&&new URL(r).origin===location.origin)return}catch(e){}" +
+  "var c=navigator.connection&&navigator.connection.effectiveType,d={tz:Intl.DateTimeFormat().resolvedOptions().timeZone," +
+  "scheme:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light',touch:('ontouchstart' in window)?1:0," +
+  "reduced:matchMedia('(prefers-reduced-motion: reduce)').matches?1:0,vw:Math.round(innerWidth/100)*100,dpr:Math.round(devicePixelRatio*10)/10};" +
+  "if(c)d.net=c;u.identify(d)}" +
+  "if(document.readyState==='complete')go();else addEventListener('load',go)})();";
+
+/**
+ * Script errors as events: the message (120 characters, no stack) and the path, once per message per page.
+ * The site is static, so a failing script is otherwise invisible until someone writes in.
+ */
+export const UMAMI_ERRORS =
+  "(function(){var seen={};function r(m){m=String(m||'').slice(0,120);var k=location.pathname+m;if(seen[k]||!window.umami)return;" +
+  "seen[k]=1;window.umami.track('js-error',{msg:m,path:location.pathname})}" +
+  "addEventListener('error',function(e){r(e.message)});" +
+  "addEventListener('unhandledrejection',function(e){r(e.reason&&e.reason.message||e.reason)})})();";
